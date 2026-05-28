@@ -1,0 +1,252 @@
+<!doctype html>
+<html lang="ko" class="layout-menu-fixed layout-compact" data-assets-path="/assets/" data-template="vertical-menu-template-free">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0" />
+    <title>입점 신청 승인 - FESTIO</title>
+
+    <link rel="icon" type="image/x-icon" href="/assets/img/favicon/favicon.ico" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="/assets/vendor/fonts/iconify-icons.css" />
+    <link rel="stylesheet" href="/assets/vendor/css/core.css" />
+    <link rel="stylesheet" href="/assets/css/demo.css" />
+    <link rel="stylesheet" href="/assets/vendor/libs/perfect-scrollbar/perfect-scrollbar.css" />
+    <link rel="stylesheet" href="/assets/vendor/libs/apex-charts/apex-charts.css" />
+    <script src="/assets/vendor/js/helpers.js"></script>
+    <script src="/assets/js/config.js"></script>
+    <style>
+      .premium-gradient {
+        background: linear-gradient(135deg, #696cff 0%, #a2a4ff 100%);
+        color: white;
+      }
+      .stat-card {
+        transition: transform 0.2s;
+      }
+      .stat-card:hover {
+        transform: translateY(-5px);
+      }
+    </style>
+  </head>
+
+  <body>
+    <div class="layout-wrapper layout-content-navbar">
+      <div class="layout-container">
+        
+        <!-- Sidebar Menu -->
+        <aside id="layout-menu" class="layout-menu menu-vertical menu bg-menu-theme">
+          <!-- sidebar.js?v=4 가 런타임에 동적으로 삽입 -->
+        </aside>
+
+        <div class="layout-page">
+          <!-- Navbar -->
+          <nav class="layout-navbar container-xxl navbar navbar-expand-xl navbar-detached align-items-center bg-navbar-theme" id="layout-navbar">
+            <div class="layout-menu-toggle navbar-nav align-items-xl-center me-4 me-xl-0 d-xl-none">
+              <a class="nav-item nav-link px-0 me-xl-6" href="javascript:void(0)">
+                <i class="bx bx-menu bx-sm"></i>
+              </a>
+            </div>
+            <div class="navbar-nav-right d-flex align-items-center" id="navbar-collapse">
+              <h5 class="mb-0 fw-bold"><i class="bx bx-list-check me-2 text-primary"></i>입점 신청 승인</h5>
+              <ul class="navbar-nav flex-row align-items-center ms-auto">
+                <li class="nav-item dropdown-user dropdown">
+                  <a class="nav-link dropdown-toggle hide-arrow" href="javascript:void(0);" data-bs-toggle="dropdown">
+                    <div class="avatar avatar-online">
+                      <img src="/assets/img/avatars/1.png" class="w-px-40 h-auto rounded-circle" />
+                    </div>
+                  </a>
+                  <ul class="dropdown-menu dropdown-menu-end">
+                    <li>
+                      <a class="dropdown-item" href="#">
+                        <div class="d-flex">
+                          <div class="flex-shrink-0 me-3">
+                            <div class="avatar avatar-online">
+                              <img src="/assets/img/avatars/1.png" class="w-px-40 h-auto rounded-circle" />
+                            </div>
+                          </div>
+                          <div class="flex-grow-1">
+                            <span class="fw-medium d-block">최고 관리자</span>
+                            <small class="text-muted">Master Admin</small>
+                          </div>
+                        </div>
+                      </a>
+                    </li>
+                  </ul>
+                </li>
+              </ul>
+            </div>
+          </nav>
+
+          <!-- Content wrapper -->
+          <div class="content-wrapper">
+            <div class="container-xxl flex-grow-1 container-p-y">
+              
+              <div class="row">
+                <!-- 요약 현황 카드 -->
+                <div class="col-lg-4 mb-6">
+                  <div class="card stat-card h-100">
+                    <div class="card-body">
+                      <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h5 class="card-title mb-0 fw-semibold">신규 입점 신청 대기</h5>
+                        <i class="bx bx-file text-warning fs-3"></i>
+                      </div>
+                      <h3 class="fw-bold text-warning mb-2" id="pendingCount">3 건</h3>
+                      <p class="mb-0 text-muted fs-7">서류 심사 및 대기열 대기 중인 가맹점 수</p>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="col-lg-4 mb-6">
+                  <div class="card stat-card h-100">
+                    <div class="card-body">
+                      <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h5 class="card-title mb-0 fw-semibold">이번 달 승인 완료</h5>
+                        <i class="bx bx-check-circle text-success fs-3"></i>
+                      </div>
+                      <h3 class="fw-bold text-success mb-2">12 건</h3>
+                      <p class="mb-0 text-muted fs-7">심사 통과하여 입점 계약 완료된 가맹점 수</p>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="col-lg-4 mb-6">
+                  <div class="card stat-card h-100 bg-label-secondary border-0">
+                    <div class="card-body">
+                      <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h5 class="card-title mb-0 fw-semibold text-secondary">반려/취소 내역</h5>
+                        <i class="bx bx-x-circle text-danger fs-3"></i>
+                      </div>
+                      <h3 class="fw-bold text-danger mb-2">2 건</h3>
+                      <p class="mb-0 text-muted fs-7">서류 미달 및 중복 신청으로 반려 처리된 내역</p>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- 입점 신청 목록 테이블 -->
+                <div class="col-12">
+                  <div class="card">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                      <h5 class="card-title m-0 fw-semibold">대기 중인 입점 가맹점 신청서</h5>
+                      <span class="badge bg-label-primary">실시간 서류 검토</span>
+                    </div>
+                    <div class="table-responsive text-nowrap">
+                      <table class="table table-hover">
+                        <thead>
+                          <tr>
+                            <th>가맹점 상호명</th>
+                            <th>대표자명</th>
+                            <th>업종 카테고리</th>
+                            <th>사업자 등록번호</th>
+                            <th>신청 일자</th>
+                            <th>첨부서류</th>
+                            <th>상태</th>
+                            <th>심사 처리</th>
+                          </tr>
+                        </thead>
+                        <tbody id="applicationTableBody">
+                          <tr id="row-1">
+                            <td><strong>마포 닭강정 푸드트럭</strong></td>
+                            <td>홍길동</td>
+                            <td><span class="badge bg-label-primary">FOOD (음식)</span></td>
+                            <td>120-81-XXXXX</td>
+                            <td>2026-05-26</td>
+                            <td><a href="#" class="text-info"><i class="bx bx-paperclip"></i> 보건증_영업신고증.zip</a></td>
+                            <td><span class="badge bg-warning">대기 중</span></td>
+                            <td>
+                              <button class="btn btn-xs btn-success approve-btn" data-id="1" data-name="마포 닭강정 푸드트럭">승인</button>
+                              <button class="btn btn-xs btn-danger reject-btn" data-id="1" data-name="마포 닭강정 푸드트럭">반려</button>
+                            </td>
+                          </tr>
+                          <tr id="row-2">
+                            <td><strong>우주선 타코야끼</strong></td>
+                            <td>김철수</td>
+                            <td><span class="badge bg-label-primary">FOOD (음식)</span></td>
+                            <td>220-12-XXXXX</td>
+                            <td>2026-05-26</td>
+                            <td><a href="#" class="text-info"><i class="bx bx-paperclip"></i> 위생증명서.pdf</a></td>
+                            <td><span class="badge bg-warning">대기 중</span></td>
+                            <td>
+                              <button class="btn btn-xs btn-success approve-btn" data-id="2" data-name="우주선 타코야끼">승인</button>
+                              <button class="btn btn-xs btn-danger reject-btn" data-id="2" data-name="우주선 타코야끼">반려</button>
+                            </td>
+                          </tr>
+                          <tr id="row-3">
+                            <td><strong>페스티벌 썬글라스 & 굿즈</strong></td>
+                            <td>이영희</td>
+                            <td><span class="badge bg-label-info">GOODS (상품)</span></td>
+                            <td>105-04-XXXXX</td>
+                            <td>2026-05-25</td>
+                            <td><a href="#" class="text-info"><i class="bx bx-paperclip"></i> 사업자등록증.jpg</a></td>
+                            <td><span class="badge bg-warning">대기 중</span></td>
+                            <td>
+                              <button class="btn btn-xs btn-success approve-btn" data-id="3" data-name="페스티벌 썬글라스 & 굿즈">승인</button>
+                              <button class="btn btn-xs btn-danger reject-btn" data-id="3" data-name="페스티벌 썬글라스 & 굿즈">반려</button>
+                            </td>
+                          </tr>
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+            </div>
+
+            <!-- Footer -->
+            <footer class="content-footer footer bg-footer-theme">
+              <div class="container-xxl d-flex flex-wrap justify-content-between py-2 flex-md-row flex-column">
+                <div class="mb-2 mb-md-0">
+                  © <script>document.write(new Date().getFullYear());</script> <span class="festio-logo-text">FESTIO</span>
+                </div>
+              </div>
+            </footer>
+
+            <div class="content-backdrop fade"></div>
+          </div>
+        </div>
+      </div>
+      <div class="layout-overlay layout-menu-toggle"></div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="/assets/vendor/libs/jquery/jquery.js"></script>
+    <script src="/assets/vendor/libs/popper/popper.js"></script>
+    <script src="/assets/vendor/js/bootstrap.js"></script>
+    <script src="/assets/vendor/libs/perfect-scrollbar/perfect-scrollbar.js"></script>
+    <script src="/assets/vendor/js/menu.js"></script>
+    <script src="/assets/js/main.js"></script>
+    <script src="/assets/js/sidebar.js?v=4"></script>
+
+    <script>
+      let activeCount = 3;
+      
+      document.querySelectorAll('.approve-btn').forEach(btn => {
+        btn.addEventListener('click', function(e) {
+          const id = e.target.getAttribute('data-id');
+          const name = e.target.getAttribute('data-name');
+          if (confirm(`🎉 [${name}]의 입점 신청을 최종 승인하시겠습니까? 승인 시 가맹점 계정 및 메뉴 등록 기능이 자동 활성화됩니다.`)) {
+            document.getElementById(`row-${id}`).remove();
+            activeCount--;
+            document.getElementById('pendingCount').innerText = activeCount + ' 건';
+            alert(`✅ [${name}]의 가맹 입점 승인이 완료되었습니다! 해당 점포 사장님께 계약 승인 알림 메시지가 발송되었습니다.`);
+          }
+        });
+      });
+
+      document.querySelectorAll('.reject-btn').forEach(btn => {
+        btn.addEventListener('click', function(e) {
+          const id = e.target.getAttribute('data-id');
+          const name = e.target.getAttribute('data-name');
+          const reason = prompt(`❌ [${name}]의 입점 신청을 반려합니다. 반려 사유를 입력해 주세요.`, "보건증 만료 및 서류 미비");
+          if (reason !== null) {
+            document.getElementById(`row-${id}`).remove();
+            activeCount--;
+            document.getElementById('pendingCount').innerText = activeCount + ' 건';
+            alert(`🚨 [${name}]의 입점 신청이 반려 처리되었습니다. 반려 사유 [${reason}] 가 이메일로 안내됩니다.`);
+          }
+        });
+      });
+    </script>
+  </body>
+</html>

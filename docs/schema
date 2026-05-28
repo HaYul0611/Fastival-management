@@ -1,0 +1,203 @@
+-- 1. app_user 테이블
+CREATE TABLE app_user (
+    id BIGSERIAL PRIMARY KEY,
+    email VARCHAR(100) NOT NULL UNIQUE,
+    password VARCHAR(255) NOT NULL,
+    name VARCHAR(50) NOT NULL,
+    role VARCHAR(20) NOT NULL DEFAULT 'ROLE_USER',
+    membership_grade VARCHAR(20) NOT NULL DEFAULT 'BRONZE',
+    balance INT NOT NULL DEFAULT 0,
+    face_vector TEXT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT chk_balance_positive CHECK (balance >= 0)
+);
+
+-- 2. festival 테이블
+CREATE TABLE festival (
+    id BIGSERIAL PRIMARY KEY,
+    name VARCHAR(100) NOT NULL,
+    start_date DATE NOT NULL,
+    end_date DATE NOT NULL,
+    is_active BOOLEAN DEFAULT FALSE,
+    map_image_url TEXT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- 3. festival_zone 테이블
+CREATE TABLE festival_zone (
+    id BIGSERIAL PRIMARY KEY,
+    festival_id BIGINT NOT NULL,
+    zone_name VARCHAR(50) NOT NULL,
+    svg_points TEXT NOT NULL,
+    safety_limit INT NOT NULL DEFAULT 500,
+    current_crowd_count INT NOT NULL DEFAULT 0,
+    density_level VARCHAR(20) NOT NULL DEFAULT '여유',
+    status VARCHAR(20) NOT NULL DEFAULT 'NORMAL',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- 4. seat_map 테이블
+CREATE TABLE seat_map (
+    id BIGSERIAL PRIMARY KEY,
+    zone_id BIGINT NOT NULL,
+    seat_row VARCHAR(10) NOT NULL,
+    seat_number INT NOT NULL,
+    price INT NOT NULL,
+    status VARCHAR(20) NOT NULL DEFAULT '빈자리',
+    is_reserved BOOLEAN DEFAULT FALSE,
+    version BIGINT DEFAULT 0
+);
+
+-- 5. store 테이블
+CREATE TABLE store (
+    id BIGSERIAL PRIMARY KEY,
+    zone_id BIGINT NOT NULL,
+    name VARCHAR(100) NOT NULL,
+    category VARCHAR(20) NOT NULL,
+    operating_hours VARCHAR(100),
+    map_x_percent NUMERIC(5, 2) NOT NULL,
+    map_y_percent NUMERIC(5, 2) NOT NULL,
+    is_open BOOLEAN DEFAULT TRUE,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- 6. product 테이블
+CREATE TABLE product (
+    id BIGSERIAL PRIMARY KEY,
+    store_id BIGINT NOT NULL,
+    name VARCHAR(100) NOT NULL,
+    price INT NOT NULL,
+    image_url TEXT,
+    total_stock INT NOT NULL DEFAULT 0,
+    reserved_stock INT NOT NULL DEFAULT 0,
+    available_stock INT NOT NULL DEFAULT 0,
+    is_soldout BOOLEAN DEFAULT FALSE,
+    status VARCHAR(20) NOT NULL DEFAULT 'ON_SALE',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- 7. orders 테이블
+CREATE TABLE orders (
+    id BIGSERIAL PRIMARY KEY,
+    user_id BIGINT,
+    festival_id BIGINT,
+    total_price INT NOT NULL,
+    discount_amount INT NOT NULL DEFAULT 0,
+    payment_status VARCHAR(20) NOT NULL DEFAULT 'PAID',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- 8. order_item 테이블
+CREATE TABLE order_item (
+    id BIGSERIAL PRIMARY KEY,
+    order_id BIGINT NOT NULL,
+    product_id BIGINT,
+    seat_id BIGINT,
+    quantity INT NOT NULL DEFAULT 1,
+    pickup_time_slot VARCHAR(50),
+    selected_options VARCHAR(255),
+    qr_code_uuid VARCHAR(255) UNIQUE,
+    qr_expired_at TIMESTAMP,
+    item_status VARCHAR(20) NOT NULL DEFAULT 'ORDERED',
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- 9. scan_log 테이블
+CREATE TABLE scan_log (
+    id BIGSERIAL PRIMARY KEY,
+    order_item_id BIGINT NOT NULL,
+    staff_user_id BIGINT,
+    scan_type VARCHAR(20) NOT NULL,
+    result VARCHAR(20) NOT NULL DEFAULT 'SUCCESS',
+    scanned_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- 10. wishlist 테이블
+CREATE TABLE wishlist (
+    id BIGSERIAL PRIMARY KEY,
+    user_id BIGINT NOT NULL,
+    product_id BIGINT,
+    item_type VARCHAR(20) NOT NULL,
+    wish_type VARCHAR(20) NOT NULL,
+    ref_no BIGINT,
+    quantity INT NOT NULL DEFAULT 1,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- 11. wallet_history 테이블
+CREATE TABLE wallet_history (
+    id BIGSERIAL PRIMARY KEY,
+    user_id BIGINT NOT NULL,
+    transaction_type VARCHAR(20) NOT NULL,
+    amount INT NOT NULL,
+    description VARCHAR(255),
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- 12. settlement 테이블
+CREATE TABLE settlement (
+    id BIGSERIAL PRIMARY KEY,
+    store_id BIGINT NOT NULL,
+    settlement_month VARCHAR(10) NOT NULL,
+    total_sales_amount INT NOT NULL DEFAULT 0,
+    commission_fee INT NOT NULL DEFAULT 0,
+    final_payout_amount INT NOT NULL DEFAULT 0,
+    status VARCHAR(20) NOT NULL DEFAULT '정산대기',
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- 13. inquiry 테이블
+CREATE TABLE inquiry (
+    id BIGSERIAL PRIMARY KEY,
+    user_id BIGINT NOT NULL,
+    category VARCHAR(50) NOT NULL,
+    title VARCHAR(150) NOT NULL,
+    content TEXT NOT NULL,
+    status VARCHAR(20) NOT NULL DEFAULT '대기',
+    answer_content TEXT,
+    replied_at TIMESTAMP,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- 14. review 테이블
+CREATE TABLE review (
+    id BIGSERIAL PRIMARY KEY,
+    user_id BIGINT,
+    store_id BIGINT,
+    festival_id BIGINT,
+    order_item_id BIGINT,
+    rating INT NOT NULL CHECK (rating >= 1 AND rating <= 5),
+    content TEXT NOT NULL,
+    image_url TEXT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- 15. coupon 테이블
+CREATE TABLE coupon (
+    id BIGSERIAL PRIMARY KEY,
+    title VARCHAR(100) NOT NULL,
+    discount_type VARCHAR(20) NOT NULL,
+    discount_value INT NOT NULL,
+    min_order_price INT DEFAULT 0,
+    expiry_date TIMESTAMP NOT NULL
+);
+
+-- 16. user_coupon 테이블
+CREATE TABLE user_coupon (
+    id BIGSERIAL PRIMARY KEY,
+    user_id BIGINT NOT NULL,
+    coupon_id BIGINT NOT NULL,
+    is_used BOOLEAN DEFAULT FALSE,
+    used_at TIMESTAMP,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- 17. emergency_broadcast 테이블
+CREATE TABLE emergency_broadcast (
+    id BIGSERIAL PRIMARY KEY,
+    festival_id BIGINT NOT NULL,
+    title VARCHAR(100) NOT NULL,
+    content TEXT NOT NULL,
+    urgency_level VARCHAR(20) NOT NULL DEFAULT 'INFO',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);

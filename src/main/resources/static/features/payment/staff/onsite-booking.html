@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FESTIO - ?ÑÏû• ?àÎß§</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Pretendard:wght@400;500;600;700&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="onsite-booking.css">
+</head>
+<body>
+
+    <header class="ob-header">
+        <div class="ob-header__badge">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+            </svg>
+            STAFF
+        </div>
+        <h1 class="ob-header__title">?ÑÏû• ?àÎß§</h1>
+        <div class="ob-header__staff" id="obStaffName">--</div>
+    </header>
+
+    <main class="ob-main">
+
+        <!-- STEP 1: Íµ¨Îß§???ïÏù∏ -->
+        <div class="ob-step" id="obStep1">
+            <div class="ob-step__header">
+                <div class="ob-step__num">1</div>
+                <div class="ob-step__label">Íµ¨Îß§???ïÏù∏</div>
+            </div>
+
+            <div class="ob-search-box">
+                <label class="ob-label">?¥Î¶Ñ ?êÎäî ?¥Î©î?ºÎ°ú Í≤Ä??/label>
+                <div class="ob-search-row">
+                    <input class="ob-input" id="obUserSearch" type="text"
+                        placeholder="?çÍ∏∏??/ hong@email.com"
+                        autocomplete="off" spellcheck="false">
+                    <button class="ob-btn ob-btn--primary" id="obUserSearchBtn" type="button">Í≤Ä??/button>
+                </div>
+            </div>
+
+            <!-- Í≤Ä??Í≤∞Í≥º -->
+            <div class="ob-user-results" id="obUserResults" hidden></div>
+
+            <!-- ?†ÌÉù??Íµ¨Îß§??-->
+            <div class="ob-selected-user" id="obSelectedUser" hidden>
+                <div class="ob-selected-user__info">
+                    <div class="ob-selected-user__name" id="obSelectedUserName">--</div>
+                    <div class="ob-selected-user__meta" id="obSelectedUserMeta">--</div>
+                </div>
+                <button class="ob-selected-user__clear" id="obClearUser" type="button">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <line x1="18" y1="6" x2="6" y2="18"/>
+                        <line x1="6" y1="6" x2="18" y2="18"/>
+                    </svg>
+                </button>
+            </div>
+        </div>
+
+        <!-- STEP 2: ?âÏÇ¨ Î∞?Ï¢åÏÑù ?†ÌÉù -->
+        <div class="ob-step ob-step--locked" id="obStep2">
+            <div class="ob-step__header">
+                <div class="ob-step__num">2</div>
+                <div class="ob-step__label">?âÏÇ¨ Î∞?Ï¢åÏÑù ?†ÌÉù</div>
+            </div>
+
+            <div class="ob-festival-list" id="obFestivalList" hidden></div>
+
+            <!-- Ï¢åÏÑù ?†ÌÉù -->
+            <div class="ob-seat-picker" id="obSeatPicker" hidden>
+                <div class="ob-seat-picker__top">
+                    <span class="ob-festival-tag" id="obFestivalTag">--</span>
+                    <button class="ob-text-btn" id="obChangeFestival" type="button">?âÏÇ¨ Î≥ÄÍ≤?/button>
+                </div>
+
+                <!-- Íµ¨Ïó≠ ?ÑÌÑ∞ -->
+                <div class="ob-zone-filter" id="obZoneFilter"></div>
+
+                <!-- Ï¢åÏÑù Í∑∏Î¶¨??-->
+                <div class="ob-seat-grid" id="obSeatGrid">
+                    <div class="ob-seat-grid__loading" id="obSeatLoading">
+                        <div class="ob-spinner"></div><span>Ï¢åÏÑù Î∂àÎü¨?§Îäî Ï§?..</span>
+                    </div>
+                </div>
+
+                <div class="ob-seat-legend">
+                    <span class="ob-seat-legend__item"><span class="ob-seat ob-seat--empty"></span>ÎπàÏûêÎ¶?/span>
+                    <span class="ob-seat-legend__item"><span class="ob-seat ob-seat--selected"></span>?†ÌÉù</span>
+                    <span class="ob-seat-legend__item"><span class="ob-seat ob-seat--taken"></span>Î∂àÍ?</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- STEP 3: Î∞úÍ∂å ?†Ìòï -->
+        <div class="ob-step ob-step--locked" id="obStep3">
+            <div class="ob-step__header">
+                <div class="ob-step__num">3</div>
+                <div class="ob-step__label">Î∞úÍ∂å ?†Ìòï ?†ÌÉù</div>
+            </div>
+
+            <div class="ob-ticket-types" id="obTicketTypes" hidden>
+                <button class="ob-ticket-type-btn ob-ticket-type-btn--active" id="obTypeGeneral" type="button" data-type="GENERAL">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/>
+                    </svg>
+                    <div>
+                        <div class="ob-ticket-type-btn__name">?ºÎ∞ò Î™®Î∞î??Î∞úÍ∂å</div>
+                        <div class="ob-ticket-type-btn__desc">QR ÏΩîÎìúÎ°?ÏßÅÏ†ë ?ÖÏû•</div>
+                    </div>
+                </button>
+
+                <button class="ob-ticket-type-btn" id="obTypeVulnerable" type="button" data-type="VULNERABLE">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/>
+                        <circle cx="9" cy="7" r="4"/>
+                        <path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/>
+                    </svg>
+                    <div>
+                        <div class="ob-ticket-type-btn__name">?∏Ïù∏ / ?ÑÎèô ?îÏ∞å Î∞úÍ∂å</div>
+                        <div class="ob-ticket-type-btn__desc">?ÑÏû• ?îÏ∞å Î∞úÍ∏â ???§Î™Ö ?ÖÎ†• ?ÑÏàò</div>
+                    </div>
+                </button>
+            </div>
+
+            <!-- ?ôÎ∞ò???ïÎ≥¥ (VULNERABLE) -->
+            <div class="ob-vulnerable-form" id="obVulnerableForm" hidden>
+                <div class="ob-label">?ôÎ∞ò???§Î™Ö</div>
+                <input class="ob-input" id="obVulnerableName" type="text" placeholder="?çÍ∏∏?? maxlength="20">
+                <div class="ob-label" style="margin-top:10px">?ùÎÖÑ?îÏùº</div>
+                <input class="ob-input" id="obVulnerableBirth" type="date">
+            </div>
+        </div>
+
+        <!-- STEP 4: Í≤∞Ï†ú -->
+        <div class="ob-step ob-step--locked" id="obStep4">
+            <div class="ob-step__header">
+                <div class="ob-step__num">4</div>
+                <div class="ob-step__label">Í≤∞Ï†ú</div>
+            </div>
+
+            <div class="ob-payment-panel" id="obPaymentPanel" hidden>
+
+                <!-- Ï£ºÎ¨∏ ?îÏïΩ -->
+                <div class="ob-order-summary" id="obOrderSummary">
+                    <!-- JS ?ôÏ†Å ?åÎçîÎß?-->
+                </div>
+
+                <!-- Í≤∞Ï†ú ?òÎã® ?†ÌÉù -->
+                <div class="ob-pay-method">
+                    <div class="ob-label">Í≤∞Ï†ú ?òÎã®</div>
+                    <div class="ob-pay-methods">
+                        <label class="ob-pay-method-item ob-pay-method-item--active">
+                            <input type="radio" name="payMethod" value="FESTIO_PAY" checked>
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/>
+                            </svg>
+                            <div>
+                                <div class="ob-pay-method-item__name">FESTIO Pay</div>
+                                <div class="ob-pay-method-item__balance" id="obPayBalance">?îÏï°: --??/div>
+                            </div>
+                        </label>
+                        <label class="ob-pay-method-item">
+                            <input type="radio" name="payMethod" value="CASH">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <line x1="12" y1="1" x2="12" y2="23"/>
+                                <path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/>
+                            </svg>
+                            <div>
+                                <div class="ob-pay-method-item__name">?ÑÍ∏à / Í∏∞Ì?</div>
+                                <div class="ob-pay-method-item__balance">?§ÌÉú???ïÏù∏ ??Ï≤òÎ¶¨</div>
+                            </div>
+                        </label>
+                    </div>
+                </div>
+
+                <!-- Ïø†Ìè∞ ?ÅÏö© -->
+                <div class="ob-coupon">
+                    <div class="ob-coupon__row">
+                        <label class="ob-label">Ïø†Ìè∞ ?ÅÏö©</label>
+                        <select class="ob-select" id="obCouponSelect">
+                            <option value="">?¨Ïö© ????/option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- ÏµúÏ¢Ö Í∏àÏï° -->
+                <div class="ob-price-total" id="obPriceTotal">
+                    <!-- JS ?ôÏ†Å ?åÎçîÎß?-->
+                </div>
+
+                <button class="ob-submit-btn" id="obPayBtn" type="button" disabled>
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M22 11.08V12a10 10 0 11-5.93-9.14"/>
+                        <polyline points="22 4 12 14.01 9 11.01"/>
+                    </svg>
+                    ?ÑÏû• ?àÎß§ ?ÑÎ£å
+                </button>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- ?ÑÎ£å Î™®Îã¨ -->
+    <div class="festio-modal" id="obSuccessModal" hidden>
+        <div class="festio-modal__backdrop"></div>
+        <div class="festio-modal__box">
+            <div class="festio-modal__icon festio-modal__icon--success">
+                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/>
+                </svg>
+            </div>
+            <h3 class="festio-modal__title">?ÑÏû• ?àÎß§ ?ÑÎ£å</h3>
+            <p class="festio-modal__body" id="obSuccessBody"></p>
+            <button class="festio-modal__btn festio-modal__btn--primary" id="obSuccessNewBtn" type="button">
+                ???àÎß§ ?úÏûë
+            </button>
+            <button class="festio-modal__btn" id="obSuccessScanBtn" type="button">
+                ?§Ï∫î ?òÏù¥ÏßÄÎ°??¥Îèô
+            </button>
+        </div>
+    </div>
+
+    <!-- ?îÏï° Î∂ÄÏ°?Î™®Îã¨ -->
+    <div class="festio-modal" id="obBalanceModal" hidden>
+        <div class="festio-modal__backdrop" id="obBalanceBackdrop"></div>
+        <div class="festio-modal__box">
+            <div class="festio-modal__icon festio-modal__icon--warning">
+                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/>
+                    <line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>
+                </svg>
+            </div>
+            <h3 class="festio-modal__title">FESTIO Pay ?îÏï° Î∂ÄÏ°?/h3>
+            <p class="festio-modal__body" id="obBalanceBody"></p>
+            <button class="festio-modal__btn festio-modal__btn--primary" id="obSwitchToCash" type="button">
+                ?ÑÍ∏à Í≤∞Ï†úÎ°??ÑÌôò
+            </button>
+            <button class="festio-modal__btn" id="obBalanceClose" type="button">?´Í∏∞</button>
+        </div>
+    </div>
+
+    <!-- ?òÎã® ?§ÎπÑÍ≤åÏù¥??-->
+    <nav class="ob-mobile-nav">
+        <a class="ob-mobile-nav__item" href="/">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/>
+                <polyline points="9 22 9 12 15 12 15 22"/>
+            </svg>
+            <span>??/span>
+        </a>
+        <a class="ob-mobile-nav__item ob-mobile-nav__item--active" href="#">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M20 12V22H4V12"/><path d="M22 7H2v5h20V7z"/>
+                <path d="M12 22V7"/><path d="M12 7H7.5a2.5 2.5 0 010-5C11 2 12 7 12 7z"/>
+                <path d="M12 7h4.5a2.5 2.5 0 000-5C13 2 12 7 12 7z"/>
+            </svg>
+            <span>?ÑÏû• ?àÎß§</span>
+        </a>
+        <a class="ob-mobile-nav__item" href="../payment/staff-scan.html">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/>
+                <rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="3" height="3"/>
+            </svg>
+            <span>?§Ï∫î</span>
+        </a>
+        <a class="ob-mobile-nav__item" href="../payment/refund.html">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M9 14l-4-4 4-4"/><path d="M5 10h11a4 4 0 010 8h-1"/>
+            </svg>
+            <span>?òÎ∂à</span>
+        </a>
+    </nav>
+
+    <script type="module" src="onsite-booking.js"></script>
+</body>
+</html>

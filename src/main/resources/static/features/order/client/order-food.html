@@ -1,0 +1,201 @@
+<!doctype html>
+<html lang="ko" class="layout-menu-fixed layout-compact" data-assets-path="/assets/" data-template="vertical-menu-template-free">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0" />
+    <title>O2O 모바일 주문 접수 - FESTIO</title>
+
+    <link rel="icon" type="image/x-icon" href="/assets/img/favicon/favicon.ico" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="/assets/vendor/fonts/iconify-icons.css" />
+    <link rel="stylesheet" href="/assets/vendor/css/core.css" />
+    <link rel="stylesheet" href="/assets/css/demo.css" />
+    <link rel="stylesheet" href="/assets/vendor/libs/perfect-scrollbar/perfect-scrollbar.css" />
+    <link rel="stylesheet" href="/assets/vendor/libs/apex-charts/apex-charts.css" />
+    <script src="/assets/vendor/js/helpers.js"></script>
+    <script src="/assets/js/config.js"></script>
+    <style>
+      .premium-gradient {
+        background: linear-gradient(135deg, #696cff 0%, #a2a4ff 100%);
+        color: white;
+      }
+      .stat-card {
+        transition: transform 0.2s;
+      }
+      .stat-card:hover {
+        transform: translateY(-5px);
+      }
+    </style>
+  </head>
+
+  <body>
+    <div class="layout-wrapper layout-content-navbar">
+      <div class="layout-container">
+        
+        <!-- Sidebar Menu -->
+        <aside id="layout-menu" class="layout-menu menu-vertical menu bg-menu-theme">
+          <!-- sidebar.js?v=4 가 런타임에 동적으로 삽입 -->
+        </aside>
+
+        <div class="layout-page">
+          <!-- Navbar -->
+          <nav class="layout-navbar container-xxl navbar navbar-expand-xl navbar-detached align-items-center bg-navbar-theme" id="layout-navbar">
+            <div class="layout-menu-toggle navbar-nav align-items-xl-center me-4 me-xl-0 d-xl-none">
+              <a class="nav-item nav-link px-0 me-xl-6" href="javascript:void(0)">
+                <i class="bx bx-menu bx-sm"></i>
+              </a>
+            </div>
+            <div class="navbar-nav-right d-flex align-items-center" id="navbar-collapse">
+              <h5 class="mb-0 fw-bold"><i class="bx bx-phone me-2 text-primary"></i>O2O 모바일 주문 접수</h5>
+              <ul class="navbar-nav flex-row align-items-center ms-auto">
+                <li class="nav-item dropdown-user dropdown">
+                  <a class="nav-link dropdown-toggle hide-arrow" href="javascript:void(0);" data-bs-toggle="dropdown">
+                    <div class="avatar avatar-online">
+                      <img src="/assets/img/avatars/1.png" class="w-px-40 h-auto rounded-circle" />
+                    </div>
+                  </a>
+                  <ul class="dropdown-menu dropdown-menu-end">
+                    <li>
+                      <a class="dropdown-item" href="#">
+                        <div class="d-flex">
+                          <div class="flex-shrink-0 me-3">
+                            <div class="avatar avatar-online">
+                              <img src="/assets/img/avatars/1.png" class="w-px-40 h-auto rounded-circle" />
+                            </div>
+                          </div>
+                          <div class="flex-grow-1">
+                            <span class="fw-medium d-block">김하율 (VVIP)</span>
+                            <small class="text-muted">Client User</small>
+                          </div>
+                        </div>
+                      </a>
+                    </li>
+                  </ul>
+                </li>
+              </ul>
+            </div>
+          </nav>
+
+          <!-- Content wrapper -->
+          <div class="content-wrapper">
+            <div class="container-xxl flex-grow-1 container-p-y">
+              
+<div class="row">
+  <div class="col-lg-8 mb-6">
+    <div class="card h-100">
+      <div class="card-header d-flex justify-content-between align-items-center border-bottom">
+        <h5 class="card-title m-0 fw-semibold">모바일 O2O 실시간 오더 메뉴판</h5>
+        <span class="badge bg-label-success">픽업 대기 시간: 약 10분</span>
+      </div>
+      <div class="card-body py-4">
+        <!-- 푸드트럭 1 -->
+        <div class="row align-items-center mb-6 pb-4 border-bottom">
+          <div class="col-sm-3 text-center">
+            <img src="/assets/img/elements/12.jpg" class="rounded w-100 h-auto" style="max-width: 130px;" />
+          </div>
+          <div class="col-sm-6">
+            <h5 class="fw-bold mb-1">원조 매운 떡볶이</h5>
+            <p class="text-muted fs-7 mb-2">B-3 홍길동 떡볶이 / 대표 강추 메뉴! 신라면 수준의 매콤한 밀떡볶이.</p>
+            <span class="text-primary fw-bold">₩ 6,500</span>
+          </div>
+          <div class="col-sm-3 text-end">
+            <button class="btn btn-sm btn-primary add-to-cart-btn" data-name="원조 매운 떡볶이" data-store="B-3 홍길동 떡볶이" data-price="6500"><i class="bx bx-plus me-1"></i>장바구니 담기</button>
+          </div>
+        </div>
+
+        <!-- 푸드트럭 2 -->
+        <div class="row align-items-center mb-6 pb-4 border-bottom">
+          <div class="col-sm-3 text-center">
+            <img src="/assets/img/elements/13.jpg" class="rounded w-100 h-auto" style="max-width: 130px;" />
+          </div>
+          <div class="col-sm-6">
+            <h5 class="fw-bold mb-1">수제 모둠 튀김 (5pcs)</h5>
+            <p class="text-muted fs-7 mb-2">B-3 홍길동 떡볶이 / 바삭바삭한 식감의 고구마, 야채, 오징어, 김말이 튀김 세트.</p>
+            <span class="text-primary fw-bold">₩ 7,000</span>
+          </div>
+          <div class="col-sm-3 text-end">
+            <button class="btn btn-sm btn-primary add-to-cart-btn" data-name="수제 모둠 튀김" data-store="B-3 홍길동 떡볶이" data-price="7000"><i class="bx bx-plus me-1"></i>장바구니 담기</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-lg-4 mb-6">
+    <div class="card h-100">
+      <div class="card-header border-bottom">
+        <h5 class="card-title m-0 fw-semibold">O2O 픽업 타임슬롯 선택 및 주문</h5>
+      </div>
+      <div class="card-body py-4">
+        <div class="mb-4">
+          <label class="form-label fw-bold">방문 및 수령 예정 타임슬롯</label>
+          <select class="form-select" id="timeSlot">
+            <option>[18:00 ~ 18:15] - 혼잡도 보통</option>
+            <option>[18:15 ~ 18:30] - 혼잡도 보통</option>
+            <option>[18:30 ~ 18:45] - 혼잡도 여유</option>
+            <option>[18:45 ~ 19:00] - 혼잡도 혼잡</option>
+          </select>
+          <small class="text-muted d-block mt-2">시간대별로 줄 서지 않고 바로 가서 바코드 제시 후 픽업할 수 있습니다.</small>
+        </div>
+
+        <div class="mb-4">
+          <label class="form-label fw-bold">추가 맛 옵션</label>
+          <select class="form-select">
+            <option>순한맛</option>
+            <option selected>보통 매운맛 (신라면 맵기)</option>
+            <option>지옥의 아주 매운맛 (+₩ 1,000)</option>
+          </select>
+        </div>
+
+        <button class="btn btn-success w-100" id="instantOrderBtn"><i class="bx bx-check-shield me-1"></i>선택 메뉴 즉시 주문</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+            </div>
+
+            <!-- Footer -->
+            <footer class="content-footer footer bg-footer-theme">
+              <div class="container-xxl d-flex flex-wrap justify-content-between py-2 flex-md-row flex-column">
+                <div class="mb-2 mb-md-0">
+                  © <script>document.write(new Date().getFullYear());</script> <span class="festio-logo-text">FESTIO</span>
+                </div>
+              </div>
+            </footer>
+
+            <div class="content-backdrop fade"></div>
+          </div>
+        </div>
+      </div>
+      <div class="layout-overlay layout-menu-toggle"></div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="/assets/vendor/libs/jquery/jquery.js"></script>
+    <script src="/assets/vendor/libs/popper/popper.js"></script>
+    <script src="/assets/vendor/js/bootstrap.js"></script>
+    <script src="/assets/vendor/libs/perfect-scrollbar/perfect-scrollbar.js"></script>
+    <script src="/assets/vendor/js/menu.js"></script>
+    <script src="/assets/vendor/libs/apex-charts/apexcharts.js"></script>
+    <script src="/assets/js/main.js"></script>
+    <script src="/assets/js/sidebar.js?v=4"></script>
+    
+<script>
+  document.querySelectorAll('.add-to-cart-btn').forEach(btn => {
+    btn.addEventListener('click', function(e) {
+      const name = e.target.getAttribute('data-name');
+      alert(`🛒 [${name}]이 모바일 장바구니에 정상 담겼습니다!`);
+    });
+  });
+
+  document.getElementById('instantOrderBtn').addEventListener('click', function() {
+    const slot = document.getElementById('timeSlot').value;
+    alert(`🎉 주문이 전송되었습니다! 타임슬롯 ${slot}에 마포 닭강정/떡볶이 푸드트럭으로 방문해 주세요. 픽업 바코드가 발권되었습니다.`);
+  });
+</script>
+
+  </body>
+</html>

@@ -1,0 +1,298 @@
+<!doctype html>
+<html lang="ko" class="layout-menu-fixed layout-compact" data-assets-path="/assets/" data-template="vertical-menu-template-free">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0" />
+    <title>통합 관제 대시보드 - FESTIO</title>
+
+    <link rel="icon" type="image/x-icon" href="/assets/img/favicon/favicon.ico" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="/assets/vendor/fonts/iconify-icons.css" />
+    <link rel="stylesheet" href="/assets/vendor/css/core.css" />
+    <link rel="stylesheet" href="/assets/css/demo.css" />
+    <link rel="stylesheet" href="/assets/vendor/libs/perfect-scrollbar/perfect-scrollbar.css" />
+    <link rel="stylesheet" href="/assets/vendor/libs/apex-charts/apex-charts.css" />
+    <script src="/assets/vendor/js/helpers.js"></script>
+    <script src="/assets/js/config.js"></script>
+    <style>
+      .premium-gradient {
+        background: linear-gradient(135deg, #696cff 0%, #a2a4ff 100%);
+        color: white;
+      }
+      .stat-card {
+        transition: transform 0.2s;
+      }
+      .stat-card:hover {
+        transform: translateY(-5px);
+      }
+    </style>
+  </head>
+
+  <body>
+    <div class="layout-wrapper layout-content-navbar">
+      <div class="layout-container">
+        
+        <!-- Sidebar Menu -->
+        <aside id="layout-menu" class="layout-menu menu-vertical menu bg-menu-theme">
+          <!-- sidebar.js?v=4 가 런타임에 동적으로 삽입 -->
+        </aside>
+
+        <div class="layout-page">
+          <!-- Navbar -->
+          <nav class="layout-navbar container-xxl navbar navbar-expand-xl navbar-detached align-items-center bg-navbar-theme" id="layout-navbar">
+            <div class="layout-menu-toggle navbar-nav align-items-xl-center me-4 me-xl-0 d-xl-none">
+              <a class="nav-item nav-link px-0 me-xl-6" href="javascript:void(0)">
+                <i class="bx bx-menu bx-sm"></i>
+              </a>
+            </div>
+            <div class="navbar-nav-right d-flex align-items-center" id="navbar-collapse">
+              <h5 class="mb-0 fw-bold"><i class="bx bx-home-smile me-2 text-primary"></i>통합 관제 대시보드</h5>
+              <ul class="navbar-nav flex-row align-items-center ms-auto">
+                <li class="nav-item dropdown-user dropdown">
+                  <a class="nav-link dropdown-toggle hide-arrow" href="javascript:void(0);" data-bs-toggle="dropdown">
+                    <div class="avatar avatar-online">
+                      <img src="/assets/img/avatars/1.png" class="w-px-40 h-auto rounded-circle" />
+                    </div>
+                  </a>
+                  <ul class="dropdown-menu dropdown-menu-end">
+                    <li>
+                      <a class="dropdown-item" href="#">
+                        <div class="d-flex">
+                          <div class="flex-shrink-0 me-3">
+                            <div class="avatar avatar-online">
+                              <img src="/assets/img/avatars/1.png" class="w-px-40 h-auto rounded-circle" />
+                            </div>
+                          </div>
+                          <div class="flex-grow-1">
+                            <span class="fw-medium d-block">최고 관리자</span>
+                            <small class="text-muted">Master Admin</small>
+                          </div>
+                        </div>
+                      </a>
+                    </li>
+                  </ul>
+                </li>
+              </ul>
+            </div>
+          </nav>
+
+          <!-- Content wrapper -->
+          <div class="content-wrapper">
+            <div class="container-xxl flex-grow-1 container-p-y">
+              
+              <!-- 웰컴 카드 & 실시간 통계 -->
+              <div class="row">
+                <div class="col-xxl-8 col-lg-12 mb-6">
+                  <div class="card premium-gradient">
+                    <div class="d-flex align-items-start row">
+                      <div class="col-sm-7">
+                        <div class="card-body">
+                          <h4 class="card-title text-white mb-3">페스티벌 통합 관제 시스템 🎉</h4>
+                          <p class="mb-6 text-white-50">
+                            오늘의 누적 입장 관객 수, 실시간 F&B 매출 및 구역별 혼잡도를 실시간으로 모니터링하고 제어할 수 있는 통합 마스터 관제 보드입니다.
+                          </p>
+                          <span class="badge bg-white text-primary">시스템 무결성 등급: 최고 안전(A+)</span>
+                        </div>
+                      </div>
+                      <div class="col-sm-5 text-center text-sm-left">
+                        <div class="card-body pb-0 px-0 px-md-6">
+                          <img src="/assets/img/illustrations/man-with-laptop.png" height="175" alt="Dashboard illustration" />
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- 실시간 누적 매출 카드 -->
+                <div class="col-xxl-4 col-md-12 mb-6">
+                  <div class="card h-100 stat-card">
+                    <div class="card-body">
+                      <div class="d-flex align-items-start justify-content-between mb-4">
+                        <div class="avatar flex-shrink-0 bg-label-success p-2 rounded">
+                          <i class="bx bx-dollar-circle text-success fs-3"></i>
+                        </div>
+                        <span class="badge bg-label-success">+18.2% 증가</span>
+                      </div>
+                      <p class="mb-1 text-muted">금일 누적 매출 총액 (O2O + 예매)</p>
+                      <h3 class="card-title mb-3 fw-bold">₩ 2,845,950,000</h3>
+                      <div class="d-flex align-items-center text-muted fs-7">
+                        <i class="bx bx-time me-1"></i> 실시간 갱신 중 (10초 전 업데이트)
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- 요약 지표 카드 3종 -->
+              <div class="row mb-6">
+                <!-- 전체 인파 현황 -->
+                <div class="col-lg-4 col-md-12 mb-6 mb-lg-0">
+                  <div class="card stat-card h-100">
+                    <div class="card-body">
+                      <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h5 class="card-title mb-0 fw-semibold">전체 체류 인파</h5>
+                        <i class="bx bx-group text-primary fs-3"></i>
+                      </div>
+                      <h3 class="fw-bold text-primary mb-2">42,850 명</h3>
+                      <p class="mb-3 text-muted fs-7">최대 수용 인원(50,000명) 대비 <b>85.7%</b> 체류 중</p>
+                      <div class="progress" style="height: 8px;">
+                        <div class="progress-bar bg-warning" role="progressbar" style="width: 85.7%" aria-valuenow="85.7" aria-valuemin="0" aria-valuemax="100"></div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- 누적 정산 현황 -->
+                <div class="col-lg-4 col-md-12 mb-6 mb-lg-0">
+                  <div class="card stat-card h-100">
+                    <div class="card-body">
+                      <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h5 class="card-title mb-0 fw-semibold">입점사 누적 정산액</h5>
+                        <i class="bx bx-spreadsheet text-info fs-3"></i>
+                      </div>
+                      <h3 class="fw-bold text-info mb-2">₩ 1,482,900,000</h3>
+                      <p class="mb-3 text-muted fs-7">총 128개 F&B 및 굿즈 가맹점 정산 보류액 없음</p>
+                      <div class="progress" style="height: 8px;">
+                        <div class="progress-bar bg-info" role="progressbar" style="style: 100%" aria-valuenow="100" aria-valuemin="0" aria-valuemax="100"></div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- 재난 발생 로그 -->
+                <div class="col-lg-4 col-md-12">
+                  <div class="card stat-card h-100 bg-label-danger border-0">
+                    <div class="card-body">
+                      <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h5 class="card-title mb-0 fw-bold text-danger">긴급 공지/경보 상태</h5>
+                        <i class="bx bx-error-alt text-danger fs-3"></i>
+                      </div>
+                      <h4 class="fw-semibold text-danger mb-2">정상 운영 중</h4>
+                      <p class="mb-3 text-muted fs-7">최근 24시간 내 긴급 재난 원격 송출 내역 없음</p>
+                      <span class="badge bg-danger">시스템 정상 대기</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- 가상 매출 추이 차트 및 테이블 -->
+              <div class="row">
+                <div class="col-12 col-lg-8 mb-6">
+                  <div class="card h-100">
+                    <div class="card-header d-flex align-items-center justify-content-between">
+                      <h5 class="card-title m-0 fw-semibold">시간대별 매출 & 예매율 추이</h5>
+                    </div>
+                    <div class="card-body">
+                      <div id="analyticsChart"></div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- 실시간 현장 긴급 이벤트 스트림 -->
+                <div class="col-12 col-lg-4 mb-6">
+                  <div class="card h-100">
+                    <div class="card-header d-flex align-items-center justify-content-between">
+                      <h5 class="card-title m-0 fw-semibold">현장 실시간 로그 모니터</h5>
+                    </div>
+                    <div class="card-body">
+                      <ul class="p-0 m-0">
+                        <li class="d-flex mb-4 pb-1">
+                          <div class="avatar flex-shrink-0 me-3">
+                            <span class="avatar-initial rounded bg-label-primary"><i class="bx bx-check-shield"></i></span>
+                          </div>
+                          <div class="d-flex w-100 flex-wrap align-items-center justify-content-between gap-2">
+                            <div class="me-2">
+                              <h6 class="mb-0">QR 게이트 4번 열림</h6>
+                              <small class="text-muted">스태프: 하율 / 정상 입장</small>
+                            </div>
+                            <div class="user-progress-sm text-muted">16:22:15</div>
+                          </div>
+                        </li>
+                        <li class="d-flex mb-4 pb-1">
+                          <div class="avatar flex-shrink-0 me-3">
+                            <span class="avatar-initial rounded bg-label-success"><i class="bx bx-cart"></i></span>
+                          </div>
+                          <div class="d-flex w-100 flex-wrap align-items-center justify-content-between gap-2">
+                            <div class="me-2">
+                              <h6 class="mb-0">푸드트럭 B-3 주문 접수</h6>
+                              <small class="text-muted">O2O 픽업 타임슬롯 매칭 완료</small>
+                            </div>
+                            <div class="user-progress-sm text-muted">16:21:40</div>
+                          </div>
+                        </li>
+                        <li class="d-flex mb-4 pb-1">
+                          <div class="avatar flex-shrink-0 me-3">
+                            <span class="avatar-initial rounded bg-label-warning"><i class="bx bx-refresh"></i></span>
+                          </div>
+                          <div class="d-flex w-100 flex-wrap align-items-center justify-content-between gap-2">
+                            <div class="me-2">
+                              <h6 class="mb-0">예매 취소 접수 (A구역 2매)</h6>
+                              <small class="text-muted">온라인 예매 데스크 환불 승인</small>
+                            </div>
+                            <div class="user-progress-sm text-muted">16:19:10</div>
+                          </div>
+                        </li>
+                      </ul>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+            </div>
+
+            <!-- Footer -->
+            <footer class="content-footer footer bg-footer-theme">
+              <div class="container-xxl d-flex flex-wrap justify-content-between py-2 flex-md-row flex-column">
+                <div class="mb-2 mb-md-0">
+                  © <script>document.write(new Date().getFullYear());</script> <span class="festio-logo-text">FESTIO</span>
+                </div>
+              </div>
+            </footer>
+
+            <div class="content-backdrop fade"></div>
+          </div>
+        </div>
+      </div>
+      <div class="layout-overlay layout-menu-toggle"></div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="/assets/vendor/libs/jquery/jquery.js"></script>
+    <script src="/assets/vendor/libs/popper/popper.js"></script>
+    <script src="/assets/vendor/js/bootstrap.js"></script>
+    <script src="/assets/vendor/libs/perfect-scrollbar/perfect-scrollbar.js"></script>
+    <script src="/assets/vendor/js/menu.js"></script>
+    <script src="/assets/vendor/libs/apex-charts/apexcharts.js"></script>
+    <script src="/assets/js/main.js"></script>
+    <script src="/assets/js/sidebar.js?v=4"></script>
+    
+    <script>
+      // 가상 매출 차트 렌더링
+      const options = {
+        series: [{
+          name: 'F&B 매출액 (백만원)',
+          type: 'column',
+          data: [23, 44, 55, 57, 56, 61, 58, 63, 60, 66]
+        }, {
+          name: '티켓 누적 예매율 (%)',
+          type: 'line',
+          data: [30, 45, 65, 80, 85, 90, 92, 95, 98, 99.2]
+        }],
+        chart: {
+          height: 350,
+          type: 'line',
+          toolbar: { show: false }
+        },
+        stroke: { width: [0, 4] },
+        colors: ['#696cff', '#03c3ec'],
+        labels: ['09:00', '10:00', '11:00', '12:00', '13:00', '14:00', '15:00', '16:00', '17:00', '18:00'],
+        legend: { position: 'bottom' }
+      };
+      
+      const chart = new ApexCharts(document.querySelector("#analyticsChart"), options);
+      chart.render();
+    </script>
+  </body>
+</html>

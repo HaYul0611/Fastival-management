@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FESTIO - 스태프 스캔</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Pretendard:wght@400;500;600;700&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="staff-scan.scss">
+</head>
+<body>
+
+    <header class="ss-header">
+        <a class="ss-header__logo" href="/">
+            <svg width="88" height="22" viewBox="0 0 88 22" fill="none">
+                <text y="17" font-family="Pretendard" font-weight="800" font-size="18" fill="#3B82F6">FESTIO</text>
+            </svg>
+        </a>
+        <div class="ss-header__badge" id="ssRoleBadge">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+            </svg>
+            <span id="ssRoleLabel">STAFF</span>
+        </div>
+        <div class="ss-header__user" id="ssUserName">--</div>
+    </header>
+
+    <!-- 스캔 유형 토글 -->
+    <div class="ss-scan-type-bar">
+        <div class="ss-scan-type-bar__inner">
+            <button class="ss-scan-type-btn ss-scan-type-btn--active" id="btnEntrance" type="button" data-type="ENTRANCE">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M15 3h4a2 2 0 012 2v14a2 2 0 01-2 2h-4"/>
+                    <polyline points="10 17 15 12 10 7"/>
+                    <line x1="15" y1="12" x2="3" y2="12"/>
+                </svg>
+                입장 게이트
+            </button>
+            <button class="ss-scan-type-btn" id="btnPickup" type="button" data-type="STORE_PICKUP">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/>
+                    <line x1="3" y1="6" x2="21" y2="6"/>
+                    <path d="M16 10a4 4 0 01-8 0"/>
+                </svg>
+                부스 수령
+            </button>
+        </div>
+    </div>
+
+    <main class="ss-main">
+
+        <!-- ── 카메라 뷰파인더 -->
+        <div class="ss-camera-wrap" id="ssCameraWrap">
+            <video class="ss-camera" id="ssVideo" autoplay playsinline muted></video>
+            <canvas class="ss-camera-canvas" id="ssScanCanvas" hidden></canvas>
+
+            <!-- 스캐닝 오버레이 -->
+            <div class="ss-viewfinder">
+                <div class="ss-viewfinder__corner ss-viewfinder__corner--tl"></div>
+                <div class="ss-viewfinder__corner ss-viewfinder__corner--tr"></div>
+                <div class="ss-viewfinder__corner ss-viewfinder__corner--bl"></div>
+                <div class="ss-viewfinder__corner ss-viewfinder__corner--br"></div>
+                <div class="ss-viewfinder__line" id="ssViewfinderLine"></div>
+            </div>
+
+            <!-- 수동 입력 버튼 -->
+            <button class="ss-manual-btn" id="ssManualBtn" type="button">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/>
+                    <path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                </svg>
+                코드 직접 입력
+            </button>
+
+            <!-- 카메라 권한 오류 -->
+            <div class="ss-camera-error" id="ssCameraError" hidden>
+                <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#9CA3AF" stroke-width="1.5">
+                    <path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/>
+                    <circle cx="12" cy="13" r="4"/>
+                </svg>
+                <p>카메라 접근 권한이 필요합니다.</p>
+                <button class="ss-retry-btn" id="ssRetryBtn" type="button">카메라 재시도</button>
+            </div>
+        </div>
+
+        <!-- ── 스캔 결과 카드 -->
+        <div class="ss-result-card" id="ssResultCard" hidden>
+            <!-- JS 동적 렌더링 -->
+        </div>
+
+        <!-- ── 관리자 잠금 해제 패널 (ADMIN 전용) -->
+        <div class="ss-admin-panel" id="ssAdminPanel" hidden>
+            <div class="ss-admin-panel__title">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
+                    <path d="M7 11V7a5 5 0 0110 0v4"/>
+                </svg>
+                사용 중지 티켓 잠금 해제
+            </div>
+            <p class="ss-admin-panel__desc">
+                양도 기한(3일) 초과로 <code>SUSPENDED</code> 처리된 티켓을
+                원래 소유자에게 복구합니다.
+            </p>
+            <div class="ss-unlock-input-row">
+                <input class="ss-unlock-input" id="ssUnlockInput"
+                    type="text" placeholder="QR 코드 12자리 입력"
+                    maxlength="12" spellcheck="false">
+                <button class="ss-unlock-btn" id="ssUnlockBtn" type="button">해제</button>
+            </div>
+            <div class="ss-unlock-result" id="ssUnlockResult" hidden></div>
+        </div>
+
+        <!-- ── 수동 입력 패널 -->
+        <div class="ss-manual-panel" id="ssManualPanel" hidden>
+            <label class="ss-manual-panel__label">QR 코드 직접 입력</label>
+            <div class="ss-manual-input-row">
+                <input class="ss-manual-input" id="ssManualInput"
+                    type="text" placeholder="12자리 코드 입력"
+                    maxlength="12" spellcheck="false">
+                <button class="ss-manual-submit" id="ssManualSubmit" type="button">스캔</button>
+            </div>
+        </div>
+
+        <!-- ── 실시간 스캔 로그 -->
+        <div class="ss-log-section">
+            <div class="ss-log-section__header">
+                <div class="ss-log-section__title">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/>
+                        <polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/>
+                        <line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/>
+                    </svg>
+                    스캔 로그
+                </div>
+                <span class="ss-log-count" id="ssLogCount">0건</span>
+            </div>
+            <div class="ss-log-list" id="ssLogList">
+                <div class="ss-log-empty">스캔된 QR이 여기에 표시됩니다.</div>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- ── 팔찌 발급 확인 모달 (VULNERABLE 전용) -->
+    <div class="festio-modal" id="ssWristbandModal" hidden>
+        <div class="festio-modal__backdrop" id="ssWristbandBackdrop"></div>
+        <div class="festio-modal__box">
+            <div class="festio-modal__icon festio-modal__icon--success">
+                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M22 11.08V12a10 10 0 11-5.93-9.14"/>
+                    <polyline points="22 4 12 14.01 9 11.01"/>
+                </svg>
+            </div>
+            <h3 class="festio-modal__title">팔찌 발급 확인</h3>
+            <p class="festio-modal__body" id="ssWristbandBody">
+                노인/아동 대상자 티켓 확인. 팔찌를 발급해주세요.
+            </p>
+            <button class="festio-modal__btn festio-modal__btn--primary" id="ssWristbandIssueBtn" type="button">
+                팔찌 발급 완료
+            </button>
+            <button class="festio-modal__btn" id="ssWristbandCloseBtn" type="button">닫기</button>
+        </div>
+    </div>
+
+    <!-- ── 스태프 예외 승인 모달 -->
+    <div class="festio-modal" id="ssExceptionModal" hidden>
+        <div class="festio-modal__backdrop" id="ssExceptionBackdrop"></div>
+        <div class="festio-modal__box">
+            <div class="festio-modal__icon festio-modal__icon--warning">
+                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/>
+                    <line x1="12" y1="9" x2="12" y2="13"/>
+                    <line x1="12" y1="17" x2="12.01" y2="17"/>
+                </svg>
+            </div>
+            <h3 class="festio-modal__title">스태프 예외 승인</h3>
+            <p class="festio-modal__body" id="ssExceptionBody"></p>
+            <button class="festio-modal__btn festio-modal__btn--warning" id="ssExceptionApproveBtn" type="button">
+                예외 승인으로 입장 처리
+            </button>
+            <button class="festio-modal__btn" id="ssExceptionCancelBtn" type="button">취소</button>
+        </div>
+    </div>
+
+    <script type="module" src="staff-scan.js"></script>
+</body>
+</html>

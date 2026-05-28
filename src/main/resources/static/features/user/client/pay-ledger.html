@@ -1,0 +1,208 @@
+<!doctype html>
+<html lang="ko" class="layout-menu-fixed layout-compact" data-assets-path="/assets/" data-template="vertical-menu-template-free">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0" />
+    <title>가상 페이 트랜잭션 - FESTIO</title>
+
+    <link rel="icon" type="image/x-icon" href="/assets/img/favicon/favicon.ico" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="/assets/vendor/fonts/iconify-icons.css" />
+    <link rel="stylesheet" href="/assets/vendor/css/core.css" />
+    <link rel="stylesheet" href="/assets/css/demo.css" />
+    <link rel="stylesheet" href="/assets/vendor/libs/perfect-scrollbar/perfect-scrollbar.css" />
+    <link rel="stylesheet" href="/assets/vendor/libs/apex-charts/apex-charts.css" />
+    <script src="/assets/vendor/js/helpers.js"></script>
+    <script src="/assets/js/config.js"></script>
+    <style>
+      .premium-gradient {
+        background: linear-gradient(135deg, #696cff 0%, #a2a4ff 100%);
+        color: white;
+      }
+      .stat-card {
+        transition: transform 0.2s;
+      }
+      .stat-card:hover {
+        transform: translateY(-5px);
+      }
+    </style>
+  </head>
+
+  <body>
+    <div class="layout-wrapper layout-content-navbar">
+      <div class="layout-container">
+        
+        <!-- Sidebar Menu -->
+        <aside id="layout-menu" class="layout-menu menu-vertical menu bg-menu-theme">
+          <!-- sidebar.js?v=4 가 런타임에 동적으로 삽입 -->
+        </aside>
+
+        <div class="layout-page">
+          <!-- Navbar -->
+          <nav class="layout-navbar container-xxl navbar navbar-expand-xl navbar-detached align-items-center bg-navbar-theme" id="layout-navbar">
+            <div class="layout-menu-toggle navbar-nav align-items-xl-center me-4 me-xl-0 d-xl-none">
+              <a class="nav-item nav-link px-0 me-xl-6" href="javascript:void(0)">
+                <i class="bx bx-menu bx-sm"></i>
+              </a>
+            </div>
+            <div class="navbar-nav-right d-flex align-items-center" id="navbar-collapse">
+              <h5 class="mb-0 fw-bold"><i class="bx bx-credit-card me-2 text-primary"></i>가상 페이 트랜잭션</h5>
+              <ul class="navbar-nav flex-row align-items-center ms-auto">
+                <li class="nav-item dropdown-user dropdown">
+                  <a class="nav-link dropdown-toggle hide-arrow" href="javascript:void(0);" data-bs-toggle="dropdown">
+                    <div class="avatar avatar-online">
+                      <img src="/assets/img/avatars/1.png" class="w-px-40 h-auto rounded-circle" />
+                    </div>
+                  </a>
+                  <ul class="dropdown-menu dropdown-menu-end">
+                    <li>
+                      <a class="dropdown-item" href="#">
+                        <div class="d-flex">
+                          <div class="flex-shrink-0 me-3">
+                            <div class="avatar avatar-online">
+                              <img src="/assets/img/avatars/1.png" class="w-px-40 h-auto rounded-circle" />
+                            </div>
+                          </div>
+                          <div class="flex-grow-1">
+                            <span class="fw-medium d-block">최고 관리자</span>
+                            <small class="text-muted">Master Admin</small>
+                          </div>
+                        </div>
+                      </a>
+                    </li>
+                  </ul>
+                </li>
+              </ul>
+            </div>
+          </nav>
+
+          <!-- Content wrapper -->
+          <div class="content-wrapper">
+            <div class="container-xxl flex-grow-1 container-p-y">
+              
+<div class="row">
+  <div class="col-lg-4 col-md-12 mb-6">
+    <div class="card stat-card h-100">
+      <div class="card-body">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+          <h5 class="card-title mb-0 fw-semibold">가상 페이 총 발행액</h5>
+          <i class="bx bx-wallet text-primary fs-3"></i>
+        </div>
+        <h3 class="fw-bold text-primary mb-2">₩ 1,245,000,000</h3>
+        <p class="mb-0 text-muted fs-7">이벤트 활성 충전 총액 (15,200회)</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-lg-4 col-md-12 mb-6">
+    <div class="card stat-card h-100">
+      <div class="card-body">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+          <h5 class="card-title mb-0 fw-semibold">사용된 페이 결제액</h5>
+          <i class="bx bx-cart text-success fs-3"></i>
+        </div>
+        <h3 class="fw-bold text-success mb-2">₩ 912,450,000</h3>
+        <p class="mb-0 text-muted fs-7">가맹 점포 내 누적 가상 페이 결제 합계</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-lg-4 col-md-12 mb-6">
+    <div class="card stat-card h-100">
+      <div class="card-body">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+          <h5 class="card-title mb-0 fw-semibold">미사용 환불 대기 금액</h5>
+          <i class="bx bx-refresh text-warning fs-3"></i>
+        </div>
+        <h3 class="fw-bold text-warning mb-2">₩ 332,550,000</h3>
+        <p class="mb-0 text-muted fs-7">폐막 시 자동 환불 예약 완료 목록 포함</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-12">
+    <div class="card">
+      <div class="card-header d-flex justify-content-between align-items-center">
+        <h5 class="card-title m-0 fw-semibold">가상 페이 트랜잭션 (원장 이력)</h5>
+        <span class="badge bg-label-success">실시간 페이 결제 승인 완료율 99.98%</span>
+      </div>
+      <div class="table-responsive text-nowrap">
+        <table class="table table-hover">
+          <thead>
+            <tr>
+              <th>거래 ID</th>
+              <th>사용자</th>
+              <th>거래 유형</th>
+              <th>금액</th>
+              <th>결제 대상 (가맹점)</th>
+              <th>거래 시각</th>
+              <th>상태</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>TX-99824</td>
+              <td>김하율</td>
+              <td><span class="badge bg-label-success">페이 결제 (O2O)</span></td>
+              <td>- ₩ 13,500</td>
+              <td>B-3 홍길동 떡볶이</td>
+              <td>16:35:10</td>
+              <td><span class="badge bg-success">승인 완료</span></td>
+            </tr>
+            <tr>
+              <td>TX-99823</td>
+              <td>박소희</td>
+              <td><span class="badge bg-label-primary">간편 충전</span></td>
+              <td>+ ₩ 50,000</td>
+              <td>계좌 연동 (국민은행)</td>
+              <td>16:34:00</td>
+              <td><span class="badge bg-success">충전 성공</span></td>
+            </tr>
+            <tr class="table-danger">
+              <td>TX-99822</td>
+              <td>이철수</td>
+              <td><span class="badge bg-label-danger">페이 결제 (현장)</span></td>
+              <td>- ₩ 45,000</td>
+              <td>C-1 공식 MD샵</td>
+              <td>16:32:15</td>
+              <td><span class="badge bg-danger">잔액 부족 실패</span></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+            </div>
+
+            <!-- Footer -->
+            <footer class="content-footer footer bg-footer-theme">
+              <div class="container-xxl d-flex flex-wrap justify-content-between py-2 flex-md-row flex-column">
+                <div class="mb-2 mb-md-0">
+                  © <script>document.write(new Date().getFullYear());</script> <span class="festio-logo-text">FESTIO</span>
+                </div>
+              </div>
+            </footer>
+
+            <div class="content-backdrop fade"></div>
+          </div>
+        </div>
+      </div>
+      <div class="layout-overlay layout-menu-toggle"></div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="/assets/vendor/libs/jquery/jquery.js"></script>
+    <script src="/assets/vendor/libs/popper/popper.js"></script>
+    <script src="/assets/vendor/js/bootstrap.js"></script>
+    <script src="/assets/vendor/libs/perfect-scrollbar/perfect-scrollbar.js"></script>
+    <script src="/assets/vendor/js/menu.js"></script>
+    <script src="/assets/vendor/libs/apex-charts/apexcharts.js"></script>
+    <script src="/assets/js/main.js"></script>
+    <script src="/assets/js/sidebar.js?v=4"></script>
+    
+  </body>
+</html>

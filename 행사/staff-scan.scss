@@ -1,0 +1,389 @@
+// ============================================================
+// src/features/payment/staff-scan.scss
+// 역할: 스태프 QR 스캔 + 로그 테이블 백오피스 스타일
+// ============================================================
+
+@use '../order/seat-map.scss' as *;
+
+// ──────────────────────────────────────
+// 헤더
+// ──────────────────────────────────────
+.ss-header {
+    position: sticky; top: 0; z-index: 100;
+    height: var(--header-h);
+    background: #0F172A; // 다크 헤더: 스태프 모드 구분
+    border-bottom: 1px solid #1E293B;
+    display: flex; align-items: center;
+    padding: 0 16px; gap: 12px;
+
+    &__logo { text-decoration: none; margin-right: auto; }
+
+    &__badge {
+        display: flex; align-items: center; gap: 5px;
+        padding: 4px 10px; border-radius: 99px;
+        background: rgba(59,130,246,.2); color: #93C5FD;
+        font-size: 11px; font-weight: 700;
+        &--admin { background: rgba(239,68,68,.2); color: #FCA5A5; }
+    }
+
+    &__user {
+        font-size: 13px; font-weight: 600; color: #94A3B8;
+    }
+}
+
+// ──────────────────────────────────────
+// 스캔 유형 토글 바
+// ──────────────────────────────────────
+.ss-scan-type-bar {
+    background: #0F172A; border-bottom: 1px solid #1E293B;
+    padding: 12px 16px;
+
+    &__inner { display: flex; gap: 8px; max-width: 600px; margin: 0 auto; }
+}
+
+.ss-scan-type-btn {
+    flex: 1; display: flex; align-items: center; justify-content: center; gap: 7px;
+    padding: 10px; border-radius: var(--radius-md);
+    background: #1E293B; border: 1.5px solid #334155;
+    color: #64748B; font-size: 13px; font-weight: 600;
+    font-family: var(--font-base); cursor: pointer; transition: all .15s;
+
+    &--active {
+        background: rgba(59,130,246,.15);
+        border-color: var(--color-primary);
+        color: #93C5FD;
+    }
+    &:hover:not(&--active) { border-color: #475569; color: #94A3B8; }
+}
+
+// ──────────────────────────────────────
+// 메인
+// ──────────────────────────────────────
+.ss-main {
+    max-width: 600px; margin: 0 auto;
+    padding: 20px 16px 48px;
+    display: flex; flex-direction: column; gap: 20px;
+}
+
+// ──────────────────────────────────────
+// 카메라 뷰파인더
+// ──────────────────────────────────────
+.ss-camera-wrap {
+    position: relative; width: 100%;
+    aspect-ratio: 1; max-height: 320px;
+    background: #000; border-radius: var(--radius-lg);
+    overflow: hidden;
+}
+
+.ss-camera {
+    width: 100%; height: 100%; object-fit: cover;
+    display: block;
+}
+
+.ss-camera-canvas { position: absolute; inset: 0; display: none; }
+
+// 뷰파인더 코너
+.ss-viewfinder {
+    position: absolute; inset: 0;
+    display: flex; align-items: center; justify-content: center;
+
+    &__corner {
+        position: absolute;
+        width: 28px; height: 28px;
+        border-color: #fff; border-style: solid; border-width: 0;
+
+        &--tl { top: 20%; left: 15%; border-top-width: 3px; border-left-width: 3px; border-radius: 4px 0 0 0; }
+        &--tr { top: 20%; right: 15%; border-top-width: 3px; border-right-width: 3px; border-radius: 0 4px 0 0; }
+        &--bl { bottom: 20%; left: 15%; border-bottom-width: 3px; border-left-width: 3px; border-radius: 0 0 0 4px; }
+        &--br { bottom: 20%; right: 15%; border-bottom-width: 3px; border-right-width: 3px; border-radius: 0 0 4px 0; }
+    }
+
+    &__line {
+        position: absolute;
+        left: 16%; right: 16%;
+        height: 2px; background: rgba(59,130,246,.7);
+        animation: scan-line 2s ease-in-out infinite;
+        border-radius: 2px;
+    }
+}
+
+@keyframes scan-line {
+    0%   { top: 20%; }
+    50%  { top: 78%; }
+    100% { top: 20%; }
+}
+
+// 수동 입력 버튼
+.ss-manual-btn {
+    position: absolute; bottom: 12px; right: 12px;
+    display: flex; align-items: center; gap: 6px;
+    padding: 8px 12px; border-radius: var(--radius-sm);
+    background: rgba(0,0,0,.6); border: 1px solid rgba(255,255,255,.2);
+    color: #fff; font-size: 12px; font-weight: 600;
+    font-family: var(--font-base); cursor: pointer;
+    &:hover { background: rgba(0,0,0,.8); }
+}
+
+// 카메라 오류
+.ss-camera-error {
+    position: absolute; inset: 0;
+    background: #0F172A;
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    gap: 12px; color: #64748B; font-size: 14px;
+    text-align: center;
+}
+
+.ss-retry-btn {
+    padding: 8px 20px; border-radius: var(--radius-sm);
+    background: var(--color-primary); color: #fff; border: none;
+    font-size: 13px; font-weight: 600; font-family: var(--font-base); cursor: pointer;
+}
+
+// ──────────────────────────────────────
+// 스캔 결과 카드
+// ──────────────────────────────────────
+.ss-result-card {
+    border-radius: var(--radius-lg); padding: 18px 16px;
+    border: 2px solid;
+    animation: result-appear .2s ease-out;
+
+    &--success {
+        background: #ECFDF5; border-color: #6EE7B7; color: #065F46;
+    }
+    &--success-exception {
+        background: #FFFBEB; border-color: #FCD34D; color: #78350F;
+    }
+    &--fail {
+        background: #FEF2F2; border-color: #FCA5A5; color: #7F1D1D;
+    }
+
+    &__top { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }
+
+    &__icon {
+        width: 40px; height: 40px; border-radius: 50%;
+        display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+        &--success { background: #D1FAE5; }
+        &--warning { background: #FEF3C7; }
+        &--fail    { background: #FEE2E2; }
+    }
+
+    &__result-text { font-size: 16px; font-weight: 700; }
+    &__code { font-family: 'JetBrains Mono', monospace; font-size: 13px; margin-top: 2px; opacity: .7; }
+
+    &__rows { display: flex; flex-direction: column; gap: 6px; }
+
+    &__row {
+        display: flex; justify-content: space-between; font-size: 13px;
+        strong { font-weight: 700; }
+    }
+
+    &__wristband-btn {
+        width: 100%; margin-top: 12px; padding: 12px;
+        background: #059669; color: #fff; border: none;
+        border-radius: var(--radius-md); font-size: 14px; font-weight: 700;
+        font-family: var(--font-base); cursor: pointer;
+        display: flex; align-items: center; justify-content: center; gap: 6px;
+    }
+
+    &__exception-btn {
+        width: 100%; margin-top: 8px; padding: 12px;
+        background: #D97706; color: #fff; border: none;
+        border-radius: var(--radius-md); font-size: 14px; font-weight: 700;
+        font-family: var(--font-base); cursor: pointer;
+        display: flex; align-items: center; justify-content: center; gap: 6px;
+    }
+}
+
+@keyframes result-appear {
+    from { opacity: 0; transform: translateY(8px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
+
+// ──────────────────────────────────────
+// 관리자 잠금 해제 패널
+// ──────────────────────────────────────
+.ss-admin-panel {
+    background: #FEF2F2; border: 1.5px solid #FECACA;
+    border-radius: var(--radius-lg); padding: 16px;
+    display: flex; flex-direction: column; gap: 10px;
+
+    &__title {
+        display: flex; align-items: center; gap: 6px;
+        font-size: 14px; font-weight: 700; color: #7F1D1D;
+    }
+    &__desc { font-size: 12px; color: #991B1B; line-height: 1.6; }
+
+    code {
+        background: #FEE2E2; padding: 1px 5px; border-radius: 3px;
+        font-family: 'JetBrains Mono', monospace; font-size: 11px;
+    }
+}
+
+.ss-unlock-input-row { display: flex; gap: 8px; }
+
+.ss-unlock-input {
+    flex: 1; padding: 10px 12px;
+    border: 1.5px solid #FECACA; border-radius: var(--radius-md);
+    font-size: 14px; font-family: 'JetBrains Mono', monospace;
+    background: #fff; color: #7F1D1D; letter-spacing: .1em;
+    &:focus { outline: none; border-color: var(--color-danger); }
+}
+
+.ss-unlock-btn {
+    padding: 10px 16px; border-radius: var(--radius-md);
+    background: var(--color-danger); color: #fff; border: none;
+    font-size: 13px; font-weight: 700; font-family: var(--font-base); cursor: pointer;
+}
+
+.ss-unlock-result {
+    font-size: 13px; padding: 10px 12px;
+    border-radius: var(--radius-sm);
+    &--ok { background: #D1FAE5; color: #065F46; }
+    &--err { background: #FEE2E2; color: #7F1D1D; }
+}
+
+// ──────────────────────────────────────
+// 수동 입력 패널
+// ──────────────────────────────────────
+.ss-manual-panel {
+    background: var(--color-surface); border: 1.5px solid var(--color-border);
+    border-radius: var(--radius-lg); padding: 16px;
+
+    &__label {
+        display: block; font-size: 13px; font-weight: 600;
+        color: var(--color-text-secondary); margin-bottom: 8px;
+    }
+}
+
+.ss-manual-input-row { display: flex; gap: 8px; }
+
+.ss-manual-input {
+    flex: 1; padding: 10px 12px;
+    border: 1.5px solid var(--color-border); border-radius: var(--radius-md);
+    font-size: 15px; font-family: 'JetBrains Mono', monospace;
+    letter-spacing: .12em; text-transform: uppercase;
+    &:focus { outline: none; border-color: var(--color-primary); }
+}
+
+.ss-manual-submit {
+    padding: 10px 20px; border-radius: var(--radius-md);
+    background: var(--color-primary); color: #fff; border: none;
+    font-size: 14px; font-weight: 700; font-family: var(--font-base); cursor: pointer;
+}
+
+// ──────────────────────────────────────
+// 스캔 로그
+// ──────────────────────────────────────
+.ss-log-section {
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+
+    &__header {
+        display: flex; align-items: center; justify-content: space-between;
+        padding: 12px 16px; border-bottom: 1px solid var(--color-border);
+        background: var(--color-surface-2);
+    }
+    &__title {
+        display: flex; align-items: center; gap: 6px;
+        font-size: 13px; font-weight: 700; color: var(--color-text-primary);
+    }
+}
+
+.ss-log-count {
+    font-size: 12px; font-weight: 600; padding: 2px 8px;
+    background: var(--color-primary-light); color: var(--color-primary);
+    border-radius: 99px;
+}
+
+.ss-log-list {
+    max-height: 320px; overflow-y: auto;
+}
+
+.ss-log-empty {
+    padding: 24px; text-align: center;
+    font-size: 13px; color: var(--color-text-muted);
+}
+
+.ss-log-row {
+    display: grid;
+    grid-template-columns: 90px 1fr 120px auto;
+    gap: 8px; align-items: center;
+    padding: 10px 16px;
+    border-bottom: 1px solid var(--color-border);
+    font-size: 13px;
+    animation: log-appear .2s ease-out;
+
+    &--success   { border-left: 3px solid var(--color-success); }
+    &--exception { border-left: 3px solid var(--color-warning); }
+    &--fail      { border-left: 3px solid var(--color-danger); }
+
+    @media (max-width: 480px) {
+        grid-template-columns: 80px 1fr auto;
+        &__type { display: none; }
+    }
+}
+
+.ss-log-row__code {
+    font-family: 'JetBrains Mono', monospace; font-weight: 500; font-size: 12px;
+    color: var(--color-text-muted);
+}
+.ss-log-row__name { font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ss-log-row__type { color: var(--color-text-muted); font-size: 12px; }
+.ss-log-row__result {
+    font-size: 11px; font-weight: 700; padding: 2px 7px; border-radius: 99px; white-space: nowrap;
+    &--success   { background: #D1FAE5; color: #065F46; }
+    &--exception { background: #FEF3C7; color: #78350F; }
+    &--fail      { background: #FEE2E2; color: #7F1D1D; }
+}
+.ss-log-row__time { font-size: 11px; color: var(--color-text-muted); }
+
+@keyframes log-appear {
+    from { opacity: 0; transform: translateX(-6px); }
+    to   { opacity: 1; transform: translateX(0); }
+}
+
+// ──────────────────────────────────────
+// 모달 (공통)
+// ──────────────────────────────────────
+.festio-modal {
+    position: fixed; inset: 0; z-index: 999;
+    display: flex; align-items: flex-end; justify-content: center;
+    @media (min-width: 480px) { align-items: center; }
+
+    &__backdrop {
+        position: absolute; inset: 0; background: rgba(0,0,0,.55);
+    }
+
+    &__box {
+        position: relative; z-index: 1;
+        width: 100%; max-width: 420px;
+        background: var(--color-surface);
+        border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+        padding: 24px 24px 32px;
+        @media (min-width: 480px) { border-radius: var(--radius-lg); }
+        display: flex; flex-direction: column; gap: 12px;
+    }
+
+    &__icon {
+        width: 52px; height: 52px; border-radius: 50%;
+        display: flex; align-items: center; justify-content: center; margin: 0 auto;
+        &--success { background: #D1FAE5; color: #059669; }
+        &--warning { background: #FEF3C7; color: var(--color-warning); }
+    }
+
+    &__title { font-size: 17px; font-weight: 700; text-align: center; }
+    &__body  { font-size: 14px; color: var(--color-text-secondary); line-height: 1.7; text-align: center; }
+
+    &__btn {
+        width: 100%; padding: 14px; border-radius: var(--radius-md);
+        font-size: 15px; font-weight: 700; font-family: var(--font-base);
+        cursor: pointer; border: none; transition: opacity .15s;
+        &--primary { background: var(--color-primary); color: #fff; }
+        &--warning { background: var(--color-warning); color: #fff; }
+        &:not([class*="--"]) { background: var(--color-surface-2); color: var(--color-text-secondary); }
+        &:hover { opacity: .85; }
+    }
+}

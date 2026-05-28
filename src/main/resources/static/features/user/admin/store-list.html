@@ -1,0 +1,267 @@
+<!doctype html>
+<html lang="ko" class="layout-menu-fixed layout-compact" data-assets-path="/assets/" data-template="vertical-menu-template-free">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0" />
+    <title>입점 가맹점 목록 - FESTIO</title>
+
+    <link rel="icon" type="image/x-icon" href="/assets/img/favicon/favicon.ico" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="/assets/vendor/fonts/iconify-icons.css" />
+    <link rel="stylesheet" href="/assets/vendor/css/core.css" />
+    <link rel="stylesheet" href="/assets/css/demo.css" />
+    <link rel="stylesheet" href="/assets/vendor/libs/perfect-scrollbar/perfect-scrollbar.css" />
+    <link rel="stylesheet" href="/assets/vendor/libs/apex-charts/apex-charts.css" />
+    <script src="/assets/vendor/js/helpers.js"></script>
+    <script src="/assets/js/config.js"></script>
+    <style>
+      .premium-gradient {
+        background: linear-gradient(135deg, #696cff 0%, #a2a4ff 100%);
+        color: white;
+      }
+      .stat-card {
+        transition: transform 0.2s;
+      }
+      .stat-card:hover {
+        transform: translateY(-5px);
+      }
+    </style>
+  </head>
+
+  <body>
+    <div class="layout-wrapper layout-content-navbar">
+      <div class="layout-container">
+        
+        <!-- Sidebar Menu -->
+        <aside id="layout-menu" class="layout-menu menu-vertical menu bg-menu-theme">
+          <!-- sidebar.js?v=4 가 런타임에 동적으로 삽입 -->
+        </aside>
+
+        <div class="layout-page">
+          <!-- Navbar -->
+          <nav class="layout-navbar container-xxl navbar navbar-expand-xl navbar-detached align-items-center bg-navbar-theme" id="layout-navbar">
+            <div class="layout-menu-toggle navbar-nav align-items-xl-center me-4 me-xl-0 d-xl-none">
+              <a class="nav-item nav-link px-0 me-xl-6" href="javascript:void(0)">
+                <i class="bx bx-menu bx-sm"></i>
+              </a>
+            </div>
+            <div class="navbar-nav-right d-flex align-items-center" id="navbar-collapse">
+              <h5 class="mb-0 fw-bold"><i class="bx bx-store me-2 text-primary"></i>입점 가맹점 목록</h5>
+              <ul class="navbar-nav flex-row align-items-center ms-auto">
+                <li class="nav-item dropdown-user dropdown">
+                  <a class="nav-link dropdown-toggle hide-arrow" href="javascript:void(0);" data-bs-toggle="dropdown">
+                    <div class="avatar avatar-online">
+                      <img src="/assets/img/avatars/1.png" class="w-px-40 h-auto rounded-circle" />
+                    </div>
+                  </a>
+                  <ul class="dropdown-menu dropdown-menu-end">
+                    <li>
+                      <a class="dropdown-item" href="#">
+                        <div class="d-flex">
+                          <div class="flex-shrink-0 me-3">
+                            <div class="avatar avatar-online">
+                              <img src="/assets/img/avatars/1.png" class="w-px-40 h-auto rounded-circle" />
+                            </div>
+                          </div>
+                          <div class="flex-grow-1">
+                            <span class="fw-medium d-block">최고 관리자</span>
+                            <small class="text-muted">Master Admin</small>
+                          </div>
+                        </div>
+                      </a>
+                    </li>
+                  </ul>
+                </li>
+              </ul>
+            </div>
+          </nav>
+
+          <!-- Content wrapper -->
+          <div class="content-wrapper">
+            <div class="container-xxl flex-grow-1 container-p-y">
+              
+              <div class="row">
+                <!-- 상단 필터 보드 -->
+                <div class="col-12 mb-6">
+                  <div class="card">
+                    <div class="card-body d-flex flex-wrap align-items-center justify-content-between gap-3">
+                      <div class="d-flex align-items-center gap-2">
+                        <select class="form-select form-select-sm" style="width: 150px;">
+                          <option>전체 카테고리</option>
+                          <option>FOOD (식음료)</option>
+                          <option>GOODS (굿즈)</option>
+                        </select>
+                        <select class="form-select form-select-sm" style="width: 150px;">
+                          <option>전체 구역</option>
+                          <option>A 구역 (메인무대)</option>
+                          <option>B 구역 (푸드트럭)</option>
+                          <option>C 구역 (MD/굿즈)</option>
+                        </select>
+                      </div>
+                      <div class="d-flex align-items-center gap-2">
+                        <input type="text" class="form-control form-control-sm" placeholder="가맹점명 검색" />
+                        <button class="btn btn-primary btn-sm">필터 검색</button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- 입점 가맹점 Grid 리스트 -->
+                <!-- 가맹점 1 -->
+                <div class="col-md-6 col-lg-4 mb-6">
+                  <div class="card h-100 border border-primary">
+                    <div class="card-header d-flex justify-content-between align-items-center pb-2">
+                      <span class="badge bg-label-primary">FOOD (푸드트럭)</span>
+                      <span class="badge bg-success" id="status-badge-1">영업 중</span>
+                    </div>
+                    <div class="card-body">
+                      <h5 class="card-title fw-bold mb-2">B-3 홍길동 떡볶이</h5>
+                      <p class="card-text text-muted mb-4 fs-7">
+                        속 시원하게 매운 원조 떡볶이와 바삭한 수제 모둠 튀김 전문 푸드트럭입니다.
+                      </p>
+                      <hr class="my-3" />
+                      <div class="d-flex justify-content-between mb-2">
+                        <span class="text-muted fs-7">위치 (구역):</span>
+                        <span class="fw-semibold fs-7">Zone B (푸드트럭)</span>
+                      </div>
+                      <div class="d-flex justify-content-between mb-2">
+                        <span class="text-muted fs-7">등록 상품 수:</span>
+                        <span class="fw-semibold fs-7">5 개</span>
+                      </div>
+                      <div class="d-flex justify-content-between mb-3">
+                        <span class="text-muted fs-7">금일 총매출:</span>
+                        <span class="fw-bold text-primary fs-6">₩ 45,000,000</span>
+                      </div>
+                      <div class="d-flex gap-2">
+                        <button class="btn btn-outline-danger btn-sm flex-grow-1 suspend-btn" data-id="1" data-name="B-3 홍길동 떡볶이">영업 중지</button>
+                        <a href="/features/order/store-management.html" class="btn btn-outline-secondary btn-sm"><i class="bx bx-cog"></i></a>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- 가맹점 2 -->
+                <div class="col-md-6 col-lg-4 mb-6">
+                  <div class="card h-100">
+                    <div class="card-header d-flex justify-content-between align-items-center pb-2">
+                      <span class="badge bg-label-info">GOODS (굿즈샵)</span>
+                      <span class="badge bg-success" id="status-badge-2">영업 중</span>
+                    </div>
+                    <div class="card-body">
+                      <h5 class="card-title fw-bold mb-2">C-1 공식 MD & 굿즈샵</h5>
+                      <p class="card-text text-muted mb-4 fs-7">
+                        페스티벌 공식 아티스트 기획 굿즈, 슬로건, 티셔츠 판매 공식 가맹점입니다.
+                      </p>
+                      <hr class="my-3" />
+                      <div class="d-flex justify-content-between mb-2">
+                        <span class="text-muted fs-7">위치 (구역):</span>
+                        <span class="fw-semibold fs-7">Zone C (MD/굿즈)</span>
+                      </div>
+                      <div class="d-flex justify-content-between mb-2">
+                        <span class="text-muted fs-7">등록 상품 수:</span>
+                        <span class="fw-semibold fs-7">18 개</span>
+                      </div>
+                      <div class="d-flex justify-content-between mb-3">
+                        <span class="text-muted fs-7">금일 총매출:</span>
+                        <span class="fw-bold text-primary fs-6">₩ 120,000,000</span>
+                      </div>
+                      <div class="d-flex gap-2">
+                        <button class="btn btn-outline-danger btn-sm flex-grow-1 suspend-btn" data-id="2" data-name="C-1 공식 MD & 굿즈샵">영업 중지</button>
+                        <button class="btn btn-outline-secondary btn-sm"><i class="bx bx-cog"></i></button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- 가맹점 3 -->
+                <div class="col-md-6 col-lg-4 mb-6">
+                  <div class="card h-100">
+                    <div class="card-header d-flex justify-content-between align-items-center pb-2">
+                      <span class="badge bg-label-primary">FOOD (음료 바)</span>
+                      <span class="badge bg-secondary" id="status-badge-3">준비 중</span>
+                    </div>
+                    <div class="card-body">
+                      <h5 class="card-title fw-bold mb-2">A-2 스텔라 아르투아 BAR</h5>
+                      <p class="card-text text-muted mb-4 fs-7">
+                        시원한 청량감의 스텔라 드래프트 생맥주와 프리미엄 논알콜 칵테일 부스입니다.
+                      </p>
+                      <hr class="my-3" />
+                      <div class="d-flex justify-content-between mb-2">
+                        <span class="text-muted fs-7">위치 (구역):</span>
+                        <span class="fw-semibold fs-7">Zone A (메인 스테이지)</span>
+                      </div>
+                      <div class="d-flex justify-content-between mb-2">
+                        <span class="text-muted fs-7">등록 상품 수:</span>
+                        <span class="fw-semibold fs-7">4 개</span>
+                      </div>
+                      <div class="d-flex justify-content-between mb-3">
+                        <span class="text-muted fs-7">금일 총매출:</span>
+                        <span class="fw-bold text-primary fs-6">₩ 28,400,000</span>
+                      </div>
+                      <div class="d-flex gap-2">
+                        <button class="btn btn-outline-danger btn-sm flex-grow-1 suspend-btn" data-id="3" data-name="A-2 스텔라 아르투아 BAR">영업 중지</button>
+                        <button class="btn btn-outline-secondary btn-sm"><i class="bx bx-cog"></i></button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+            </div>
+
+            <!-- Footer -->
+            <footer class="content-footer footer bg-footer-theme">
+              <div class="container-xxl d-flex flex-wrap justify-content-between py-2 flex-md-row flex-column">
+                <div class="mb-2 mb-md-0">
+                  © <script>document.write(new Date().getFullYear());</script> <span class="festio-logo-text">FESTIO</span>
+                </div>
+              </div>
+            </footer>
+
+            <div class="content-backdrop fade"></div>
+          </div>
+        </div>
+      </div>
+      <div class="layout-overlay layout-menu-toggle"></div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="/assets/vendor/libs/jquery/jquery.js"></script>
+    <script src="/assets/vendor/libs/popper/popper.js"></script>
+    <script src="/assets/vendor/js/bootstrap.js"></script>
+    <script src="/assets/vendor/libs/perfect-scrollbar/perfect-scrollbar.js"></script>
+    <script src="/assets/vendor/js/menu.js"></script>
+    <script src="/assets/js/main.js"></script>
+    <script src="/assets/js/sidebar.js?v=4"></script>
+
+    <script>
+      document.querySelectorAll('.suspend-btn').forEach(btn => {
+        btn.addEventListener('click', function(e) {
+          const id = e.target.getAttribute('data-id');
+          const name = e.target.getAttribute('data-name');
+          const badge = document.getElementById(`status-badge-${id}`);
+          
+          if (e.target.innerText === "영업 중지") {
+            if (confirm(`🚨 [${name}]의 O2O 주문 접수 및 영업 상태를 강제로 임시중지하시겠습니까?`)) {
+              badge.innerText = "임시정지 (원격)";
+              badge.className = "badge bg-danger";
+              e.target.innerText = "영업 재개";
+              e.target.className = "btn btn-outline-success btn-sm flex-grow-1 suspend-btn";
+              alert(`🚫 [${name}]의 모바일 앱 주문 결제가 원격으로 일시 차단되었습니다.`);
+            }
+          } else {
+            if (confirm(`🟢 [${name}]의 영업 정지를 해제하고 O2O 영업을 원격으로 재개하시겠습니까?`)) {
+              badge.innerText = "영업 중";
+              badge.className = "badge bg-success";
+              e.target.innerText = "영업 중지";
+              e.target.className = "btn btn-outline-danger btn-sm flex-grow-1 suspend-btn";
+              alert(`🟢 [${name}]의 O2O 주문 접수가 정상적으로 재개 및 해제되었습니다.`);
+            }
+          }
+        });
+      });
+    </script>
+  </body>
+</html>

@@ -1,0 +1,211 @@
+<!doctype html>
+<html lang="ko" class="layout-menu-fixed layout-compact" data-assets-path="/assets/" data-template="vertical-menu-template-free">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0" />
+    <title>장바구니 및 관심 목록 - FESTIO</title>
+
+    <link rel="icon" type="image/x-icon" href="/assets/img/favicon/favicon.ico" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="/assets/vendor/fonts/iconify-icons.css" />
+    <link rel="stylesheet" href="/assets/vendor/css/core.css" />
+    <link rel="stylesheet" href="/assets/css/demo.css" />
+    <link rel="stylesheet" href="/assets/vendor/libs/perfect-scrollbar/perfect-scrollbar.css" />
+    <link rel="stylesheet" href="/assets/vendor/libs/apex-charts/apex-charts.css" />
+    <script src="/assets/vendor/js/helpers.js"></script>
+    <script src="/assets/js/config.js"></script>
+    <style>
+      .premium-gradient {
+        background: linear-gradient(135deg, #696cff 0%, #a2a4ff 100%);
+        color: white;
+      }
+      .stat-card {
+        transition: transform 0.2s;
+      }
+      .stat-card:hover {
+        transform: translateY(-5px);
+      }
+    </style>
+  </head>
+
+  <body>
+    <div class="layout-wrapper layout-content-navbar">
+      <div class="layout-container">
+        
+        <!-- Sidebar Menu -->
+        <aside id="layout-menu" class="layout-menu menu-vertical menu bg-menu-theme">
+          <!-- sidebar.js?v=4 가 런타임에 동적으로 삽입 -->
+        </aside>
+
+        <div class="layout-page">
+          <!-- Navbar -->
+          <nav class="layout-navbar container-xxl navbar navbar-expand-xl navbar-detached align-items-center bg-navbar-theme" id="layout-navbar">
+            <div class="layout-menu-toggle navbar-nav align-items-xl-center me-4 me-xl-0 d-xl-none">
+              <a class="nav-item nav-link px-0 me-xl-6" href="javascript:void(0)">
+                <i class="bx bx-menu bx-sm"></i>
+              </a>
+            </div>
+            <div class="navbar-nav-right d-flex align-items-center" id="navbar-collapse">
+              <h5 class="mb-0 fw-bold"><i class="bx bx-cart me-2 text-primary"></i>장바구니 및 관심 목록</h5>
+              <ul class="navbar-nav flex-row align-items-center ms-auto">
+                <li class="nav-item dropdown-user dropdown">
+                  <a class="nav-link dropdown-toggle hide-arrow" href="javascript:void(0);" data-bs-toggle="dropdown">
+                    <div class="avatar avatar-online">
+                      <img src="/assets/img/avatars/1.png" class="w-px-40 h-auto rounded-circle" />
+                    </div>
+                  </a>
+                  <ul class="dropdown-menu dropdown-menu-end">
+                    <li>
+                      <a class="dropdown-item" href="#">
+                        <div class="d-flex">
+                          <div class="flex-shrink-0 me-3">
+                            <div class="avatar avatar-online">
+                              <img src="/assets/img/avatars/1.png" class="w-px-40 h-auto rounded-circle" />
+                            </div>
+                          </div>
+                          <div class="flex-grow-1">
+                            <span class="fw-medium d-block">김하율 (VVIP)</span>
+                            <small class="text-muted">Client User</small>
+                          </div>
+                        </div>
+                      </a>
+                    </li>
+                  </ul>
+                </li>
+              </ul>
+            </div>
+          </nav>
+
+          <!-- Content wrapper -->
+          <div class="content-wrapper">
+            <div class="container-xxl flex-grow-1 container-p-y">
+              
+<div class="row">
+  <div class="col-lg-8 mb-6">
+    <div class="card h-100">
+      <div class="card-header border-bottom d-flex justify-content-between align-items-center">
+        <h5 class="card-title m-0 fw-semibold">나의 모바일 장바구니 (Cart)</h5>
+        <span class="badge bg-label-primary">총 2종 품목 담김</span>
+      </div>
+      <div class="table-responsive text-nowrap">
+        <table class="table table-hover">
+          <thead>
+            <tr>
+              <th>상품 정보</th>
+              <th>가맹점</th>
+              <th>수량</th>
+              <th>선택 옵션</th>
+              <th>금액</th>
+              <th>삭제</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><strong>원조 매운 떡볶이</strong></td>
+              <td>B-3 홍길동 떡볶이</td>
+              <td>
+                <div class="btn-group btn-group-xs">
+                  <button class="btn btn-outline-secondary btn-xs">-</button>
+                  <button class="btn btn-outline-secondary btn-xs disabled">1</button>
+                  <button class="btn btn-outline-secondary btn-xs">+</button>
+                </div>
+              </td>
+              <td>보통 매운맛 (신라면 맵기)</td>
+              <td>₩ 6,500</td>
+              <td><button class="btn btn-xs btn-link text-danger"><i class="bx bx-trash"></i></button></td>
+            </tr>
+            <tr>
+              <td><strong>수제 모둠 튀김 (5pcs)</strong></td>
+              <td>B-3 홍길동 떡볶이</td>
+              <td>
+                <div class="btn-group btn-group-xs">
+                  <button class="btn btn-outline-secondary btn-xs">-</button>
+                  <button class="btn btn-outline-secondary btn-xs disabled">2</button>
+                  <button class="btn btn-outline-secondary btn-xs">+</button>
+                </div>
+              </td>
+              <td>기본 세트 (옵션 없음)</td>
+              <td>₩ 14,000</td>
+              <td><button class="btn btn-xs btn-link text-danger"><i class="bx bx-trash"></i></button></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="card-footer border-top d-flex justify-content-between align-items-center">
+        <div>
+          <span class="text-muted">가상 페이 보유 잔액:</span>
+          <strong class="text-success ms-1">₩ 182,500</strong>
+        </div>
+        <div class="text-end">
+          <span class="text-muted me-3">합계금액: <strong>₩ 20,500</strong></span>
+          <button class="btn btn-primary" id="checkoutBtn"><i class="bx bx-credit-card me-1"></i>페이로 즉시 결제하기</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-lg-4 mb-6">
+    <div class="card h-100">
+      <div class="card-header border-bottom">
+        <h5 class="card-title m-0 fw-semibold">관심 찜 목록 (Wishlist)</h5>
+      </div>
+      <div class="list-group list-group-flush">
+        <div class="list-group-item d-flex justify-content-between align-items-center py-3">
+          <div>
+            <h6 class="mb-0 fw-bold">C-1 공식 MD & 굿즈샵</h6>
+            <small class="text-muted">Zone C / 공식 머천다이즈 아티스트 티셔츠</small>
+          </div>
+          <button class="btn btn-xs btn-primary">방문</button>
+        </div>
+        <div class="list-group-item d-flex justify-content-between align-items-center py-3">
+          <div>
+            <h6 class="mb-0 fw-bold">A-2 스텔라 아르투아 BAR</h6>
+            <small class="text-muted">Zone A / 스텔라 아르투아 생맥주 전문 부스</small>
+          </div>
+          <button class="btn btn-xs btn-primary">방문</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+            </div>
+
+            <!-- Footer -->
+            <footer class="content-footer footer bg-footer-theme">
+              <div class="container-xxl d-flex flex-wrap justify-content-between py-2 flex-md-row flex-column">
+                <div class="mb-2 mb-md-0">
+                  © <script>document.write(new Date().getFullYear());</script> <span class="festio-logo-text">FESTIO</span>
+                </div>
+              </div>
+            </footer>
+
+            <div class="content-backdrop fade"></div>
+          </div>
+        </div>
+      </div>
+      <div class="layout-overlay layout-menu-toggle"></div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="/assets/vendor/libs/jquery/jquery.js"></script>
+    <script src="/assets/vendor/libs/popper/popper.js"></script>
+    <script src="/assets/vendor/js/bootstrap.js"></script>
+    <script src="/assets/vendor/libs/perfect-scrollbar/perfect-scrollbar.js"></script>
+    <script src="/assets/vendor/js/menu.js"></script>
+    <script src="/assets/vendor/libs/apex-charts/apexcharts.js"></script>
+    <script src="/assets/js/main.js"></script>
+    <script src="/assets/js/sidebar.js?v=4"></script>
+    
+<script>
+  document.getElementById('checkoutBtn').addEventListener('click', function() {
+    if(confirm("💳 총 ₩ 20,500을 가상 페이로 결제하고 O2O 픽업 예약을 생성하시겠습니까?")) {
+      alert("🎉 결제가 성공적으로 처리되었습니다! 주문 접수 현황판(#O2O-4093)이 즉시 생성되었으며 픽업 바코드가 발급되었습니다.");
+    }
+  });
+</script>
+
+  </body>
+</html>

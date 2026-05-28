@@ -1,0 +1,584 @@
+// ============================================================
+// src/features/payment/staff-scan.js
+// 역할: HTML5 Camera API QR 스캔 + scan_log INSERT
+//       스캔 결과 7종 분기 + 팔찌 발급 + 관리자 잠금 해제
+// 스키마: order_item, scan_log, user
+// ============================================================
+
+import { supabase, TABLE, requireAuth, getUserProfile, maskName, isQRExpired } from '../common/supabase-client.js';
+
+// ── DOM
+const ssVideo         = document.getElementById('ssVideo');
+const ssScanCanvas    = document.getElementById('ssScanCanvas');
+const ssCameraError   = document.getElementById('ssCameraError');
+const ssRetryBtn      = document.getElementById('ssRetryBtn');
+const ssManualBtn     = document.getElementById('ssManualBtn');
+const ssManualPanel   = document.getElementById('ssManualPanel');
+const ssManualInput   = document.getElementById('ssManualInput');
+const ssManualSubmit  = document.getElementById('ssManualSubmit');
+const ssResultCard    = document.getElementById('ssResultCard');
+const ssAdminPanel    = document.getElementById('ssAdminPanel');
+const ssUnlockInput   = document.getElementById('ssUnlockInput');
+const ssUnlockBtn     = document.getElementById('ssUnlockBtn');
+const ssUnlockResult  = document.getElementById('ssUnlockResult');
+const ssLogList       = document.getElementById('ssLogList');
+const ssLogCount      = document.getElementById('ssLogCount');
+const ssRoleBadge     = document.getElementById('ssRoleBadge');
+const ssRoleLabel     = document.getElementById('ssRoleLabel');
+const ssUserName      = document.getElementById('ssUserName');
+const btnEntrance     = document.getElementById('btnEntrance');
+const btnPickup       = document.getElementById('btnPickup');
+const ssWristbandModal    = document.getElementById('ssWristbandModal');
+const ssWristbandBody     = document.getElementById('ssWristbandBody');
+const ssWristbandIssueBtn = document.getElementById('ssWristbandIssueBtn');
+const ssWristbandCloseBtn = document.getElementById('ssWristbandCloseBtn');
+const ssExceptionModal    = document.getElementById('ssExceptionModal');
+const ssExceptionBody     = document.getElementById('ssExceptionBody');
+const ssExceptionApproveBtn = document.getElementById('ssExceptionApproveBtn');
+const ssExceptionCancelBtn  = document.getElementById('ssExceptionCancelBtn');
+
+// ── 상태
+let currentUser  = null;
+let userProfile  = null;
+let scanType     = 'ENTRANCE';
+let scanCooldown = false;  // 연속 스캔 방지 (1초)
+let logRows      = [];
+let pendingExceptionItem = null; // 예외 승인 대기 item
+
+// ──────────────────────────────────────
+// 스캔 결과 상수 (schema.sql result 컬럼)
+// ──────────────────────────────────────
+const RESULT = {
+    SUCCESS:           '성공',
+    SUCCESS_EXCEPTION: '성공-스태프예외승인',
+    FAIL_DUPLICATE:    '실패-중복입장',
+    FAIL_EXPIRED:      '실패-시간만료',
+    FAIL_TOKEN_EXPIRED:'실패-토큰만료',
+    FAIL_INVALID:      '실패-유효하지않은QR',
+    FAIL_REFUNDED:     '실패-환불된티켓',
+};
+
+// ──────────────────────────────────────
+// 초기화
+// ──────────────────────────────────────
+async function init() {
+    currentUser = await requireAuth();
+    if (!currentUser) return;
+    userProfile = await getUserProfile(currentUser.id);
+
+    // 스태프/관리자만 접근
+    if (!['ROLE_STAFF', 'ROLE_ADMIN'].includes(userProfile?.role)) {
+        alert('스태프 전용 페이지입니다.');
+        location.href = '/';
+        return;
+    }
+
+    // 헤더 업데이트
+    const isAdmin = userProfile.role === 'ROLE_ADMIN';
+    ssRoleLabel.textContent = isAdmin ? 'ADMIN' : 'STAFF';
+    if (isAdmin) ssRoleBadge.classList.add('ss-header__badge--admin');
+    ssUserName.textContent = maskName(userProfile.name ?? '');
+
+    // 관리자 패널 노출
+    if (isAdmin) ssAdminPanel.hidden = false;
+
+    bindEvents();
+    await startCamera();
+    loadRecentLogs();
+    subscribeRealtime();
+}
+
+// ──────────────────────────────────────
+// 카메라
+// ──────────────────────────────────────
+async function startCamera() {
+    try {
+        const stream = await navigator.mediaDevices.getUserMedia({
+            video: { facingMode: 'environment', width: { ideal: 1280 } }
+        });
+        ssVideo.srcObject = stream;
+        ssCameraError.hidden = true;
+        requestAnimationFrame(scanFrame);
+    } catch {
+        ssCameraError.hidden = false;
+    }
+}
+
+// jsQR 라이브러리 동적 로드 (CDN)
+let jsQR = null;
+async function loadJsQR() {
+    if (jsQR) return jsQR;
+    return new Promise(resolve => {
+        const s = document.createElement('script');
+        s.src = 'https://cdnjs.cloudflare.com/ajax/libs/jsQR/1.4.0/jsQR.min.js';
+        s.onload = () => { jsQR = window.jsQR; resolve(jsQR); };
+        document.head.appendChild(s);
+    });
+}
+
+async function scanFrame() {
+    if (!jsQR) await loadJsQR();
+
+    if (ssVideo.readyState === ssVideo.HAVE_ENOUGH_DATA) {
+        const ctx = ssScanCanvas.getContext('2d');
+        ssScanCanvas.width  = ssVideo.videoWidth;
+        ssScanCanvas.height = ssVideo.videoHeight;
+        ctx.drawImage(ssVideo, 0, 0);
+
+        const imageData = ctx.getImageData(0, 0, ssScanCanvas.width, ssScanCanvas.height);
+        const code = jsQR(imageData.data, imageData.width, imageData.height);
+
+        if (code?.data && !scanCooldown) {
+            await processQR(code.data.trim());
+        }
+    }
+    requestAnimationFrame(scanFrame);
+}
+
+// ──────────────────────────────────────
+// QR 처리 핵심 로직
+// ──────────────────────────────────────
+async function processQR(qrCode) {
+    if (scanCooldown) return;
+    scanCooldown = true;
+    setTimeout(() => { scanCooldown = false; }, 1500);
+
+    // 12자리 유효성 체크
+    if (!/^[A-Z0-9]{12}$/i.test(qrCode)) {
+        await renderResult(null, RESULT.FAIL_INVALID, qrCode);
+        return;
+    }
+
+    // order_item 조회
+    const { data: item, error } = await supabase
+        .from('order_item')
+        .select(`
+            id, item_status, qr_code_uuid, qr_expired_at,
+            ticket_type, target_vulnerable_name, target_vulnerable_birth,
+            owner_user_id,
+            order:order_id ( festival_id, payment_status ),
+            seat:seat_id ( seat_row, seat_number )
+        `)
+        .eq('qr_code_uuid', qrCode.toUpperCase())
+        .maybeSingle();
+
+    if (error || !item) {
+        await renderResult(null, RESULT.FAIL_INVALID, qrCode);
+        await insertScanLog(null, RESULT.FAIL_INVALID);
+        return;
+    }
+
+    // 환불된 티켓
+    if (item.item_status === 'REFUNDED' || item.order?.payment_status === 'CANCELLED') {
+        await renderResult(item, RESULT.FAIL_REFUNDED, qrCode);
+        await insertScanLog(item.id, RESULT.FAIL_REFUNDED);
+        return;
+    }
+
+    // QR 만료 확인
+    if (item.qr_expired_at && isQRExpired(item.qr_expired_at)) {
+        await renderResult(item, RESULT.FAIL_TOKEN_EXPIRED, qrCode);
+        await insertScanLog(item.id, RESULT.FAIL_TOKEN_EXPIRED);
+        return;
+    }
+
+    // 입장 게이트 전용 로직
+    if (scanType === 'ENTRANCE') {
+        if (item.item_status === 'ENTERED') {
+            await renderResult(item, RESULT.FAIL_DUPLICATE, qrCode);
+            await insertScanLog(item.id, RESULT.FAIL_DUPLICATE);
+            return;
+        }
+
+        // SUSPENDED (양도 기한 초과)
+        if (item.item_status === 'SUSPENDED') {
+            showExceptionModal(item, qrCode);
+            return;
+        }
+
+        // 정상 입장 처리
+        await supabase
+            .from('order_item')
+            .update({ item_status: 'ENTERED', updated_at: new Date().toISOString() })
+            .eq('id', item.id);
+
+        await renderResult(item, RESULT.SUCCESS, qrCode);
+        await insertScanLog(item.id, RESULT.SUCCESS);
+
+        // VULNERABLE 팔찌 발급 모달
+        if (item.ticket_type === 'VULNERABLE') {
+            showWristbandModal(item);
+        }
+        return;
+    }
+
+    // 부스 수령 로직
+    if (scanType === 'STORE_PICKUP') {
+        if (item.item_status === 'PICKED_UP') {
+            await renderResult(item, RESULT.FAIL_DUPLICATE, qrCode);
+            await insertScanLog(item.id, RESULT.FAIL_DUPLICATE);
+            return;
+        }
+
+        await supabase
+            .from('order_item')
+            .update({ item_status: 'PICKED_UP', updated_at: new Date().toISOString() })
+            .eq('id', item.id);
+
+        await renderResult(item, RESULT.SUCCESS, qrCode);
+        await insertScanLog(item.id, RESULT.SUCCESS);
+    }
+}
+
+// ──────────────────────────────────────
+// scan_log INSERT
+// ──────────────────────────────────────
+async function insertScanLog(orderItemId, result) {
+    await supabase
+        .from('scan_log')
+        .insert({
+            order_item_id: orderItemId,
+            staff_user_id: currentUser.id,
+            scan_type:     scanType,
+            result
+        });
+}
+
+// ──────────────────────────────────────
+// 결과 카드 렌더링
+// ──────────────────────────────────────
+async function renderResult(item, result, code) {
+    const isSuccess   = result === RESULT.SUCCESS;
+    const isException = result === RESULT.SUCCESS_EXCEPTION;
+    const isFail      = !isSuccess && !isException;
+
+    const cardClass = isSuccess   ? 'ss-result-card--success'
+                    : isException ? 'ss-result-card--success-exception'
+                    : 'ss-result-card--fail';
+
+    const iconClass = isSuccess   ? 'ss-result-card__icon--success'
+                    : isException ? 'ss-result-card__icon--warning'
+                    : 'ss-result-card__icon--fail';
+
+    const resultLabel = getResultLabel(result);
+
+    let bodyHtml = '';
+    if (item) {
+        const seatStr = item.seat ? `${item.seat.seat_row} ${item.seat.seat_number}번` : '입장권';
+        const typeStr = item.ticket_type === 'VULNERABLE'
+            ? `노인/아동 [${maskName(item.target_vulnerable_name ?? '')}]`
+            : '일반';
+
+        bodyHtml = `
+            <div class="ss-result-card__rows">
+                <div class="ss-result-card__row"><span>좌석</span><strong>${seatStr}</strong></div>
+                <div class="ss-result-card__row"><span>유형</span><strong>${typeStr}</strong></div>
+                <div class="ss-result-card__row"><span>스캔</span><strong>${scanType === 'ENTRANCE' ? '입장 게이트' : '부스 수령'}</strong></div>
+            </div>`;
+    }
+
+    let actionBtn = '';
+    if (isFail && result !== RESULT.FAIL_INVALID && result !== RESULT.FAIL_REFUNDED
+        && userProfile?.role === 'ROLE_STAFF') {
+        actionBtn = `
+            <button class="ss-result-card__exception-btn" id="ssExceptionBtnInCard">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/>
+                </svg>
+                스태프 예외 승인
+            </button>`;
+    }
+
+    ssResultCard.className = `ss-result-card ${cardClass}`;
+    ssResultCard.innerHTML = `
+        <div class="ss-result-card__top">
+            <div class="ss-result-card__icon ${iconClass}">
+                ${isSuccess   ? successSVG() : ''}
+                ${isException ? warningSVG() : ''}
+                ${isFail      ? failSVG()    : ''}
+            </div>
+            <div>
+                <div class="ss-result-card__result-text">${resultLabel}</div>
+                <div class="ss-result-card__code">${(code ?? '').toUpperCase()}</div>
+            </div>
+        </div>
+        ${bodyHtml}
+        ${actionBtn}`;
+
+    ssResultCard.hidden = false;
+
+    // 예외 승인 버튼 이벤트
+    document.getElementById('ssExceptionBtnInCard')?.addEventListener('click', () => {
+        if (item) showExceptionModal(item, code);
+    });
+
+    // 로그에 추가
+    prependLog({ code, item, result, time: new Date() });
+}
+
+function getResultLabel(result) {
+    const map = {
+        [RESULT.SUCCESS]:           '입장 / 수령 완료',
+        [RESULT.SUCCESS_EXCEPTION]: '예외 승인 처리',
+        [RESULT.FAIL_DUPLICATE]:    '중복 입장 차단',
+        [RESULT.FAIL_EXPIRED]:      '유효 시간 만료',
+        [RESULT.FAIL_TOKEN_EXPIRED]:'QR 토큰 만료',
+        [RESULT.FAIL_INVALID]:      '유효하지 않은 QR',
+        [RESULT.FAIL_REFUNDED]:     '환불된 티켓',
+    };
+    return map[result] ?? result;
+}
+
+// ──────────────────────────────────────
+// 팔찌 발급 모달
+// ──────────────────────────────────────
+function showWristbandModal(item) {
+    const name = maskName(item.target_vulnerable_name ?? '대상자');
+    const birth = item.target_vulnerable_birth ?? '';
+    ssWristbandBody.innerHTML = `
+        대상자: <strong>${name}</strong> (${birth})<br>
+        노인/아동 팔찌를 발급하고 완료 버튼을 눌러주세요.`;
+    ssWristbandModal.hidden = false;
+
+    ssWristbandIssueBtn.onclick = async () => {
+        await supabase
+            .from('order_item')
+            .update({ item_status: 'WRISTBAND_ISSUED', updated_at: new Date().toISOString() })
+            .eq('id', item.id);
+        ssWristbandModal.hidden = true;
+    };
+}
+
+// ──────────────────────────────────────
+// 스태프 예외 승인 모달
+// ──────────────────────────────────────
+function showExceptionModal(item, code) {
+    pendingExceptionItem = { item, code };
+    const seatStr = item.seat ? `${item.seat.seat_row} ${item.seat.seat_number}번` : '입장권';
+    ssExceptionBody.innerHTML = `
+        <strong>${seatStr}</strong> 티켓이 비정상 상태입니다.<br>
+        현장 확인 후 예외 승인으로 입장 처리하시겠습니까?`;
+    ssExceptionModal.hidden = false;
+}
+
+// ──────────────────────────────────────
+// 실시간 스캔 로그 (Supabase Realtime)
+// ──────────────────────────────────────
+function subscribeRealtime() {
+    supabase
+        .channel('scan_log_staff')
+        .on('postgres_changes', {
+            event: 'INSERT', schema: 'public', table: 'scan_log',
+            filter: `staff_user_id=eq.${currentUser.id}`
+        }, payload => {
+            // 이미 prependLog로 처리하므로 중복 방지
+        })
+        .subscribe();
+}
+
+async function loadRecentLogs() {
+    const { data } = await supabase
+        .from('scan_log')
+        .select(`
+            id, scan_type, result, scanned_at,
+            order_item:order_item_id ( qr_code_uuid, ticket_type )
+        `)
+        .eq('staff_user_id', currentUser.id)
+        .order('scanned_at', { ascending: false })
+        .limit(20);
+
+    if (!data?.length) return;
+    ssLogList.innerHTML = '';
+    data.forEach(log => {
+        appendLogRow({
+            code: log.order_item?.qr_code_uuid ?? '------',
+            type: log.scan_type,
+            result: log.result,
+            time: new Date(log.scanned_at)
+        });
+    });
+    ssLogCount.textContent = `${data.length}건`;
+}
+
+function prependLog({ code, item, result, time }) {
+    logRows.unshift({ code, item, result, time });
+    ssLogCount.textContent = `${logRows.length}건`;
+
+    const row = buildLogRow({
+        code: code ?? '',
+        type: scanType,
+        result,
+        time
+    });
+    const empty = ssLogList.querySelector('.ss-log-empty');
+    if (empty) empty.remove();
+    ssLogList.insertBefore(row, ssLogList.firstChild);
+}
+
+function appendLogRow(data) {
+    ssLogList.appendChild(buildLogRow(data));
+}
+
+function buildLogRow({ code, type, result, time }) {
+    const isSuccess   = result === RESULT.SUCCESS;
+    const isException = result === RESULT.SUCCESS_EXCEPTION;
+    const modClass    = isSuccess ? 'ss-log-row--success'
+                      : isException ? 'ss-log-row--exception'
+                      : 'ss-log-row--fail';
+    const badgeClass  = isSuccess ? 'ss-log-row__result--success'
+                      : isException ? 'ss-log-row__result--exception'
+                      : 'ss-log-row__result--fail';
+
+    const timeStr = time.toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+    const typeStr = type === 'ENTRANCE' ? '입장' : '수령';
+    const shortResult = isSuccess ? '성공' : isException ? '예외승인' : '실패';
+
+    const el = document.createElement('div');
+    el.className = `ss-log-row ${modClass}`;
+    el.innerHTML = `
+        <span class="ss-log-row__code">${(code ?? '').toUpperCase()}</span>
+        <span class="ss-log-row__name">${result}</span>
+        <span class="ss-log-row__type">${typeStr}</span>
+        <span class="ss-log-row__result ${badgeClass}">${shortResult}</span>`;
+    return el;
+}
+
+// ──────────────────────────────────────
+// 관리자 잠금 해제
+// ──────────────────────────────────────
+async function handleUnlock() {
+    const code = ssUnlockInput.value.trim().toUpperCase();
+    if (!code) return;
+
+    ssUnlockBtn.disabled = true;
+    ssUnlockResult.hidden = true;
+
+    const { data: item } = await supabase
+        .from('order_item')
+        .select('id, item_status, transfer_generated_at')
+        .eq('qr_code_uuid', code)
+        .maybeSingle();
+
+    if (!item) {
+        showUnlockResult('QR 코드를 찾을 수 없습니다.', false);
+        ssUnlockBtn.disabled = false;
+        return;
+    }
+
+    if (item.item_status !== 'SUSPENDED') {
+        showUnlockResult(`현재 상태: ${item.item_status} (SUSPENDED 상태만 해제 가능)`, false);
+        ssUnlockBtn.disabled = false;
+        return;
+    }
+
+    // SUSPENDED → ORDERED 원복, transfer_generated_at NULL 초기화
+    const { error } = await supabase
+        .from('order_item')
+        .update({
+            item_status: 'ORDERED',
+            transfer_token: null,
+            transfer_generated_at: null,
+            updated_at: new Date().toISOString()
+        })
+        .eq('id', item.id);
+
+    if (error) {
+        showUnlockResult('처리 중 오류가 발생했습니다.', false);
+    } else {
+        showUnlockResult(`잠금 해제 완료: ${code}`, true);
+        ssUnlockInput.value = '';
+    }
+    ssUnlockBtn.disabled = false;
+}
+
+function showUnlockResult(msg, ok) {
+    ssUnlockResult.textContent = msg;
+    ssUnlockResult.className = `ss-unlock-result ss-unlock-result--${ok ? 'ok' : 'err'}`;
+    ssUnlockResult.hidden = false;
+}
+
+// ──────────────────────────────────────
+// 이벤트 바인딩
+// ──────────────────────────────────────
+function bindEvents() {
+    ssRetryBtn.addEventListener('click', startCamera);
+
+    ssManualBtn.addEventListener('click', () => {
+        ssManualPanel.hidden = !ssManualPanel.hidden;
+        if (!ssManualPanel.hidden) ssManualInput.focus();
+    });
+
+    ssManualSubmit.addEventListener('click', () => {
+        const v = ssManualInput.value.trim();
+        if (v) { processQR(v); ssManualInput.value = ''; }
+    });
+
+    ssManualInput.addEventListener('keydown', e => {
+        if (e.key === 'Enter') ssManualSubmit.click();
+    });
+
+    btnEntrance.addEventListener('click', () => setScanType('ENTRANCE'));
+    btnPickup.addEventListener('click', () => setScanType('STORE_PICKUP'));
+
+    ssUnlockBtn.addEventListener('click', handleUnlock);
+    ssUnlockInput.addEventListener('keydown', e => { if (e.key === 'Enter') handleUnlock(); });
+
+    // 팔찌 모달
+    ssWristbandCloseBtn.addEventListener('click', () => { ssWristbandModal.hidden = true; });
+    document.getElementById('ssWristbandBackdrop').addEventListener('click', () => { ssWristbandModal.hidden = true; });
+
+    // 예외 승인 모달
+    ssExceptionCancelBtn.addEventListener('click', () => { ssExceptionModal.hidden = true; pendingExceptionItem = null; });
+    document.getElementById('ssExceptionBackdrop').addEventListener('click', () => {
+        ssExceptionModal.hidden = true; pendingExceptionItem = null;
+    });
+
+    ssExceptionApproveBtn.addEventListener('click', async () => {
+        if (!pendingExceptionItem) return;
+        const { item, code } = pendingExceptionItem;
+
+        await supabase
+            .from('order_item')
+            .update({ item_status: 'ENTERED', updated_at: new Date().toISOString() })
+            .eq('id', item.id);
+
+        await insertScanLog(item.id, RESULT.SUCCESS_EXCEPTION);
+        await renderResult(item, RESULT.SUCCESS_EXCEPTION, code);
+
+        ssExceptionModal.hidden = true;
+        pendingExceptionItem = null;
+    });
+}
+
+function setScanType(type) {
+    scanType = type;
+    btnEntrance.classList.toggle('ss-scan-type-btn--active', type === 'ENTRANCE');
+    btnPickup.classList.toggle('ss-scan-type-btn--active', type === 'STORE_PICKUP');
+}
+
+// ──────────────────────────────────────
+// SVG 아이콘 헬퍼
+// ──────────────────────────────────────
+function successSVG() {
+    return `<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#059669" stroke-width="2.5">
+        <path d="M22 11.08V12a10 10 0 11-5.93-9.14"/>
+        <polyline points="22 4 12 14.01 9 11.01"/>
+    </svg>`;
+}
+function warningSVG() {
+    return `<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#D97706" stroke-width="2.5">
+        <path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/>
+        <line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>
+    </svg>`;
+}
+function failSVG() {
+    return `<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#EF4444" stroke-width="2.5">
+        <circle cx="12" cy="12" r="10"/>
+        <line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/>
+    </svg>`;
+}
+
+// ──────────────────────────────────────
+// 실행
+// ──────────────────────────────────────
+init();

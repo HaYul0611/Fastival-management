@@ -1,0 +1,189 @@
+<!doctype html>
+<html lang="ko" class="layout-menu-fixed layout-compact" data-assets-path="/assets/" data-template="vertical-menu-template-free">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0" />
+    <title>GPS 기반 인파 혼잡도 히트맵 - FESTIO</title>
+
+    <link rel="icon" type="image/x-icon" href="/assets/img/favicon/favicon.ico" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="/assets/vendor/fonts/iconify-icons.css" />
+    <link rel="stylesheet" href="/assets/vendor/css/core.css" />
+    <link rel="stylesheet" href="/assets/css/demo.css" />
+    <link rel="stylesheet" href="/assets/vendor/libs/perfect-scrollbar/perfect-scrollbar.css" />
+    <link rel="stylesheet" href="/assets/vendor/libs/apex-charts/apex-charts.css" />
+    <script src="/assets/vendor/js/helpers.js"></script>
+    <script src="/assets/js/config.js"></script>
+    <style>
+      .premium-gradient {
+        background: linear-gradient(135deg, #696cff 0%, #a2a4ff 100%);
+        color: white;
+      }
+      .stat-card {
+        transition: transform 0.2s;
+      }
+      .stat-card:hover {
+        transform: translateY(-5px);
+      }
+    </style>
+  </head>
+
+  <body>
+    <div class="layout-wrapper layout-content-navbar">
+      <div class="layout-container">
+        
+        <!-- Sidebar Menu -->
+        <aside id="layout-menu" class="layout-menu menu-vertical menu bg-menu-theme">
+          <!-- sidebar.js?v=4 가 런타임에 동적으로 삽입 -->
+        </aside>
+
+        <div class="layout-page">
+          <!-- Navbar -->
+          <nav class="layout-navbar container-xxl navbar navbar-expand-xl navbar-detached align-items-center bg-navbar-theme" id="layout-navbar">
+            <div class="layout-menu-toggle navbar-nav align-items-xl-center me-4 me-xl-0 d-xl-none">
+              <a class="nav-item nav-link px-0 me-xl-6" href="javascript:void(0)">
+                <i class="bx bx-menu bx-sm"></i>
+              </a>
+            </div>
+            <div class="navbar-nav-right d-flex align-items-center" id="navbar-collapse">
+              <h5 class="mb-0 fw-bold"><i class="bx bx-map-pin me-2 text-primary"></i>GPS 기반 인파 혼잡도 히트맵</h5>
+              <ul class="navbar-nav flex-row align-items-center ms-auto">
+                <li class="nav-item dropdown-user dropdown">
+                  <a class="nav-link dropdown-toggle hide-arrow" href="javascript:void(0);" data-bs-toggle="dropdown">
+                    <div class="avatar avatar-online">
+                      <img src="/assets/img/avatars/1.png" class="w-px-40 h-auto rounded-circle" />
+                    </div>
+                  </a>
+                  <ul class="dropdown-menu dropdown-menu-end">
+                    <li>
+                      <a class="dropdown-item" href="#">
+                        <div class="d-flex">
+                          <div class="flex-shrink-0 me-3">
+                            <div class="avatar avatar-online">
+                              <img src="/assets/img/avatars/1.png" class="w-px-40 h-auto rounded-circle" />
+                            </div>
+                          </div>
+                          <div class="flex-grow-1">
+                            <span class="fw-medium d-block">최고 관리자</span>
+                            <small class="text-muted">Master Admin</small>
+                          </div>
+                        </div>
+                      </a>
+                    </li>
+                  </ul>
+                </li>
+              </ul>
+            </div>
+          </nav>
+
+          <!-- Content wrapper -->
+          <div class="content-wrapper">
+            <div class="container-xxl flex-grow-1 container-p-y">
+              
+<div class="row">
+  <div class="col-lg-8 mb-6">
+    <div class="card h-100">
+      <div class="card-header d-flex justify-content-between align-items-center">
+        <h5 class="card-title m-0 fw-semibold">행사장 GPS 실시간 위치 기반 인파 밀집 히트맵</h5>
+        <div class="d-flex gap-2">
+          <span class="badge" style="background: rgba(113, 221, 55, 0.6); color: white;">여유 (Green)</span>
+          <span class="badge" style="background: rgba(255, 171, 0, 0.6); color: white;">보통 (Orange)</span>
+          <span class="badge" style="background: rgba(255, 62, 29, 0.6); color: white;">혼잡/위험 (Red)</span>
+        </div>
+      </div>
+      <div class="card-body">
+        <div class="border rounded p-2 text-center bg-light position-relative" style="min-height: 450px;">
+          <!-- Heatmap Canvas SVG Mockup -->
+          <svg width="100%" height="430" style="background: url('/assets/img/elements/18.jpg') center/cover; border-radius: 4px;">
+            <!-- Zone A (Stage) - Highly Congested -->
+            <circle cx="150" cy="180" r="100" fill="rgba(255, 62, 29, 0.45)" stroke="#ff3e1d" stroke-width="2" />
+            <circle cx="140" cy="170" r="60" fill="rgba(255, 62, 29, 0.6)" />
+            <circle cx="130" cy="160" r="30" fill="rgba(255, 62, 29, 0.85)" />
+            <text x="150" y="185" fill="white" font-weight="bold" text-anchor="middle">A구역: 극심한 혼잡 (92%)</text>
+            
+            <!-- Zone B (FoodTrucks) - Normal -->
+            <circle cx="480" cy="200" r="120" fill="rgba(255, 171, 0, 0.35)" stroke="#ffab00" stroke-width="2" />
+            <circle cx="470" cy="190" r="60" fill="rgba(255, 171, 0, 0.55)" />
+            <text x="480" y="205" fill="white" font-weight="bold" text-anchor="middle">B구역: 보통 (55%)</text>
+            
+            <!-- Zone C (Entrance/MD) - Safe -->
+            <circle cx="320" cy="350" r="70" fill="rgba(113, 221, 55, 0.3)" stroke="#71dd37" stroke-width="2" />
+            <text x="320" y="355" fill="white" font-weight="bold" text-anchor="middle">C구역: 원활 (24%)</text>
+          </svg>
+          <div class="position-absolute bottom-0 start-0 m-3 badge bg-danger">GPS 오차범위: ±3m</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-lg-4 mb-6">
+    <div class="card h-100">
+      <div class="card-header">
+        <h5 class="card-title m-0 fw-semibold">구역별 위험 수준 분석</h5>
+      </div>
+      <div class="card-body">
+        <div id="dangerStatsChart"></div>
+        <div class="alert alert-danger mt-4 d-flex align-items-center">
+          <i class="bx bx-error-circle me-2"></i>
+          <div><strong>경보:</strong> 메인무대 진입로의 병목 현상이 예상됩니다. 안전 요원을 추가 배치하세요!</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+            </div>
+
+            <!-- Footer -->
+            <footer class="content-footer footer bg-footer-theme">
+              <div class="container-xxl d-flex flex-wrap justify-content-between py-2 flex-md-row flex-column">
+                <div class="mb-2 mb-md-0">
+                  © <script>document.write(new Date().getFullYear());</script> <span class="festio-logo-text">FESTIO</span>
+                </div>
+              </div>
+            </footer>
+
+            <div class="content-backdrop fade"></div>
+          </div>
+        </div>
+      </div>
+      <div class="layout-overlay layout-menu-toggle"></div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="/assets/vendor/libs/jquery/jquery.js"></script>
+    <script src="/assets/vendor/libs/popper/popper.js"></script>
+    <script src="/assets/vendor/js/bootstrap.js"></script>
+    <script src="/assets/vendor/libs/perfect-scrollbar/perfect-scrollbar.js"></script>
+    <script src="/assets/vendor/js/menu.js"></script>
+    <script src="/assets/vendor/libs/apex-charts/apexcharts.js"></script>
+    <script src="/assets/js/main.js"></script>
+    <script src="/assets/js/sidebar.js?v=4"></script>
+    
+<script>
+  const options = {
+    series: [{
+      name: '실시간 인파 밀도 (명/㎡)',
+      data: [1.2, 4.8, 2.1, 0.8, 1.5]
+    }],
+    chart: {
+      height: 250,
+      type: 'radar',
+      toolbar: { show: false }
+    },
+    title: {
+      text: '구역별 단위면적당 인파 강도'
+    },
+    xaxis: {
+      categories: ['메인광장', '무대진입로', '푸드트럭라인', '물품보관소', '게이트외곽']
+    },
+    colors: ['#ff3e1d']
+  };
+  const chart = new ApexCharts(document.querySelector("#dangerStatsChart"), options);
+  chart.render();
+</script>
+
+  </body>
+</html>

@@ -1,0 +1,215 @@
+<!doctype html>
+<html lang="ko" class="layout-menu-fixed layout-compact" data-assets-path="/assets/" data-template="vertical-menu-template-free">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0" />
+    <title>회원 및 등급 관리 - FESTIO</title>
+
+    <link rel="icon" type="image/x-icon" href="/assets/img/favicon/favicon.ico" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="/assets/vendor/fonts/iconify-icons.css" />
+    <link rel="stylesheet" href="/assets/vendor/css/core.css" />
+    <link rel="stylesheet" href="/assets/css/demo.css" />
+    <link rel="stylesheet" href="/assets/vendor/libs/perfect-scrollbar/perfect-scrollbar.css" />
+    <link rel="stylesheet" href="/assets/vendor/libs/apex-charts/apex-charts.css" />
+    <script src="/assets/vendor/js/helpers.js"></script>
+    <script src="/assets/js/config.js"></script>
+    <style>
+      .premium-gradient {
+        background: linear-gradient(135deg, #696cff 0%, #a2a4ff 100%);
+        color: white;
+      }
+      .stat-card {
+        transition: transform 0.2s;
+      }
+      .stat-card:hover {
+        transform: translateY(-5px);
+      }
+    </style>
+  </head>
+
+  <body>
+    <div class="layout-wrapper layout-content-navbar">
+      <div class="layout-container">
+        
+        <!-- Sidebar Menu -->
+        <aside id="layout-menu" class="layout-menu menu-vertical menu bg-menu-theme">
+          <!-- sidebar.js?v=4 가 런타임에 동적으로 삽입 -->
+        </aside>
+
+        <div class="layout-page">
+          <!-- Navbar -->
+          <nav class="layout-navbar container-xxl navbar navbar-expand-xl navbar-detached align-items-center bg-navbar-theme" id="layout-navbar">
+            <div class="layout-menu-toggle navbar-nav align-items-xl-center me-4 me-xl-0 d-xl-none">
+              <a class="nav-item nav-link px-0 me-xl-6" href="javascript:void(0)">
+                <i class="bx bx-menu bx-sm"></i>
+              </a>
+            </div>
+            <div class="navbar-nav-right d-flex align-items-center" id="navbar-collapse">
+              <h5 class="mb-0 fw-bold"><i class="bx bx-user me-2 text-primary"></i>회원 및 등급 관리</h5>
+              <ul class="navbar-nav flex-row align-items-center ms-auto">
+                <li class="nav-item dropdown-user dropdown">
+                  <a class="nav-link dropdown-toggle hide-arrow" href="javascript:void(0);" data-bs-toggle="dropdown">
+                    <div class="avatar avatar-online">
+                      <img src="/assets/img/avatars/1.png" class="w-px-40 h-auto rounded-circle" />
+                    </div>
+                  </a>
+                  <ul class="dropdown-menu dropdown-menu-end">
+                    <li>
+                      <a class="dropdown-item" href="#">
+                        <div class="d-flex">
+                          <div class="flex-shrink-0 me-3">
+                            <div class="avatar avatar-online">
+                              <img src="/assets/img/avatars/1.png" class="w-px-40 h-auto rounded-circle" />
+                            </div>
+                          </div>
+                          <div class="flex-grow-1">
+                            <span class="fw-medium d-block">최고 관리자</span>
+                            <small class="text-muted">Master Admin</small>
+                          </div>
+                        </div>
+                      </a>
+                    </li>
+                  </ul>
+                </li>
+              </ul>
+            </div>
+          </nav>
+
+          <!-- Content wrapper -->
+          <div class="content-wrapper">
+            <div class="container-xxl flex-grow-1 container-p-y">
+              
+<div class="row">
+  <div class="col-12 mb-6">
+    <div class="card">
+      <div class="card-header d-flex justify-content-between align-items-center">
+        <h5 class="card-title m-0 fw-semibold">멤버십 혜택 및 등급별 할인 정책</h5>
+        <button class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#policyModal">등급 정책 추가</button>
+      </div>
+      <div class="table-responsive text-nowrap">
+        <table class="table table-hover">
+          <thead>
+            <tr>
+              <th>멤버십 등급</th>
+              <th>가입 기준 (누적 결제금액)</th>
+              <th>O2O 주문 할인율</th>
+              <th>페이 충전 수수료</th>
+              <th>상태</th>
+              <th>작업</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><span class="badge bg-label-danger"><i class="bx bx-crown me-1"></i>VVIP</span></td>
+              <td>₩ 1,000,000 이상</td>
+              <td><strong>10% 할인</strong></td>
+              <td>무료 (0%)</td>
+              <td><span class="badge bg-success">활성</span></td>
+              <td><button class="btn btn-outline-secondary btn-sm"><i class="bx bx-edit"></i> 수정</button></td>
+            </tr>
+            <tr>
+              <td><span class="badge bg-label-primary"><i class="bx bx-star me-1"></i>VIP</span></td>
+              <td>₩ 500,000 이상</td>
+              <td><strong>7% 할인</strong></td>
+              <td>0.5%</td>
+              <td><span class="badge bg-success">활성</span></td>
+              <td><button class="btn btn-outline-secondary btn-sm"><i class="bx bx-edit"></i> 수정</button></td>
+            </tr>
+            <tr>
+              <td><span class="badge bg-label-success">GOLD</span></td>
+              <td>₩ 100,000 이상</td>
+              <td><strong>3% 할인</strong></td>
+              <td>1.0%</td>
+              <td><span class="badge bg-success">활성</span></td>
+              <td><button class="btn btn-outline-secondary btn-sm"><i class="bx bx-edit"></i> 수정</button></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-12">
+    <div class="card">
+      <div class="card-header d-flex justify-content-between align-items-center">
+        <h5 class="card-title m-0 fw-semibold">회원 목록 조회 및 관리</h5>
+        <div class="d-flex">
+          <input type="text" class="form-control form-control-sm me-2" placeholder="이름/이메일 검색" />
+          <button class="btn btn-outline-primary btn-sm">검색</button>
+        </div>
+      </div>
+      <div class="table-responsive text-nowrap">
+        <table class="table table-hover">
+          <thead>
+            <tr>
+              <th>이름</th>
+              <th>이메일</th>
+              <th>회원 등급</th>
+              <th>페이 잔액</th>
+              <th>가입 일자</th>
+              <th>작업</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>김하율</td>
+              <td>hayul@koreait.com</td>
+              <td><span class="badge bg-label-danger">VVIP</span></td>
+              <td>₩ 182,500</td>
+              <td>2026-05-01</td>
+              <td>
+                <button class="btn btn-xs btn-outline-primary">이력</button>
+                <button class="btn btn-xs btn-outline-danger">정지</button>
+              </td>
+            </tr>
+            <tr>
+              <td>박소희</td>
+              <td>sohee@koreait.com</td>
+              <td><span class="badge bg-label-primary">VIP</span></td>
+              <td>₩ 92,000</td>
+              <td>2026-05-03</td>
+              <td>
+                <button class="btn btn-xs btn-outline-primary">이력</button>
+                <button class="btn btn-xs btn-outline-danger">정지</button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+            </div>
+
+            <!-- Footer -->
+            <footer class="content-footer footer bg-footer-theme">
+              <div class="container-xxl d-flex flex-wrap justify-content-between py-2 flex-md-row flex-column">
+                <div class="mb-2 mb-md-0">
+                  © <script>document.write(new Date().getFullYear());</script> <span class="festio-logo-text">FESTIO</span>
+                </div>
+              </div>
+            </footer>
+
+            <div class="content-backdrop fade"></div>
+          </div>
+        </div>
+      </div>
+      <div class="layout-overlay layout-menu-toggle"></div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="/assets/vendor/libs/jquery/jquery.js"></script>
+    <script src="/assets/vendor/libs/popper/popper.js"></script>
+    <script src="/assets/vendor/js/bootstrap.js"></script>
+    <script src="/assets/vendor/libs/perfect-scrollbar/perfect-scrollbar.js"></script>
+    <script src="/assets/vendor/js/menu.js"></script>
+    <script src="/assets/vendor/libs/apex-charts/apexcharts.js"></script>
+    <script src="/assets/js/main.js"></script>
+    <script src="/assets/js/sidebar.js?v=4"></script>
+    
+  </body>
+</html>
