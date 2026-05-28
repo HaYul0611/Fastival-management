@@ -47,6 +47,7 @@ const DOM = {
     venueMapBg:       document.getElementById('venueMapBg'),
     venueMapSvg:      document.getElementById('venueMapSvg'),
     venuePins:        document.getElementById('venuePins'),
+    mapPanel:         document.getElementById('mapPanel'),
     seatPanel:        document.getElementById('seatPanel'),
     seatPanelBack:    document.getElementById('seatPanelBack'),
     seatZoneName:     document.getElementById('seatZoneName'),
@@ -219,37 +220,81 @@ async function loadZones() {
 
     if (error || !zones) return;
 
-    // SVG polygon 동적 생성
-    zones.forEach(zone => {
-        const polygon = document.createElementNS('http://www.w3.org/2000/svg', 'polygon');
-        polygon.setAttribute('points', zone.svg_points);
-        polygon.setAttribute('data-zone-id', zone.id);
-        polygon.setAttribute('data-zone-name', zone.zone_name);
+    // 프리미엄 스타디움 SVG 하드코딩 렌더링
+    DOM.venueMapSvg.innerHTML = `
+      <defs>
+        <style>
+          .stadium-zone { stroke: #ffffff; stroke-width: 3; cursor: pointer; transition: all 0.3s ease; }
+          .stadium-zone:hover { filter: brightness(1.2) drop-shadow(0 0 10px rgba(255,255,255,0.5)); stroke-width: 5; }
+          .stadium-zone.sold-out { fill: #e2e8f0; cursor: not-allowed; }
+          .zone-text { fill: #ffffff; font-family: 'Public Sans', sans-serif; font-weight: bold; font-size: 20px; pointer-events: none; text-anchor: middle; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.5)); }
+          .zone-subtext { fill: rgba(255,255,255,0.9); font-family: 'Public Sans', sans-serif; font-size: 14px; pointer-events: none; text-anchor: middle; }
+        </style>
+      </defs>
 
-        // 밀집도에 따른 클래스
-        if (zone.density_level === '위험' || zone.status === 'DANGER') {
-            polygon.classList.add('zone--sold');
-        } else if (zone.density_level === '혼잡') {
-            polygon.classList.add('zone--limited');
-        } else {
-            polygon.classList.add('zone--available');
+      <!-- 그라운드 배경 -->
+      <path d="M 0,0 L 800,0 L 800,600 L 0,600 Z" fill="transparent" />
+
+      <!-- 외야 (빈 구역) -->
+      <path class="stadium-zone sold-out" d="M 100,200 C 100,0 700,0 700,200 L 600,250 C 600,100 200,100 200,250 Z" />
+      <text x="400" y="100" class="zone-text" style="fill: #64748b; filter: none;">외야석 (오픈예정)</text>
+      
+      <!-- 좌측 외야 커플석 -->
+      <path id="svg-zone-couple-1" class="stadium-zone" d="M 50,300 C 50,200 100,200 100,200 L 200,250 C 150,280 150,350 150,350 Z" fill="#ffb6c1" />
+      <text x="130" y="270" class="zone-text" style="fill: #be185d;">커플석</text>
+
+      <!-- 우측 외야 커플석 -->
+      <path id="svg-zone-couple-2" class="stadium-zone" d="M 750,300 C 750,200 700,200 700,200 L 600,250 C 650,280 650,350 650,350 Z" fill="#ffb6c1" />
+      <text x="670" y="270" class="zone-text" style="fill: #be185d;">커플석</text>
+
+      <!-- 구역 1: VIP (DB 매핑용) -->
+      <path id="svg-zone-0" class="stadium-zone" d="M 300,400 L 500,400 L 550,450 C 450,520 350,520 250,450 Z" fill="#d4af37" />
+      <text x="400" y="440" class="zone-text" id="svg-text-0">VIP 구역</text>
+
+      <!-- 구역 2: 일반석 (DB 매핑용) -->
+      <path id="svg-zone-1" class="stadium-zone" d="M 200,300 C 300,220 500,220 600,300 L 550,360 C 450,280 350,280 250,360 Z" fill="#28a745" />
+      <text x="400" y="290" class="zone-text" id="svg-text-1">일반석 구역</text>
+      
+      <!-- 구역 3: 스탠딩 (DB 매핑용) -->
+      <path id="svg-zone-2" class="stadium-zone" d="M 250,450 C 350,520 450,520 550,450 L 400,600 Z" fill="#3b82f6" />
+      <text x="400" y="520" class="zone-text" id="svg-text-2">스탠딩석</text>
+
+      <!-- 홈플레이트 / 다이아몬드 (장식) -->
+      <polygon points="400,340 430,370 400,400 370,370" fill="#ffffff" opacity="0.8" style="pointer-events:none;" />
+    `;
+
+    // DB 데이터와 SVG 도형 매핑
+    zones.forEach((zone, index) => {
+        if (index > 2) return; // 데모 SVG는 최대 3구역만 매핑
+        
+        const pathEl = DOM.venueMapSvg.querySelector('#svg-zone-' + index);
+        const textEl = DOM.venueMapSvg.querySelector('#svg-text-' + index);
+        
+        if (pathEl && textEl) {
+            textEl.textContent = zone.zone_name;
+            pathEl.setAttribute('data-zone-id', zone.id);
+            
+            // 밀집도 표시 텍스트 추가
+            const sub = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+            sub.setAttribute('x', textEl.getAttribute('x'));
+            sub.setAttribute('y', parseInt(textEl.getAttribute('y')) + 22);
+            sub.setAttribute('class', 'zone-subtext');
+            sub.textContent = `[${zone.density_level}]`;
+            DOM.venueMapSvg.appendChild(sub);
+
+            // 구역 클릭 시 좌석 화면(Seat View)으로 전환
+            pathEl.addEventListener('click', () => onZoneClick(zone));
         }
-
-        // 툴팁 title
-        const title = document.createElementNS('http://www.w3.org/2000/svg', 'title');
-        title.textContent = `${zone.zone_name} - ${zone.density_level}`;
-        polygon.appendChild(title);
-
-        polygon.addEventListener('click', () => onZoneClick(zone));
-        DOM.venueMapSvg.appendChild(polygon);
     });
 
-    await loadStorePins();
+    // 커플석 클릭 시 데모 처리
+    const couple1 = DOM.venueMapSvg.querySelector('#svg-zone-couple-1');
+    const couple2 = DOM.venueMapSvg.querySelector('#svg-zone-couple-2');
+    const coupleHandler = () => alert('커플석은 현재 준비 중입니다.');
+    if (couple1) couple1.addEventListener('click', coupleHandler);
+    if (couple2) couple2.addEventListener('click', coupleHandler);
 
-    // UI 특성상 구역 클릭 없이 바로 첫 번째 구역 좌석 로딩
-    if (zones.length > 0) {
-        onZoneClick(zones[0]);
-    }
+    await loadStorePins();
 }
 
 // 부스 핀 렌더링
@@ -302,7 +347,11 @@ async function onZoneClick(zone) {
 
     state.selectedZoneId = zone.id;
     DOM.seatZoneName.textContent = zone.zone_name;
-    DOM.seatPanel.hidden = false;
+    
+    // 도면(Map View) 숨기고 좌석(Seat View) 보이기 (2-Depth)
+    if (DOM.mapPanel) DOM.mapPanel.hidden = true;
+    if (DOM.seatPanel) DOM.seatPanel.hidden = false;
+    
     await loadSeats(zone.id);
 }
 
@@ -774,9 +823,10 @@ function setupEventListeners() {
     // 예매 버튼
     DOM.bookingBtn.addEventListener('click', handleBooking);
 
-    // 좌석 패널 뒤로가기
+    // 좌석 패널 뒤로가기 (좌석 뷰 -> 도면 뷰 전환)
     DOM.seatPanelBack.addEventListener('click', () => {
-        DOM.seatPanel.hidden = true;
+        if (DOM.seatPanel) DOM.seatPanel.hidden = true;
+        if (DOM.mapPanel) DOM.mapPanel.hidden = false;
         state.selectedZoneId = null;
     });
 

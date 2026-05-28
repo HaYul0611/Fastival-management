@@ -91,46 +91,68 @@
       <button id="adultVerifyBtn" class="btn btn-sm btn-danger ms-auto">본인인증 하기</button>
     </div>
     
-    <div class="card h-100">
-      <div class="card-header d-flex justify-content-between align-items-center border-bottom">
+    <div class="card h-100 shadow-sm border-0">
+      <div class="card-header d-flex justify-content-between align-items-center border-bottom bg-white py-3">
         <div>
-          <h5 class="card-title m-0 fw-semibold d-inline-block">메인 무대 지정석 실시간 좌석 현황</h5>
+          <h5 class="card-title m-0 fw-bold d-inline-block text-dark">🏟️ 스타디움 예매 현황</h5>
           <span id="adultOnlyBadge" class="badge bg-danger ms-2" hidden>19+</span>
         </div>
         <div class="d-flex gap-2">
-          <span class="badge bg-success">예매가능</span>
-          <span class="badge bg-warning">가선점 (O2O)</span>
-          <span class="badge bg-danger">결제완료</span>
+          <span class="badge" style="background-color: #d4af37; color: #fff;">VIP 구역</span>
+          <span class="badge" style="background-color: #28a745; color: #fff;">일반석</span>
+          <span class="badge" style="background-color: #ffb6c1; color: #000;">커플석</span>
+          <span class="badge" style="background-color: #e2e8f0; color: #475569;">빈 구역</span>
         </div>
       </div>
-      <div class="card-body py-4" id="seatPanel">
-        <div class="d-flex justify-content-between align-items-center mb-3">
-            <div>
-              <h6 class="mb-0" id="eventTitle">FASTIVAL 행사</h6>
-              <small class="text-muted" id="eventDate">2026.10.01 ~ 2026.10.03</small>
-            </div>
-            <div>
-              <span id="seatZoneName" class="badge bg-label-primary fs-6">A구역</span>
-            </div>
-        </div>
-        <div class="stage-bar bg-dark text-white text-center py-2 mb-6 fw-bold rounded">STAGE (무대 정면)</div>
-        <div id="seatGrid" class="seat-grid d-flex flex-column align-items-center">
-          <!-- seat-map.js 에서 DB 데이터를 불러와 동적으로 렌더링 됩니다. -->
-          <div class="text-center p-5">
-            <div class="spinner-border text-primary" role="status">
-              <span class="visually-hidden">Loading...</span>
-            </div>
-            <p class="mt-2 text-muted">좌석 정보를 불러오는 중입니다...</p>
+
+      <div class="card-body p-0 position-relative" style="min-height: 600px; background-color: #f8fafc; overflow: hidden;">
+        
+        <!-- MAP VIEW (1단계 도면) -->
+        <div id="mapPanel" class="w-100 h-100 d-flex flex-column align-items-center justify-content-center p-4 transition-all" style="position: absolute; top: 0; left: 0;">
+          <h6 class="mb-4 text-center fw-bold text-secondary">원하시는 블록(구역)을 선택해주세요.</h6>
+          <div class="position-relative w-100 h-100 d-flex justify-content-center align-items-center">
+            <!-- 스타디움 도면 렌더링 영역 (SVG) -->
+            <svg id="venueMapSvg" viewBox="0 0 800 600" class="w-100" style="max-width: 800px; filter: drop-shadow(0 10px 15px rgba(0,0,0,0.1));"></svg>
+            <div id="venuePins" class="position-absolute top-0 start-0 w-100 h-100" style="pointer-events: none;"></div>
           </div>
         </div>
+
+        <!-- SEAT VIEW (2단계 좌석) -->
+        <div id="seatPanel" class="w-100 h-100 bg-white p-4 transition-all" style="position: absolute; top: 0; left: 0; z-index: 10;" hidden>
+          <div class="d-flex justify-content-between align-items-center mb-3">
+            <button id="seatPanelBack" class="btn btn-outline-secondary btn-sm shadow-sm rounded-pill px-3">
+              <i class="bx bx-chevron-left me-1"></i> 전체 도면으로 돌아가기
+            </button>
+            <div class="text-end">
+              <h6 class="mb-0 fw-bold" id="eventTitle">FASTIVAL 행사</h6>
+              <small class="text-muted" id="eventDate">2026.10.01 ~ 2026.10.03</small>
+            </div>
+          </div>
+          
+          <div class="d-flex justify-content-between align-items-center mb-4 pb-3 border-bottom">
+            <div class="d-flex gap-2 align-items-center">
+              <span class="badge bg-success">예매가능</span>
+              <span class="badge bg-warning text-dark">가선점</span>
+              <span class="badge bg-danger">결제완료</span>
+            </div>
+            <span id="seatZoneName" class="badge bg-primary fs-5 px-4 py-2 shadow-sm rounded-pill">A구역</span>
+          </div>
+
+          <div class="stage-bar bg-dark text-white text-center py-2 mb-5 fw-bold rounded shadow-sm mx-auto" style="letter-spacing: 2px; max-width: 600px;">STAGE (무대 정면)</div>
+          
+          <div id="seatGrid" class="seat-grid d-flex flex-column align-items-center pb-5 overflow-auto" style="max-height: 400px;">
+            <div class="text-center p-5">
+              <div class="spinner-border text-primary" role="status">
+                <span class="visually-hidden">Loading...</span>
+              </div>
+              <p class="mt-2 text-muted">좌석 정보를 불러오는 중입니다...</p>
+            </div>
+          </div>
+        </div>
+
+        <img id="venueMapBg" hidden />
+        <div id="festioPayBalance" hidden></div>
       </div>
-      
-      <!-- 숨김 처리된 venueMapSvg (seat-map.js 오류 방지용) -->
-      <div id="venueMapSvg" hidden></div>
-      <div id="venuePins" hidden></div>
-      <img id="venueMapBg" hidden />
-      <button id="seatPanelBack" hidden>뒤로가기</button>
-      <div id="festioPayBalance" hidden></div>
     </div>
   </div>
 
