@@ -220,79 +220,105 @@ async function loadZones() {
 
     if (error || !zones) return;
 
-    // 프리미엄 스타디움 SVG 하드코딩 렌더링
-    DOM.venueMapSvg.innerHTML = `
-      <defs>
-        <style>
-          .stadium-zone { stroke: #ffffff; stroke-width: 3; cursor: pointer; transition: all 0.3s ease; }
-          .stadium-zone:hover { filter: brightness(1.2) drop-shadow(0 0 10px rgba(255,255,255,0.5)); stroke-width: 5; }
-          .stadium-zone.sold-out { fill: #e2e8f0; cursor: not-allowed; }
-          .zone-text { fill: #ffffff; font-family: 'Public Sans', sans-serif; font-weight: bold; font-size: 20px; pointer-events: none; text-anchor: middle; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.5)); }
-          .zone-subtext { fill: rgba(255,255,255,0.9); font-family: 'Public Sans', sans-serif; font-size: 14px; pointer-events: none; text-anchor: middle; }
-        </style>
-      </defs>
+    // SVG 렌더링 함수 (수학적 렌더링)
+    function createStadiumSVG() {
+        let svg = `
+          <defs>
+            <style>
+              .stadium-bg { fill: #f8fafc; }
+              .stadium-field { fill: #86efac; stroke: #ffffff; stroke-width: 2; pointer-events: none; }
+              .stadium-dirt { fill: #d4a373; pointer-events: none; }
+              .stadium-block { stroke: #ffffff; stroke-width: 1.5; cursor: pointer; transition: all 0.2s ease; }
+              .stadium-block:hover { filter: brightness(1.15) drop-shadow(0 0 8px rgba(0,0,0,0.4)); stroke-width: 2.5; stroke: #000; z-index: 10; }
+              .stadium-block.sold-out { fill: #cbd5e1; cursor: not-allowed; }
+              .stadium-block.sold-out:hover { filter: brightness(0.95); stroke: #ffffff; stroke-width: 1.5; }
+              .zone-text { font-family: 'Public Sans', sans-serif; font-size: 11px; font-weight: 700; fill: #ffffff; text-anchor: middle; pointer-events: none; }
+            </style>
+          </defs>
+          <rect width="100%" height="100%" class="stadium-bg" />
+        `;
 
-      <!-- 그라운드 배경 -->
-      <path d="M 0,0 L 800,0 L 800,600 L 0,600 Z" fill="transparent" />
+        const cx = 400;
+        const cy = 460;
 
-      <!-- 외야 (빈 구역) -->
-      <path class="stadium-zone sold-out" d="M 100,200 C 100,0 700,0 700,200 L 600,250 C 600,100 200,100 200,250 Z" />
-      <text x="400" y="100" class="zone-text" style="fill: #64748b; filter: none;">외야석 (오픈예정)</text>
-      
-      <!-- 좌측 외야 커플석 -->
-      <path id="svg-zone-couple-1" class="stadium-zone" d="M 50,300 C 50,200 100,200 100,200 L 200,250 C 150,280 150,350 150,350 Z" fill="#ffb6c1" />
-      <text x="130" y="270" class="zone-text" style="fill: #be185d;">커플석</text>
+        function createRing(rIn, rOut, startA, endA, numB, color, prefix, isClickable=false, dbZoneIndex=-1) {
+            let res = '';
+            const step = (endA - startA) / numB;
+            for(let i=0; i<numB; i++) {
+                const a1 = (startA + i*step) * Math.PI/180;
+                const a2 = (startA + (i+1)*step) * Math.PI/180;
+                const p = `M ${cx + rIn*Math.cos(a1)},${cy + rIn*Math.sin(a1)} A ${rIn} ${rIn} 0 0 1 ${cx + rIn*Math.cos(a2)},${cy + rIn*Math.sin(a2)} L ${cx + rOut*Math.cos(a2)},${cy + rOut*Math.sin(a2)} A ${rOut} ${rOut} 0 0 0 ${cx + rOut*Math.cos(a1)},${cy + rOut*Math.sin(a1)} Z`;
+                
+                const isTarget = isClickable && (dbZoneIndex === -1 || (i === dbZoneIndex)); 
+                const cls = isTarget ? 'stadium-block' : 'stadium-block sold-out';
+                const id = isTarget ? `id="svg-zone-${prefix}-${i}"` : '';
+                const fill = isTarget ? color : '#cbd5e1'; // 회색
+                
+                res += `<path ${id} class="${cls}" d="${p}" fill="${fill}" data-is-target="${isTarget}" />`;
+                
+                const midA = (startA + (i+0.5)*step) * Math.PI/180;
+                const midR = (rIn + rOut)/2;
+                const tx = cx + midR*Math.cos(midA);
+                const ty = cy + midR*Math.sin(midA) + 4;
+                const textColor = isTarget ? '#ffffff' : '#64748b';
+                res += `<text x="${tx}" y="${ty}" class="zone-text" style="fill: ${textColor}">${prefix}${i+1}</text>`;
+            }
+            return res;
+        }
 
-      <!-- 우측 외야 커플석 -->
-      <path id="svg-zone-couple-2" class="stadium-zone" d="M 750,300 C 750,200 700,200 700,200 L 600,250 C 650,280 650,350 650,350 Z" fill="#ffb6c1" />
-      <text x="670" y="270" class="zone-text" style="fill: #be185d;">커플석</text>
-
-      <!-- 구역 1: VIP (DB 매핑용) -->
-      <path id="svg-zone-0" class="stadium-zone" d="M 300,400 L 500,400 L 550,450 C 450,520 350,520 250,450 Z" fill="#d4af37" />
-      <text x="400" y="440" class="zone-text" id="svg-text-0">VIP 구역</text>
-
-      <!-- 구역 2: 일반석 (DB 매핑용) -->
-      <path id="svg-zone-1" class="stadium-zone" d="M 200,300 C 300,220 500,220 600,300 L 550,360 C 450,280 350,280 250,360 Z" fill="#28a745" />
-      <text x="400" y="290" class="zone-text" id="svg-text-1">일반석 구역</text>
-      
-      <!-- 구역 3: 스탠딩 (DB 매핑용) -->
-      <path id="svg-zone-2" class="stadium-zone" d="M 250,450 C 350,520 450,520 550,450 L 400,600 Z" fill="#3b82f6" />
-      <text x="400" y="520" class="zone-text" id="svg-text-2">스탠딩석</text>
-
-      <!-- 홈플레이트 / 다이아몬드 (장식) -->
-      <polygon points="400,340 430,370 400,400 370,370" fill="#ffffff" opacity="0.8" style="pointer-events:none;" />
-    `;
-
-    // DB 데이터와 SVG 도형 매핑
-    zones.forEach((zone, index) => {
-        if (index > 2) return; // 데모 SVG는 최대 3구역만 매핑
+        // 외야석 (스탠딩 매핑용) - dbZoneIndex 2(중앙 외야)를 스탠딩으로 매핑
+        svg += createRing(350, 410, 225, 315, 6, '#3b82f6', 'OUT-', true, 2); 
         
-        const pathEl = DOM.venueMapSvg.querySelector('#svg-zone-' + index);
-        const textEl = DOM.venueMapSvg.querySelector('#svg-text-' + index);
+        // 그라운드
+        svg += `<path class="stadium-field" d="M ${cx},${cy} L ${cx + 340*Math.cos(225*Math.PI/180)},${cy + 340*Math.sin(225*Math.PI/180)} A 340 340 0 0 1 ${cx + 340*Math.cos(315*Math.PI/180)},${cy + 340*Math.sin(315*Math.PI/180)} Z" />`;
+        svg += `<path class="stadium-dirt" d="M ${cx},${cy} L ${cx + 140*Math.cos(225*Math.PI/180)},${cy + 140*Math.sin(225*Math.PI/180)} A 140 140 0 0 1 ${cx + 140*Math.cos(315*Math.PI/180)},${cy + 140*Math.sin(315*Math.PI/180)} Z" />`;
+        svg += `<polygon points="${cx},410 ${cx+15},425 ${cx},440 ${cx-15},425" fill="#ffffff" opacity="0.8" />`; // 다이아몬드
+
+        // 내야석 3층 (일반) - dbZoneIndex 3(중앙)를 일반으로 매핑
+        svg += createRing(230, 300, -10, 190, 8, '#28a745', 'GEN-', true, 3);
         
-        if (pathEl && textEl) {
-            textEl.textContent = zone.zone_name;
+        // 내야석 2층 (응원석/커플) - 다 커플석으로 치고 매핑은 안함
+        svg += createRing(160, 220, -10, 190, 6, '#ffb6c1', 'CPL-', true, -1);
+
+        // 내야석 1층 (VIP / 포수후면) - dbZoneIndex 2(중앙)를 VIP로 매핑
+        svg += createRing(90, 150, -10, 190, 5, '#d4af37', 'VIP-', true, 2);
+
+        return svg;
+    }
+
+    DOM.venueMapSvg.innerHTML = createStadiumSVG();
+
+    // 생성된 SVG 내에서 DB 존과 매핑
+    // zones[0]: VIP A구역 -> VIP-2
+    // zones[1]: 일반 B구역 -> GEN-3
+    // zones[2]: 스탠딩 구역 -> OUT-2
+    
+    const mappings = [
+        { zoneIdx: 0, svgId: 'svg-zone-VIP-2' },
+        { zoneIdx: 1, svgId: 'svg-zone-GEN-3' },
+        { zoneIdx: 2, svgId: 'svg-zone-OUT-2' }
+    ];
+
+    mappings.forEach(m => {
+        const zone = zones[m.zoneIdx];
+        if (!zone) return;
+        const pathEl = DOM.venueMapSvg.querySelector('#' + m.svgId);
+        if (pathEl) {
             pathEl.setAttribute('data-zone-id', zone.id);
-            
-            // 밀집도 표시 텍스트 추가
-            const sub = document.createElementNS('http://www.w3.org/2000/svg', 'text');
-            sub.setAttribute('x', textEl.getAttribute('x'));
-            sub.setAttribute('y', parseInt(textEl.getAttribute('y')) + 22);
-            sub.setAttribute('class', 'zone-subtext');
-            sub.textContent = `[${zone.density_level}]`;
-            DOM.venueMapSvg.appendChild(sub);
-
-            // 구역 클릭 시 좌석 화면(Seat View)으로 전환
             pathEl.addEventListener('click', () => onZoneClick(zone));
+            
+            // 이름 텍스트 변경
+            const textEl = pathEl.nextElementSibling;
+            if (textEl && textEl.tagName === 'text') {
+                textEl.textContent = zone.zone_name;
+            }
         }
     });
 
-    // 커플석 클릭 시 데모 처리
-    const couple1 = DOM.venueMapSvg.querySelector('#svg-zone-couple-1');
-    const couple2 = DOM.venueMapSvg.querySelector('#svg-zone-couple-2');
-    const coupleHandler = () => alert('커플석은 현재 준비 중입니다.');
-    if (couple1) couple1.addEventListener('click', coupleHandler);
-    if (couple2) couple2.addEventListener('click', coupleHandler);
+    // CPL (커플석) 데모 클릭 처리
+    DOM.venueMapSvg.querySelectorAll('[id^="svg-zone-CPL-"]').forEach(el => {
+        el.addEventListener('click', () => alert('커플석은 현재 준비 중입니다.'));
+    });
 
     await loadStorePins();
 }
