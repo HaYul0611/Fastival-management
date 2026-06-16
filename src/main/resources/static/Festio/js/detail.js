@@ -89,16 +89,110 @@ function renderEventDetail(detail) {
     }
   }
 
-  // 좌석 배치도 동기화 (구역 선택 영역 배경 이미지 제거)
-  /*
-  const mapUrl = detail.mapImageUrl || detail.map_image_url;
-  if (mapUrl) {
-    const bgOverlay = document.getElementById('venueBgOverlay');
-    if (bgOverlay) {
-      bgOverlay.style.backgroundImage = `url('${mapUrl}')`;
+  // 장소 탭 지도 및 링크 동기화
+  const tabVenue = document.getElementById('tab-venue');
+  if (tabVenue) {
+    const inner = tabVenue.querySelector('.tab-content-inner');
+    let address = detail.venue || '등록된 주소가 없습니다.';
+
+    if (inner) {
+      const savedCustomAddressEl = inner.querySelector('#savedCustomAddress');
+      if (savedCustomAddressEl && savedCustomAddressEl.textContent.trim()) {
+        address = savedCustomAddressEl.innerHTML.replace(/<br>/gi, '\\n'); // 원래 포맷으로 복원
+        detail.venue = address;
+        _eventDetail.venue = address;
+      }
+
+      const formattedAddress = address.replace(/\\n/g, '<br>').replace(/\n/g, '<br>').replace(' (지번:', '<br>(지번:');
+
+      // 0. Extract transit text
+      let transitContentHtml = '<p>대중교통 정보가 없습니다.</p>';
+      const firstTransit = inner.querySelector('#transitContent');
+      if (firstTransit) {
+        transitContentHtml = firstTransit.innerHTML;
+      }
+
+      // 옛날 데이터(카카오맵 네이버지도 구글 길찾기) 문자열 레벨 청소
+      let cleanTransit = transitContentHtml;
+      cleanTransit = cleanTransit.replace(/<[^>]*>카카오맵<\/[^>]*>/gi, '');
+      cleanTransit = cleanTransit.replace(/<[^>]*>네이버지도<\/[^>]*>/gi, '');
+      cleanTransit = cleanTransit.replace(/<[^>]*>구글\s*길찾기<\/[^>]*>/gi, '');
+      cleanTransit = cleanTransit.replace(/카카오맵|네이버지도|구글\s*길찾기/gi, '');
+      if (!cleanTransit.replace(/<[^>]*>/g, '').trim()) {
+        cleanTransit = '<p>대중교통 정보가 없습니다.</p>';
+      }
+      transitContentHtml = cleanTransit;
+
+      // 장소 탭 내부는 무조건 동적으로 재생성되므로 기존 찌꺼기(인천 등) 완벽히 초기화
+      inner.innerHTML = '';
+
+      // 1. Map Update (Recreate cleanly at the top)
+      let mapWrap = document.createElement('div');
+      mapWrap.className = 'venue-map-wrap';
+      mapWrap.style.height = '400px';
+      mapWrap.style.width = '100%';
+      mapWrap.style.background = '#e9ecef';
+      mapWrap.style.borderRadius = '8px';
+      mapWrap.style.overflow = 'hidden';
+      mapWrap.style.marginBottom = '2rem';
+      inner.insertBefore(mapWrap, inner.firstChild);
+
+      let googleMapFrame = document.createElement('iframe');
+      googleMapFrame.id = 'googleMap';
+      googleMapFrame.style.border = '0';
+      googleMapFrame.style.display = 'block';
+      googleMapFrame.style.width = '100%';
+      googleMapFrame.style.height = '100%';
+      googleMapFrame.src = `https://maps.google.com/maps?q=${encodeURIComponent(address.split(' 상세:')[0])}&output=embed`;
+      mapWrap.appendChild(googleMapFrame);
+
+      // 2. Text Address Update
+      let addressWrap = document.createElement('div');
+      addressWrap.id = 'venueAddressWrap';
+      addressWrap.style.marginBottom = '2rem';
+      addressWrap.innerHTML = `<h4 style="font-size: 1.1rem; font-weight: 700; color: var(--text-main); margin-top: 0; margin-bottom: 12px; line-height: 1.4;">${formattedAddress}</h4>`;
+      mapWrap.after(addressWrap);
+
+      // 3. Transit Editor Sync Area Update
+      let transitInfoArea = document.createElement('div');
+      transitInfoArea.id = 'transitInfoArea';
+      transitInfoArea.className = 'venue-transit-info';
+      transitInfoArea.style.padding = '1.5rem';
+      transitInfoArea.style.background = 'var(--bg-surface1)';
+      transitInfoArea.style.borderRadius = '8px';
+      transitInfoArea.style.marginBottom = '2rem';
+      addressWrap.after(transitInfoArea);
+
+      transitInfoArea.innerHTML = `
+        <h4 style="margin-top:0; margin-bottom:1rem; font-size:1.1rem; color:var(--text-main);">대중교통 안내</h4>
+        <div id="transitContent" style="color:var(--text-sub); line-height:1.6;">${transitContentHtml}</div>
+      `;
+
+      // 4. Directions Links Wrap
+      let linksWrap = inner.querySelector('#directionsLinksWrap');
+      if (!linksWrap) {
+        linksWrap = document.createElement('div');
+        linksWrap.id = 'directionsLinksWrap';
+        transitInfoArea.after(linksWrap);
+      }
+      linksWrap.innerHTML = `
+        <div style="margin-top: 1.5rem;">
+          <h4 style="font-size: 1.1rem; font-weight: 700; color: var(--text-main); margin-top: 0; margin-bottom: 12px; line-height: 1.4;">길찾기</h4>
+          <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+            <a href="https://map.kakao.com/link/search/${encodeURIComponent(address.split(' (지번:')[0].split('\\n')[0].split('\n')[0].split(' 상세:')[0])}" target="_blank" style="display:inline-flex; align-items:center; gap:6px; padding: 10px 16px; background: #FEE500; color: #000; border-radius: 8px; text-decoration: none; font-weight: 600; font-size: 0.9rem;">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="#000"><path d="M12 3c-5.523 0-10 3.514-10 7.85 0 2.804 1.83 5.253 4.606 6.647l-1.18 4.34c-.05.18.17.33.32.22l5.12-3.41c.37.04.74.06 1.13.06 5.523 0 10-3.514 10-7.85C22 6.514 17.523 3 12 3z"/></svg>카카오맵
+            </a>
+            <a href="https://map.naver.com/v5/search/${encodeURIComponent(address.split(' (지번:')[0].split('\\n')[0].split('\n')[0].split(' 상세:')[0])}" target="_blank" style="display:inline-flex; align-items:center; gap:6px; padding: 10px 16px; background: #03C75A; color: #fff; border-radius: 8px; text-decoration: none; font-weight: 600; font-size: 0.9rem;">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="#fff"><path d="M16.084 12.637L8.03 2.127C7.625 1.597 7.026 1.334 6.386 1.334H2v21.332h5.922V11.233l8.053 10.51C16.42 22.316 17.02 22.58 17.658 22.58H22V1.248h-5.916v11.389z"/></svg>네이버지도
+            </a>
+            <a href="https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(address.split(' (지번:')[0].split('\\n')[0].split('\n')[0].split(' 상세:')[0])}&travelmode=transit" target="_blank" style="display:inline-flex; align-items:center; gap:6px; padding: 10px 16px; background: #4285F4; color: #fff; border-radius: 8px; text-decoration: none; font-weight: 600; font-size: 0.9rem;">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="#fff"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/></svg>구글 길찾기
+            </a>
+          </div>
+        </div>
+      `;
     }
   }
-  */
 }
 
 function getFigmaTemplateSelector(zoneName) {
@@ -183,7 +277,7 @@ function initVenueMap(zones) {
       legendItem.dataset.zoneNo = zone.zoneNo;
       legendItem.setAttribute('role', 'button');
       legendItem.setAttribute('tabindex', '0');
-      
+
       // 가격 포맷
       const priceText = formatKRW(zone.price);
 
@@ -279,7 +373,7 @@ function updateCtaBar(zone) {
     } else {
       seatsList.innerHTML = _selectedSeats.map(s => {
         const rowClean = (s.seatRow || '').replace(/열$/, '');
-        const priceText = typeof formatKRW === 'function' ? formatKRW(s.price) : `${(s.price||0).toLocaleString()}원`;
+        const priceText = typeof formatKRW === 'function' ? formatKRW(s.price) : `${(s.price || 0).toLocaleString()}원`;
         return `<li class="seat-list-item">
           <span class="seat-list-label">${rowClean}열 ${s.seatNumber}번</span>
           <span class="seat-list-price">${priceText}</span>
@@ -340,7 +434,7 @@ function openSeatSelectionModal(zoneNo, zone) {
   const legendContainer = document.getElementById('userSeatLegendContainer');
   if (legendContainer) {
     legendContainer.innerHTML = '';
-    
+
     // 등록된 각 등급에 맞는 범례 아이템 추가
     userSeatGrades.forEach(g => {
       const colors = colorMap[g.class] || colorMap['seat-available'];
@@ -406,9 +500,9 @@ function openSeatSelectionModal(zoneNo, zone) {
       const rows = [...new Set(seats.map(s => s.seatRow || ''))]
         .filter(r => r)
         .sort((a, b) => a.localeCompare(b, undefined, { numeric: true, sensitivity: 'base' }));
-      
+
       const maxCol = Math.max(...seats.map(s => parseInt(s.seatNumber, 10) || 1), 1);
-      
+
       console.log('[SeatModal] Calculated layout - rows:', rows, 'maxCol:', maxCol);
 
       // 모달 그리드 레이아웃 동적 셋팅 (행 개수에 무대 가이드 행 +1 추가 - 32px 사각형 포맷)
@@ -452,10 +546,10 @@ function openSeatSelectionModal(zoneNo, zone) {
             const isSold = seat.isReserved || seat.status === 'RESERVED' || seat.status === 'HOLD' || seat.status === '예매완료';
             const priceText = typeof formatKRW === 'function' ? formatKRW(seat.price) : `${(seat.price || 0).toLocaleString()}원`;
             const rowClean = (seat.seatRow || '').replace(/열$/, '');
-            const tooltipValue = isSold 
-              ? `${rowClean}열 ${seat.seatNumber}번 (예매완료)` 
+            const tooltipValue = isSold
+              ? `${rowClean}열 ${seat.seatNumber}번 (예매완료)`
               : `${rowClean}열 ${seat.seatNumber}번 (${priceText})`;
-            
+
             cell.dataset.tooltip = tooltipValue;
             cell.title = tooltipValue; // overflow: auto 환경에서도 잘리지 않도록 브라우저 툴팁 지원
 
@@ -659,7 +753,7 @@ function updateTotalQtyFromRows() {
   });
   _quantity = total;
 
-  // Update disabled states
+  // 비활성화 상태 업데이트
   const zone = _eventDetail?.zones.find(z => z.zoneNo === _selectedZoneNo);
   const max = zone ? Math.min(4, zone.remainingCapacity) : 4;
 
@@ -761,7 +855,7 @@ function startQueueSimulation() {
   const totalEntry = _queueCount;
   const myEntry = Math.floor(Math.random() * 80) + 10;
   let elapsed = 0;
-  const totalWait = 30;   // seconds (시뮬레이션 총 시간)
+  const totalWait = 30;   // 초 (시뮬레이션 총 시간)
 
   const countEl = $('.queue-count');
   const progFill = $('.queue-progress-fill');
@@ -1017,7 +1111,7 @@ function enterPaymentModal() {
   $$('.pay-method-btn').forEach(o => o.classList.remove('selected'));
   const cardBtn = $('.pay-method-btn[data-method="card"]');
   if (cardBtn) cardBtn.classList.add('selected');
-  
+
   const payBtnText = $('#btn-pay-text');
   if (payBtnText) payBtnText.textContent = 'Portone으로 결제';
 
@@ -1232,11 +1326,105 @@ function checkPaymentCallback() {
   }
 }
 
+/* ═══════════════════════════════════════════════════════════
+   커스텀 확인 모달 로직
+═══════════════════════════════════════════════════════════ */
+let pendingDeleteAction = null;
+
+function showDeleteConfirm(onConfirm) {
+  pendingDeleteAction = onConfirm;
+  let modal = document.getElementById('dynamicDeleteConfirmModal');
+
+  if (!modal) {
+    modal = document.createElement('div');
+    modal.id = 'dynamicDeleteConfirmModal';
+    modal.style.cssText = `
+      position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+      background: rgba(17, 24, 39, 0.4); z-index: 10000;
+      display: flex; align-items: center; justify-content: center;
+      backdrop-filter: blur(8px); opacity: 0; transition: opacity 0.3s ease;
+    `;
+    modal.innerHTML = `
+      <div style="background: #ffffff; border-radius: 20px; padding: 2rem; width: 340px; box-shadow: 0 20px 40px rgba(0,0,0,0.15); display: flex; flex-direction: column; gap: 1.5rem; text-align: center; transform: scale(0.95); transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);">
+        <div style="display: flex; flex-direction: column; align-items: center; gap: 1rem;">
+          <div style="width: 54px; height: 54px; border-radius: 50%; background: #fee2e2; display: flex; align-items: center; justify-content: center; color: #ef4444; margin-bottom: 0.5rem;">
+            <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M3 6h18"></path>
+              <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+              <line x1="10" y1="11" x2="10" y2="17"></line>
+              <line x1="14" y1="11" x2="14" y2="17"></line>
+            </svg>
+          </div>
+          <h3 style="margin: 0; font-size: 1.3rem; font-weight: 700; color: #111827; letter-spacing: -0.03em;">섹션을 삭제할까요?</h3>
+          <p style="margin: 0; font-size: 0.95rem; color: #6b7280; line-height: 1.5; letter-spacing: -0.02em;">삭제된 섹션과 내용은 다시 복구할 수 없습니다.<br>정말로 삭제하시겠습니까?</p>
+        </div>
+        <div style="display: flex; gap: 0.8rem; margin-top: 0.5rem;">
+          <button id="dynBtnDeleteCancel" style="flex: 1; padding: 0.85rem; background: #f3f4f6; color: #4b5563; border: none; border-radius: 12px; font-size: 1rem; font-weight: 600; cursor: pointer; transition: all 0.2s ease;">취소</button>
+          <button id="dynBtnDeleteConfirm" style="flex: 1; padding: 0.85rem; background: #ef4444; color: #ffffff; border: none; border-radius: 12px; font-size: 1rem; font-weight: 600; cursor: pointer; transition: all 0.2s ease; box-shadow: 0 4px 12px rgba(239,68,68,0.25);">삭제</button>
+        </div>
+      </div>
+    `;
+    document.body.appendChild(modal);
+
+    const cancelBtn = modal.querySelector('#dynBtnDeleteCancel');
+    const confirmBtn = modal.querySelector('#dynBtnDeleteConfirm');
+
+    cancelBtn.addEventListener('mouseenter', () => cancelBtn.style.background = '#e5e7eb');
+    cancelBtn.addEventListener('mouseleave', () => cancelBtn.style.background = '#f3f4f6');
+    confirmBtn.addEventListener('mouseenter', () => confirmBtn.style.background = '#dc2626');
+    confirmBtn.addEventListener('mouseleave', () => confirmBtn.style.background = '#ef4444');
+
+    const closeModal = () => {
+      modal.style.opacity = '0';
+      modal.querySelector('div').style.transform = 'scale(0.95)';
+      setTimeout(() => { modal.style.display = 'none'; }, 300);
+    };
+
+    cancelBtn.addEventListener('click', () => {
+      closeModal();
+      pendingDeleteAction = null;
+    });
+
+    confirmBtn.addEventListener('click', () => {
+      closeModal();
+      if (pendingDeleteAction) {
+        pendingDeleteAction();
+        pendingDeleteAction = null;
+      }
+    });
+  }
+
+  modal.style.display = 'flex';
+  // 애니메이션을 위해 DOM 리플로우 트리거
+  void modal.offsetWidth;
+  modal.style.opacity = '1';
+  modal.querySelector('div').style.transform = 'scale(1)';
+}
 
 /* ═══════════════════════════════════════════════════════════
    DOMContentLoaded — 진입점
 ═══════════════════════════════════════════════════════════ */
 document.addEventListener('DOMContentLoaded', async () => {
+  const btnDeleteCancel = document.getElementById('btnDeleteCancel');
+  const btnDeleteConfirm = document.getElementById('btnDeleteConfirm');
+  const deleteModal = document.getElementById('deleteConfirmModal');
+
+  if (btnDeleteCancel && deleteModal) {
+    btnDeleteCancel.addEventListener('click', () => {
+      deleteModal.style.display = 'none';
+      pendingDeleteAction = null;
+    });
+  }
+  if (btnDeleteConfirm && deleteModal) {
+    btnDeleteConfirm.addEventListener('click', () => {
+      deleteModal.style.display = 'none';
+      if (pendingDeleteAction) {
+        pendingDeleteAction();
+        pendingDeleteAction = null;
+      }
+    });
+  }
+
   checkPaymentCallback();
 
   const eventNo = getEventNo();
@@ -1249,13 +1437,44 @@ document.addEventListener('DOMContentLoaded', async () => {
   // 사용자 편집 데이터 불러오기 (우선순위: DB > localStorage)
   const tabsSection = document.getElementById('detailTabsSection');
   if (tabsSection) {
-    if (detail.descriptionHtml) {
-      tabsSection.innerHTML = detail.descriptionHtml;
-    } else {
-      const savedTabs = localStorage.getItem(`festio_event_${eventNo}_tabs`);
-      if (savedTabs) {
-        tabsSection.innerHTML = savedTabs;
+    let rawHtml = detail.descriptionHtml || localStorage.getItem(`festio_event_${eventNo}_tabs`);
+    if (rawHtml) {
+      // 렌더링 전(Pre-clean) 장소 탭 좀비 데이터 완벽 제거 (깜빡임 방지)
+      const tempDiv = document.createElement('div');
+      tempDiv.innerHTML = rawHtml;
+
+      const tabVenue = tempDiv.querySelector('#tab-venue');
+      if (tabVenue) {
+        const inner = tabVenue.querySelector('.tab-content-inner');
+        if (inner) {
+          let transitContentHtml = '<p>대중교통 정보가 없습니다.</p>';
+          const tc = inner.querySelector('#transitContent');
+          if (tc) { transitContentHtml = tc.innerHTML; }
+
+          let cleanTransit = transitContentHtml;
+          cleanTransit = cleanTransit.replace(/<[^>]*>카카오맵<\/[^>]*>/gi, '');
+          cleanTransit = cleanTransit.replace(/<[^>]*>네이버지도<\/[^>]*>/gi, '');
+          cleanTransit = cleanTransit.replace(/<[^>]*>구글\s*길찾기<\/[^>]*>/gi, '');
+          cleanTransit = cleanTransit.replace(/카카오맵|네이버지도|구글\s*길찾기/gi, '');
+          if (!cleanTransit.replace(/<[^>]*>/g, '').trim()) {
+            cleanTransit = '<p>대중교통 정보가 없습니다.</p>';
+          }
+
+          let customAddress = '';
+          const savedAddrEl = inner.querySelector('#venueAddressWrap h4');
+          if (savedAddrEl) {
+            // \\n을 다시 원래 줄바꿈으로 복원 (필요시)
+            customAddress = savedAddrEl.innerHTML.replace(/<br>/gi, '\\n');
+          }
+
+          // 장소 탭 내용을 완전히 리셋하고 오직 대중교통 텍스트만 안전하게 남겨둠 (하드코딩 찌꺼기 완벽 증발)
+          inner.innerHTML = `<div id="transitContent" style="display:none;">${cleanTransit}</div>`;
+          if (customAddress) {
+            inner.innerHTML += `<div id="savedCustomAddress" style="display:none;">${customAddress}</div>`;
+          }
+        }
       }
+      tabsSection.innerHTML = tempDiv.innerHTML;
     }
   }
 
@@ -1278,6 +1497,27 @@ document.addEventListener('DOMContentLoaded', async () => {
   const tabsHeader = document.querySelector('.detail-tabs-header');
   if (tabsHeader) {
     tabsHeader.addEventListener('click', (e) => {
+      const deleteBtn = e.target.closest('.tab-delete-btn');
+      if (deleteBtn && isEditMode) {
+        e.stopPropagation();
+        const btn = deleteBtn.closest('.detail-tab-btn');
+        let targetId = btn.dataset.target || (btn.dataset.tab ? 'tab-' + btn.dataset.tab : null);
+        if (!targetId) return;
+
+        const accordionItem = document.querySelector(`.builder-accordion-item[data-target-id="${targetId}"]`);
+        if (accordionItem) {
+          const accDeleteBtn = accordionItem.querySelector('.btn-delete-section');
+          if (accDeleteBtn) accDeleteBtn.click();
+        } else {
+          showDeleteConfirm(() => {
+            btn.remove();
+            const content = document.getElementById(targetId);
+            if (content) content.remove();
+          });
+        }
+        return;
+      }
+
       const btn = e.target.closest('.detail-tab-btn');
       if (!btn) return;
 
@@ -1287,15 +1527,25 @@ document.addEventListener('DOMContentLoaded', async () => {
       }
       if (!targetId) return;
 
-      document.querySelectorAll('.detail-tab-btn').forEach(b => b.classList.remove('active'));
-      document.querySelectorAll('.detail-tab-content').forEach(c => c.classList.remove('active'));
+      if (isEditMode) {
+        document.querySelectorAll('.detail-tab-btn').forEach(b => b.classList.remove('active'));
+        document.querySelectorAll('.detail-tab-content').forEach(c => c.classList.remove('active'));
+        btn.classList.add('active');
+        const targetContent = document.getElementById(targetId);
+        if (targetContent) targetContent.classList.add('active');
 
-      btn.classList.add('active');
-      const targetContent = document.getElementById(targetId);
-      if (targetContent) {
-        targetContent.classList.add('active');
-        if (!isEditMode) {
-          const header = document.querySelector('.detail-tabs-header');
+        // 사이드바 아코디언 동기화
+        document.querySelectorAll('.builder-accordion-item').forEach(item => {
+          item.classList.remove('active');
+          if (item.dataset.targetId === targetId) {
+            item.classList.add('active');
+            item.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+          }
+        });
+      } else {
+        const targetContent = document.getElementById(targetId);
+        if (targetContent) {
+          const header = document.querySelector('.tabs-header-wrapper');
           const headerHeight = header ? header.offsetHeight : 0;
           const globalHeaderH = parseInt(getComputedStyle(document.documentElement).getPropertyValue('--header-h')) || 80;
           const offsetTop = targetContent.getBoundingClientRect().top + window.scrollY - headerHeight - globalHeaderH - 20;
@@ -1304,6 +1554,44 @@ document.addEventListener('DOMContentLoaded', async () => {
       }
     });
   }
+
+  // 스크롤 스파이 로직 (뷰 모드 전용)
+  window.addEventListener('scroll', () => {
+    if (isEditMode) return;
+
+    const tabsSection = document.getElementById('detailTabsSection');
+    if (!tabsSection || tabsSection.classList.contains('edit-mode')) return;
+
+    const contents = tabsSection.querySelectorAll('.detail-tab-content');
+    if (!contents || contents.length === 0) return;
+
+    const header = document.querySelector('.tabs-header-wrapper');
+    const headerHeight = header ? header.offsetHeight : 0;
+    const globalHeaderH = parseInt(getComputedStyle(document.documentElement).getPropertyValue('--header-h')) || 80;
+    const offset = headerHeight + globalHeaderH + 150; // 감지 임계값
+
+    let currentId = null;
+
+    contents.forEach(content => {
+      const rect = content.getBoundingClientRect();
+      if (rect.top <= offset && rect.bottom > offset) {
+        currentId = content.id;
+      }
+    });
+
+    if (currentId) {
+      document.querySelectorAll('.detail-tab-btn').forEach(btn => {
+        let targetId = btn.dataset.target;
+        if (!targetId && btn.dataset.tab) targetId = 'tab-' + btn.dataset.tab;
+
+        if (targetId === currentId) {
+          btn.classList.add('active');
+        } else {
+          btn.classList.remove('active');
+        }
+      });
+    }
+  });
 
   // 위시리스트 버튼
   on($('#btn-wish-detail'), 'click', async (e) => {
@@ -1331,6 +1619,8 @@ document.addEventListener('DOMContentLoaded', async () => {
 let isEditMode = false;
 const quillEditors = {};
 
+let originalTabsHtml = '';
+
 function toggleEditMode(enable) {
   isEditMode = enable;
   const detailTabsSection = document.getElementById('detailTabsSection');
@@ -1339,6 +1629,7 @@ function toggleEditMode(enable) {
   const btnSave = document.getElementById('btnSaveAllEdits');
 
   if (enable) {
+    if (detailTabsSection) originalTabsHtml = detailTabsSection.innerHTML;
     body.classList.add('edit-mode');
     if (editBadge) editBadge.style.display = 'inline-flex';
     if (btnSave) btnSave.style.display = 'inline-flex';
@@ -1355,7 +1646,7 @@ function toggleEditMode(enable) {
       wrapper.insertBefore(builderSidebar, detailTabsSection);
 
       initBuilderSidebar(builderSidebar, detailTabsSection);
-      // initMainAreaEditors moved to sidebar
+      // initMainAreaEditors는 사이드바로 이동됨
     } else {
       document.querySelector('.builder-tabs-wrapper').classList.add('edit-builder-layout');
     }
@@ -1365,10 +1656,14 @@ function toggleEditMode(enable) {
     if (btnSave) btnSave.style.display = 'none';
     const wrapper = document.querySelector('.builder-tabs-wrapper');
     if (wrapper) {
-      wrapper.classList.remove('edit-builder-layout');
+      // 롤백 처리 시 detailTabsSection 내용을 복구하기 전 래퍼에서 먼저 분리
+      wrapper.parentNode.insertBefore(detailTabsSection, wrapper);
+      wrapper.remove();
     }
-    // 에디터 비활성화 및 내용 반영
-    // Editors are now in sidebar, right area already has live preview HTML
+    // 롤백 처리 (저장 없이 종료 시 원본으로 복구)
+    if (detailTabsSection && originalTabsHtml) {
+      detailTabsSection.innerHTML = originalTabsHtml;
+    }
   }
 }
 
@@ -1400,6 +1695,9 @@ function destroyMainAreaEditors(tabsSection) {
         } else if (block.classList.contains('gallery-block')) {
           const previewHtml = block.querySelector('.gallery-preview-container').innerHTML;
           combinedHtml += `<div class="view-gallery-block" style="margin-bottom:1rem;">${previewHtml}</div>`;
+        } else if (block.classList.contains('map-block') || block.classList.contains('list-block') || block.classList.contains('notice-block')) {
+          const previewHtml = block.querySelector('.gallery-preview-container').innerHTML;
+          combinedHtml += previewHtml;
         }
       });
       inner.innerHTML = combinedHtml;
@@ -1420,7 +1718,7 @@ function destroyMainAreaEditors(tabsSection) {
 
 function initBuilderSidebar(sidebar, tabsSection) {
   sidebar.innerHTML = `
-    <div class="builder-sidebar-header" style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:1rem;">
+    <div class="builder-sidebar-header" style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:0.5rem; padding-bottom: 0;">
       <div>
         <h3 style="margin:0; font-size:1.1rem;">섹션 구성</h3>
         <p style="font-size:0.75rem; color:var(--text-muted); margin:0.5rem 0 0 0;">드래그하여 순서를 변경하거나 섹션을 관리하세요.</p>
@@ -1439,7 +1737,7 @@ function initBuilderSidebar(sidebar, tabsSection) {
   const btnReset = sidebar.querySelector('#btnResetLayout');
   if (btnReset) {
     btnReset.addEventListener('click', () => {
-      if (confirm('모든 섹션을 삭제하고 초기화하시겠습니까? (이 작업은 되돌릴 수 없습니다)')) {
+      showDeleteConfirm(() => {
         const listWrap = sidebar.querySelector('#builderAccordionList');
         if (listWrap) listWrap.innerHTML = '';
 
@@ -1455,7 +1753,7 @@ function initBuilderSidebar(sidebar, tabsSection) {
           btns.forEach(b => b.remove());
         }
         Toast.success('모든 섹션이 초기화되었습니다. 새 섹션을 추가해 주세요.');
-      }
+      });
     });
   }
 
@@ -1482,6 +1780,14 @@ function initBuilderSidebar(sidebar, tabsSection) {
   }
 
   sidebar.querySelector('#btnAddSectionTop').addEventListener('click', () => handleAddSection());
+
+  // 1번 수정사항: 편집 모드 진입 시 첫 번째 아코디언 자동 클릭 (탭 컨텐츠 노출)
+  setTimeout(() => {
+    const firstAccordionHeader = listWrap.querySelector('.builder-accordion-header');
+    if (firstAccordionHeader) {
+      firstAccordionHeader.click();
+    }
+  }, 100);
 }
 
 function addAccordionItem(listWrap, title, id, index, tabElement) {
@@ -1560,7 +1866,13 @@ function addAccordionItem(listWrap, title, id, index, tabElement) {
       const tabBtn = document.querySelector(`.detail-tab-btn[data-tab="${tabId}"], .detail-tab-btn[data-target="${targetId}"]`);
       if (tabBtn) {
         tabBtn.classList.add('active');
-        tabBtn.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+        const container = tabBtn.closest('.detail-tabs-header');
+        if (container) {
+          const scrollLeft = tabBtn.offsetLeft - (container.clientWidth / 2) + (tabBtn.clientWidth / 2);
+          container.scrollTo({ left: scrollLeft, behavior: 'smooth' });
+        } else {
+          tabBtn.scrollIntoView({ behavior: 'smooth', inline: 'center' });
+        }
       }
     }
   });
@@ -1575,7 +1887,11 @@ function addAccordionItem(listWrap, title, id, index, tabElement) {
     }
     const tabId = targetId.replace('tab-', '');
     const tabBtn = document.querySelector(`.detail-tab-btn[data-tab="${tabId}"], .detail-tab-btn[data-target="${targetId}"]`);
-    if (tabBtn) tabBtn.textContent = nameEl.textContent;
+    if (tabBtn) {
+      const textSpan = tabBtn.querySelector('.tab-title-text');
+      if (textSpan) textSpan.textContent = nameEl.textContent;
+      else tabBtn.textContent = nameEl.textContent;
+    }
   });
 
   const bodyWrap = item.querySelector('.builder-accordion-body');
@@ -1590,7 +1906,7 @@ function addAccordionItem(listWrap, title, id, index, tabElement) {
   item.querySelector('.btn-delete-section').addEventListener('click', (e) => {
     e.stopPropagation();
 
-    if (confirm('이 섹션을 삭제하시겠습니까?')) {
+    showDeleteConfirm(() => {
       const targetId = item.dataset.targetId;
       const targetTab = document.getElementById(targetId);
       if (targetTab) targetTab.remove();
@@ -1600,21 +1916,21 @@ function addAccordionItem(listWrap, title, id, index, tabElement) {
       if (tabBtn) tabBtn.remove();
 
       item.remove();
-      
+
       const listWrap = document.getElementById('builderAccordionList');
       const tabsSection = document.getElementById('detailTabsSection');
       if (listWrap && tabsSection) {
         syncTabsOrder(listWrap, tabsSection);
-        
+
         // 즉시 DB 저장 연동
         const wasEditMode = isEditMode;
         if (wasEditMode) {
           destroyMainAreaEditors(tabsSection);
         }
-        
+
         const htmlContent = tabsSection.innerHTML;
         const eventNo = getEventNo();
-        
+
         eventApi.saveDescriptionHtml(eventNo, htmlContent)
           .then(result => {
             if (result) {
@@ -1635,7 +1951,7 @@ function addAccordionItem(listWrap, title, id, index, tabElement) {
             }
           });
       }
-    }
+    });
   });
 
   const fileInput = item.querySelector('.gallery-upload-input');
@@ -1771,8 +2087,21 @@ function updateGalleryPreview(targetId) {
   inner.innerHTML = html;
 }
 
+const customFonts = [
+  'noto-sans', 'nanum-gothic', 'nanum-myeongjo', 'noto-serif',
+  'jua', 'dongle', 'gowun-dodum', 'hahmlet', 'gamja-flower', 'black-han-sans',
+  'gowun-batang', 'do-hyeon', 'poor-story', 'song-myung', 'yeon-sung',
+  'roboto', 'open-sans', 'lato', 'montserrat', 'oswald', 'source-code-pro',
+  'playfair-display', 'poppins', 'merriweather'
+];
+if (typeof Quill !== 'undefined') {
+  const Font = Quill.import('formats/font');
+  Font.whitelist = [false, ...customFonts];
+  Quill.register(Font, true);
+}
+
 const quillToolbarOptions = [
-  [{ 'font': [] }, { 'size': [] }],
+  [{ 'font': [false, ...customFonts] }, { 'size': [] }],
   ['bold', 'italic', 'underline', 'strike'],
   [{ 'color': [] }, { 'background': [] }],
   [{ 'script': 'sub' }, { 'script': 'super' }],
@@ -1790,70 +2119,10 @@ function initMainAreaEditors(tabsSection) {
     const inner = tab.querySelector('.tab-content-inner');
     if (!inner) return;
 
+    // 장소 탭은 사이드바의 makeVenueEditor에서 처리됨. 추가 주입 필요 없음
     if (tab.id === 'tab-venue') {
-      if (inner.querySelector('.venue-editor-wrap')) return;
-
-      const currentAddress = inner.querySelector('.venue-address-text')?.textContent || '';
-      const currentTransit = inner.querySelector('#transitContent')?.innerHTML || '';
-
-      const editorHtml = `
-        <div class="venue-editor-wrap" style="background: var(--bg-surface1); padding: 1.5rem; border-radius: 12px; margin-bottom: 1.5rem; border: 1px dashed var(--border-default);">
-          <div style="margin-bottom: 1rem;">
-            <label style="display:block; font-weight: 700; margin-bottom: 0.5rem; color:var(--text-main);">행사 장소 주소</label>
-            <div style="display:flex; gap: 0.5rem;">
-              <input type="text" id="venueEditAddress" class="form-control" style="flex: 1; border-radius:8px;" placeholder="예: 서울특별시 강남구 테헤란로 123" value="${currentAddress === '장소 정보가 없습니다.' ? '' : currentAddress}">
-              <button type="button" class="btn btn-primary" id="btnUpdateVenueMap" style="border-radius:8px;">지도 반영</button>
-            </div>
-          </div>
-          <div>
-            <label style="display:block; font-weight: 700; margin-bottom: 0.5rem; color:var(--text-main);">대중교통 안내</label>
-            <textarea id="venueEditTransit" class="form-control" style="width:100%; min-height: 100px; resize: vertical; border-radius:8px;" placeholder="지하철, 버스 등 교통편 안내를 입력하세요">${currentTransit === '대중교통 정보가 없습니다.' ? '' : currentTransit}</textarea>
-          </div>
-        </div>
-      `;
-      inner.insertAdjacentHTML('afterbegin', editorHtml);
-
-      const btnUpdate = inner.querySelector('#btnUpdateVenueMap');
-      const addressInput = inner.querySelector('#venueEditAddress');
-      const transitInput = inner.querySelector('#venueEditTransit');
-
-      btnUpdate.addEventListener('click', () => {
-        const address = addressInput.value.trim();
-        const transit = transitInput.value.trim();
-
-        const addressTextEl = inner.querySelector('.venue-address-text');
-        const transitContentEl = inner.querySelector('#transitContent');
-        const googleMapFrame = inner.querySelector('#googleMap');
-
-        if (addressTextEl) addressTextEl.textContent = address || '장소 정보가 없습니다.';
-        if (transitContentEl) transitContentEl.innerHTML = transit.replace(/\n/g, '<br>') || '대중교통 정보가 없습니다.';
-
-        if (googleMapFrame && address) {
-          googleMapFrame.src = `https://maps.google.com/maps?q=${encodeURIComponent(address)}&output=embed`;
-        }
-
-        let linksWrap = inner.querySelector('#directionsLinksWrap');
-        if (!linksWrap) {
-          linksWrap = document.createElement('div');
-          linksWrap.id = 'directionsLinksWrap';
-          inner.appendChild(linksWrap);
-        }
-
-        if (address) {
-          linksWrap.innerHTML = `
-            <div style="margin-top: 1.5rem; display: flex; gap: 0.5rem; flex-wrap: wrap;">
-              <a href="https://map.kakao.com/link/search/${encodeURIComponent(address)}" target="_blank" style="display:inline-flex; align-items:center; gap:6px; padding: 10px 16px; background: #FEE500; color: #000; border-radius: 8px; text-decoration: none; font-weight: 600; font-size: 0.9rem;"><svg width="16" height="16" viewBox="0 0 24 24" fill="#000"><path d="M12 3c-5.523 0-10 3.514-10 7.85 0 2.804 1.83 5.253 4.606 6.647l-1.18 4.34c-.05.18.17.33.32.22l5.12-3.41c.37.04.74.06 1.13.06 5.523 0 10-3.514 10-7.85C22 6.514 17.523 3 12 3z"/></svg>카카오맵</a>
-              <a href="https://map.naver.com/v5/search/${encodeURIComponent(address)}" target="_blank" style="display:inline-flex; align-items:center; gap:6px; padding: 10px 16px; background: #03C75A; color: #fff; border-radius: 8px; text-decoration: none; font-weight: 600; font-size: 0.9rem;"><svg width="14" height="14" viewBox="0 0 24 24" fill="#fff"><path d="M16.084 12.637L8.03 2.127C7.625 1.597 7.026 1.334 6.386 1.334H2v21.332h5.922V11.233l8.053 10.51C16.42 22.316 17.02 22.58 17.658 22.58H22V1.248h-5.916v11.389z"/></svg>네이버지도</a>
-              <a href="https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(address)}&travelmode=transit" target="_blank" style="display:inline-flex; align-items:center; gap:6px; padding: 10px 16px; background: #4285F4; color: #fff; border-radius: 8px; text-decoration: none; font-weight: 600; font-size: 0.9rem;"><svg width="16" height="16" viewBox="0 0 24 24" fill="#fff"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/></svg>구글맵 길찾기</a>
-            </div>
-          `;
-        } else {
-          linksWrap.innerHTML = '';
-        }
-
-        Toast.success('장소 및 지도가 반영되었습니다.');
-      });
-
+      const editorWrap = inner.querySelector('.venue-editor-wrap');
+      if (editorWrap) return; // Already has editor
       return;
     }
 
@@ -1934,7 +2203,7 @@ function makeBlockEditor(tab, sidebarContainer) {
     block.style.padding = '40px 0 0 0';
     block.style.background = '#fff';
     block.style.boxShadow = '0 4px 6px -1px rgba(0, 0, 0, 0.05)';
-    block.style.overflow = 'hidden';
+    block.style.overflow = 'visible';
 
     const controls = document.createElement('div');
     controls.style.position = 'absolute';
@@ -1996,9 +2265,28 @@ function makeBlockEditor(tab, sidebarContainer) {
     if (typeof Quill !== 'undefined') {
       const quill = new Quill(quillWrap, {
         theme: 'snow',
+        bounds: document.getElementById('builderSidebar'), // Use sidebar as bounds for correct tooltip positioning
         modules: { toolbar: quillToolbarOptions }
       });
       quillEditors[tab.id + '_' + Date.now()] = quill;
+
+      const toolbar = quill.getModule('toolbar');
+      toolbar.addHandler('link', function (value) {
+        if (value) {
+          let range = this.quill.getSelection();
+          if (range == null || range.length === 0) {
+            const cursorPosition = range ? range.index : this.quill.getLength();
+            this.quill.insertText(cursorPosition, '구경하기', 'user');
+            this.quill.setSelection(cursorPosition, '구경하기'.length);
+            range = this.quill.getSelection();
+          }
+          const preview = this.quill.getText(range);
+          this.quill.theme.tooltip.edit('link', preview);
+          this.quill.theme.tooltip.linkRange = range;
+        } else {
+          this.quill.format('link', false);
+        }
+      });
 
       quill.on('text-change', () => {
         syncLivePreview(tab, blocksContainer);
@@ -2015,13 +2303,23 @@ function makeBlockEditor(tab, sidebarContainer) {
     const uploadWrap = document.createElement('div');
     uploadWrap.style.padding = '1.5rem';
     uploadWrap.innerHTML = `
-      <div style="margin-bottom:1rem;">
-        <select class="form-control gallery-layout-select" style="width:100%; border-radius:8px;">
-          <option value="grid">Grid (기본 격자)</option>
-          <option value="masonry">Masonry (핀터레스트 스타일)</option>
-          <option value="mosaic">Mosaic (모자이크형)</option>
-          <option value="carousel">Carousel (캐러셀)</option>
-        </select>
+      <div style="margin-bottom:1rem; position:relative;" class="gallery-custom-dropdown">
+        <input type="hidden" class="gallery-layout-select" value="grid">
+        <div class="custom-select-trigger" tabindex="0" style="width:100%; border-radius:10px; border:1.5px solid #d1d5db; padding:12px 40px 12px 14px; font-size:0.88rem; font-weight:600; color:#334155; background:#fff; cursor:pointer; position:relative; display:flex; justify-content:space-between; align-items:center; transition:border-color 0.2s, box-shadow 0.2s;">
+          <span class="custom-select-label">Grid (기본 격자)</span>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#64748b" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+        </div>
+        <div class="custom-select-options" style="display:none; position:absolute; top:100%; left:0; right:0; margin-top:4px; background:#fff; border:1px solid #e2e8f0; border-radius:8px; box-shadow:0 4px 12px rgba(0,0,0,0.1); z-index:1000; max-height:240px; overflow-y:auto;">
+          <div class="custom-option selected" data-value="grid" style="padding:10px 14px; font-size:0.88rem; color:#334155; cursor:pointer; border-bottom:1px solid #f1f5f9;">Grid (기본 격자)</div>
+          <div class="custom-option" data-value="masonry" style="padding:10px 14px; font-size:0.88rem; color:#334155; cursor:pointer; border-bottom:1px solid #f1f5f9;">Masonry (핀터레스트 스타일)</div>
+          <div class="custom-option" data-value="mosaic" style="padding:10px 14px; font-size:0.88rem; color:#334155; cursor:pointer; border-bottom:1px solid #f1f5f9;">Mosaic (모자이크형)</div>
+          <div class="custom-option" data-value="carousel" style="padding:10px 14px; font-size:0.88rem; color:#334155; cursor:pointer; border-bottom:1px solid #f1f5f9;">Carousel (캐러셀)</div>
+          <div class="custom-option" data-value="filmstrip" style="padding:10px 14px; font-size:0.88rem; color:#334155; cursor:pointer; border-bottom:1px solid #f1f5f9;">Filmstrip (필름 스트립)</div>
+          <div class="custom-option" data-value="polaroid" style="padding:10px 14px; font-size:0.88rem; color:#334155; cursor:pointer; border-bottom:1px solid #f1f5f9;">Polaroid (폴라로이드)</div>
+          <div class="custom-option" data-value="collage" style="padding:10px 14px; font-size:0.88rem; color:#334155; cursor:pointer; border-bottom:1px solid #f1f5f9;">Collage (콜라주)</div>
+          <div class="custom-option" data-value="fullwidth" style="padding:10px 14px; font-size:0.88rem; color:#334155; cursor:pointer; border-bottom:1px solid #f1f5f9;">Full Width (전체 너비)</div>
+          <div class="custom-option" data-value="tiled" style="padding:10px 14px; font-size:0.88rem; color:#334155; cursor:pointer;">Tiled (타일형)</div>
+        </div>
       </div>
       <div style="margin-bottom:1rem; font-weight:700; color:var(--text-main); font-size:0.9rem;">이미지</div>
       <label class="gallery-upload-area" style="display:block; border:1px dashed #d1d5db; border-radius:12px; padding:2rem; text-align:center; cursor:pointer; background:#f9fafb; transition:all 0.2s;">
@@ -2031,7 +2329,7 @@ function makeBlockEditor(tab, sidebarContainer) {
         </div>
         <div style="color:#6b7280; font-size:0.9rem; font-weight:600;">이미지 선택</div>
       </label>
-      <div class="uploaded-image-grid" style="display:grid; grid-template-columns:repeat(auto-fill, minmax(80px, 1fr)); gap:10px; margin-top:1rem;"></div>
+      <div class="uploaded-image-grid" style="display:flex; gap:10px; margin-top:1rem; overflow-x:auto; padding-bottom:8px; flex-wrap:nowrap;"></div>
       <div class="gallery-preview-container" style="display:none;"></div>
     `;
     block.appendChild(uploadWrap);
@@ -2047,7 +2345,45 @@ function makeBlockEditor(tab, sidebarContainer) {
       syncLivePreview(tab, blocksContainer);
     };
 
-    layoutSelect.addEventListener('change', triggerUpdate);
+    // 커스텀 드롭다운 이벤트 처리
+    const customDropdown = block.querySelector('.gallery-custom-dropdown');
+    const triggerBtn = customDropdown.querySelector('.custom-select-trigger');
+    const optionsMenu = customDropdown.querySelector('.custom-select-options');
+    const labelSpan = customDropdown.querySelector('.custom-select-label');
+    const optionItems = customDropdown.querySelectorAll('.custom-option');
+
+    triggerBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const isExpanded = optionsMenu.style.display === 'block';
+      document.querySelectorAll('.custom-select-options').forEach(menu => menu.style.display = 'none');
+      optionsMenu.style.display = isExpanded ? 'none' : 'block';
+      triggerBtn.style.borderColor = isExpanded ? '#d1d5db' : '#6366f1';
+    });
+
+    optionItems.forEach(item => {
+      item.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const value = item.getAttribute('data-value');
+        const text = item.textContent;
+
+        layoutSelect.value = value;
+        labelSpan.textContent = text;
+
+        optionItems.forEach(opt => opt.classList.remove('selected'));
+        item.classList.add('selected');
+
+        optionsMenu.style.display = 'none';
+        triggerBtn.style.borderColor = '#d1d5db';
+        triggerUpdate();
+      });
+    });
+
+    document.addEventListener('click', (e) => {
+      if (!customDropdown.contains(e.target)) {
+        optionsMenu.style.display = 'none';
+        triggerBtn.style.borderColor = '#d1d5db';
+      }
+    });
 
     fileInput.addEventListener('change', (e) => {
       const files = Array.from(e.target.files);
@@ -2066,14 +2402,16 @@ function makeBlockEditor(tab, sidebarContainer) {
           const imgWrap = document.createElement('div');
           imgWrap.className = 'uploaded-image-item';
           imgWrap.style.position = 'relative';
-          imgWrap.style.aspectRatio = '1';
+          imgWrap.style.width = '80px';
+          imgWrap.style.height = '80px';
+          imgWrap.style.flexShrink = '0';
           imgWrap.style.borderRadius = '8px';
           imgWrap.style.overflow = 'hidden';
           imgWrap.style.boxShadow = '0 2px 4px rgba(0,0,0,0.1)';
 
           imgWrap.innerHTML = `
             <img src="${e.target.result}" style="width:100%; height:100%; object-fit:cover;">
-            <button class="btn-remove-img" style="position:absolute; top:4px; right:4px; background:rgba(0,0,0,0.5); color:#fff; border:none; border-radius:50%; width:20px; height:20px; display:flex; align-items:center; justify-content:center; cursor:pointer; font-size:12px;">✕</button>
+            <button class="btn-remove-img" style="position:absolute; top:4px; right:4px; background:rgba(0,0,0,0.55); color:#fff; border:none; border-radius:6px; width:22px; height:22px; display:flex; align-items:center; justify-content:center; cursor:pointer; font-size:11px; line-height:1;">✕</button>
           `;
 
           imgWrap.querySelector('.btn-remove-img').addEventListener('click', () => {
@@ -2090,19 +2428,29 @@ function makeBlockEditor(tab, sidebarContainer) {
     });
 
     if (savedGalleryData) {
-      if (savedGalleryData.layout) layoutSelect.value = savedGalleryData.layout;
+      if (savedGalleryData.layout) {
+        layoutSelect.value = savedGalleryData.layout;
+        const matchedItem = Array.from(optionItems).find(opt => opt.getAttribute('data-value') === savedGalleryData.layout);
+        if (matchedItem) {
+          labelSpan.textContent = matchedItem.textContent;
+          optionItems.forEach(opt => opt.classList.remove('selected'));
+          matchedItem.classList.add('selected');
+        }
+      }
       if (savedGalleryData.images) {
         savedGalleryData.images.forEach(src => {
           const imgWrap = document.createElement('div');
           imgWrap.className = 'uploaded-image-item';
           imgWrap.style.position = 'relative';
-          imgWrap.style.aspectRatio = '1';
+          imgWrap.style.width = '80px';
+          imgWrap.style.height = '80px';
+          imgWrap.style.flexShrink = '0';
           imgWrap.style.borderRadius = '8px';
           imgWrap.style.overflow = 'hidden';
           imgWrap.style.boxShadow = '0 2px 4px rgba(0,0,0,0.1)';
           imgWrap.innerHTML = `
             <img src="${src}" style="width:100%; height:100%; object-fit:cover;">
-            <button class="btn-remove-img" style="position:absolute; top:4px; right:4px; background:rgba(0,0,0,0.5); color:#fff; border:none; border-radius:50%; width:20px; height:20px; display:flex; align-items:center; justify-content:center; cursor:pointer; font-size:12px;">✕</button>
+            <button class="btn-remove-img" style="position:absolute; top:4px; right:4px; background:rgba(0,0,0,0.55); color:#fff; border:none; border-radius:6px; width:22px; height:22px; display:flex; align-items:center; justify-content:center; cursor:pointer; font-size:11px; line-height:1;">✕</button>
           `;
           imgWrap.querySelector('.btn-remove-img').addEventListener('click', () => {
             imgWrap.remove();
@@ -2443,12 +2791,12 @@ function makeBlockEditor(tab, sidebarContainer) {
           if (bg.includes('rgb(239, 246, 255)') || bg.includes('#eff6ff')) type = 'info';
           else if (bg.includes('rgb(240, 253, 244)') || bg.includes('#f0fdf4')) type = 'success';
           addNoticeBlock({ content, type });
-        } else if (child.classList.contains('gallery-grid') || child.classList.contains('gallery-masonry') || child.classList.contains('gallery-mosaic') || child.classList.contains('gallery-slider') || child.classList.contains('gallery-coverflow')) {
+        } else if (child.classList.contains('view-gallery-block')) {
           let layout = 'grid';
-          if (child.classList.contains('gallery-masonry')) layout = 'masonry';
-          else if (child.classList.contains('gallery-mosaic')) layout = 'mosaic';
-          else if (child.classList.contains('gallery-slider')) layout = 'carousel';
-          else if (child.classList.contains('gallery-coverflow')) layout = 'coverflow';
+          const innerHtml = child.innerHTML;
+          if (innerHtml.includes('scroll-snap-type')) layout = 'slider';
+          else if (innerHtml.includes('transform:rotate')) layout = 'polaroid';
+          else if (innerHtml.includes('flex-direction:column')) layout = 'carousel';
           const images = Array.from(child.querySelectorAll('img')).map(img => img.src);
           addGalleryBlock({ layout, images });
         } else {
@@ -2523,7 +2871,10 @@ function handleAddSection(customTitle) {
     const newBtn = document.createElement('button');
     newBtn.className = 'detail-tab-btn';
     newBtn.dataset.target = newId;
-    newBtn.textContent = title;
+    newBtn.innerHTML = `
+      <span class="tab-title-text">${title}</span>
+      <span class="tab-delete-btn" title="탭 삭제">&times;</span>
+    `;
     tabsHeader.appendChild(newBtn);
 
     newBtn.addEventListener('click', () => {
@@ -2534,7 +2885,7 @@ function handleAddSection(customTitle) {
       if (targetContent) targetContent.classList.add('active');
     });
 
-    // Auto focus and scroll
+    // 자동 포커스 및 스크롤
     setTimeout(() => {
       newBtn.click();
       tabsHeader.scrollLeft = tabsHeader.scrollWidth;
@@ -2551,11 +2902,10 @@ function handleAddSection(customTitle) {
   tabsSection.appendChild(newContent);
 
   const inner = newContent.querySelector('.tab-content-inner');
-  makeBlockEditor(newContent, inner);
 
   const listWrap = document.getElementById('builderAccordionList');
   const items = listWrap.querySelectorAll('.builder-accordion-item');
-  addAccordionItem(listWrap, title, newId, items.length);
+  addAccordionItem(listWrap, title, newId, items.length, newContent);
 
   const newItem = listWrap.lastElementChild;
   newItem.querySelector('.builder-accordion-header').click();
@@ -2563,7 +2913,7 @@ function handleAddSection(customTitle) {
 
 document.addEventListener('DOMContentLoaded', () => {
   // 관리자 권한 확인 (여기서는 데모용으로 항상 표시)
-  
+
   const isLoggedIn = localStorage.getItem('isLoggedIn') === 'true' || sessionStorage.getItem('isLoggedIn') === 'true' || !!localStorage.getItem('userToken') || !!sessionStorage.getItem('userToken');
   const userRole = localStorage.getItem('userRole') || sessionStorage.getItem('userRole') || 'CLIENT';
   const globalEdit = document.getElementById('globalEditControls');
@@ -2593,6 +2943,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
       const htmlContent = tabsSection.innerHTML;
       const eventNo = getEventNo();
+
+      // 저장 성공 시 롤백 방지를 위해 백업본 갱신
+      originalTabsHtml = htmlContent;
 
       // 1. DB에 저장 시도 (서버 → Supabase 폴백 순으로 api.js가 처리)
       btnSave.disabled = true;
@@ -2713,43 +3066,151 @@ function makeVenueEditor(tab, sidebarContainer) {
   const inner = tab.querySelector('.tab-content-inner');
   if (!inner) return;
 
-  const currentAddress = inner.querySelector('.venue-address-text')?.textContent || '';
+  const addressEl = inner.querySelector('#venueAddressWrap h4') || inner.querySelector('.venue-address-text');
+  let currentAddress = '';
+  if (addressEl) {
+    currentAddress = addressEl.innerHTML.replace(/<br\s*[\/]?>/gi, ' ').replace(/\s+/g, ' ').trim();
+  }
+
   const currentTransit = inner.querySelector('#transitContent')?.innerHTML || '';
+
+  const addressParts = currentAddress === '등록된 주소가 없습니다.' ? ['', ''] : currentAddress.split(' 상세: ');
+  const baseAddress = addressParts[0] || '';
+  const detailAddress = addressParts[1] || '';
 
   const editorHtml = `
     <div class="venue-editor-wrap" style="background: var(--bg-surface1); padding: 1.5rem; border-radius: 12px; margin-bottom: 1.5rem; border: 1px dashed var(--border-default);">
-      <div style="margin-bottom: 1rem;">
-        <label style="display:block; font-weight: 700; margin-bottom: 0.5rem; color:var(--text-main);">오시는 길 주소</label>
-        <div style="display:flex; gap: 0.5rem; flex-direction:column;">
-          <input type="text" id="venueEditAddress" class="form-control" style="width: 100%; border-radius:8px;" placeholder="예: 올림픽공원 체조경기장" value="${currentAddress === '등록된 주소가 없습니다.' ? '' : currentAddress}">
-          <button type="button" class="btn btn-primary" id="btnUpdateVenueMap" style="border-radius:8px; width:100%;">지도 및 안내 업데이트</button>
+      <div style="margin-bottom: 1.5rem;">
+        <label style="display:block; font-weight: 700; margin-bottom: 0.5rem; color:var(--text-main);">기본 오시는 길 (검색)</label>
+        <div style="display:flex; gap: 0.5rem; flex-direction:row; align-items:center; margin-bottom: 0.5rem;">
+          <input type="text" id="venueEditAddress" class="form-control" style="flex:1; border-radius:8px; padding: 12px 16px; background: #f9fafb; cursor: not-allowed;" placeholder="주소 검색 버튼을 이용해주세요" value="${baseAddress}" readonly>
+          <button type="button" class="btn btn-outline" id="btnSearchAddressApi" style="border-radius:8px; white-space:nowrap; padding: 12px 16px;">주소 검색</button>
+        </div>
+        <label style="display:block; font-weight: 700; margin-bottom: 0.5rem; color:var(--text-main);">상세 주소 (직접 입력)</label>
+        <input type="text" id="venueEditDetailAddress" class="form-control" style="width:100%; border-radius:8px; padding: 12px 16px;" placeholder="예: 지하 1층, 3문 앞 등" value="${detailAddress}">
+      </div>
+      <div style="margin-bottom: 1.5rem;">
+        <label style="display:block; font-weight: 700; margin-bottom: 0.5rem; color:var(--text-main);">대중교통 안내</label>
+        <div style="border-radius:8px; border: 1px solid var(--border-default); background: #fff; position:relative;">
+          <style>
+            #venueEditTransit .ql-editor { border-bottom-left-radius: 8px; border-bottom-right-radius: 8px; }
+            #venueEditTransitToolbar { border-top-left-radius: 8px; border-top-right-radius: 8px; }
+            /* 드롭다운 리스트 박스 둥근 모서리 및 스크롤바 튀어나옴 방지 */
+            .ql-picker-options { border-radius: 8px; overflow: hidden !important; }
+          </style>
+          <div id="venueEditTransitToolbar"></div>
+          <div id="venueEditTransit" style="min-height: 150px;">${currentTransit === '대중교통 정보가 등록되지 않았습니다.' ? '' : currentTransit}</div>
         </div>
       </div>
-      <div>
-        <label style="display:block; font-weight: 700; margin-bottom: 0.5rem; color:var(--text-main);">대중교통 안내</label>
-        <textarea id="venueEditTransit" class="form-control" style="width:100%; min-height: 100px; resize: vertical; border-radius:8px;" placeholder="지하철, 버스 등 교통 안내를 입력하세요">${currentTransit === '대중교통 정보가 등록되지 않았습니다.' ? '' : currentTransit.replace(/<br>/g, '\n')}</textarea>
+      <div style="text-align: right;">
+        <button type="button" class="btn btn-primary" id="btnUpdateVenueMap" style="border-radius:8px; padding: 12px 24px; font-weight:600; width:100%;">지도 및 안내 업데이트</button>
       </div>
     </div>
   `;
   sidebarContainer.innerHTML = editorHtml;
 
+  // 오시는 길 정보를 위한 Quill 에디터 초기화
+  const transitQuill = new Quill('#venueEditTransit', {
+    theme: 'snow',
+    bounds: document.getElementById('builderSidebar'), // Use sidebar as bounds for correct tooltip positioning
+    modules: {
+      toolbar: typeof quillToolbarOptions !== 'undefined' ? quillToolbarOptions : [
+        [{ 'header': [1, 2, 3, false] }],
+        ['bold', 'italic', 'underline', 'strike'],
+        [{ 'color': [] }, { 'background': [] }],
+        [{ 'list': 'ordered' }, { 'list': 'bullet' }],
+        ['link', 'clean']
+      ]
+    }
+  });
+
+  const transitToolbar = transitQuill.getModule('toolbar');
+  transitToolbar.addHandler('link', function (value) {
+    if (value) {
+      let range = this.quill.getSelection();
+      if (range == null || range.length === 0) {
+        const cursorPosition = range ? range.index : this.quill.getLength();
+        this.quill.insertText(cursorPosition, '구경하기', 'user');
+        this.quill.setSelection(cursorPosition, '구경하기'.length);
+        range = this.quill.getSelection();
+      }
+      const preview = this.quill.getText(range);
+      this.quill.theme.tooltip.edit('link', preview);
+      this.quill.theme.tooltip.linkRange = range;
+    } else {
+      this.quill.format('link', false);
+    }
+  });
+
+  // 3번 수정사항: 대중교통 퀄 에디터 실시간 동기화 바인딩
+  transitQuill.on('text-change', () => {
+    const transitContent = sidebarContainer.querySelector('#venueEditTransit .ql-editor');
+    const mainViewTransit = document.getElementById('transitContent');
+    if (mainViewTransit && transitContent) {
+      mainViewTransit.innerHTML = transitContent.innerHTML;
+    }
+  });
+
   const btnUpdate = sidebarContainer.querySelector('#btnUpdateVenueMap');
   const addressInput = sidebarContainer.querySelector('#venueEditAddress');
-  const transitInput = sidebarContainer.querySelector('#venueEditTransit');
+  const detailAddressInput = sidebarContainer.querySelector('#venueEditDetailAddress');
+  const btnSearchAddress = sidebarContainer.querySelector('#btnSearchAddressApi');
+
+  // 다음 주소 API 연동
+  btnSearchAddress.addEventListener('click', () => {
+    if (typeof daum !== 'undefined' && daum.Postcode) {
+      new daum.Postcode({
+        oncomplete: function (data) {
+          // 검색된 기본 주소(도로명 주소 + 지번 주소) 조합
+          let addr = data.roadAddress;
+          if (data.jibunAddress) {
+            addr += ` (지번: ${data.jibunAddress})`;
+          } else if (data.autoJibunAddress) {
+            addr += ` (지번: ${data.autoJibunAddress})`;
+          }
+          addressInput.value = addr;
+          updateVenueTextPreview();
+        }
+      }).open();
+    } else {
+      Toast.error('주소 검색 API를 불러올 수 없습니다.');
+    }
+  });
+
+  const updateVenueTextPreview = () => {
+    const baseAddr = addressInput.value.trim();
+    const detailAddr = detailAddressInput.value.trim();
+    const address = baseAddr + (detailAddr ? ` 상세: ${detailAddr}` : '');
+
+    let transit = transitQuill.root.innerHTML.trim();
+    if (transit === '<p><br></p>') transit = '';
+
+    // 백그라운드 변수에도 저장
+    _eventDetail.venue = address;
+
+    const addressWrap = inner.querySelector('#venueAddressWrap');
+    const transitContentEl = inner.querySelector('#transitContent');
+
+    if (addressWrap) {
+      const formattedAddress = address.replace(/\\n/g, '<br>').replace(/\n/g, '<br>').replace(' (지번:', '<br>(지번:');
+      addressWrap.innerHTML = `<h4 style="font-size: 1.1rem; font-weight: 700; color: var(--text-main); margin-top: 0; margin-bottom: 12px; line-height: 1.4;">${formattedAddress || '등록된 주소가 없습니다.'}</h4>`;
+    }
+    if (transitContentEl) transitContentEl.innerHTML = transit || '대중교통 정보가 등록되지 않았습니다.';
+  };
+
+  detailAddressInput.addEventListener('input', updateVenueTextPreview);
+  addressInput.addEventListener('input', updateVenueTextPreview);
+  transitQuill.on('text-change', updateVenueTextPreview);
 
   btnUpdate.addEventListener('click', () => {
-    const address = addressInput.value.trim();
-    const transit = transitInput.value.trim();
+    const baseAddr = addressInput.value.trim();
+    const detailAddr = detailAddressInput.value.trim();
+    const address = baseAddr + (detailAddr ? ` 상세: ${detailAddr}` : '');
+    updateVenueTextPreview();
 
-    const addressTextEl = inner.querySelector('.venue-address-text');
-    const transitContentEl = inner.querySelector('#transitContent');
     const googleMapFrame = inner.querySelector('#googleMap');
-
-    if (addressTextEl) addressTextEl.textContent = address || '등록된 주소가 없습니다.';
-    if (transitContentEl) transitContentEl.innerHTML = transit.replace(/\n/g, '<br>') || '대중교통 정보가 등록되지 않았습니다.';
-
-    if (googleMapFrame && address) {
-      googleMapFrame.src = `https://maps.google.com/maps?q=${encodeURIComponent(address)}&output=embed`;
+    if (googleMapFrame && baseAddr) {
+      googleMapFrame.src = `https://maps.google.com/maps?q=${encodeURIComponent(baseAddr.split(' (지번:')[0])}&output=embed`;
     }
 
     let linksWrap = inner.querySelector('#directionsLinksWrap');
@@ -2761,10 +3222,19 @@ function makeVenueEditor(tab, sidebarContainer) {
 
     if (address) {
       linksWrap.innerHTML = `
-        <div style="margin-top: 1.5rem; display: flex; gap: 0.5rem; flex-wrap: wrap;">
-          <a href="https://map.kakao.com/link/search/${encodeURIComponent(address)}" target="_blank" style="display:inline-flex; align-items:center; gap:6px; padding: 10px 16px; background: #FEE500; color: #000; border-radius: 8px; text-decoration: none; font-weight: 600; font-size: 0.9rem;"><svg width="16" height="16" viewBox="0 0 24 24" fill="#000"><path d="M12 3c-5.523 0-10 3.514-10 7.85 0 2.804 1.83 5.253 4.606 6.647l-1.18 4.34c-.05.18.17.33.32.22l5.12-3.41c.37.04.74.06 1.13.06 5.523 0 10-3.514 10-7.85C22 6.514 17.523 3 12 3z"/></svg>카카오맵</a>
-          <a href="https://map.naver.com/v5/search/${encodeURIComponent(address)}" target="_blank" style="display:inline-flex; align-items:center; gap:6px; padding: 10px 16px; background: #03C75A; color: #fff; border-radius: 8px; text-decoration: none; font-weight: 600; font-size: 0.9rem;"><svg width="14" height="14" viewBox="0 0 24 24" fill="#fff"><path d="M16.084 12.637L8.03 2.127C7.625 1.597 7.026 1.334 6.386 1.334H2v21.332h5.922V11.233l8.053 10.51C16.42 22.316 17.02 22.58 17.658 22.58H22V1.248h-5.916v11.389z"/></svg>네이버지도</a>
-          <a href="https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(address)}&travelmode=transit" target="_blank" style="display:inline-flex; align-items:center; gap:6px; padding: 10px 16px; background: #4285F4; color: #fff; border-radius: 8px; text-decoration: none; font-weight: 600; font-size: 0.9rem;"><svg width="16" height="16" viewBox="0 0 24 24" fill="#fff"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/></svg>구글 길찾기</a>
+        <div style="margin-top: 1.5rem;">
+          <h4 style="font-size: 1.1rem; font-weight: 700; color: var(--text-main); margin-top: 0; margin-bottom: 12px; line-height: 1.4;">길찾기</h4>
+          <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+            <a href="https://map.kakao.com/link/search/${encodeURIComponent(address.split(' (지번:')[0].split('\\n')[0].split('\n')[0])}" target="_blank" style="display:inline-flex; align-items:center; gap:6px; padding: 10px 16px; background: #FEE500; color: #000; border-radius: 8px; text-decoration: none; font-weight: 600; font-size: 0.9rem;">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="#000"><path d="M12 3c-5.523 0-10 3.514-10 7.85 0 2.804 1.83 5.253 4.606 6.647l-1.18 4.34c-.05.18.17.33.32.22l5.12-3.41c.37.04.74.06 1.13.06 5.523 0 10-3.514 10-7.85C22 6.514 17.523 3 12 3z"/></svg>카카오맵
+            </a>
+            <a href="https://map.naver.com/v5/search/${encodeURIComponent(address.split(' (지번:')[0].split('\\n')[0].split('\n')[0])}" target="_blank" style="display:inline-flex; align-items:center; gap:6px; padding: 10px 16px; background: #03C75A; color: #fff; border-radius: 8px; text-decoration: none; font-weight: 600; font-size: 0.9rem;">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="#fff"><path d="M16.084 12.637L8.03 2.127C7.625 1.597 7.026 1.334 6.386 1.334H2v21.332h5.922V11.233l8.053 10.51C16.42 22.316 17.02 22.58 17.658 22.58H22V1.248h-5.916v11.389z"/></svg>네이버지도
+            </a>
+            <a href="https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(address.split(' (지번:')[0].split('\\n')[0].split('\n')[0])}&travelmode=transit" target="_blank" style="display:inline-flex; align-items:center; gap:6px; padding: 10px 16px; background: #4285F4; color: #fff; border-radius: 8px; text-decoration: none; font-weight: 600; font-size: 0.9rem;">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="#fff"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/></svg>구글 길찾기
+            </a>
+          </div>
         </div>
       `;
     } else {

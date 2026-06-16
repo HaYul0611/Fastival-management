@@ -1241,7 +1241,7 @@ svg {
   justify-content: center;
   width: 32px;
   height: 32px;
-  border-radius: var(--radius-full);
+  border-radius: var(--radius-md, 8px);
   background: var(--bg-elevated);
   color: var(--text-secondary);
   transition: all var(--transition-fast);

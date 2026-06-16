@@ -1,0 +1,69 @@
+/* ================================================================
+   FESTIO SHOP — login.css
+   ================================================================ */
+.login-pg{min-height:100vh;background:var(--g50)}
+.login-layout{display:flex;min-height:100vh}
+
+/* 브랜드 패널 */
+.login-brand{
+  flex:0 0 460px;background:var(--black);
+  display:flex;align-items:center;justify-content:center;
+  padding:56px 52px;position:sticky;top:0;height:100vh;overflow:hidden;
+}
+.login-brand::before{content:'';position:absolute;inset:0;pointer-events:none;
+  background:radial-gradient(ellipse 70% 60% at 20% 70%,rgba(255,45,85,.18) 0%,transparent 55%),
+             radial-gradient(ellipse 50% 50% at 85% 25%,rgba(123,47,255,.13) 0%,transparent 55%)}
+
+.lb-inner{position:relative;z-index:1;color:#fff;width:100%}
+.lb-logo{display:flex;align-items:center;gap:14px;margin-bottom:44px}
+.lb-logo-mark{width:52px;height:52px;background:var(--red);border-radius:14px;display:flex;align-items:center;justify-content:center}
+.lb-name{font-size:28px;font-weight:900;letter-spacing:-.5px;color:#fff}
+.lb-sub{font-size:11px;font-weight:800;letter-spacing:3px;color:var(--red);margin-top:2px}
+.lb-h1{font-size:38px;font-weight:900;line-height:1.15;letter-spacing:-1.5px;color:#fff;margin-bottom:14px}
+.lb-h1 em{font-style:normal;color:var(--red)}
+.lb-p{font-size:15px;color:rgba(255,255,255,.5);line-height:1.7;margin-bottom:44px}
+.lb-feats{display:flex;flex-direction:column;gap:14px}
+.lb-feat{display:flex;align-items:center;gap:12px;font-size:14px;color:rgba(255,255,255,.75);font-weight:500}
+.lb-feat-ico{width:38px;height:38px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.1);
+  border-radius:var(--r8);display:flex;align-items:center;justify-content:center;flex-shrink:0}
+
+/* 폼 패널 */
+.login-form-panel{flex:1;display:flex;align-items:center;justify-content:center;padding:56px 24px;overflow-y:auto}
+.login-form-inner{width:100%;max-width:400px}
+
+.mob-logo{display:none;align-items:center;gap:10px;margin-bottom:36px}
+.mob-logo-mark{width:40px;height:40px;background:var(--black);border-radius:var(--r8);display:flex;align-items:center;justify-content:center}
+.mob-logo-name{font-size:18px;font-weight:900;color:var(--black);letter-spacing:-.3px}
+
+/* 탭 */
+.auth-tabs{display:flex;border-bottom:2px solid var(--g200);margin-bottom:28px}
+.auth-tab{flex:1;height:46px;font-size:15px;font-weight:700;color:var(--g400);
+  border-bottom:2px solid transparent;margin-bottom:-2px;transition:all var(--trans);letter-spacing:-.2px}
+.auth-tab.on{color:var(--black);border-bottom-color:var(--black)}
+.auth-tab:hover:not(.on){color:var(--g600)}
+
+.auth-pane{display:none}.auth-pane.on{display:block}
+
+.form-opts{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px}
+.link-sm{font-size:13px;color:var(--g500);transition:color var(--trans)}
+.link-sm:hover{color:var(--black)}
+
+.social-btns{display:flex;flex-direction:column;gap:10px}
+.btn-social{width:100%;height:48px;border-radius:var(--r12);font-size:14px;font-weight:700;
+  display:flex;align-items:center;justify-content:center;gap:10px;
+  transition:filter var(--trans),transform var(--trans);letter-spacing:-.2px}
+.btn-social:hover{filter:brightness(.94);transform:translateY(-1px)}
+.btn-kakao{background:#FEE500;color:#3A1D1D}
+.btn-naver{background:#03C75A;color:#fff}
+
+/* 약관 */
+.terms-box{border:1.5px solid var(--g200);border-radius:var(--r16);padding:16px;margin-bottom:20px}
+.terms-all{font-weight:700;color:var(--black)}
+.terms-items{margin-top:12px;padding-top:12px;border-top:1px solid var(--g100);display:flex;flex-direction:column;gap:10px}
+
+@media(max-width:900px){
+  .login-brand{display:none}
+  .login-form-panel{padding:36px 20px}
+  .mob-logo{display:flex}
+}
+@media(max-width:480px){.login-form-panel{padding:24px 16px}}

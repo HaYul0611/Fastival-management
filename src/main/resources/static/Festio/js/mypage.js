@@ -228,6 +228,18 @@ function renderProfile() {
 // MOCK 데이터 정의
 const MOCK_TICKETS = [];
 
+// --- FORMAT BARCODE ---
+function formatBarcode(rawCode, prefix) {
+  if (!rawCode) return prefix + '00000000000';
+  let clean = String(rawCode).replace(/[^A-Za-z0-9]/g, '').toUpperCase();
+  if (/^[A-Z]/.test(clean)) {
+    clean = clean.substring(1);
+  }
+  clean = prefix + clean;
+  if (clean.length > 12) return clean.substring(0, 12);
+  return clean.padEnd(12, '0');
+}
+
 let MOCK_FOOD_ORDERS = [];
 
 // 통계 렌더링
@@ -276,8 +288,13 @@ function renderReservationList() {
   // 실제 DB 결제 티켓 렌더링
   _dbTickets.forEach(t => {
     const isUsed = t.used === 'true';
-    const statusText = isUsed ? '입장완료' : '예매완료';
-    const statusClass = isUsed ? 'status-입장' : 'status-완료';
+    const isCanceled = t.paymentStatus === 'CANCELED' || t.status === 'CANCELED';
+    let statusText = isUsed ? '입장완료' : '예매완료';
+    let statusClass = isUsed ? 'status-입장' : 'status-완료';
+    if (isCanceled) {
+      statusText = '입장취소';
+      statusClass = 'status-취소';
+    }
     const quantity = t.seats ? t.seats.split(',').length : 1;
     const formattedDate = t.eventDate ? t.eventDate.replace(/-/g, '.') : '추후 공지';
 
@@ -285,11 +302,11 @@ function renderReservationList() {
       <div class="custom-ticket-dropdown mypage-more-dropdown" tabindex="0" onclick="this.classList.toggle('open')" onblur="setTimeout(()=>this.classList.remove('open'), 200)" style="width: 24px; height: 24px; display: flex; align-items: center; justify-content: center; cursor: pointer; border-radius: 50%;">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width: 20px; height: 20px; color: var(--text-muted);"><circle cx="12" cy="5" r="1.5"/><circle cx="12" cy="12" r="1.5"/><circle cx="12" cy="19" r="1.5"/></svg>
         <div class="custom-dropdown-options" style="right: -8px; left: auto; top: calc(100% + 4px); min-width: 150px; z-index: 100; box-shadow: 0 4px 12px rgba(0,0,0,0.1); border-radius: 8px; border: 1px solid var(--border-default); background: #fff;">
-          <div class="custom-dropdown-option" onclick="event.stopPropagation(); window.location.href='#'" style="display: flex; align-items: center; gap: 8px; font-size: 0.9rem; padding: 10px 16px;">
+          <div class="custom-dropdown-option" onclick="event.stopPropagation(); window.location.href='/shop/shop.html?category=goods'" style="display: flex; align-items: center; gap: 8px; font-size: 0.9rem; padding: 10px 16px;">
             <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z" /><line x1="3" y1="6" x2="21" y2="6" /><path d="M16 10a4 4 0 01-8 0" /></svg>
             굿즈 상품
           </div>
-          <div class="custom-dropdown-option" onclick="event.stopPropagation(); window.location.href='#'" style="display: flex; align-items: center; gap: 8px; font-size: 0.9rem; padding: 10px 16px;">
+          <div class="custom-dropdown-option" onclick="event.stopPropagation(); window.location.href='/shop/shop.html?category=food'" style="display: flex; align-items: center; gap: 8px; font-size: 0.9rem; padding: 10px 16px;">
             <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
             F&B
           </div>
@@ -305,7 +322,7 @@ function renderReservationList() {
           ${kebabMenuStr}
         </div>
         <div class="mp-card-meta">
-          <div>예매 번호: <strong class="mp-color-primary">${t.ticketNumber || ('T' + String(t.orderId).padStart(11, '0'))}</strong></div>
+          <div>예매 번호: <strong class="mp-color-primary">${formatBarcode(t.ticketNumber || String(t.orderId), 'T')}</strong></div>
           <div>관람 일시: ${formattedDate}</div>
           <div>좌석 정보: ${t.seats || '자율석'} · 수량: ${quantity}매</div>
           <div>결제 일시: ${t.createdAt ? t.createdAt.split(' ')[0] : ''}</div>
@@ -325,11 +342,11 @@ function renderReservationList() {
       <div class="custom-ticket-dropdown mypage-more-dropdown" tabindex="0" onclick="this.classList.toggle('open')" onblur="setTimeout(()=>this.classList.remove('open'), 200)" style="width: 24px; height: 24px; display: flex; align-items: center; justify-content: center; cursor: pointer; border-radius: 50%;">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width: 20px; height: 20px; color: var(--text-muted);"><circle cx="12" cy="5" r="1.5"/><circle cx="12" cy="12" r="1.5"/><circle cx="12" cy="19" r="1.5"/></svg>
         <div class="custom-dropdown-options" style="right: -8px; left: auto; top: calc(100% + 4px); min-width: 150px; z-index: 100; box-shadow: 0 4px 12px rgba(0,0,0,0.1); border-radius: 8px; border: 1px solid var(--border-default); background: #fff;">
-          <div class="custom-dropdown-option" onclick="event.stopPropagation(); window.location.href='#'" style="display: flex; align-items: center; gap: 8px; font-size: 0.9rem; padding: 10px 16px;">
+          <div class="custom-dropdown-option" onclick="event.stopPropagation(); window.location.href='/shop/shop.html?category=goods'" style="display: flex; align-items: center; gap: 8px; font-size: 0.9rem; padding: 10px 16px;">
             <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z" /><line x1="3" y1="6" x2="21" y2="6" /><path d="M16 10a4 4 0 01-8 0" /></svg>
             굿즈 상품 바로가기
           </div>
-          <div class="custom-dropdown-option" onclick="event.stopPropagation(); window.location.href='#'" style="display: flex; align-items: center; gap: 8px; font-size: 0.9rem; padding: 10px 16px;">
+          <div class="custom-dropdown-option" onclick="event.stopPropagation(); window.location.href='/shop/shop.html?category=food'" style="display: flex; align-items: center; gap: 8px; font-size: 0.9rem; padding: 10px 16px;">
             <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
             F&B 바로가기
           </div>
@@ -345,7 +362,7 @@ function renderReservationList() {
           ${kebabMenuStr}
         </div>
         <div class="mp-card-meta">
-          <div>예매 번호: <strong class="mp-color-primary">${t.reservationId}</strong></div>
+          <div>예매 번호: <strong class="mp-color-primary">${formatBarcode(t.reservationId, 'T')}</strong></div>
           <div>관람 일시: ${t.eventDate}</div>
           <div>구역명: ${t.zoneName} · 수량: ${t.quantity}매</div>
         </div>
@@ -380,7 +397,7 @@ function renderReservationList() {
           <span class="mp-badge ${statusLabelClass}">${f.statusText}</span>
         </div>
         <div class="mp-card-meta">
-          <div>주문 번호: <strong class="mp-color-success">${f.orderItemId}</strong></div>
+          <div>주문 번호: <strong class="mp-color-success">${formatBarcode(f.orderItemId, 'F')}</strong></div>
           <div>상품명: ${f.productName} · 수량: ${f.quantity}개</div>
           <div>옵션: ${f.selectedOptions}</div>
           <div class="mp-color-success mp-weight-500" style="display: flex; align-items: center; gap: 6px;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mp-icon-sm" style="flex-shrink: 0;"><circle cx="12" cy="13" r="8"></circle><path d="M12 9v4l2 2"></path><path d="M12 2v2"></path><path d="M18 4l-1 1"></path></svg> <span>${f.pickupTimeSlot}</span></div>
@@ -2344,9 +2361,9 @@ function openQrModalView(token, type = 'TICKET') {
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg>
               </div>
               <div class="qr-accordion-body">
-                <div class="qr-history-item"><span>입장 완료 (게이트 A)</span><span>2026.06.04 14:30</span></div>
-                <div class="qr-history-item"><span>MD 부스 인증</span><span>2026.06.04 15:15</span></div>
-                <div class="qr-history-item"><span>재입장 완료</span><span>2026.06.04 18:00</span></div>
+                <div class="qr-history-item"><span>입장 완료 (게이트 A)</span><span>26.06.04 14:30</span></div>
+                <div class="qr-history-item"><span>MD 부스 인증</span><span>26.06.04 15:15</span></div>
+                <div class="qr-history-item"><span>재입장 완료</span><span>26.06.04 18:00</span></div>
               </div>
             </div>
 
@@ -2368,7 +2385,24 @@ function openQrModalView(token, type = 'TICKET') {
 
   modal.style.display = 'flex';
   generateDynamicQR('dynamicQrCanvas', token, 140, type); // FIXED: pass 'type' to trigger 45deg tilt!
-  document.getElementById('dynamicQrCode').textContent = token;
+
+  let displayCode = token;
+  if (type === 'FOOD') {
+    const foodOrder = typeof MOCK_FOOD_ORDERS !== 'undefined' ? MOCK_FOOD_ORDERS.find(f => f.qrToken === token) : null;
+    if (foodOrder) displayCode = foodOrder.orderItemId;
+  } else if (type === 'GOODS') {
+    const goodsOrder = typeof MOCK_GOODS_ORDERS !== 'undefined' ? MOCK_GOODS_ORDERS.find(g => g.qrToken === token) : null;
+    if (goodsOrder) displayCode = goodsOrder.orderItemId;
+  } else {
+    const dbTicket = typeof _dbTickets !== 'undefined' ? _dbTickets.find(t => t.secret === token) : null;
+    if (dbTicket) {
+      displayCode = dbTicket.ticketNumber || ('T' + String(dbTicket.orderId).padStart(11, '0'));
+    } else {
+      const mockTicket = typeof MOCK_TICKETS !== 'undefined' ? MOCK_TICKETS.find(t => t.qrToken === token) : null;
+      if (mockTicket) displayCode = mockTicket.reservationId;
+    }
+  }
+  document.getElementById('dynamicQrCode').textContent = formatBarcode(displayCode, type === 'FOOD' ? 'F' : type === 'GOODS' ? 'G' : 'T');
 
   const qrCanvas = document.getElementById('dynamicQrCanvas');
 
@@ -2400,18 +2434,18 @@ function openQrModalView(token, type = 'TICKET') {
       accBody.innerHTML = `
         <div class="qr-history-item" style="display:flex; justify-content:space-between; align-items:center; padding:12px 16px;">
           <span style="color:#64748b; font-size:0.9rem;">굿즈 수령 완료</span>
-          <span style="color:#64748b; font-size:0.9rem;">2026.06.04 16:30</span>
+          <span style="color:#64748b; font-size:0.9rem;">26.06.04 16:30</span>
         </div>
       `;
     } else {
       accBody.innerHTML = `
         <div class="qr-history-item" style="display:flex; justify-content:space-between; align-items:center; padding:12px 16px;">
           <span style="color:#64748b; font-size:0.9rem;">입장 완료 (게이트 A)</span>
-          <span style="color:#64748b; font-size:0.9rem;">2026.06.04 14:30</span>
+          <span style="color:#64748b; font-size:0.9rem;">26.06.04 14:30</span>
         </div>
         <div class="qr-history-item" style="display:flex; justify-content:space-between; align-items:center; padding:12px 16px;">
           <span style="color:#64748b; font-size:0.9rem;">MD 부스 인증</span>
-          <span style="color:#64748b; font-size:0.9rem;">2026.06.04 15:15</span>
+          <span style="color:#64748b; font-size:0.9rem;">26.06.04 15:15</span>
         </div>
         <div class="qr-history-item" style="display:flex; justify-content:space-between; align-items:center; padding:12px 16px;">
           <span style="color:#64748b; font-size:0.9rem;">재입장 완료</span>

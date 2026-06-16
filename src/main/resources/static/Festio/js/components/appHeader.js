@@ -46,7 +46,25 @@
 
   let headerHtml = '';
 
-  // 4. 로그인 및 권한 상태 확인
+  // 4. 로그인 및 권한 상태 확인, 세션 만료 처리 (2시간)
+  const EXPIRY_TIME_MS = 2 * 60 * 60 * 1000;
+  const loginTimestamp = localStorage.getItem('loginTimestamp') || sessionStorage.getItem('loginTimestamp');
+  if (loginTimestamp) {
+    if (new Date().getTime() - parseInt(loginTimestamp) > EXPIRY_TIME_MS) {
+      ['isLoggedIn', 'userToken', 'userRole', 'userName', 'email', 'userPhone', 'userSpecificRole', 'loginTimestamp', 'savedEmail'].forEach(k => {
+        if (k !== 'savedEmail') { // savedEmail(기억하기)는 예외
+          localStorage.removeItem(k);
+        }
+        sessionStorage.removeItem(k);
+      });
+      if (!path.endsWith('login.html')) {
+        alert('일정 시간이 지나 로그아웃 되었습니다. 다시 로그인 해주세요.');
+        window.location.href = '/login.html';
+        return;
+      }
+    }
+  }
+
   const isLoggedIn = localStorage.getItem('isLoggedIn') === 'true' || sessionStorage.getItem('isLoggedIn') === 'true' || !!localStorage.getItem('userToken') || !!sessionStorage.getItem('userToken');
   const userRole = localStorage.getItem('userRole') || sessionStorage.getItem('userRole') || 'CLIENT';
 
@@ -156,7 +174,7 @@
                }
                @font-face {
                  font-family: 'CookieRun';
-                 src: url('https://fastly.jsdelivr.net/gh/projectnoonnu/noonfonts_2001@1.1/CookieRun-Bold.woff') format('woff');
+                 src: url('https://fastly.jsdelivr.net/gh/projectnoonnu/noonfonts_2001@1.1/CookieRun-Regular.woff') format('woff');
                  font-weight: 700;
                }
              </style>

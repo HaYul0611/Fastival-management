@@ -537,6 +537,16 @@ body {
   padding: 6px 0;
 }
 
+.tab-empty-text {
+  color: var(--text-sub);
+  text-align: center;
+  padding: var(--sp-4) 0;
+}
+
+#tab-review .tab-empty-text {
+  display: none !important;
+}
+
 .seat-list-item {
   display: flex;
   align-items: center;
@@ -921,17 +931,18 @@ body {
 
 .detail-tabs-header {
   display: flex;
+  align-items: center;
   gap: 1.5rem;
+  overflow-x: auto;
+  overflow-y: hidden;
   border-bottom: 1px solid var(--border-subtle);
   border-right: none;
   margin-bottom: 0;
-  overflow-x: auto;
-  overflow-y: hidden;
   white-space: nowrap;
   position: relative;
   -ms-overflow-style: auto;
   scrollbar-width: auto;
-  padding-bottom: 6px;
+  /* 2번 수정사항: 텍스트와 구분선 간격 조정을 위해 패딩 제거 유지 */
 }
 
 .detail-tabs-header::-webkit-scrollbar {
@@ -964,6 +975,8 @@ body {
   white-space: nowrap;
   position: relative;
   transition: color 0.3s ease;
+  scroll-margin-top: calc(var(--header-h, 80px) + 60px);
+  /* 5번 수정사항: 탭 스크롤 시 상단 잘림 방지 */
 }
 
 .detail-tab-btn::after {
@@ -990,7 +1003,8 @@ body {
 .detail-tab-btn.active::after {
   content: '';
   position: absolute;
-  bottom: 0;
+  bottom: -1px;
+  /* 2번 수정사항: 글로벌 구분선에 딱 맞게 부착 */
   left: 0;
   right: 0;
   height: 3px;
@@ -1002,7 +1016,18 @@ body {
   transform: scaleX(1);
 }
 
-.detail-tab-content {
+.tabs-header-wrapper {
+  position: sticky !important;
+  top: var(--header-h, 80px) !important;
+  /* 상단 글로벌 헤더 높이만큼만 띄움 (여백 제거) */
+  z-index: 100 !important;
+  background-color: var(--bg-main, #ffffff) !important;
+  border-bottom: 1px solid var(--border-color, #e5e7eb) !important;
+  margin-bottom: 2rem;
+}
+
+/* Edit Mode: hide inactive contents */
+.edit-mode .detail-tab-content {
   display: none;
   animation: fadeIn 0.4s ease;
 }
@@ -1019,8 +1044,21 @@ body {
   }
 }
 
-.detail-tab-content.active {
+.edit-mode .detail-tab-content.active {
   display: block;
+}
+
+/* View Mode: show all contents for scroll spy */
+.view-mode .detail-tab-content {
+  display: block;
+  margin-bottom: 4rem;
+  scroll-margin-top: calc(var(--header-h, 80px) + 60px);
+  /* 5번 수정사항: 본문 스크롤 시 상단 잘림 방지 */
+}
+
+/* Edit Mode: Add scroll margin here as well */
+.edit-mode .detail-tab-content {
+  scroll-margin-top: calc(var(--header-h, 80px) + 60px);
 }
 
 .tab-content-inner {
@@ -1383,7 +1421,7 @@ body.edit-mode .detail-tabs-section .detail-tab-content.active {
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
   background: var(--bg-surface1);
   border-radius: 16px;
-  overflow: hidden;
+  overflow: visible;
 }
 
 .builder-tabs-wrapper.edit-builder-layout .builder-sidebar {
@@ -1546,7 +1584,7 @@ body.edit-mode .detail-tabs-section .detail-tab-content.active {
   display: flex;
   flex-direction: column;
   gap: 12px;
-  padding: 16px;
+  padding: 4px 16px;
   background-color: transparent;
   overflow-y: auto;
   flex: 1;
@@ -1953,7 +1991,8 @@ body.edit-mode .detail-tabs-section .detail-tab-content.active {
   flex: 0 0 80%;
   max-width: 600px;
   border-radius: 12px;
-  object-fit: cover;
+  object-fit: contain;
+  background: var(--bg-surface1);
 }
 
 /* 갤러리 렌더링 - 그리드 */
@@ -1966,7 +2005,8 @@ body.edit-mode .detail-tabs-section .detail-tab-content.active {
 .gallery-grid img {
   width: 100%;
   height: 200px;
-  object-fit: cover;
+  object-fit: contain;
+  background: var(--bg-surface1);
   border-radius: 12px;
 }
 
@@ -2000,7 +2040,8 @@ body.edit-mode .detail-tabs-section .detail-tab-content.active {
 .gallery-polaroid img {
   width: 100%;
   height: 200px;
-  object-fit: cover;
+  object-fit: contain;
+  background: var(--bg-surface1);
 }
 
 /* 갤러리 렌더링 - 캐러셀 (간단 버전) */
@@ -2014,7 +2055,8 @@ body.edit-mode .detail-tabs-section .detail-tab-content.active {
 .gallery-carousel img {
   width: 100%;
   border-radius: 8px;
-  object-fit: cover;
+  object-fit: contain;
+  background: var(--bg-surface1);
   animation: slide-scroll 20s linear infinite;
 }
 
@@ -2042,7 +2084,8 @@ body.edit-mode .detail-tabs-section .detail-tab-content.active {
 .gallery-coverflow img {
   width: 100%;
   height: 200px;
-  object-fit: cover;
+  object-fit: contain;
+  background: var(--bg-surface1);
   border-radius: 12px;
   flex: 1 1 calc(33.333% - 16px);
   min-width: 200px;
@@ -2191,34 +2234,34 @@ body.edit-mode .detail-tabs-section .detail-tab-content.active {
   display: none !important;
 }
 
-/* ── 편집 모드 탭 삭제 버튼 호버 시 노출 ── */
+/* ── 편집 모드 탭 삭제 버튼 노출 ── */
 .edit-mode .detail-tab-btn .tab-delete-btn {
   position: absolute !important;
-  right: -16px;
-  top: 50%;
-  transform: translateY(-50%);
+  left: 100%;
+  top: 0;
+  height: 100%;
+  padding-left: 4px;
+  padding-right: 4px;
   display: inline-flex !important;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.3rem;
+  font-weight: 500;
+  color: #9ca3af;
   opacity: 0;
   pointer-events: none;
   transition: opacity 0.2s ease, color 0.2s ease;
-  background: transparent;
-  color: #9ca3af;
-  border: none;
-  width: 18px;
-  height: 18px;
-  align-items: center;
-  justify-content: center;
   cursor: pointer;
+  line-height: 1;
 }
 
 .edit-mode .detail-tab-btn:hover .tab-delete-btn {
   opacity: 1 !important;
   pointer-events: auto !important;
-  color: #9ca3af !important;
 }
 
 .edit-mode .detail-tab-btn .tab-delete-btn:hover {
-  color: #4b5563 !important;
+  color: #ef4444 !important;
 }
 
 /* ── 텍스트 정렬 버튼 활성화 상태 ── */
@@ -2735,35 +2778,50 @@ body.edit-mode .detail-tabs-section .detail-tab-content.active {
   border: 1px solid rgba(113, 221, 55, 0.6) !important;
   color: #71dd37 !important;
 }
-.seat-custom-1:hover { background: rgba(113, 221, 55, 0.2) !important; }
+
+.seat-custom-1:hover {
+  background: rgba(113, 221, 55, 0.2) !important;
+}
 
 .seat-custom-2 {
   background: rgba(255, 62, 29, 0.1) !important;
   border: 1px solid rgba(255, 62, 29, 0.6) !important;
   color: #ff3e1d !important;
 }
-.seat-custom-2:hover { background: rgba(255, 62, 29, 0.2) !important; }
+
+.seat-custom-2:hover {
+  background: rgba(255, 62, 29, 0.2) !important;
+}
 
 .seat-custom-3 {
   background: rgba(130, 94, 251, 0.1) !important;
   border: 1px solid rgba(130, 94, 251, 0.6) !important;
   color: #825efb !important;
 }
-.seat-custom-3:hover { background: rgba(130, 94, 251, 0.2) !important; }
+
+.seat-custom-3:hover {
+  background: rgba(130, 94, 251, 0.2) !important;
+}
 
 .seat-custom-4 {
   background: rgba(233, 30, 99, 0.1) !important;
   border: 1px solid rgba(233, 30, 99, 0.6) !important;
   color: #e91e63 !important;
 }
-.seat-custom-4:hover { background: rgba(233, 30, 99, 0.2) !important; }
+
+.seat-custom-4:hover {
+  background: rgba(233, 30, 99, 0.2) !important;
+}
 
 .seat-custom-5 {
   background: rgba(0, 150, 136, 0.1) !important;
   border: 1px solid rgba(0, 150, 136, 0.6) !important;
   color: #009688 !important;
 }
-.seat-custom-5:hover { background: rgba(0, 150, 136, 0.2) !important; }
+
+.seat-custom-5:hover {
+  background: rgba(0, 150, 136, 0.2) !important;
+}
 
 /* 상태 제어용 스타일 */
 .seat-stage {
@@ -2772,6 +2830,7 @@ body.edit-mode .detail-tabs-section .detail-tab-content.active {
   color: #ffffff !important;
   cursor: default;
 }
+
 .seat-stage:hover {
   transform: none;
   box-shadow: none;
@@ -2784,6 +2843,7 @@ body.edit-mode .detail-tabs-section .detail-tab-content.active {
   cursor: default;
   opacity: 0.1;
 }
+
 .seat-corridor:hover {
   transform: none;
   box-shadow: none;
@@ -2795,6 +2855,7 @@ body.edit-mode .detail-tabs-section .detail-tab-content.active {
   color: rgba(75, 75, 90, 0.5) !important;
   cursor: not-allowed;
 }
+
 .seat-reserved:hover {
   transform: none;
   box-shadow: none;
@@ -2858,7 +2919,173 @@ body.edit-mode .detail-tabs-section .detail-tab-content.active {
   cursor: not-allowed;
   opacity: 0.5;
 }
+
 .figma-template-zone.sold-out path {
   fill: #e5e7eb !important;
   stroke: #9ca3af !important;
+}
+
+/* ── 외부 지도 링크 버튼 스타일 ── */
+.venue-map-links-container {
+  margin-top: 1.5rem;
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.btn-map-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 16px;
+  border-radius: 8px;
+  text-decoration: none;
+  font-weight: 600;
+  font-size: 0.9rem;
+  transition: opacity 0.2s;
+}
+
+.btn-map-link:hover {
+  opacity: 0.9;
+}
+
+.btn-map-kakao {
+  background: #FEE500;
+  color: #000;
+}
+
+.btn-map-naver {
+  background: #03C75A;
+  color: #fff;
+}
+
+.btn-map-google {
+  background: #4285F4;
+  color: #fff;
+}
+
+.ql-snow .ql-tooltip {
+  z-index: 10000 !important;
+}
+
+.ql-snow .ql-picker-options {
+  z-index: 10000 !important;
+}
+
+/* ── 미리보기 영역 링크 버튼 스타일 ── */
+.view-text-block a,
+.tab-content-inner .view-text-block a {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 9px 20px;
+  background: #fff;
+  color: #334155 !important;
+  text-decoration: none !important;
+  border: 1.5px solid #cbd5e1;
+  border-radius: 10px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  transition: all 0.2s ease;
+  margin: 4px 2px;
+}
+
+.view-text-block a::after,
+.tab-content-inner .view-text-block a::after {
+  content: '';
+  display: inline-block;
+  width: 13px;
+  height: 13px;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%2364748b' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6'/%3E%3Cpolyline points='15 3 21 3 21 9'/%3E%3Cline x1='10' y1='14' x2='21' y2='3'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-size: contain;
+  flex-shrink: 0;
+}
+
+.view-text-block a:hover,
+.tab-content-inner .view-text-block a:hover {
+  background: #f8fafc;
+  border-color: #94a3b8;
+  color: #1e293b !important;
+}
+
+/* ── 갤러리 드롭다운 셀렉트 박스 커스텀 스타일 ── */
+.gallery-layout-select {
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+  background-color: #fff !important;
+  border: 1.5px solid #d1d5db !important;
+  border-radius: 10px !important;
+  padding: 12px 40px 12px 14px !important;
+  font-size: 0.88rem !important;
+  font-weight: 600;
+  color: #334155;
+  cursor: pointer;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%2364748b' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E") !important;
+  background-repeat: no-repeat !important;
+  background-position: right 12px center !important;
+  background-size: 16px !important;
+}
+
+.gallery-layout-select:hover {
+  border-color: #94a3b8 !important;
+}
+
+.gallery-layout-select:focus {
+  outline: none;
+  border-color: #6366f1 !important;
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.12) !important;
+}
+
+.gallery-layout-select option {
+  padding: 10px 14px;
+  font-size: 0.88rem;
+  font-weight: 500;
+  color: #334155;
+}
+
+/* ── 에디터 드롭다운 모서리 라운드 튀어나옴 방지 및 스크롤 유지 ── */
+.ql-snow .ql-picker-options {
+  overflow-x: hidden !important;
+  overflow-y: auto !important;
+  border-radius: 8px !important;
+}
+
+/* ── 갤러리 커스텀 드롭다운 옵션 호버 스타일 ── */
+.custom-option:hover {
+  background-color: #f8fafc;
+  color: #2563eb !important;
+}
+
+.custom-option.selected {
+  color: #2563eb !important;
+  font-weight: 600;
+  background-color: #f1f5f9;
+}
+
+/* ── 전역 공통 스크롤바 커스텀 (라운드 모서리 튀어나옴 방지) ── */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+  border-radius: 8px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 8px;
+  border: 2px solid transparent;
+  background-clip: padding-box;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+  border: 2px solid transparent;
+  background-clip: padding-box;
 }
