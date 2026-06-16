@@ -110,6 +110,9 @@ public class AdminSeatApiController {
         zone.setZoneName(payload.get("zoneName").toString());
         zone.setSvgPoints(payload.getOrDefault("svgPoints", "0,0").toString());
         zone.setSafetyLimit(Integer.parseInt(payload.getOrDefault("safetyLimit", "500").toString()));
+        if (payload.containsKey("mapBgUrl") && payload.get("mapBgUrl") != null) {
+            zone.setMapBgUrl(payload.get("mapBgUrl").toString());
+        }
         zone.setCurrentCrowdCount(0);
         zone.setDensityLevel("여유");
         zone.setStatus("NORMAL");
@@ -133,6 +136,9 @@ public class AdminSeatApiController {
         zone.setZoneName(payload.get("zoneName").toString());
         zone.setSvgPoints(payload.getOrDefault("svgPoints", "0,0").toString());
         zone.setSafetyLimit(Integer.parseInt(payload.getOrDefault("safetyLimit", "500").toString()));
+        if (payload.containsKey("mapBgUrl") && payload.get("mapBgUrl") != null) {
+            zone.setMapBgUrl(payload.get("mapBgUrl").toString());
+        }
         zone.setCurrentCrowdCount(0);
         zone.setDensityLevel("여유");
         zone.setStatus("NORMAL");

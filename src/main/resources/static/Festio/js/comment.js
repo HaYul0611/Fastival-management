@@ -274,9 +274,18 @@ window.initCommentUI = function () {
   async function getFestivalReviews(festivalId) {
     if (window.USE_MOCK) return window.MOCK.reviews.filter(r => r.festival_id == festivalId);
     const sb = window.getSupabase();
-    if (!sb) return [];
-    const { data } = await sb.from('review').select('*, app_user:user_id(name)').eq('festival_id', festivalId);
-    return data || [];
+    if (!sb) return (window.MOCK?.reviews || []).filter(r => r.festival_id == festivalId);
+    try {
+      const { data, error } = await sb.from('review').select('*, app_user:user_id(name)').eq('festival_id', festivalId);
+      if (error) throw error;
+      return data || [];
+    } catch (e) {
+      console.warn('Failed to fetch reviews from Supabase. Falling back to mock data.', e);
+      if (window.markSupabaseUnreachable) {
+        window.markSupabaseUnreachable(e);
+      }
+      return (window.MOCK?.reviews || []).filter(r => r.festival_id == festivalId);
+    }
   }
 
   // 리스트 렌더링
@@ -641,21 +650,27 @@ window.initCommentUI = function () {
     const sb = window.getSupabase();
     if (!sb) return;
 
-    sb.channel('public:event_comments')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'event_comments', filter: `festival_id=eq.${festivalId}` }, payload => {
-        loadAllCommentsAndReviews(festivalId);
-      })
-      .subscribe();
+    try {
+      sb.channel('public:event_comments')
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'event_comments', filter: `festival_id=eq.${festivalId}` }, payload => {
+          loadAllCommentsAndReviews(festivalId);
+        })
+        .subscribe();
 
-    sb.auth.getUser().then(res => {
-      if (res.data.user) {
-        sb.channel('public:user_notifications')
-          .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'user_notifications', filter: `user_id=eq.${res.data.user.id}` }, payload => {
-            updateNotificationBadge();
-          })
-          .subscribe();
-      }
-    });
+      sb.auth.getUser().then(res => {
+        if (res && res.data && res.data.user) {
+          sb.channel('public:user_notifications')
+            .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'user_notifications', filter: `user_id=eq.${res.data.user.id}` }, payload => {
+              updateNotificationBadge();
+            })
+            .subscribe();
+        }
+      }).catch(e => {
+        console.warn('Supabase realtime auth check failed:', e);
+      });
+    } catch (err) {
+      console.warn('Supabase realtime subscription failed:', err);
+    }
   }
 
   // 알림 배지 카운트 갱신

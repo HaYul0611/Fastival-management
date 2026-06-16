@@ -127,89 +127,26 @@ function initVenueMap(zones) {
 
   if (!svg || !zones || !Array.isArray(zones)) return;
 
-  // 1. 도면 배경 이미지 로드 제거
-  /*
+  // 1. 기존 SVG 내용물 클리어
+  svg.innerHTML = '';
+
+  // 2. 동적 배경 도면 주입 (관리자가 저장한 배경 도면이 있을 때 SVG <image> 추가)
   const zoneWithBg = zones.find(z => z.mapBgUrl);
-  if (zoneWithBg && bgOverlay) {
-    bgOverlay.style.backgroundImage = `url('${zoneWithBg.mapBgUrl}')`;
+  if (zoneWithBg && zoneWithBg.mapBgUrl) {
+    const bgImage = document.createElementNS('http://www.w3.org/2000/svg', 'image');
+    bgImage.setAttribute('id', 'svgBgImage');
+    bgImage.setAttribute('x', '0');
+    bgImage.setAttribute('y', '0');
+    bgImage.setAttribute('width', '800');
+    bgImage.setAttribute('height', '660');
+    bgImage.setAttribute('preserveAspectRatio', 'none');
+    bgImage.setAttribute('style', 'opacity: 0.85; pointer-events: none;');
+    bgImage.setAttribute('href', zoneWithBg.mapBgUrl);
+    bgImage.setAttributeNS('http://www.w3.org/1999/xlink', 'href', zoneWithBg.mapBgUrl);
+    svg.appendChild(bgImage);
   }
-  */
 
-  // 2. SVG 구역 다각형 그리기
-  svg.innerHTML = `
-    <!-- Figma static background drawings -->
-    <g id="figmaBackground" opacity="1">
-      <!-- Stage -->
-      <g>
-        <path d="M 100 50 L 700 50 L 680 120 L 120 120 Z" fill="#FFE5E5" stroke="#9ca3af" stroke-width="1.5" />
-        <text x="400" y="95" text-anchor="middle" fill="#374151" font-size="24" font-weight="bold">Stage</text>
-      </g>
-      
-      <!-- VIP존 -->
-      <g class="figma-template-zone" data-template="vip">
-        <path d="M 250 150 L 550 150 L 540 230 L 260 230 Z" fill="#FFD4E5" stroke="#9ca3af" stroke-width="1.5" />
-        <text x="400" y="195" text-anchor="middle" fill="#374151" font-size="16" font-weight="600">VIP존</text>
-        <text x="400" y="215" text-anchor="middle" fill="#6b7280" font-size="12">100석</text>
-      </g>
-      
-      <!-- F1 -->
-      <g class="figma-template-zone" data-template="f1">
-        <path d="M 180 250 L 340 250 L 340 340 L 180 340 Z" fill="#E5F3FF" stroke="#9ca3af" stroke-width="1.5" />
-        <text x="260" y="295" text-anchor="middle" fill="#374151" font-size="16" font-weight="600">F1</text>
-        <text x="260" y="315" text-anchor="middle" fill="#6b7280" font-size="12">80석</text>
-      </g>
-      
-      <!-- F2 -->
-      <g class="figma-template-zone" data-template="f2">
-        <path d="M 360 250 L 440 250 L 440 340 L 360 340 Z" fill="#E5F9FF" stroke="#9ca3af" stroke-width="1.5" />
-        <text x="400" y="295" text-anchor="middle" fill="#374151" font-size="16" font-weight="600">F2</text>
-        <text x="400" y="315" text-anchor="middle" fill="#6b7280" font-size="12">50석</text>
-      </g>
-      
-      <!-- F3 -->
-      <g class="figma-template-zone" data-template="f3">
-        <path d="M 460 250 L 620 250 L 620 340 L 460 340 Z" fill="#E5F3FF" stroke="#9ca3af" stroke-width="1.5" />
-        <text x="540" y="295" text-anchor="middle" fill="#374151" font-size="16" font-weight="600">F3</text>
-        <text x="540" y="315" text-anchor="middle" fill="#6b7280" font-size="12">80석</text>
-      </g>
-      
-      <!-- 스탠딩존 -->
-      <g class="figma-template-zone" data-template="standing">
-        <path d="M 220 360 L 580 360 L 580 500 L 220 500 Z" fill="#FFF9E5" stroke="#9ca3af" stroke-width="1.5" />
-        <text x="400" y="435" text-anchor="middle" fill="#374151" font-size="16" font-weight="600">스탠딩존</text>
-        <text x="400" y="455" text-anchor="middle" fill="#6b7280" font-size="12">200명</text>
-      </g>
-      
-      <!-- A존 (좌) -->
-      <g class="figma-template-zone" data-template="a-left">
-        <path d="M 100 250 L 160 250 L 160 500 L 100 500 Z" fill="#F0E5FF" stroke="#9ca3af" stroke-width="1.5" />
-        <text x="130" y="380" text-anchor="middle" fill="#374151" font-size="16" font-weight="600">A존 (좌)</text>
-        <text x="130" y="400" text-anchor="middle" fill="#6b7280" font-size="12">60석</text>
-      </g>
-      
-      <!-- A존 (우) -->
-      <g class="figma-template-zone" data-template="a-right">
-        <path d="M 640 250 L 700 250 L 700 500 L 640 500 Z" fill="#F0E5FF" stroke="#9ca3af" stroke-width="1.5" />
-        <text x="670" y="380" text-anchor="middle" fill="#374151" font-size="16" font-weight="600">A존 (우)</text>
-        <text x="670" y="400" text-anchor="middle" fill="#6b7280" font-size="12">60석</text>
-      </g>
-      
-      <!-- F4 (좌) -->
-      <g class="figma-template-zone" data-template="f4-left">
-        <path d="M 100 520 L 300 520 L 300 610 L 100 610 Z" fill="#E5FFE5" stroke="#9ca3af" stroke-width="1.5" />
-        <text x="200" y="570" text-anchor="middle" fill="#374151" font-size="16" font-weight="600">F4 (좌)</text>
-        <text x="200" y="590" text-anchor="middle" fill="#6b7280" font-size="12">100석</text>
-      </g>
-      
-      <!-- F4 (우) -->
-      <g class="figma-template-zone" data-template="f4-right">
-        <path d="M 500 520 L 700 520 L 700 610 L 500 610 Z" fill="#E5FFE5" stroke="#9ca3af" stroke-width="1.5" />
-        <text x="600" y="570" text-anchor="middle" fill="#374151" font-size="16" font-weight="600">F4 (우)</text>
-        <text x="600" y="590" text-anchor="middle" fill="#6b7280" font-size="12">100석</text>
-      </g>
-    </g>
-  `; // 기존 정적 렌더링 클리어
-
+  // 3. 관리자가 지정한 구역 다각형(polygon)을 100% 동적 렌더링
   zones.forEach(zone => {
     if (!zone.svgPoints) return;
 
@@ -218,7 +155,7 @@ function initVenueMap(zones) {
     polygon.setAttribute('class', 'zone-polygon');
     polygon.setAttribute('data-zone-no', zone.zoneNo);
 
-    // 툴팁 텍스트 추가
+    // 마우스 호버 시 툴팁 추가
     const title = document.createElementNS('http://www.w3.org/2000/svg', 'title');
     title.textContent = `${zone.zoneName} (잔여: ${zone.remainingCapacity}석 / 총: ${zone.totalCapacity}석)`;
     polygon.appendChild(title);
@@ -232,29 +169,6 @@ function initVenueMap(zones) {
     }
 
     svg.appendChild(polygon);
-
-    // 피그마 템플릿 구역 찾기 및 클릭/상태 매핑
-    const templateKey = getFigmaTemplateSelector(zone.zoneName);
-    if (templateKey) {
-      const templateEl = svg.querySelector(`.figma-template-zone[data-template="${templateKey}"]`);
-      if (templateEl) {
-        templateEl.setAttribute('data-zone-no', zone.zoneNo);
-        
-        // 마우스 오버 시 표시할 툴팁 텍스트 설정
-        const templateTitle = templateEl.querySelector('title') || document.createElementNS('http://www.w3.org/2000/svg', 'title');
-        templateTitle.textContent = `${zone.zoneName} (잔여: ${zone.remainingCapacity}석 / 총: ${zone.totalCapacity}석)`;
-        if (!templateEl.querySelector('title')) {
-          templateEl.appendChild(templateTitle);
-        }
-
-        if (zone.remainingCapacity === 0) {
-          templateEl.classList.add('sold-out');
-          templateEl.setAttribute('aria-disabled', 'true');
-        } else {
-          templateEl.addEventListener('click', () => selectZone(zone.zoneNo, zone, templateEl));
-        }
-      }
-    }
   });
 
   // 3. 범례 목록 동적 생성

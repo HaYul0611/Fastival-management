@@ -298,7 +298,7 @@
       left: 0;
       width: 100%;
       height: 100%;
-      background-size: contain;
+      background-size: 100% 100% !important;
       background-repeat: no-repeat;
       background-position: center center;
       z-index: 1;
@@ -607,6 +607,40 @@
                   </div>
                 </div>
 
+                <!-- 3-2. SVG 파일로 구역 일괄 가져오기 카드 -->
+                <div class="card mt-4" id="svgImportCard">
+                  <div class="card-header d-flex align-items-center justify-content-between">
+                    <h5 class="card-title m-0 fw-bold"><i class="bx bx-file-find me-2 text-primary"></i>3-2. SVG 구역 일괄 가져오기</h5>
+                  </div>
+                  <div class="card-body pt-4">
+                    <div class="mb-4">
+                      <label class="form-label" for="svgImportInput">구역 정보가 포함된 SVG 파일</label>
+                      <input type="file" id="svgImportInput" class="form-control" accept=".svg">
+                      <small class="text-muted mt-1 d-block">SVG 내의 polygon, rect, path 요소를 추출하여 자동으로 구역을 생성합니다.</small>
+                    </div>
+                    <div id="svgParsedListWrapper" style="display: none;">
+                      <label class="form-label fw-bold text-dark mb-2"><i class="bx bx-list-check me-1"></i>추출된 구역 목록</label>
+                      <div class="table-responsive border rounded mb-3" style="max-height: 250px; overflow-y: auto;">
+                        <table class="table table-sm table-hover mb-0" style="font-size: 0.8rem;">
+                          <thead class="table-light">
+                            <tr>
+                              <th style="width: 10%;" class="text-center">선택</th>
+                              <th style="width: 45%;">구역 이름</th>
+                              <th style="width: 45%;">수용 인원</th>
+                            </tr>
+                          </thead>
+                          <tbody id="svgParsedListTbody">
+                            <!-- JS 동적 생성 -->
+                          </tbody>
+                        </table>
+                      </div>
+                      <button id="btnImportSvgZones" class="btn btn-success btn-sm w-100">
+                        <i class="bx bx-download me-1"></i>선택한 구역 가져오기 실행
+                      </button>
+                    </div>
+                  </div>
+                </div>
+
                 <!-- 3-1. 등급별 티켓 단가 설정 카드 추가 -->
                 <div class="card mt-4">
                   <div class="card-header d-flex align-items-center justify-content-between">
@@ -648,14 +682,16 @@
                     <div class="grid-editor-container" id="gridEditorContainer"
                       style="position: relative; overflow: hidden; width: 100%; max-width: 650px; aspect-ratio: 1 / 1; margin: 0 auto; border-radius: 8px; border: 1px solid #d9dee3; display: flex; align-items: center; justify-content: center;">
                       
-                      <!-- 1층: 배경 이미지 오버레이 (전체 페스티벌 도면) -->
-                      <div class="grid-bg-overlay" id="gridBgOverlay" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; background-size: contain; background-repeat: no-repeat; background-position: center center; opacity: 1; z-index: 1; pointer-events: none;"></div>
+                      <!-- 1층: 배경 이미지 오버레이 (전체 페스티벌 도면 - 하위 호환용으로 유지하되 숨김) -->
+                      <div class="grid-bg-overlay" id="gridBgOverlay" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; background-size: 100% 100% !important; background-repeat: no-repeat; background-position: center center; opacity: 0; z-index: 1; pointer-events: none; display: none;"></div>
 
                       <!-- 2층: 구역 다각형을 그리고 감지할 SVG 레이어 -->
                       <svg id="zoneSvgLayer" viewBox="0 0 800 660"
                         style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 2; pointer-events: auto;">
+                        <!-- SVG 내부 배경 이미지 엘리먼트 추가 (800x660 크기에 강제 정합) -->
+                        <image id="svgBgImage" x="0" y="0" width="800" height="660" preserveAspectRatio="none" style="opacity: 0.8; pointer-events: none;"/>
                         <!-- Figma static background drawings -->
-                        <g id="figmaBackground" opacity="1">
+                        <g id="figmaBackground" opacity="1" style="display: none;">
                           <!-- Stage -->
                           <g>
                             <path d="M 100 50 L 700 50 L 680 120 L 120 120 Z" fill="#FFE5E5" stroke="#9ca3af" stroke-width="1.5" />
@@ -895,6 +931,35 @@
       const btnSaveBg = document.getElementById('btnSaveBg');
       const btnClearBg = document.getElementById('btnClearBg');
       const gridBgOverlay = document.getElementById('gridBgOverlay');
+      const svgBgImage = document.getElementById('svgBgImage');
+
+      // 배경 이미지 설정 헬퍼 함수 (SVG <image>와 하위 호환 div 백오버레이 동시 처리)
+      function setBgImage(url) {
+        if (url && url !== 'none') {
+          if (gridBgOverlay) {
+            gridBgOverlay.style.backgroundImage = `url('${url}')`;
+          }
+          if (svgBgImage) {
+            // SVG <image> 태그의 href/xlink:href에 이미지 바인딩
+            svgBgImage.setAttribute('href', url);
+            svgBgImage.setAttributeNS('http://www.w3.org/1999/xlink', 'href', url);
+          }
+        } else {
+          if (gridBgOverlay) {
+            gridBgOverlay.style.backgroundImage = 'none';
+          }
+          if (svgBgImage) {
+            svgBgImage.removeAttribute('href');
+            svgBgImage.removeAttributeNS('http://www.w3.org/1999/xlink', 'href');
+          }
+        }
+      }
+
+      // SVG 일괄 가져오기 관련 DOM 바인딩
+      const svgImportInput = document.getElementById('svgImportInput');
+      const svgParsedListWrapper = document.getElementById('svgParsedListWrapper');
+      const svgParsedListTbody = document.getElementById('svgParsedListTbody');
+      const btnImportSvgZones = document.getElementById('btnImportSvgZones');
 
       // 모달 엘리먼트 바인딩
       const seatEditorModalEl = document.getElementById('seatEditorModal');
@@ -973,9 +1038,7 @@
         if (file) {
           const reader = new FileReader();
           reader.onload = (event) => {
-            if (gridBgOverlay) {
-              gridBgOverlay.style.backgroundImage = `url('${event.target.result}')`;
-            }
+            setBgImage(event.target.result);
           };
           reader.readAsDataURL(file);
 
@@ -1029,7 +1092,7 @@
           }
 
           // 메인 화면 배경 이미지 및 모달 배경 이미지 즉시 갱신 반영
-          gridBgOverlay.style.backgroundImage = `url('${data.fileUrl}')`;
+          setBgImage(data.fileUrl);
           modalGridBgOverlay.style.backgroundImage = `url('${data.fileUrl}')`;
 
           btnSaveBg.style.display = 'none';
@@ -1068,7 +1131,7 @@
         }
 
         // 배경 이미지 소거
-        gridBgOverlay.style.backgroundImage = 'none';
+        setBgImage('none');
         modalGridBgOverlay.style.backgroundImage = 'none';
 
         mapBgInput.value = '';
@@ -1076,6 +1139,436 @@
         btnSaveBg.style.display = 'none';
         Swal.fire('완료', '배경 이미지가 제거되었습니다.', 'info');
       });
+
+      // SVG 일괄 가져오기 관련 변수 및 이벤트 핸들러
+      let parsedSvgZones = [];
+      
+      // SVG 미리보기 레이어 생성
+      const svgPreviewLayer = (() => {
+        let layer = document.getElementById('svgPreviewLayer');
+        if (!layer) {
+          layer = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+          layer.setAttribute('id', 'svgPreviewLayer');
+          zoneSvgLayer.appendChild(layer);
+        }
+        return layer;
+      })();
+
+      // SVG 파일 선택 이벤트
+      svgImportInput.addEventListener('change', (e) => {
+        const file = e.target.files[0];
+        if (!file) {
+          clearSvgImport();
+          return;
+        }
+
+        const reader = new FileReader();
+        reader.onload = (event) => {
+          const svgText = event.target.result;
+          parsedSvgZones = parseSvgFile(svgText);
+
+          if (parsedSvgZones.length === 0) {
+            Swal.fire('알림', '선택한 SVG 파일에서 유효한 구역(polygon, rect, path)을 찾지 못했습니다.', 'warning');
+            clearSvgImport();
+            return;
+          }
+
+          // 임시로 배경 이미지 미리보기 적용 (SVG Blob URL 생성)
+          const svgBlob = new Blob([svgText], { type: 'image/svg+xml;charset=utf-8' });
+          const svgUrl = URL.createObjectURL(svgBlob);
+          setBgImage(svgUrl);
+          gridBgOverlay.dataset.tempImportUrl = svgUrl;
+
+          renderParsedZonesList();
+          drawPreviewZones();
+          svgParsedListWrapper.style.display = 'block';
+        };
+        reader.readAsText(file);
+      });
+
+      // SVG 파서 함수 (디자인용 불필요 데코레이션 요소 및 아이콘 등 필터링 강화)
+      function parseSvgFile(svgText) {
+        const parser = new DOMParser();
+        const doc = parser.parseFromString(svgText, 'image/svg+xml');
+        const svgRoot = doc.documentElement;
+
+        // 브라우저의 SVG 레이아웃 엔진을 통해 getCTM()을 호출하기 위해 임시로 DOM에 렌더링
+        const tempContainer = document.createElement('div');
+        tempContainer.style.position = 'absolute';
+        tempContainer.style.left = '-9999px';
+        tempContainer.style.top = '-9999px';
+        tempContainer.style.visibility = 'hidden';
+        tempContainer.appendChild(svgRoot);
+        document.body.appendChild(tempContainer);
+
+        const zones = [];
+
+        try {
+          // viewBox 또는 width/height를 활용한 스케일링 설정 (기본값: 800x660)
+          let viewBox = { x: 0, y: 0, w: 800, h: 660 };
+          const vbAttr = svgRoot.getAttribute('viewBox');
+          if (vbAttr) {
+            const parts = vbAttr.split(/[\s,]+/).map(Number);
+            if (parts.length === 4) {
+              viewBox = { x: parts[0], y: parts[1], w: parts[2], h: parts[3] };
+            }
+          } else {
+            const wAttr = parseFloat(svgRoot.getAttribute('width'));
+            const hAttr = parseFloat(svgRoot.getAttribute('height'));
+            if (!isNaN(wAttr) && !isNaN(hAttr)) {
+              viewBox = { x: 0, y: 0, w: wAttr, h: hAttr };
+            } else {
+              const bbox = svgRoot.getBBox();
+              if (bbox.width > 0 && bbox.height > 0) {
+                viewBox = { x: bbox.x, y: bbox.y, w: bbox.width, h: bbox.height };
+              }
+            }
+          }
+
+          // SVG 로컬 좌표 -> 800x660 캔버스로 매핑
+          function normalizePoint(x, y) {
+            const nx = ((x - viewBox.x) / viewBox.w) * 800;
+            const ny = ((y - viewBox.y) / viewBox.h) * 660;
+            return [Math.round(nx), Math.round(ny)];
+          }
+
+          function getElementName(el) {
+            return el.getAttribute('id') || el.getAttribute('name') || el.getAttribute('class') || '';
+          }
+
+          // 1. Polygons 파싱 (transform 반영 및 노이즈 필터링)
+          svgRoot.querySelectorAll('polygon').forEach((poly, idx) => {
+            // 클립패스, 정의태그 등 내부 템플릿 요소는 제외
+            if (poly.closest('defs, clipPath, mask, linearGradient')) return;
+
+            // 크기 필터링 (너무 작거나 한쪽이라도 화면을 가득 채우는 요소는 제외)
+            const bbox = poly.getBBox();
+            const targetWidth = (bbox.width / viewBox.w) * 800;
+            const targetHeight = (bbox.height / viewBox.h) * 660;
+            if (targetWidth < 15 || targetHeight < 15) return;
+            if (targetWidth > 750 || targetHeight > 610) return;
+
+            const matrix = poly.getCTM();
+            const pointsAttr = poly.getAttribute('points');
+            if (pointsAttr && matrix) {
+              const pairs = pointsAttr.trim().split(/[\s,]+/);
+              const transformedPairs = [];
+              for (let i = 0; i < pairs.length; i += 2) {
+                if (pairs[i] !== undefined && pairs[i+1] !== undefined) {
+                  const x = parseFloat(pairs[i]);
+                  const y = parseFloat(pairs[i+1]);
+                  const p = svgRoot.createSVGPoint();
+                  p.x = x;
+                  p.y = y;
+                  const tp = p.matrixTransform(matrix);
+                  transformedPairs.push(normalizePoint(tp.x, tp.y).join(','));
+                }
+              }
+              // 꼭짓점이 3개 이상 12개 이하인 형태만 구역 다각형으로 필터링
+              if (transformedPairs.length >= 3 && transformedPairs.length <= 12) {
+                zones.push({
+                  type: 'polygon',
+                  name: getElementName(poly) || `구역 ${zones.length + 1}`,
+                  points: transformedPairs.join(' '),
+                  safetyLimit: 500
+                });
+              }
+            }
+          });
+
+          // 2. Rects 파싱 (transform 반영 및 노이즈 필터링)
+          svgRoot.querySelectorAll('rect').forEach((rect, idx) => {
+            if (rect.closest('defs, clipPath, mask, linearGradient')) return;
+
+            const bbox = rect.getBBox();
+            const targetWidth = (bbox.width / viewBox.w) * 800;
+            const targetHeight = (bbox.height / viewBox.h) * 660;
+            if (targetWidth < 15 || targetHeight < 15) return;
+            if (targetWidth > 750 || targetHeight > 610) return;
+
+            const matrix = rect.getCTM();
+            const x = parseFloat(rect.getAttribute('x')) || 0;
+            const y = parseFloat(rect.getAttribute('y')) || 0;
+            const w = parseFloat(rect.getAttribute('width')) || 0;
+            const h = parseFloat(rect.getAttribute('height')) || 0;
+            if (w > 0 && h > 0 && matrix) {
+              const corners = [
+                { x, y },
+                { x: x + w, y },
+                { x: x + w, y: y + h },
+                { x, y: y + h }
+              ];
+              const transformedPairs = corners.map(c => {
+                const p = svgRoot.createSVGPoint();
+                p.x = c.x;
+                p.y = c.y;
+                const tp = p.matrixTransform(matrix);
+                return normalizePoint(tp.x, tp.y).join(',');
+              });
+              zones.push({
+                type: 'rect',
+                name: getElementName(rect) || `구역 ${zones.length + 1}`,
+                points: transformedPairs.join(' '),
+                safetyLimit: 500
+              });
+            }
+          });
+
+          // 3. Paths 파싱 (transform 반영 및 노이즈 필터링)
+          svgRoot.querySelectorAll('path').forEach((path, idx) => {
+            if (path.closest('defs, clipPath, mask, linearGradient')) return;
+
+            const d = path.getAttribute('d') || '';
+            // 닫히지 않은 라인(z/Z 미포함)은 구역 배치용 도형이 아니므로 필터링
+            if (!d.toLowerCase().includes('z')) return;
+
+            const bbox = path.getBBox();
+            const targetWidth = (bbox.width / viewBox.w) * 800;
+            const targetHeight = (bbox.height / viewBox.h) * 660;
+            if (targetWidth < 15 || targetHeight < 15) return;
+            if (targetWidth > 750 || targetHeight > 610) return;
+
+            const matrix = path.getCTM();
+            if (matrix) {
+              const numbers = d.match(/[+-]?\d+(?:\.\d+)?/g);
+              if (numbers && numbers.length >= 6) {
+                const transformedPairs = [];
+                for (let i = 0; i < numbers.length; i += 2) {
+                  if (numbers[i] !== undefined && numbers[i+1] !== undefined) {
+                    const x = parseFloat(numbers[i]);
+                    const y = parseFloat(numbers[i+1]);
+                    const p = svgRoot.createSVGPoint();
+                    p.x = x;
+                    p.y = y;
+                    const tp = p.matrixTransform(matrix);
+                    transformedPairs.push(normalizePoint(tp.x, tp.y).join(','));
+                  }
+                }
+                // 중복 제거
+                const uniquePairs = transformedPairs.filter((item, index) => transformedPairs.indexOf(item) === index);
+                // 복잡한 심볼이나 로고 텍스트 패스는 거르고 단순 닫힌 다각형(3~12개 꼭짓점)만 구역으로 간주
+                if (uniquePairs.length >= 3 && uniquePairs.length <= 12) {
+                  zones.push({
+                    type: 'path',
+                    name: getElementName(path) || `구역 ${zones.length + 1}`,
+                    points: uniquePairs.join(' '),
+                    safetyLimit: 500
+                  });
+                }
+              }
+            }
+          });
+        } catch (err) {
+          console.error('SVG 파싱 에러:', err);
+        } finally {
+          document.body.removeChild(tempContainer);
+        }
+
+        return zones;
+      }
+
+      // 파싱된 구역 리스트 HTML 렌더링
+      function renderParsedZonesList() {
+        svgParsedListTbody.innerHTML = '';
+        parsedSvgZones.forEach((zone, idx) => {
+          const tr = document.createElement('tr');
+          tr.innerHTML = `
+            <td class="text-center align-middle">
+              <input type="checkbox" class="form-check-input svg-zone-checkbox" data-index="${idx}" checked>
+            </td>
+            <td class="align-middle">
+              <input type="text" class="form-control form-control-sm svg-zone-name-input" data-index="${idx}" value="${zone.name}">
+            </td>
+            <td class="align-middle">
+              <input type="number" class="form-control form-control-sm svg-zone-limit-input" data-index="${idx}" value="${zone.safetyLimit}" min="1">
+            </td>
+          `;
+          svgParsedListTbody.appendChild(tr);
+        });
+
+        // 리스트 변경 시 실시간 동기화
+        svgParsedListTbody.querySelectorAll('.svg-zone-name-input').forEach(input => {
+          input.addEventListener('input', (e) => {
+            const idx = parseInt(e.target.dataset.index);
+            parsedSvgZones[idx].name = e.target.value;
+            drawPreviewZones();
+          });
+        });
+
+        svgParsedListTbody.querySelectorAll('.svg-zone-limit-input').forEach(input => {
+          input.addEventListener('input', (e) => {
+            const idx = parseInt(e.target.dataset.index);
+            parsedSvgZones[idx].safetyLimit = parseInt(e.target.value) || 500;
+          });
+        });
+      }
+
+      // 파싱된 구역 임시 드로잉 프리뷰
+      function drawPreviewZones() {
+        svgPreviewLayer.innerHTML = '';
+        parsedSvgZones.forEach((zone, idx) => {
+          const checkbox = svgParsedListTbody.querySelector(`.svg-zone-checkbox[data-index="${idx}"]`);
+          if (checkbox && !checkbox.checked) return;
+
+          const polygon = document.createElementNS('http://www.w3.org/2000/svg', 'polygon');
+          polygon.setAttribute('points', zone.points);
+          polygon.setAttribute('fill', 'rgba(105, 108, 255, 0.2)');
+          polygon.setAttribute('stroke', '#696cff');
+          polygon.setAttribute('stroke-width', '2');
+          polygon.setAttribute('stroke-dasharray', '5,5');
+          polygon.setAttribute('style', 'cursor: help;');
+
+          const title = document.createElementNS('http://www.w3.org/2000/svg', 'title');
+          title.textContent = `[가져오기 예정] ${zone.name}`;
+          polygon.appendChild(title);
+
+          svgPreviewLayer.appendChild(polygon);
+        });
+      }
+
+      // 체크박스 상태 변경 시 프리뷰 업데이트
+      svgParsedListTbody.addEventListener('change', (e) => {
+        if (e.target.classList.contains('svg-zone-checkbox')) {
+          drawPreviewZones();
+        }
+      });
+
+      // 가져오기 실행 (첫 번째 구역 생성 후 도면 업로드 -> 나머지 구역 배경 자동 공유)
+      btnImportSvgZones.addEventListener('click', async () => {
+        const festivalId = festivalSelect.value;
+        if (!festivalId) {
+          Swal.fire('경고', '페스티벌을 먼저 선택해 주세요.', 'warning');
+          return;
+        }
+
+        const selectedCheckboxes = svgParsedListTbody.querySelectorAll('.svg-zone-checkbox:checked');
+        if (selectedCheckboxes.length === 0) {
+          Swal.fire('알림', '가져올 구역을 최소 하나 이상 선택해 주세요.', 'warning');
+          return;
+        }
+
+        const confirmResult = await Swal.fire({
+          title: '구역 가져오기 실행',
+          text: `선택하신 ${selectedCheckboxes.length}개의 구역을 등록하고, 업로드한 SVG 파일을 좌석 배치도 배경 도면으로 설정하시겠습니까?`,
+          icon: 'question',
+          showCancelButton: true,
+          confirmButtonText: '가져오기',
+          cancelButtonText: '취소',
+          confirmButtonColor: '#696cff'
+        });
+
+        if (confirmResult.isConfirmed) {
+          try {
+            Swal.showLoading();
+            let successCount = 0;
+            let uploadedBgUrl = null;
+
+            // 1단계: 첫 번째 구역 생성
+            const firstCheckbox = selectedCheckboxes[0];
+            const firstIdx = parseInt(firstCheckbox.dataset.index);
+            const firstZone = parsedSvgZones[firstIdx];
+
+            const firstPayload = {
+              festivalId: parseInt(festivalId),
+              zoneName: firstZone.name,
+              safetyLimit: firstZone.safetyLimit,
+              svgPoints: firstZone.points
+            };
+
+            const firstRes = await fetch('/api/admin/zones', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                'Authorization': getAuthHeader()
+              },
+              body: JSON.stringify(firstPayload)
+            });
+
+            if (firstRes.ok) {
+              successCount++;
+              const createdFirstZone = await firstRes.json();
+
+              // 2단계: 첫 번째 구역에 업로드한 SVG 파일을 배경으로 전송
+              const file = svgImportInput.files[0];
+              if (file) {
+                const formData = new FormData();
+                formData.append('file', file);
+
+                const uploadRes = await fetch(`/api/admin/zones/${createdFirstZone.id}/background`, {
+                  method: 'POST',
+                  headers: {
+                    'Authorization': getAuthHeader()
+                  },
+                  body: formData
+                });
+
+                if (uploadRes.ok) {
+                  const uploadData = await uploadRes.json();
+                  uploadedBgUrl = uploadData.fileUrl; // 업로드된 SVG 도면 URL
+                }
+              }
+            }
+
+            // 3단계: 나머지 구역 생성 (이 때 획득한 배경 URL을 payload에 포함하여 공유 설정)
+            for (let i = 1; i < selectedCheckboxes.length; i++) {
+              const cb = selectedCheckboxes[i];
+              const idx = parseInt(cb.dataset.index);
+              const zone = parsedSvgZones[idx];
+
+              const payload = {
+                festivalId: parseInt(festivalId),
+                zoneName: zone.name,
+                safetyLimit: zone.safetyLimit,
+                svgPoints: zone.points
+              };
+              if (uploadedBgUrl) {
+                payload.mapBgUrl = uploadedBgUrl;
+              }
+
+              const res = await fetch('/api/admin/zones', {
+                method: 'POST',
+                headers: {
+                  'Content-Type': 'application/json',
+                  'Authorization': getAuthHeader()
+                },
+                body: JSON.stringify(payload)
+              });
+
+              if (res.ok) {
+                successCount++;
+              }
+            }
+
+            Swal.fire('가져오기 완료', `${successCount}개의 구역이 성공적으로 생성되었으며, 업로드한 SVG 도면이 배경으로 등록되었습니다.`, 'success');
+            clearSvgImport();
+            await refreshZones(festivalId);
+          } catch (err) {
+            Swal.fire('에러', err.message, 'error');
+          }
+        }
+      });
+
+      // 가져오기 완료 및 리셋
+      function clearSvgImport() {
+        svgImportInput.value = '';
+        svgParsedListWrapper.style.display = 'none';
+        svgParsedListTbody.innerHTML = '';
+        parsedSvgZones = [];
+        svgPreviewLayer.innerHTML = '';
+
+        // 임시 SVG Blob URL 해제 및 원래 배경으로 복구
+        if (gridBgOverlay.dataset.tempImportUrl) {
+          URL.revokeObjectURL(gridBgOverlay.dataset.tempImportUrl);
+          delete gridBgOverlay.dataset.tempImportUrl;
+        }
+        const festivalId = festivalSelect.value;
+        if (festivalId) {
+          refreshZones(festivalId);
+        } else {
+          setBgImage('none');
+          btnClearBg.style.display = 'none';
+        }
+      }
 
       // 임시 구역 다각형 상대 좌표 변수
       let tempSvgPoints = null;
@@ -1717,6 +2210,16 @@
 
           currentZones = zones; // 백업 저장
 
+          // 만약 등록된 구역 중에 배경 도면이 등록된 구역이 있다면 메인 화면 배경 이미지로 설정
+          const zoneWithBg = zones.find(z => z.mapBgUrl);
+          if (zoneWithBg && zoneWithBg.mapBgUrl) {
+            setBgImage(zoneWithBg.mapBgUrl);
+            btnClearBg.style.display = 'block';
+          } else {
+            setBgImage('none');
+            btnClearBg.style.display = 'none';
+          }
+
           zones.forEach(zone => {
             const selectedAttr = (selectZoneId && zone.id == selectZoneId) ? 'selected' : '';
             zoneSelect.innerHTML += `<option value="${zone.id}" ${selectedAttr}>${zone.zoneName}</option>`;
@@ -1876,7 +2379,7 @@
         const curZone = currentZones.find(z => z.id == zoneId);
         if (curZone && curZone.mapBgUrl) {
           modalGridBgOverlay.style.backgroundImage = `url('${curZone.mapBgUrl}')`;
-          gridBgOverlay.style.backgroundImage = `url('${curZone.mapBgUrl}')`; // 메인 화면 배경도 갱신
+          setBgImage(curZone.mapBgUrl); // 메인 화면 배경도 갱신
           btnClearBg.style.display = 'block';
           btnSaveBg.style.display = 'none';
         } else {
@@ -2068,9 +2571,24 @@
         }
       });
 
+      // Figma 기본 배치도 노출 여부 동기화 함수
+      function updateFigmaBackgroundVisibility() {
+        const festivalId = festivalSelect.value;
+        const selectedText = festivalSelect.options[festivalSelect.selectedIndex]?.text || '';
+        const figmaBg = document.getElementById('figmaBackground');
+        if (figmaBg) {
+          if (festivalId && (festivalId === '1' || selectedText.includes('서울 재즈') || selectedText.toLowerCase().includes('jazz'))) {
+            figmaBg.style.display = 'block';
+          } else {
+            figmaBg.style.display = 'none';
+          }
+        }
+      }
+
       // 2-3. 특정 페스티벌 선택 시 구역 목록 조회
       festivalSelect.addEventListener('change', async (e) => {
         const festivalId = e.target.value;
+        updateFigmaBackgroundVisibility();
 
         if (festivalId) {
           sessionStorage.setItem('selectedFestivalId', festivalId);
@@ -2125,7 +2643,7 @@
         // 메인 화면 배경 이미지 미리 연동 (이미지가 존재할 때만 덮어씀, 없으면 이전 배경 유지)
         const curZone = currentZones.find(z => z.id == zoneId);
         if (curZone && curZone.mapBgUrl) {
-          gridBgOverlay.style.backgroundImage = `url('${curZone.mapBgUrl}')`;
+          setBgImage(curZone.mapBgUrl);
         }
 
         btnGenerate.disabled = false;
@@ -2703,6 +3221,21 @@
         showEmptyState('페스티벌과 구역을 선택하거나 좌석 판을 생성해주세요.');
       }
 
+      // zoomOut
+      function zoomOut() {
+        zoomState = { zoomed: false, scale: 1, x: 0, y: 0, activeZoneId: null };
+        const btnZoomOut = document.querySelector('.btn-zoom-out');
+        if (btnZoomOut) {
+          btnZoomOut.style.display = 'none';
+        }
+        if (gridEditorContainer) {
+          gridEditorContainer.style.transform = 'none';
+        }
+        document.querySelectorAll('.zone-polygon').forEach(p => {
+          p.classList.remove('active');
+        });
+      }
+
       // showEmptyState
       function showEmptyState(msg) {
         modalGridWrapper.style.display = 'none';
@@ -2722,6 +3255,7 @@
         
         if (savedFestivalId) {
           festivalSelect.value = savedFestivalId;
+          updateFigmaBackgroundVisibility();
           
           // 구역 목록 조회
           await refreshZones(savedFestivalId);
@@ -2743,7 +3277,7 @@
             if (savedZoneId && selectedOptionText) {
               const curZone = currentZones.find(z => z.id == savedZoneId);
               if (curZone && curZone.mapBgUrl) {
-                gridBgOverlay.style.backgroundImage = `url('${curZone.mapBgUrl}')`;
+                setBgImage(curZone.mapBgUrl);
               }
               openSeatEditor(savedZoneId, selectedOptionText);
             }

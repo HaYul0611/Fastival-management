@@ -38,12 +38,33 @@ const SUPABASE_URL = 'https://cddfyvkilmfrbtcruklw.supabase.co';   // TODO: 실�
 const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNkZGZ5dmtpbG1mcmJ0Y3J1a2x3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzk3NzM5MzksImV4cCI6MjA5NTM1MTkzOX0.YPkPc7wDBWE3NwE_SrUnhQIOofJjTA-N9iPzxdiEFXs';                          // TODO: 실제 anon key로 교체
 
 let _supabase = null;
+let _isSupabaseUnreachable = false;
+
 function getSupabase() {
+  if (_isSupabaseUnreachable) return null;
   if (!_supabase && window.supabase) {
     _supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
   }
   return _supabase;
 }
+
+window.getSupabase = getSupabase;
+
+function markSupabaseUnreachable(err) {
+  if (err && (
+    err.message?.includes('Failed to fetch') || 
+    err.toString().includes('Failed to fetch') || 
+    err.message?.includes('net::ERR_NAME_NOT_RESOLVED') ||
+    err.toString().includes('ERR_NAME_NOT_RESOLVED') ||
+    err.message?.includes('Failed to execute \'fetch\'')
+  )) {
+    if (!_isSupabaseUnreachable) {
+      _isSupabaseUnreachable = true;
+      console.warn('Supabase server is unreachable. Switched to local/mock fallback mode.');
+    }
+  }
+}
+window.markSupabaseUnreachable = markSupabaseUnreachable;
 
 /* ── KOPIS / TourAPI 설정 ──────────────────────────────────── */
 const KOPIS_BASE = 'https://kopis.or.kr/openApi/restful';
@@ -418,20 +439,33 @@ const memberApi = {
   getMe: async () => {
     if (USE_MOCK) return { ...MOCK.app_user };
     const sb = getSupabase();
-    if (!sb) return null;
-    const { data: { user } } = await sb.auth.getUser();
-    if (!user) return null;
-    const { data } = await sb.from('app_user').select('*').eq('id', user.id).single();
-    return data;
+    if (!sb) return { ...MOCK.app_user };
+    try {
+      const { data: { user } } = await sb.auth.getUser();
+      if (!user) return null;
+      const { data } = await sb.from('app_user').select('*').eq('id', user.id).single();
+      return data;
+    } catch (e) {
+      markSupabaseUnreachable(e);
+      return { ...MOCK.app_user };
+    }
   },
 
   /** 프로필 수정 */
   updateMe: async (payload) => {
     if (USE_MOCK) { Object.assign(MOCK.app_user, payload); return { ...MOCK.app_user }; }
     const sb = getSupabase();
-    const { data: { user } } = await sb.auth.getUser();
-    const { data } = await sb.from('app_user').update(payload).eq('id', user.id).select().single();
-    return data;
+    if (!sb) { Object.assign(MOCK.app_user, payload); return { ...MOCK.app_user }; }
+    try {
+      const { data: { user } } = await sb.auth.getUser();
+      if (!user) { Object.assign(MOCK.app_user, payload); return { ...MOCK.app_user }; }
+      const { data } = await sb.from('app_user').update(payload).eq('id', user.id).select().single();
+      return data;
+    } catch (e) {
+      markSupabaseUnreachable(e);
+      Object.assign(MOCK.app_user, payload);
+      return { ...MOCK.app_user };
+    }
   },
 
   /** 알림 설정 변경 */
@@ -582,17 +616,21 @@ const eventApi = {
         if (onProgress) onProgress([...allEvents]);
       } else {
         // 3. Fallback: Supabase 직접 조회
-        const sb = getSupabase();
-        if (sb) {
-          let q = sb.from('festival').select('*').eq('is_active', true).order('created_at', { ascending: false });
-          if (category && category !== 'all') q = q.eq('category', category);
+        try {
+          const sb = getSupabase();
+          if (sb) {
+            let q = sb.from('festival').select('*').eq('is_active', true).order('created_at', { ascending: false });
+            if (category && category !== 'all') q = q.eq('category', category);
 
-          const { data, error } = await q;
-          if (!error) {
+            const { data, error } = await q;
+            if (error) throw error;
             const normalized = (data || []).map(normalizeFestival);
             allEvents = [...normalized];
             if (onProgress) onProgress([...allEvents]);
           }
+        } catch (e) {
+          console.warn('Failed to fetch from Supabase in getEvents:', e);
+          markSupabaseUnreachable(e);
         }
       }
     }
@@ -842,12 +880,20 @@ const wishlistApi = {
   getWishlist: async () => {
     if (USE_MOCK) return [...MOCK.wishlist_ids];
     const sb = getSupabase();
-    const { data: { user } } = await sb.auth.getUser();
-    if (!user) {
+    if (!sb) {
       try { return JSON.parse(localStorage.getItem('festio_local_wishlist')) || []; } catch { return []; }
     }
-    const { data } = await sb.from('wishlist').select('festival_id').eq('user_id', user.id);
-    return (data || []).map(r => r.festival_id);
+    try {
+      const { data: { user } } = await sb.auth.getUser();
+      if (!user) {
+        try { return JSON.parse(localStorage.getItem('festio_local_wishlist')) || []; } catch { return []; }
+      }
+      const { data } = await sb.from('wishlist').select('festival_id').eq('user_id', user.id);
+      return (data || []).map(r => r.festival_id);
+    } catch (e) {
+      markSupabaseUnreachable(e);
+      try { return JSON.parse(localStorage.getItem('festio_local_wishlist')) || []; } catch { return []; }
+    }
   },
 
   addWishlist: async (festivalId) => {
@@ -856,16 +902,32 @@ const wishlistApi = {
       return { success: true };
     }
     const sb = getSupabase();
-    const { data: { user } } = await sb.auth.getUser();
-    if (!user) {
+    if (!sb) {
       let list = [];
       try { list = JSON.parse(localStorage.getItem('festio_local_wishlist')) || []; } catch { }
       if (!list.includes(festivalId)) list.push(festivalId);
       localStorage.setItem('festio_local_wishlist', JSON.stringify(list));
       return { success: true };
     }
-    const { data } = await sb.from('wishlist').insert({ user_id: user.id, festival_id: festivalId }).select().single();
-    return data;
+    try {
+      const { data: { user } } = await sb.auth.getUser();
+      if (!user) {
+        let list = [];
+        try { list = JSON.parse(localStorage.getItem('festio_local_wishlist')) || []; } catch { }
+        if (!list.includes(festivalId)) list.push(festivalId);
+        localStorage.setItem('festio_local_wishlist', JSON.stringify(list));
+        return { success: true };
+      }
+      const { data } = await sb.from('wishlist').insert({ user_id: user.id, festival_id: festivalId }).select().single();
+      return data;
+    } catch (e) {
+      markSupabaseUnreachable(e);
+      let list = [];
+      try { list = JSON.parse(localStorage.getItem('festio_local_wishlist')) || []; } catch { }
+      if (!list.includes(festivalId)) list.push(festivalId);
+      localStorage.setItem('festio_local_wishlist', JSON.stringify(list));
+      return { success: true };
+    }
   },
 
   /** 찜 제거 */
@@ -875,16 +937,32 @@ const wishlistApi = {
       return { success: true };
     }
     const sb = getSupabase();
-    const { data: { user } } = await sb.auth.getUser();
-    if (!user) {
+    if (!sb) {
       let list = [];
       try { list = JSON.parse(localStorage.getItem('festio_local_wishlist')) || []; } catch { }
       list = list.filter(n => n !== festivalId);
       localStorage.setItem('festio_local_wishlist', JSON.stringify(list));
       return { success: true };
     }
-    await sb.from('wishlist').delete().eq('user_id', user.id).eq('festival_id', festivalId);
-    return { success: true };
+    try {
+      const { data: { user } } = await sb.auth.getUser();
+      if (!user) {
+        let list = [];
+        try { list = JSON.parse(localStorage.getItem('festio_local_wishlist')) || []; } catch { }
+        list = list.filter(n => n !== festivalId);
+        localStorage.setItem('festio_local_wishlist', JSON.stringify(list));
+        return { success: true };
+      }
+      await sb.from('wishlist').delete().eq('user_id', user.id).eq('festival_id', festivalId);
+      return { success: true };
+    } catch (e) {
+      markSupabaseUnreachable(e);
+      let list = [];
+      try { list = JSON.parse(localStorage.getItem('festio_local_wishlist')) || []; } catch { }
+      list = list.filter(n => n !== festivalId);
+      localStorage.setItem('festio_local_wishlist', JSON.stringify(list));
+      return { success: true };
+    }
   },
 
   /** 토글 */
@@ -1118,70 +1196,166 @@ const broadcastApi = {
 ═══════════════════════════════════════════════════════════ */
 const commentApi = {
   getComments: async (festivalId) => {
-    if (USE_MOCK) return [];
+    const getOfflineComments = (fid) => {
+      try {
+        const localData = localStorage.getItem(`festio_mock_comments_${fid}`);
+        if (localData) return JSON.parse(localData);
+      } catch {}
+      return [
+        {
+          id: 101,
+          festival_id: fid,
+          content: '라인업이 너무 기대되네요! 티켓팅 꼭 성공했으면 좋겠습니다.',
+          created_at: new Date(Date.now() - 3600000 * 2).toISOString(),
+          author_name: '페스티벌러',
+          author_img: 'https://ui-avatars.com/api/?name=F&background=f3f4f6',
+          author_gender: 'M',
+          like_count: 5,
+          is_liked: false
+        },
+        {
+          id: 102,
+          festival_id: fid,
+          content: '작년에 정말 재밌었는데 올해는 더 재밌을 것 같아요!',
+          created_at: new Date(Date.now() - 1800000).toISOString(),
+          author_name: '멜로디',
+          author_img: 'https://ui-avatars.com/api/?name=M&background=f3f4f6',
+          author_gender: 'F',
+          like_count: 2,
+          is_liked: false
+        }
+      ];
+    };
+
+    if (USE_MOCK) return getOfflineComments(festivalId);
     const sb = getSupabase();
-    if (!sb) return [];
-    const { data: { user } } = await sb.auth.getUser();
+    if (!sb) return getOfflineComments(festivalId);
 
-    // 가져올 때 좋아요 개수, 내가 좋아요 했는지 여부, 작성자 정보(app_user) 조인
-    // Supabase 릴레이션에 따라 쿼리가 달라질 수 있음. (간단하게 구현)
-    const { data, error } = await sb
-      .from('event_comments')
-      .select(`
-        *,
-        app_user:user_id ( name, profile_img, gender ),
-        comment_likes ( user_id )
-      `)
-      .eq('festival_id', festivalId)
-      .order('created_at', { ascending: true });
+    try {
+      let user = null;
+      try {
+        const authRes = await sb.auth.getUser();
+        user = authRes.data?.user;
+      } catch {}
 
-    if (error) {
-      console.error('Failed to get comments:', error);
-      return [];
+      // 가져올 때 좋아요 개수, 내가 좋아요 했는지 여부, 작성자 정보(app_user) 조인
+      // Supabase 릴레이션에 따라 쿼리가 달라질 수 있음. (간단하게 구현)
+      const { data, error } = await sb
+        .from('event_comments')
+        .select(`
+          *,
+          app_user:user_id ( name, profile_img, gender ),
+          comment_likes ( user_id )
+        `)
+        .eq('festival_id', festivalId)
+        .order('created_at', { ascending: true });
+
+      if (error) throw error;
+
+      // 데이터 가공 (좋아요 수, 내 좋아요 여부)
+      return data.map(c => {
+        const likes = c.comment_likes || [];
+        return {
+          ...c,
+          author_name: c.app_user?.name || '익명',
+          author_img: c.app_user?.profile_img || 'https://ui-avatars.com/api/?name=U&background=f3f4f6',
+          author_gender: c.app_user?.gender || 'U',
+          like_count: likes.length,
+          is_liked: user ? likes.some(l => l.user_id === user.id) : false
+        };
+      });
+    } catch (e) {
+      console.warn('Failed to load comments from Supabase, using mock fallback.', e);
+      markSupabaseUnreachable(e);
+      return getOfflineComments(festivalId);
     }
-
-    // 데이터 가공 (좋아요 수, 내 좋아요 여부)
-    return data.map(c => {
-      const likes = c.comment_likes || [];
-      return {
-        ...c,
-        author_name: c.app_user?.name || '익명',
-        author_img: c.app_user?.profile_img || 'https://ui-avatars.com/api/?name=U&background=f3f4f6',
-        author_gender: c.app_user?.gender || 'U',
-        like_count: likes.length,
-        is_liked: user ? likes.some(l => l.user_id === user.id) : false
-      };
-    });
   },
 
   addComment: async (festivalId, content, parentId = null, mediaUrl = null) => {
+    const getOfflineComments = (fid) => {
+      try {
+        const localData = localStorage.getItem(`festio_mock_comments_${fid}`);
+        if (localData) return JSON.parse(localData);
+      } catch {}
+      return [
+        {
+          id: 101,
+          festival_id: fid,
+          content: '라인업이 너무 기대되네요! 티켓팅 꼭 성공했으면 좋겠습니다.',
+          created_at: new Date(Date.now() - 3600000 * 2).toISOString(),
+          author_name: '페스티벌러',
+          author_img: 'https://ui-avatars.com/api/?name=F&background=f3f4f6',
+          author_gender: 'M',
+          like_count: 5,
+          is_liked: false
+        },
+        {
+          id: 102,
+          festival_id: fid,
+          content: '작년에 정말 재밌었는데 올해는 더 재밌을 것 같아요!',
+          created_at: new Date(Date.now() - 1800000).toISOString(),
+          author_name: '멜로디',
+          author_img: 'https://ui-avatars.com/api/?name=M&background=f3f4f6',
+          author_gender: 'F',
+          like_count: 2,
+          is_liked: false
+        }
+      ];
+    };
+
     const sb = getSupabase();
-    const { data: { user } } = await sb.auth.getUser();
-    if (!user) throw new Error('로그인이 필요합니다.');
-
-    const { data, error } = await sb.from('event_comments').insert({
-      festival_id: festivalId,
-      user_id: user.id,
-      parent_id: parentId,
-      content: content,
-      media_url: mediaUrl
-    }).select().single();
-
-    if (error) throw error;
-
-    // 대댓글인 경우 부모 댓글 작성자에게 알림 발송 (자신이 자신에게 단 경우는 제외)
-    if (parentId) {
-      const { data: parentComment } = await sb.from('event_comments').select('user_id').eq('id', parentId).single();
-      if (parentComment && parentComment.user_id !== user.id) {
-        await notificationApi.createNotification({
-          userId: parentComment.user_id,
-          type: 'REPLY',
-          targetId: data.id
-        });
-      }
+    if (!sb) {
+      const mockComments = getOfflineComments(festivalId);
+      const newComment = {
+        id: Date.now(),
+        festival_id: parseInt(festivalId),
+        user_id: 'mock-user-id',
+        parent_id: parentId,
+        content: content,
+        media_url: mediaUrl,
+        created_at: new Date().toISOString(),
+        author_name: localStorage.getItem('userNickname') || '익명(오프라인)',
+        author_img: 'https://ui-avatars.com/api/?name=U&background=f3f4f6',
+        author_gender: localStorage.getItem('userGender') || 'U',
+        like_count: 0,
+        is_liked: false
+      };
+      mockComments.push(newComment);
+      localStorage.setItem(`festio_mock_comments_${festivalId}`, JSON.stringify(mockComments));
+      return newComment;
     }
 
-    return data;
+    try {
+      const { data: { user } } = await sb.auth.getUser();
+      if (!user) throw new Error('로그인이 필요합니다.');
+
+      const { data, error } = await sb.from('event_comments').insert({
+        festival_id: festivalId,
+        user_id: user.id,
+        parent_id: parentId,
+        content: content,
+        media_url: mediaUrl
+      }).select().single();
+
+      if (error) throw error;
+
+      // 대댓글인 경우 부모 댓글 작성자에게 알림 발송 (자신이 자신에게 단 경우는 제외)
+      if (parentId) {
+        const { data: parentComment } = await sb.from('event_comments').select('user_id').eq('id', parentId).single();
+        if (parentComment && parentComment.user_id !== user.id) {
+          await notificationApi.createNotification({
+            userId: parentComment.user_id,
+            type: 'REPLY',
+            targetId: data.id
+          });
+        }
+      }
+
+      return data;
+    } catch (e) {
+      markSupabaseUnreachable(e);
+      throw e;
+    }
   },
 
   updateComment: async (commentId, content) => {
