@@ -61,13 +61,13 @@ async function fetchFoodOrders() {
       MOCK_FOOD_ORDERS = fnbOrders.map(f => {
         const productName = f.items && f.items.length > 0 ? f.items[0].name : '푸드 상품';
         const quantity = f.items && f.items.length > 0 ? f.items[0].quantity : 1;
-        
+
         let statusText = '주문 완료';
         if (f.status === 'RECEIVED') statusText = '주문 접수';
         else if (f.status === 'PREPARING') statusText = '조리 중';
         else if (f.status === 'READY') statusText = '조리 완료 (픽업 대기)';
         else if (f.status === 'PICKED_UP') statusText = '수령 완료';
-        
+
         return {
           orderItemId: f.id,
           storeName: '춘향이네 야시장',
@@ -281,14 +281,31 @@ function renderReservationList() {
     const quantity = t.seats ? t.seats.split(',').length : 1;
     const formattedDate = t.eventDate ? t.eventDate.replace(/-/g, '.') : '추후 공지';
 
+    const kebabMenuStr = `
+      <div class="custom-ticket-dropdown mypage-more-dropdown" tabindex="0" onclick="this.classList.toggle('open')" onblur="setTimeout(()=>this.classList.remove('open'), 200)" style="width: 24px; height: 24px; display: flex; align-items: center; justify-content: center; cursor: pointer; border-radius: 50%;">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width: 20px; height: 20px; color: var(--text-muted);"><circle cx="12" cy="5" r="1.5"/><circle cx="12" cy="12" r="1.5"/><circle cx="12" cy="19" r="1.5"/></svg>
+        <div class="custom-dropdown-options" style="right: -8px; left: auto; top: calc(100% + 4px); min-width: 150px; z-index: 100; box-shadow: 0 4px 12px rgba(0,0,0,0.1); border-radius: 8px; border: 1px solid var(--border-default); background: #fff;">
+          <div class="custom-dropdown-option" onclick="event.stopPropagation(); window.location.href='#'" style="display: flex; align-items: center; gap: 8px; font-size: 0.9rem; padding: 10px 16px;">
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z" /><line x1="3" y1="6" x2="21" y2="6" /><path d="M16 10a4 4 0 01-8 0" /></svg>
+            굿즈 상품
+          </div>
+          <div class="custom-dropdown-option" onclick="event.stopPropagation(); window.location.href='#'" style="display: flex; align-items: center; gap: 8px; font-size: 0.9rem; padding: 10px 16px;">
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
+            F&B
+          </div>
+        </div>
+      </div>
+    `;
+
     htmlContent += `
-      <div class="mp-card">
+      <div class="mp-card" style="overflow: visible;">
+        <span class="mp-badge mp-badge-protruding ${statusClass}">${statusText}</span>
         <div class="mp-card-header">
           <p class="mp-card-title">${t.eventName}</p>
-          <span class="mp-badge ${statusClass}">${statusText}</span>
+          ${kebabMenuStr}
         </div>
         <div class="mp-card-meta">
-          <div>예매 번호: <strong class="mp-color-primary">${t.ticketNumber || ('TKT-' + t.orderId)}</strong></div>
+          <div>예매 번호: <strong class="mp-color-primary">${t.ticketNumber || ('T' + String(t.orderId).padStart(11, '0'))}</strong></div>
           <div>관람 일시: ${formattedDate}</div>
           <div>좌석 정보: ${t.seats || '자율석'} · 수량: ${quantity}매</div>
           <div>결제 일시: ${t.createdAt ? t.createdAt.split(' ')[0] : ''}</div>
@@ -304,30 +321,28 @@ function renderReservationList() {
   // 기존 MOCK 티켓 렌더링
   MOCK_TICKETS.forEach(t => {
     const statusClass = t.itemStatus === '예매완료' ? 'status-완료' : 'status-입장';
+    const kebabMenuStr = `
+      <div class="custom-ticket-dropdown mypage-more-dropdown" tabindex="0" onclick="this.classList.toggle('open')" onblur="setTimeout(()=>this.classList.remove('open'), 200)" style="width: 24px; height: 24px; display: flex; align-items: center; justify-content: center; cursor: pointer; border-radius: 50%;">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width: 20px; height: 20px; color: var(--text-muted);"><circle cx="12" cy="5" r="1.5"/><circle cx="12" cy="12" r="1.5"/><circle cx="12" cy="19" r="1.5"/></svg>
+        <div class="custom-dropdown-options" style="right: -8px; left: auto; top: calc(100% + 4px); min-width: 150px; z-index: 100; box-shadow: 0 4px 12px rgba(0,0,0,0.1); border-radius: 8px; border: 1px solid var(--border-default); background: #fff;">
+          <div class="custom-dropdown-option" onclick="event.stopPropagation(); window.location.href='#'" style="display: flex; align-items: center; gap: 8px; font-size: 0.9rem; padding: 10px 16px;">
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z" /><line x1="3" y1="6" x2="21" y2="6" /><path d="M16 10a4 4 0 01-8 0" /></svg>
+            굿즈 상품 바로가기
+          </div>
+          <div class="custom-dropdown-option" onclick="event.stopPropagation(); window.location.href='#'" style="display: flex; align-items: center; gap: 8px; font-size: 0.9rem; padding: 10px 16px;">
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
+            F&B 바로가기
+          </div>
+        </div>
+      </div>
+    `;
+
     htmlContent += `
       <div class="mp-card" style="overflow: visible;">
+        <span class="mp-badge mp-badge-protruding ${statusClass}">${t.itemStatus}</span>
         <div class="mp-card-header">
           <p class="mp-card-title">${t.eventName}</p>
-          <div style="display: flex; align-items: center; gap: 8px;">
-            <span class="mp-badge ${statusClass}">${t.itemStatus}</span>
-            <div class="custom-ticket-dropdown mypage-more-dropdown" tabindex="0" onclick="this.classList.toggle('open')" onblur="setTimeout(()=>this.classList.remove('open'), 200)" style="width: 24px; height: 24px; display: flex; align-items: center; justify-content: center; cursor: pointer; border-radius: 50%;">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width: 20px; height: 20px; color: var(--text-muted);"><circle cx="12" cy="5" r="1.5"/><circle cx="12" cy="12" r="1.5"/><circle cx="12" cy="19" r="1.5"/></svg>
-              <div class="custom-dropdown-options" style="right: -8px; left: auto; top: calc(100% + 4px); min-width: 150px; z-index: 100; box-shadow: 0 4px 12px rgba(0,0,0,0.1); border-radius: 8px; border: 1px solid var(--border-default);">
-                <div class="custom-dropdown-option" onclick="event.stopPropagation(); window.location.href='#'" style="display: flex; align-items: center; gap: 8px; font-size: 0.9rem; padding: 10px 16px;">
-                  <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z" /><line x1="3" y1="6" x2="21" y2="6" /><path d="M16 10a4 4 0 01-8 0" /></svg>
-                  굿즈 상품
-                </div>
-                <div class="custom-dropdown-option" onclick="event.stopPropagation(); window.location.href='#'" style="display: flex; align-items: center; gap: 8px; font-size: 0.9rem; padding: 10px 16px;">
-                  <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
-                  입점 점포
-                </div>
-                <div class="custom-dropdown-option" onclick="event.stopPropagation(); window.location.href='#'" style="display: flex; align-items: center; gap: 8px; font-size: 0.9rem; padding: 10px 16px; color: #ff4757;">
-                  <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
-                  취소/환불
-                </div>
-              </div>
-            </div>
-          </div>
+          ${kebabMenuStr}
         </div>
         <div class="mp-card-meta">
           <div>예매 번호: <strong class="mp-color-primary">${t.reservationId}</strong></div>
@@ -619,6 +634,7 @@ function openQrModalView(token, type = 'TICKET') {
   let finalTitle = '페스티벌 예매 티켓';
   let dateText = '2026.07.01 13:00';
 
+  let displayCode = qrToken;
   if (type === 'FOOD') {
     let baseEventName = (window.MOCK_TICKETS && MOCK_TICKETS[0])
       ? (MOCK_TICKETS[0].eventName || '2026 워터밤 서울')
@@ -626,6 +642,7 @@ function openQrModalView(token, type = 'TICKET') {
     const foodOrder = MOCK_FOOD_ORDERS.find(f => f.qrToken === token);
     if (foodOrder) {
       finalTitle = `${baseEventName} - ${foodOrder.storeName}`;
+      displayCode = foodOrder.orderItemId;
     }
   } else {
     // TICKET인 경우: 실제 DB 티켓 먼저 찾기
@@ -633,11 +650,14 @@ function openQrModalView(token, type = 'TICKET') {
     if (dbTicket) {
       finalTitle = dbTicket.eventName;
       dateText = dbTicket.eventDate ? dbTicket.eventDate.replace(/-/g, '.') : '';
+      // ticketNumber가 있으면 사용, 없으면 orderId 기반 12자리 생성
+      displayCode = dbTicket.ticketNumber || ('T' + String(dbTicket.orderId).padStart(11, '0'));
     } else {
       const mockTicket = MOCK_TICKETS.find(t => t.qrToken === qrToken);
       if (mockTicket) {
         finalTitle = mockTicket.eventName;
         dateText = mockTicket.eventDate;
+        displayCode = mockTicket.reservationId;
       }
     }
   }
@@ -676,7 +696,7 @@ function openQrModalView(token, type = 'TICKET') {
 
   // QR 코드 텍스트
   const codeEl = document.getElementById('qrModalCode');
-  if (codeEl) codeEl.textContent = qrToken;
+  if (codeEl) codeEl.textContent = displayCode;
 
   // 마스킹 이름
   const userName = (_member && _member.name) ? _member.name : (localStorage.getItem('userName') || '이용자');

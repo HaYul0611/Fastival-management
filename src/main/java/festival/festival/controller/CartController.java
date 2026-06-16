@@ -16,7 +16,6 @@ public class CartController {
 
     private final CartService cartService;
 
-    // TODO: 연동 시 실제 세션/로그인 유저 ID 사용
     private final String MOCK_USER_ID = "test-user";
 
     @GetMapping
@@ -27,8 +26,7 @@ public class CartController {
     @PostMapping
     public ResponseEntity<CartItem> addCartItem(@RequestBody CartItemRequest req) {
         return ResponseEntity.ok(cartService.addCartItem(
-                MOCK_USER_ID, req.getEventId(), req.getZoneName(), req.getQuantity(), req.getPrice()
-        ));
+                MOCK_USER_ID, req.getEventId(), req.getZoneName(), req.getQuantity(), req.getPrice()));
     }
 
     @PutMapping("/{cartItemId}")
