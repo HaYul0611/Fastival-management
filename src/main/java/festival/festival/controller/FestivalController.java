@@ -81,6 +81,7 @@ public class FestivalController {
         return ResponseEntity.ok(seatMapService.getSeatsByZone(zoneId));
     }
 
+
     /**
      * 특정 페스티벌 단건 마스터 데이터를 조회합니다.
      * GET /api/festival/{id}

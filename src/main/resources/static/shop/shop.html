@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1.0" />
+  <title>굿즈 & 푸드트럭 — FESTIO SHOP</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link rel="stylesheet" href="css/common.css" />
+  <link rel="stylesheet" href="css/shop.css" />
+</head>
+
+<body>
+  <header class="site-header" id="siteHeader"></header>
+
+  <main>
+
+    <!-- ── HERO ── -->
+    <section class="hero" aria-label="메인 배너">
+      <div class="container">
+        <div class="hero-inner">
+
+          <div class="hero-left">
+            <div class="hero-tag">
+              <span class="hero-tag-dot"></span>
+              <span>FESTIO × 2026 Summer</span>
+            </div>
+            <h1 class="hero-h1">축제 현장에서<br /><em>지금 바로</em> 주문</h1>
+            <p class="hero-desc">한정판 굿즈 · 아티스트 컬래버 · 현장 푸드트럭<br />QR 하나로 주문하고 바로 수령하세요</p>
+          </div>
+
+          <div class="hero-right">
+            <div class="hero-stats">
+              <div class="hero-stat">
+                <div class="hero-stat-icon ico-red" aria-hidden="true">
+                  <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                    <path d="M10 2l2.2 4.5H17L13 9.3l1.5 4.5L10 11l-4.5 2.8 1.5-4.5L3 6.5h4.8L10 2z" stroke="#FF2D55"
+                      stroke-width="1.5" stroke-linejoin="round" />
+                  </svg>
+                </div>
+                <div class="hero-stat-info">
+                  <div class="hero-stat-num">24</div>
+                  <div class="hero-stat-label">입점 상점</div>
+                </div>
+              </div>
+              <div class="hero-stat">
+                <div class="hero-stat-icon ico-orange" aria-hidden="true">
+                  <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                    <rect x="3" y="5" width="14" height="12" rx="2" stroke="#FF6B00" stroke-width="1.5" />
+                    <path d="M3 9h14M7 5V3M13 5V3" stroke="#FF6B00" stroke-width="1.5" stroke-linecap="round" />
+                  </svg>
+                </div>
+                <div class="hero-stat-info">
+                  <div class="hero-stat-num">312</div>
+                  <div class="hero-stat-label">총 상품</div>
+                </div>
+              </div>
+              <div class="hero-stat">
+                <div class="hero-stat-icon ico-purple" aria-hidden="true">
+                  <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                    <path d="M3 15h14M5 11h10l-1.5-6H6.5L5 11z" stroke="#7B2FFF" stroke-width="1.5"
+                      stroke-linejoin="round" />
+                    <path d="M8 8V5M10 8V5M12 8V5" stroke="#7B2FFF" stroke-width="1.4" stroke-linecap="round" />
+                  </svg>
+                </div>
+                <div class="hero-stat-info">
+                  <div class="hero-stat-num">8</div>
+                  <div class="hero-stat-label">푸드트럭</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </section>
+
+    <!-- ── 카테고리 탭 ── -->
+    <nav class="cat-strip" aria-label="카테고리">
+      <div class="container">
+        <button class="cat-btn on" data-cat="all">
+          <span class="cat-dot cat-dot-all"></span>전체보기
+        </button>
+        <button class="cat-btn" data-cat="food">
+          <span class="cat-dot cat-dot-food"></span>푸드트럭 메뉴
+        </button>
+        <button class="cat-btn" data-cat="goods">
+          <span class="cat-dot cat-dot-goods"></span>공식 굿즈
+        </button>
+        <button class="cat-btn" data-cat="collab">
+          <span class="cat-dot cat-dot-collab"></span>아티스트 컬래버
+        </button>
+      </div>
+    </nav>
+
+    <!-- ── 필터 바 ── -->
+    <div class="filter-bar">
+      <div class="container">
+        <div class="filter-tags" role="group" aria-label="필터">
+          <button class="ftag on" data-cat="all">전체</button>
+          <button class="ftag" data-cat="food">푸드트럭</button>
+          <button class="ftag" data-cat="goods">굿즈</button>
+          <button class="ftag" data-cat="collab">컬래버</button>
+        </div>
+        <label class="sr-only" for="sortSel">정렬</label>
+        <select class="sort-sel" id="sortSel">
+          <option value="popular">인기순</option>
+          <option value="newest">최신순</option>
+          <option value="price_asc">가격 낮은 순</option>
+          <option value="price_desc">가격 높은 순</option>
+        </select>
+      </div>
+    </div>
+
+    <!-- ── 상품 그리드 ── -->
+    <section class="grid-section">
+      <div class="container">
+        <div class="grid-meta">
+          <span class="grid-count" id="gridCount">총 0개 상품</span>
+        </div>
+        <div class="prod-grid" id="prodGrid"></div>
+        <div class="empty" id="gridEmpty" style="display:none" role="status">
+          <svg width="52" height="52" viewBox="0 0 52 52" fill="none">
+            <circle cx="26" cy="26" r="22" stroke="currentColor" stroke-width="2" />
+            <path d="M18 26h16" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+          </svg>
+          <p>상품이 없어요</p>
+          <span>다른 카테고리나 검색어를 시도해보세요</span>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <span class="sr-only" aria-live="polite" id="srMsg"></span>
+
+  <script src="js/common.js"></script>
+  <script src="js/shop.js"></script>
+</body>
+
+</html>

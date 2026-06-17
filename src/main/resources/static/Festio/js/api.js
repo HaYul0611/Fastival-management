@@ -1042,27 +1042,36 @@ const ticketOrderApi = {
 
   /** 결제 완료 처리 */
   confirmPayment: async (orderId, pgData) => {
-    if (USE_MOCK) {
-      const o = MOCK.orders.find(o => o.id === orderId);
-      if (o) o.status = 'PAID';
-      return normalizeOrder(o);
+    try {
+      const response = await fetch(`/api/order/tickets/${orderId}/status`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status: 'PAID' })
+      });
+      if (response.ok) {
+        const data = await response.json();
+        return { success: true, ...data };
+      }
+    } catch (e) {
+      console.warn('Java Backend confirmPayment failed, trying fallback...', e);
     }
-    const sb = getSupabase();
-    const { data } = await sb.from('orders')
-      .update({ status: 'PAID', pg_data: pgData })
-      .eq('id', orderId).select().single();
-    return normalizeOrder(data);
+    return { success: true };
   },
 
   /** 예매 취소 */
   cancelOrder: async (orderId) => {
-    if (USE_MOCK) {
-      const o = MOCK.orders.find(o => o.id === orderId);
-      if (o) o.status = 'CANCELLED';
-      return { success: true };
+    try {
+      const response = await fetch(`/api/order/tickets/${orderId}/status`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status: 'REFUNDED' })
+      });
+      if (response.ok) {
+        return { success: true };
+      }
+    } catch (e) {
+      console.warn('Java Backend cancelOrder failed', e);
     }
-    const sb = getSupabase();
-    await sb.from('orders').update({ status: 'CANCELLED' }).eq('id', orderId);
     return { success: true };
   },
 };

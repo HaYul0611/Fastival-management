@@ -2809,8 +2809,8 @@ body.edit-mode .detail-tabs-section .detail-tab-content.active {
 
 /* ── 구역 선택 SVG 폴리곤 스타일 ── */
 .zone-polygon {
-  fill: rgba(106, 77, 255, 0.05);
-  stroke: rgba(106, 77, 255, 0.4);
+  fill: transparent;
+  stroke: transparent;
   stroke-width: 2;
   cursor: pointer;
   transition: all 0.2s ease;
@@ -2818,20 +2818,20 @@ body.edit-mode .detail-tabs-section .detail-tab-content.active {
 }
 
 .zone-polygon:hover {
-  fill: rgba(106, 77, 255, 0.2);
+  fill: rgba(106, 77, 255, 0.15);
   stroke: rgba(106, 77, 255, 0.8);
-  stroke-width: 3;
+  stroke-width: 2.5;
 }
 
 .zone-polygon.selected {
-  fill: rgba(106, 77, 255, 0.3) !important;
+  fill: rgba(106, 77, 255, 0.25) !important;
   stroke: rgba(106, 77, 255, 1) !important;
-  stroke-width: 3 !important;
+  stroke-width: 2.5 !important;
 }
 
 .zone-polygon.sold-out {
   fill: rgba(133, 146, 163, 0.15) !important;
-  stroke: rgba(133, 146, 163, 0.4) !important;
+  stroke: transparent !important;
   cursor: not-allowed;
 }
 

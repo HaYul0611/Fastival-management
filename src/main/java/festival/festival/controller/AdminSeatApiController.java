@@ -6,6 +6,7 @@ import festival.festival.domain.SeatMap;
 import festival.festival.service.FestivalService;
 import festival.festival.repository.FestivalRepository;
 import festival.festival.repository.FestivalZoneRepository;
+import festival.festival.repository.SeatMapRepository;
 import festival.festival.service.SeatMapService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -28,6 +29,7 @@ public class AdminSeatApiController {
     private final FestivalService festivalService;
     private final FestivalRepository festivalRepository;
     private final FestivalZoneRepository festivalZoneRepository;
+    private final SeatMapRepository seatMapRepository;
     private final SeatMapService seatMapService;
 
     /**
@@ -45,9 +47,23 @@ public class AdminSeatApiController {
      * GET /api/admin/festivals/{festivalId}/zones
      */
     @GetMapping("/festivals/{festivalId}/zones")
-    public ResponseEntity<List<FestivalZone>> getZonesByFestival(@PathVariable("festivalId") Long festivalId) {
+    public ResponseEntity<List<Map<String, Object>>> getZonesByFestival(@PathVariable("festivalId") Long festivalId) {
         List<FestivalZone> zones = festivalZoneRepository.findByFestivalId(festivalId);
-        return ResponseEntity.ok(zones);
+        List<Map<String, Object>> result = zones.stream().map(zone -> {
+            Map<String, Object> map = new java.util.HashMap<>();
+            map.put("id", zone.getId());
+            map.put("festivalId", zone.getFestivalId());
+            map.put("zoneName", zone.getZoneName());
+            map.put("svgPoints", zone.getSvgPoints());
+            map.put("safetyLimit", zone.getSafetyLimit());
+            map.put("currentCrowdCount", zone.getCurrentCrowdCount());
+            map.put("densityLevel", zone.getDensityLevel());
+            map.put("status", zone.getStatus());
+            map.put("mapBgUrl", zone.getMapBgUrl());
+            map.put("hasSeats", seatMapRepository.existsByZoneId(zone.getId()));
+            return map;
+        }).toList();
+        return ResponseEntity.ok(result);
     }
 
     /**
@@ -160,6 +176,29 @@ public class AdminSeatApiController {
                 .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 구역 ID입니다: " + zoneId));
         
         zone.setSvgPoints(payload.get("svgPoints").toString());
+        FestivalZone updated = festivalZoneRepository.save(zone);
+        return ResponseEntity.ok(updated);
+    }
+
+    /**
+     * 구역 기본 정보 업데이트 (이름 및 수용 인원 수정)
+     * PUT /api/admin/zones/{zoneId}
+     */
+    @PutMapping("/zones/{zoneId}")
+    public ResponseEntity<FestivalZone> updateZoneInfo(
+            @PathVariable("zoneId") Long zoneId,
+            @RequestBody Map<String, Object> payload) {
+        
+        FestivalZone zone = festivalZoneRepository.findById(zoneId)
+                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 구역 ID입니다: " + zoneId));
+        
+        if (payload.containsKey("zoneName")) {
+            zone.setZoneName(payload.get("zoneName").toString());
+        }
+        if (payload.containsKey("safetyLimit")) {
+            zone.setSafetyLimit(Integer.parseInt(payload.get("safetyLimit").toString()));
+        }
+        
         FestivalZone updated = festivalZoneRepository.save(zone);
         return ResponseEntity.ok(updated);
     }

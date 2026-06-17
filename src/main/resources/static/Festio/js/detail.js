@@ -120,7 +120,7 @@ function getFigmaTemplateSelector(zoneName) {
    SVG 도면 구역 선택
    — DCC (대전컨벤션센터) 스타일 벡터 플로어맵
 ═══════════════════════════════════════════════════════════ */
-function initVenueMap(zones) {
+async function initVenueMap(zones) {
   const svg = document.getElementById('venueSvgLayer');
   const bgOverlay = document.getElementById('venueBgOverlay');
   const legendContainer = document.getElementById('zoneLegendContainer');
@@ -133,20 +133,117 @@ function initVenueMap(zones) {
   // 2. 동적 배경 도면 주입 (관리자가 저장한 배경 도면이 있을 때 SVG <image> 추가)
   const zoneWithBg = zones.find(z => z.mapBgUrl);
   if (zoneWithBg && zoneWithBg.mapBgUrl) {
-    const bgImage = document.createElementNS('http://www.w3.org/2000/svg', 'image');
-    bgImage.setAttribute('id', 'svgBgImage');
-    bgImage.setAttribute('x', '0');
-    bgImage.setAttribute('y', '0');
-    bgImage.setAttribute('width', '800');
-    bgImage.setAttribute('height', '660');
-    bgImage.setAttribute('preserveAspectRatio', 'none');
-    bgImage.setAttribute('style', 'opacity: 0.85; pointer-events: none;');
-    bgImage.setAttribute('href', zoneWithBg.mapBgUrl);
-    bgImage.setAttributeNS('http://www.w3.org/1999/xlink', 'href', zoneWithBg.mapBgUrl);
-    svg.appendChild(bgImage);
-  }
+    if (zoneWithBg.mapBgUrl.toLowerCase().includes('.svg')) {
+      try {
+        const response = await fetch(zoneWithBg.mapBgUrl);
+        if (!response.ok) throw new Error('SVG 도면을 불러올 수 없습니다.');
+        const svgText = await response.text();
 
-  // 3. 관리자가 지정한 구역 다각형(polygon)을 100% 동적 렌더링
+        const parser = new DOMParser();
+        const doc = parser.parseFromString(svgText, 'image/svg+xml');
+        const svgRoot = doc.documentElement;
+
+        // 컨테이너 크기에 정합
+        svgRoot.setAttribute('width', '100%');
+        svgRoot.setAttribute('height', '100%');
+        svgRoot.setAttribute('style', 'pointer-events: auto;');
+
+        // 인라인 SVG 주입
+        svg.appendChild(svgRoot);
+
+        // SVG 내부에 임베디드된 <script> 태그 실행 비활성화 (전역 namespace 오염 및 selectZone 오버라이드 차단)
+        /*
+        svgRoot.querySelectorAll('script').forEach(oldScript => {
+          try {
+            const newScript = document.createElementNS('http://www.w3.org/2000/svg', 'script');
+            newScript.textContent = oldScript.textContent;
+            
+            // 모든 기존 속성 및 href/xlink:href 네임스페이스 전사
+            for (let i = 0; i < oldScript.attributes.length; i++) {
+              const attr = oldScript.attributes[i];
+              if (attr.name.includes('href')) {
+                newScript.setAttributeNS('http://www.w3.org/1999/xlink', 'href', attr.value);
+                newScript.setAttribute('href', attr.value);
+              } else {
+                newScript.setAttribute(attr.name, attr.value);
+              }
+            }
+            
+            // SVG DOM 내부에서 교체하여 실행 트리거
+            oldScript.parentNode.replaceChild(newScript, oldScript);
+          } catch (e) {
+            console.error('SVG 임베디드 스크립트 실행 실패:', e);
+          }
+        });
+        */
+
+        // SVG 내의 구역 인터랙션 바인딩
+        zones.forEach(zone => {
+          if (!zone.svgPoints) return;
+
+          // svgPoints 컬럼에 저장된 ID 값(예: zone-3F-L2)을 기준으로 SVG 내부 탐색
+          const elementId = zone.svgPoints.replace('#', '');
+          const targetEl = svgRoot.getElementById(elementId) || svgRoot.querySelector(`[id="${elementId}"]`);
+
+          if (targetEl) {
+            targetEl.setAttribute('data-zone-no', zone.zoneNo);
+            targetEl.classList.add('zone-polygon');
+            targetEl.style.cursor = 'pointer';
+
+            // 마우스 호버 시 툴팁 추가
+            const title = targetEl.querySelector('title') || document.createElementNS('http://www.w3.org/2000/svg', 'title');
+            title.textContent = `${zone.zoneName} (잔여: ${zone.remainingCapacity}석 / 총: ${zone.totalCapacity}석)`;
+            if (!targetEl.querySelector('title')) {
+              targetEl.appendChild(title);
+            }
+
+            // 매진 시 비활성화 스타일 처리
+            if (zone.remainingCapacity === 0) {
+              targetEl.classList.add('sold-out');
+              targetEl.setAttribute('aria-disabled', 'true');
+              // 매진 시 자식 도형 색상 보정
+              const fillElements = targetEl.querySelectorAll('.zone-fill, path, rect, polygon');
+              fillElements.forEach(fe => {
+                fe.style.fill = '#8592a3';
+                fe.style.opacity = '0.5';
+              });
+            } else {
+              targetEl.addEventListener('click', () => {
+                // 이전 선택 스타일 해제
+                svgRoot.querySelectorAll('.zone-polygon.selected, .selected').forEach(el => {
+                  el.classList.remove('selected');
+                });
+                targetEl.classList.add('selected');
+                selectZone(zone.zoneNo, zone, targetEl);
+              });
+            }
+          }
+        });
+      } catch (err) {
+        console.error('인라인 SVG 렌더링 실패, 폴백 복구:', err);
+        renderFallbackImage(svg, zoneWithBg.mapBgUrl, zones);
+      }
+    } else {
+      renderFallbackImage(svg, zoneWithBg.mapBgUrl, zones);
+    }
+  }
+}
+
+// 비트맵/폴백용 렌더러 함수 분리
+function renderFallbackImage(svg, imgUrl, zones) {
+  const bgImage = document.createElementNS('http://www.w3.org/2000/svg', 'image');
+  bgImage.setAttribute('id', 'svgBgImage');
+  bgImage.setAttribute('x', '0');
+  bgImage.setAttribute('y', '0');
+  bgImage.setAttribute('width', '800');
+  bgImage.setAttribute('height', '660');
+  bgImage.setAttribute('preserveAspectRatio', 'none');
+  bgImage.setAttribute('style', 'opacity: 0.85; pointer-events: none;');
+  bgImage.setAttribute('href', imgUrl);
+  bgImage.setAttributeNS('http://www.w3.org/1999/xlink', 'href', imgUrl);
+  svg.appendChild(bgImage);
+
+  // 다각형 덧그리기
   zones.forEach(zone => {
     if (!zone.svgPoints) return;
 
@@ -155,12 +252,10 @@ function initVenueMap(zones) {
     polygon.setAttribute('class', 'zone-polygon');
     polygon.setAttribute('data-zone-no', zone.zoneNo);
 
-    // 마우스 호버 시 툴팁 추가
     const title = document.createElementNS('http://www.w3.org/2000/svg', 'title');
     title.textContent = `${zone.zoneName} (잔여: ${zone.remainingCapacity}석 / 총: ${zone.totalCapacity}석)`;
     polygon.appendChild(title);
 
-    // 매진 시 비활성화 스타일 처리
     if (zone.remainingCapacity === 0) {
       polygon.classList.add('sold-out');
       polygon.setAttribute('aria-disabled', 'true');
@@ -170,6 +265,10 @@ function initVenueMap(zones) {
 
     svg.appendChild(polygon);
   });
+}
+
+// 기존 범례 탐색을 지원하도록 임시 함수 래핑 처리
+function continueVenueMapLegend(zones) {
 
   // 3. 범례 목록 동적 생성
   if (legendContainer) {
@@ -216,14 +315,34 @@ function selectZone(zoneNo, zone, svgEl) {
   _selectedZone = zone;
 
   // SVG 선택 강조
-  $$('.zone-polygon').forEach(el => el.classList.remove('selected'));
-  $$('.figma-template-zone').forEach(el => el.classList.remove('selected'));
-  if (svgEl) svgEl.classList.add('selected');
+  $$('.zone-polygon').forEach(el => {
+    if (el && el.classList) el.classList.remove('selected');
+  });
+  $$('.figma-template-zone').forEach(el => {
+    if (el && el.classList) el.classList.remove('selected');
+  });
+  
+  if (svgEl) {
+    if (svgEl.classList) {
+      svgEl.classList.add('selected');
+    } else if (typeof svgEl.addClass === 'function') {
+      svgEl.addClass('selected');
+    }
+  }
 
   // 범례 선택 강조
-  $$('.zone-legend-item').forEach(li => li.classList.remove('active'));
+  $$('.zone-legend-item').forEach(li => {
+    if (li && li.classList) li.classList.remove('active');
+  });
+  
   const legendItem = $(`.zone-legend-item[data-zone-no="${zoneNo}"]`);
-  if (legendItem) legendItem.classList.add('active');
+  if (legendItem) {
+    if (legendItem.classList) {
+      legendItem.classList.add('active');
+    } else if (typeof legendItem.addClass === 'function') {
+      legendItem.addClass('active');
+    }
+  }
 
   // 구역 정보 패널 업데이트
   updateZoneInfoPanel(zone);
@@ -242,23 +361,31 @@ function updateQtyDisplay() {
 }
 
 function updateZoneInfoPanel(zone) {
-  const panel = $('.zone-info-panel');
+  const panel = document.querySelector('.zone-info-panel');
   if (!panel) return;
-  panel.classList.add('visible');
+  
+  if (panel.classList) {
+    panel.classList.add('visible');
+  } else if (typeof panel.addClass === 'function') {
+    panel.addClass('visible');
+  }
 
   const name = panel.querySelector('.zone-info-name');
   const soldRem = panel.querySelector('.zone-info-stat-value.remaining');
   const priceEl = panel.querySelector('.zone-info-stat-value.price');
   const capBar = panel.querySelector('.capacity-bar-fill');
 
-  if (name) name.textContent = zone.zoneName;
-  if (soldRem) soldRem.textContent = `${zone.remainingCapacity}석`;
+  const zoneNameStr = zone.zoneName || zone.zoneCode || '구역';
+  if (name) name.textContent = zoneNameStr;
+  if (soldRem) soldRem.textContent = `${zone.remainingCapacity || 0}석`;
   if (priceEl) priceEl.textContent = formatKRW(zone.price);
 
   if (capBar) {
-    const pct = Math.round(zone.remainingCapacity / zone.totalCapacity * 100);
+    const total = zone.totalCapacity || 1;
+    const remaining = zone.remainingCapacity || 0;
+    const pct = Math.round(remaining / total * 100);
     capBar.style.width = `${pct}%`;
-    capBar.className = `capacity-bar-fill ${zone.zoneType === 'VIP' ? 'zone-vip' : zone.zoneName.includes('A') ? 'zone-a' : zone.zoneName.includes('B') ? 'zone-b' : 'standing'}`;
+    capBar.className = `capacity-bar-fill ${zone.zoneType === 'VIP' ? 'zone-vip' : zoneNameStr.includes('A') ? 'zone-a' : zoneNameStr.includes('B') ? 'zone-b' : 'standing'}`;
   }
 }
 
@@ -343,7 +470,9 @@ function openSeatSelectionModal(zoneNo, zone) {
     
     // 등록된 각 등급에 맞는 범례 아이템 추가
     userSeatGrades.forEach(g => {
-      const colors = colorMap[g.class] || colorMap['seat-available'];
+      if (!g || !g.name) return;
+      const cls = g.class || 'seat-available';
+      const colors = colorMap[cls] || colorMap['seat-available'] || { bg: 'rgba(133, 146, 163, 0.08)', border: 'rgba(133, 146, 163, 0.4)' };
       const div = document.createElement('div');
       div.style.display = 'flex';
       div.style.alignItems = 'center';
@@ -873,10 +1002,19 @@ async function initiateTossPayment() {
       Toast.warning('잔액이 부족합니다. 충전 후 다시 시도해주세요.');
       return;
     }
-    // 결제 성공 처리
-    Toast.success('FESTIO Pay로 결제되었습니다.');
-    Modal.closeAll();
-    showBookingSuccess();
+    Toast.info('결제 승인 처리 중...');
+    try {
+      await orderApi.confirmPayment(_orderNo, {
+        pgProvider: 'festiopay',
+        pgTid: 'FST-PAY-' + Date.now()
+      });
+      Toast.success('FESTIO Pay로 결제되었습니다.');
+      Modal.closeAll();
+      showBookingSuccess();
+    } catch (e) {
+      console.error(e);
+      Toast.error('결제 승인 처리 중 오류가 발생했습니다.');
+    }
     return;
   }
 
@@ -1055,6 +1193,13 @@ function updatePaymentSummary(zone) {
 ═══════════════════════════════════════════════════════════ */
 function initBookingBtn() {
   on($('#btn-book'), 'click', () => {
+    if (!Auth.isLoggedIn()) {
+      Toast.warning('로그인이 필요한 서비스입니다. 로그인 페이지로 이동합니다.');
+      setTimeout(() => {
+        window.location.href = 'login.html';
+      }, 1500);
+      return;
+    }
     if (!_selectedZoneNo) {
       Toast.warning('구역을 먼저 선택해 주세요.');
       return;
