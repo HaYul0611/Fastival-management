@@ -32,6 +32,9 @@ dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-thymeleaf' // 하단에 있던 것을 위로 통합
     implementation 'com.fasterxml.jackson.core:jackson-databind:2.18.2'
     
+    // 이메일 발송
+    implementation 'org.springframework.boot:spring-boot-starter-mail'
+    
     // 개발 도구 (Lombok, DevTools)
     compileOnly 'org.projectlombok:lombok'
     annotationProcessor 'org.projectlombok:lombok'

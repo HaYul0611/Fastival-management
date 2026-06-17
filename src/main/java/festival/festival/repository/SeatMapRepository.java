@@ -9,4 +9,5 @@ import java.util.List;
 public interface SeatMapRepository extends JpaRepository<SeatMap, Long> {
     List<SeatMap> findByZoneIdOrderBySeatRowAscSeatNumberAsc(Long zoneId);
     void deleteByZoneId(Long zoneId);
+    boolean existsByZoneId(Long zoneId);
 }

@@ -1,0 +1,135 @@
+<svg viewBox="0 0 680 760" xmlns="http://www.w3.org/2000/svg" font-family="'Inter', 'Helvetica Neue', system-ui, -apple-system, sans-serif">
+
+  <!-- Background -->
+  <rect width="680" height="760" fill="#2D1F3D"/>
+
+  <!-- Title bar -->
+  <rect x="0" y="0" width="680" height="52" fill="#1A0F2E"/>
+  <text x="10" y="19" fill="rgba(255,255,255,0.4)" font-size="11" font-weight="600">구역 선택</text>
+  <text x="340" y="35" text-anchor="middle" fill="white" font-size="19" font-weight="800" letter-spacing="1">좌석 안내</text>
+
+  <!-- Stage -->
+  <rect x="188" y="62" width="304" height="68" rx="7" fill="#52606E"/>
+  <rect x="188" y="62" width="304" height="6" rx="4" fill="#6E7F91"/>
+  <text x="340" y="103" text-anchor="middle" fill="#E5E7EB" font-size="18" font-weight="800" letter-spacing="7">STAGE</text>
+
+  <!-- Runway -->
+  <rect x="329" y="130" width="22" height="100" fill="#52606E"/>
+
+  <!-- F1 (teal trapezoid, left) -->
+  <polygon points="188,130 327,130 309,230 188,230" fill="#4ECDC4"/>
+  <polygon points="188,130 327,130 320,139 188,139" fill="rgba(255,255,255,0.22)"/>
+  <text x="250" y="188" text-anchor="middle" fill="#052A35" font-size="24" font-weight="900">F1</text>
+
+  <!-- F2 (teal trapezoid, right) -->
+  <polygon points="353,130 492,130 492,230 371,230" fill="#4ECDC4"/>
+  <polygon points="353,130 492,130 492,139 360,139" fill="rgba(255,255,255,0.22)"/>
+  <text x="430" y="188" text-anchor="middle" fill="#052A35" font-size="24" font-weight="900">F2</text>
+
+  <!-- F3 (blue rect) -->
+  <rect x="188" y="238" width="158" height="106" rx="6" fill="#3A7BD5"/>
+  <rect x="188" y="238" width="158" height="6" rx="3" fill="rgba(255,255,255,0.22)"/>
+  <text x="267" y="299" text-anchor="middle" fill="white" font-size="24" font-weight="900">F3</text>
+
+  <!-- F4 (blue rect) -->
+  <rect x="344" y="238" width="148" height="106" rx="6" fill="#3A7BD5"/>
+  <rect x="344" y="238" width="148" height="6" rx="3" fill="rgba(255,255,255,0.22)"/>
+  <text x="418" y="299" text-anchor="middle" fill="white" font-size="24" font-weight="900">F4</text>
+
+  <!-- FOH -->
+  <rect x="286" y="358" width="108" height="46" rx="7" fill="#48566A"/>
+  <rect x="286" y="358" width="108" height="6" rx="3" fill="#6E7F91"/>
+  <text x="340" y="387" text-anchor="middle" fill="#CBD5E0" font-size="14" font-weight="700" letter-spacing="4">FOH</text>
+
+  <!-- Left outer GREEN: 314, 313, 312, 311, 310 -->
+  <!-- 314 -->
+  <rect x="12" y="62" width="90" height="72" rx="7" fill="#8AE19E"/>
+  <rect x="12" y="62" width="90" height="5" rx="3" fill="rgba(255,255,255,0.22)"/>
+  <text x="57" y="103" text-anchor="middle" fill="#0A2B15" font-size="15" font-weight="800">314</text>
+  <!-- 313 -->
+  <rect x="12" y="140" width="90" height="72" rx="7" fill="#8AE19E"/>
+  <rect x="12" y="140" width="90" height="5" rx="3" fill="rgba(255,255,255,0.22)"/>
+  <text x="57" y="181" text-anchor="middle" fill="#0A2B15" font-size="15" font-weight="800">313</text>
+  <!-- 312 -->
+  <rect x="12" y="218" width="90" height="72" rx="7" fill="#8AE19E"/>
+  <rect x="12" y="218" width="90" height="5" rx="3" fill="rgba(255,255,255,0.22)"/>
+  <text x="57" y="259" text-anchor="middle" fill="#0A2B15" font-size="15" font-weight="800">312</text>
+  <!-- 311 -->
+  <rect x="12" y="296" width="90" height="72" rx="7" fill="#8AE19E"/>
+  <rect x="12" y="296" width="90" height="5" rx="3" fill="rgba(255,255,255,0.22)"/>
+  <text x="57" y="337" text-anchor="middle" fill="#0A2B15" font-size="15" font-weight="800">311</text>
+  <!-- 310 -->
+  <rect x="12" y="374" width="90" height="72" rx="7" fill="#8AE19E"/>
+  <rect x="12" y="374" width="90" height="5" rx="3" fill="rgba(255,255,255,0.22)"/>
+  <text x="57" y="415" text-anchor="middle" fill="#0A2B15" font-size="15" font-weight="800">310</text>
+
+  <!-- Left inner PINK: 214, 213, 212, 211 -->
+  <!-- 214 -->
+  <rect x="110" y="130" width="62" height="72" rx="7" fill="#E3659B"/>
+  <rect x="110" y="130" width="62" height="5" rx="3" fill="rgba(255,255,255,0.22)"/>
+  <text x="141" y="171" text-anchor="middle" fill="#3D071C" font-size="13" font-weight="800">214</text>
+  <!-- 213 -->
+  <rect x="110" y="208" width="62" height="72" rx="7" fill="#E3659B"/>
+  <rect x="110" y="208" width="62" height="5" rx="3" fill="rgba(255,255,255,0.22)"/>
+  <text x="141" y="249" text-anchor="middle" fill="#3D071C" font-size="13" font-weight="800">213</text>
+  <!-- 212 -->
+  <rect x="110" y="286" width="62" height="72" rx="7" fill="#E3659B"/>
+  <rect x="110" y="286" width="62" height="5" rx="3" fill="rgba(255,255,255,0.22)"/>
+  <text x="141" y="327" text-anchor="middle" fill="#3D071C" font-size="13" font-weight="800">212</text>
+  <!-- 211 -->
+  <rect x="110" y="364" width="62" height="72" rx="7" fill="#E3659B"/>
+  <rect x="110" y="364" width="62" height="5" rx="3" fill="rgba(255,255,255,0.22)"/>
+  <text x="141" y="405" text-anchor="middle" fill="#3D071C" font-size="13" font-weight="800">211</text>
+
+  <!-- Right PINK: 202, 203, 204, 205 -->
+  <!-- 202 -->
+  <rect x="578" y="130" width="90" height="72" rx="7" fill="#E3659B"/>
+  <rect x="578" y="130" width="90" height="5" rx="3" fill="rgba(255,255,255,0.22)"/>
+  <text x="623" y="171" text-anchor="middle" fill="#3D071C" font-size="15" font-weight="800">202</text>
+  <!-- 203 -->
+  <rect x="578" y="208" width="90" height="72" rx="7" fill="#E3659B"/>
+  <rect x="578" y="208" width="90" height="5" rx="3" fill="rgba(255,255,255,0.22)"/>
+  <text x="623" y="249" text-anchor="middle" fill="#3D071C" font-size="15" font-weight="800">203</text>
+  <!-- 204 -->
+  <rect x="578" y="286" width="90" height="72" rx="7" fill="#E3659B"/>
+  <rect x="578" y="286" width="90" height="5" rx="3" fill="rgba(255,255,255,0.22)"/>
+  <text x="623" y="327" text-anchor="middle" fill="#3D071C" font-size="15" font-weight="800">204</text>
+  <!-- 205 -->
+  <rect x="578" y="364" width="90" height="72" rx="7" fill="#E3659B"/>
+  <rect x="578" y="364" width="90" height="5" rx="3" fill="rgba(255,255,255,0.22)"/>
+  <text x="623" y="405" text-anchor="middle" fill="#3D071C" font-size="15" font-weight="800">205</text>
+
+  <!-- Bottom inner: 210 (yellow), 209, 208, 207 (pink) -->
+  <!-- 210 -->
+  <rect x="188" y="456" width="73" height="68" rx="7" fill="#F5C842"/>
+  <rect x="188" y="456" width="73" height="5" rx="3" fill="rgba(255,255,255,0.22)"/>
+  <text x="224" y="494" text-anchor="middle" fill="#3A2800" font-size="14" font-weight="800">210</text>
+  <!-- 209 -->
+  <rect x="267" y="456" width="73" height="68" rx="7" fill="#E3659B"/>
+  <rect x="267" y="456" width="73" height="5" rx="3" fill="rgba(255,255,255,0.22)"/>
+  <text x="303" y="494" text-anchor="middle" fill="#3D071C" font-size="14" font-weight="800">209</text>
+  <!-- 208 -->
+  <rect x="346" y="456" width="73" height="68" rx="7" fill="#E3659B"/>
+  <rect x="346" y="456" width="73" height="5" rx="3" fill="rgba(255,255,255,0.22)"/>
+  <text x="382" y="494" text-anchor="middle" fill="#3D071C" font-size="14" font-weight="800">208</text>
+  <!-- 207 -->
+  <rect x="425" y="456" width="73" height="68" rx="7" fill="#E3659B"/>
+  <rect x="425" y="456" width="73" height="5" rx="3" fill="rgba(255,255,255,0.22)"/>
+  <text x="461" y="494" text-anchor="middle" fill="#3D071C" font-size="14" font-weight="800">207</text>
+
+  <!-- 206 (yellow, bottom-right) -->
+  <rect x="578" y="456" width="90" height="68" rx="7" fill="#F5C842"/>
+  <rect x="578" y="456" width="90" height="5" rx="3" fill="rgba(255,255,255,0.22)"/>
+  <text x="623" y="494" text-anchor="middle" fill="#3A2800" font-size="15" font-weight="800">206</text>
+
+  <!-- Bottom outer GREEN: 309, 308 -->
+  <!-- 309 -->
+  <rect x="267" y="532" width="73" height="64" rx="7" fill="#8AE19E"/>
+  <rect x="267" y="532" width="73" height="5" rx="3" fill="rgba(255,255,255,0.22)"/>
+  <text x="303" y="568" text-anchor="middle" fill="#0A2B15" font-size="14" font-weight="800">309</text>
+  <!-- 308 -->
+  <rect x="346" y="532" width="73" height="64" rx="7" fill="#8AE19E"/>
+  <rect x="346" y="532" width="73" height="5" rx="3" fill="rgba(255,255,255,0.22)"/>
+  <text x="382" y="568" text-anchor="middle" fill="#0A2B15" font-size="14" font-weight="800">308</text>
+
+</svg>

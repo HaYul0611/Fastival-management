@@ -6,8 +6,9 @@
   <meta name="viewport" content="width=device-width,initial-scale=1.0,viewport-fit=cover">
   <title>행사 상세 | FESTIO</title>
   <link rel="stylesheet" href="css/common.css?v=1.0.3">
-  <link rel="stylesheet" href="css/detail.css?v=1.0.4">
+  <link rel="stylesheet" href="css/detail.css?v=1.0.6">
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  <script src="https://cdn.iamport.kr/v1/iamport.js"></script>
   <script src="https://js.tosspayments.com/v1/payment"></script>
   <script type="text/javascript"
     src="//dapi.kakao.com/v2/maps/sdk.js?appkey=e7c84bb07c1b52a51f8a846f4eb27bc8&libraries=services"></script>
@@ -146,14 +147,14 @@
           <h2 class="venue-section-title">구역 선택</h2>
           <div class="venue-map-wrap"
             style="position: relative; width: 100%; aspect-ratio: 1000/1000; overflow: hidden; background: #FAF9F6; display: flex; align-items: center; justify-content: center; border-radius: 12px; border: 1px solid var(--border-default);">
-            <!-- 배경 이미지 오버레이 (전체 페스티벌 도면) -->
+            <!-- 배경 이미지 오버레이 (전체 페스티벌 도면 - 하위 호환용으로 감춤) -->
             <div class="venue-bg-overlay" id="venueBgOverlay"
-              style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; background-size: 100% 100%; background-repeat: no-repeat; background-position: center center; opacity: 0.95; z-index: 1; pointer-events: none;">
+              style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; background-size: 100% 100%; background-repeat: no-repeat; background-position: center center; opacity: 0; z-index: 1; pointer-events: none; display: none;">
             </div>
 
             <!-- 구역 다각형을 그리고 감지할 SVG 레이어 -->
-            <svg class="venue-svg" id="venueSvgLayer" viewBox="0 0 1000 1000" preserveAspectRatio="none"
-              xmlns="http://www.w3.org/2000/svg" role="img" aria-label="공연장 좌석 배치도"
+            <svg class="venue-svg" id="venueSvgLayer" viewBox="0 0 800 660" xmlns="http://www.w3.org/2000/svg"
+              role="img" aria-label="공연장 좌석 배치도"
               style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 2; pointer-events: auto;">
               <!-- JS dynamic SVG polygons -->
             </svg>
@@ -345,55 +346,23 @@
         <button id="btnTabScrollLeft" class="tab-scroll-btn left"
           style="display:none; align-items:center; justify-content:center; position:absolute; left:0; z-index:10; background:linear-gradient(to right, var(--bg-main) 70%, transparent); border:none; height:100%; padding:0 15px 0 5px; cursor:pointer; color:var(--text-muted); font-size:1.2rem;">&lt;</button>
         <div class="detail-tabs-header" id="detailTabsHeader"
-          style="flex:1; overflow-x:auto; scrollbar-width:none; scroll-behavior:smooth; position:relative;">
-          <button class="detail-tab-btn active" data-tab="notice">공지사항<span class="tab-delete-btn"><svg width="12"
-                height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                stroke-linecap="round" stroke-linejoin="round">
-                <line x1="18" y1="6" x2="6" y2="18"></line>
-                <line x1="6" y1="6" x2="18" y2="18"></line>
-              </svg></span></button>
-          <button class="detail-tab-btn" data-tab="desc">상품설명<span class="tab-delete-btn"><svg width="12" height="12"
-                viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
-                stroke-linejoin="round">
-                <line x1="18" y1="6" x2="6" y2="18"></line>
-                <line x1="6" y1="6" x2="18" y2="18"></line>
-              </svg></span></button>
-          <button class="detail-tab-btn" data-tab="price">가격<span class="tab-delete-btn"><svg width="12" height="12"
-                viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
-                stroke-linejoin="round">
-                <line x1="18" y1="6" x2="6" y2="18"></line>
-                <line x1="6" y1="6" x2="18" y2="18"></line>
-              </svg></span></button>
-          <button class="detail-tab-btn" data-tab="refund">취소/환불 규정<span class="tab-delete-btn"><svg width="12"
-                height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                stroke-linecap="round" stroke-linejoin="round">
-                <line x1="18" y1="6" x2="6" y2="18"></line>
-                <line x1="6" y1="6" x2="18" y2="18"></line>
-              </svg></span></button>
-          <button class="detail-tab-btn" data-tab="venue">장소<span class="tab-delete-btn"><svg width="12" height="12"
-                viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
-                stroke-linejoin="round">
-                <line x1="18" y1="6" x2="6" y2="18"></line>
-                <line x1="6" y1="6" x2="18" y2="18"></line>
-              </svg></span></button>
-          <button class="detail-tab-btn" data-tab="fnb">F&B<span class="tab-delete-btn"><svg width="12" height="12"
-                viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
-                stroke-linejoin="round">
-                <line x1="18" y1="6" x2="6" y2="18"></line>
-                <line x1="6" y1="6" x2="18" y2="18"></line>
-              </svg></span></button>
-          <button class="detail-tab-btn" data-tab="goods">굿즈<span class="tab-delete-btn"><svg width="12" height="12"
-                viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
-                stroke-linejoin="round">
-                <line x1="18" y1="6" x2="6" y2="18"></line>
-                <line x1="6" y1="6" x2="18" y2="18"></line>
-              </svg></span></button>
-          <button class="detail-tab-btn" data-tab="review">리뷰<span class="tab-delete-btn"><svg width="12" height="12"
-                viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
-                stroke-linejoin="round">
-                <line x1="18" y1="6" x2="6" y2="18"></line>
-                <line x1="6" y1="6" x2="18" y2="18"></line>
-              </svg></span></button>
+          style="flex:1; overflow-x:auto; scroll-behavior:smooth; position:relative;">
+          <button class="detail-tab-btn active" data-tab="notice"><span class="tab-title-text">공지사항</span><span
+              class="tab-delete-btn" title="탭 삭제">&times;</span></button>
+          <button class="detail-tab-btn" data-tab="desc"><span class="tab-title-text">상품설명</span><span
+              class="tab-delete-btn" title="탭 삭제">&times;</span></button>
+          <button class="detail-tab-btn" data-tab="price"><span class="tab-title-text">가격</span><span
+              class="tab-delete-btn" title="탭 삭제">&times;</span></button>
+          <button class="detail-tab-btn" data-tab="refund"><span class="tab-title-text">취소/환불 규정</span><span
+              class="tab-delete-btn" title="탭 삭제">&times;</span></button>
+          <button class="detail-tab-btn" data-tab="venue"><span class="tab-title-text">장소</span><span
+              class="tab-delete-btn" title="탭 삭제">&times;</span></button>
+          <button class="detail-tab-btn" data-tab="fnb"><span class="tab-title-text">F&B</span><span
+              class="tab-delete-btn" title="탭 삭제">&times;</span></button>
+          <button class="detail-tab-btn" data-tab="goods"><span class="tab-title-text">굿즈</span><span
+              class="tab-delete-btn" title="탭 삭제">&times;</span></button>
+          <button class="detail-tab-btn" data-tab="review"><span class="tab-title-text">리뷰</span><span
+              class="tab-delete-btn" title="탭 삭제">&times;</span></button>
         </div>
         <button id="btnTabScrollRight" class="tab-scroll-btn right"
           style="display:none; align-items:center; justify-content:center; position:absolute; right:0; z-index:10; background:linear-gradient(to left, var(--bg-main) 70%, transparent); border:none; height:100%; padding:0 5px 0 15px; cursor:pointer; color:var(--text-muted); font-size:1.2rem;">&gt;</button>
@@ -730,9 +699,10 @@
   <script src="js/components/appFooter.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="//t1.daumcdn.net/mapjsapi/bundle/postcode/prod/postcode.v2.js"></script>
-  <script src="js/api.js"></script>
+  <script src="js/api.js?v=4"></script>
   <script src="js/common.js"></script>
-  <script src="js/detail.js?v=4"></script>
+  <script src="js/detail.js?v=12"></script>
+  <script src="js/comment.js"></script>
   <script src="js/recent_carousel.js"></script>
 
   <!-- Delete Confirm Modal -->
@@ -756,6 +726,81 @@
           style="background:#f3f4f6; color:#4b5563; border:none; border-radius:8px; padding:0.8rem 1.5rem; font-size:1rem; font-weight:600; cursor:pointer; flex:1; transition:background 0.2s;">취소</button>
         <button id="btnDeleteConfirm"
           style="background:#1f2937; color:#ffffff; border:none; border-radius:8px; padding:0.8rem 1.5rem; font-size:1rem; font-weight:600; cursor:pointer; flex:1; transition:background 0.2s;">삭제하기</button>
+      </div>
+    </div>
+  </div> <!-- Delete Confirm Modal -->
+  <div id="deleteConfirmModal"
+    style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.4); z-index:9999; align-items:center; justify-content:center; backdrop-filter:blur(3px);">
+    <div
+      style="background:#ffffff; border-radius:16px; padding:2rem; width:360px; box-shadow:0 10px 30px rgba(0,0,0,0.1); display:flex; flex-direction:column; gap:1.5rem; position:relative; text-align:center;">
+      <div style="display:flex; flex-direction:column; align-items:center; gap:1rem;">
+        <div
+          style="width:50px; height:50px; border-radius:50%; background:#f3f4f6; display:flex; align-items:center; justify-content:center;">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#6b7280" stroke-width="2">
+            <path d="M3 6h18" />
+            <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
+          </svg>
+        </div>
+        <h3 style="margin:0; font-size:1.2rem; font-weight:700; color:#1f2937;">섹션 삭제</h3>
+        <p style="margin:0; font-size:1rem; color:#4b5563;">이 섹션을 정말로 삭제하시겠습니까?<br>삭제된 내용은 복구할 수 없습니다.</p>
+      </div>
+      <div style="display:flex; justify-content:center; gap:0.8rem; margin-top:0.5rem;">
+        <button id="btnDeleteCancel"
+          style="background:#f3f4f6; color:#4b5563; border:none; border-radius:8px; padding:0.8rem 1.5rem; font-size:1rem; font-weight:600; cursor:pointer; flex:1; transition:background 0.2s;">취소</button>
+        <button id="btnDeleteConfirm"
+          style="background:#1f2937; color:#ffffff; border:none; border-radius:8px; padding:0.8rem 1.5rem; font-size:1rem; font-weight:600; cursor:pointer; flex:1; transition:background 0.2s;">삭제하기</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Custom Alert Modal -->
+  <div id="customAlertModal"
+    style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.4); z-index:10000; align-items:center; justify-content:center; backdrop-filter:blur(3px);">
+    <div
+      style="background:#ffffff; border-radius:16px; padding:2rem; width:360px; box-shadow:0 10px 30px rgba(0,0,0,0.1); display:flex; flex-direction:column; gap:1.5rem; position:relative; text-align:center;">
+      <div style="display:flex; flex-direction:column; align-items:center; gap:1rem;">
+        <div
+          style="width:50px; height:50px; border-radius:50%; background:#fee2e2; display:flex; align-items:center; justify-content:center; color:#ef4444;">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+            stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="10"></circle>
+            <line x1="12" y1="8" x2="12" y2="12"></line>
+            <line x1="12" y1="16" x2="12.01" y2="16"></line>
+          </svg>
+        </div>
+        <h3 id="customAlertTitle" style="margin:0; font-size:1.2rem; font-weight:700; color:#1f2937;">알림</h3>
+        <p id="customAlertMessage" style="margin:0; font-size:1rem; color:#4b5563; line-height:1.5;">메시지 내용</p>
+      </div>
+      <div style="display:flex; justify-content:center; gap:0.8rem; margin-top:0.5rem;">
+        <button id="btnCustomAlertOk"
+          style="background:#1f2937; color:#ffffff; border:none; border-radius:8px; padding:0.8rem 1.5rem; font-size:1rem; font-weight:600; cursor:pointer; flex:1; transition:background 0.2s;">확인</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Custom Confirm Modal -->
+  <div id="customConfirmModal"
+    style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.4); z-index:10000; align-items:center; justify-content:center; backdrop-filter:blur(3px);">
+    <div
+      style="background:#ffffff; border-radius:16px; padding:2rem; width:360px; box-shadow:0 10px 30px rgba(0,0,0,0.1); display:flex; flex-direction:column; gap:1.5rem; position:relative; text-align:center;">
+      <div style="display:flex; flex-direction:column; align-items:center; gap:1rem;">
+        <div
+          style="width:50px; height:50px; border-radius:50%; background:#fef3c7; display:flex; align-items:center; justify-content:center; color:#d97706;">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+            stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="10"></circle>
+            <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path>
+            <line x1="12" y1="17" x2="12.01" y2="17"></line>
+          </svg>
+        </div>
+        <h3 id="customConfirmTitle" style="margin:0; font-size:1.2rem; font-weight:700; color:#1f2937;">확인</h3>
+        <p id="customConfirmMessage" style="margin:0; font-size:1rem; color:#4b5563; line-height:1.5;">확인 메시지</p>
+      </div>
+      <div style="display:flex; justify-content:center; gap:0.8rem; margin-top:0.5rem;">
+        <button id="btnCustomConfirmCancel"
+          style="background:#f3f4f6; color:#4b5563; border:none; border-radius:8px; padding:0.8rem 1.5rem; font-size:1rem; font-weight:600; cursor:pointer; flex:1; transition:background 0.2s;">취소</button>
+        <button id="btnCustomConfirmOk"
+          style="background:#1f2937; color:#ffffff; border:none; border-radius:8px; padding:0.8rem 1.5rem; font-size:1rem; font-weight:600; cursor:pointer; flex:1; transition:background 0.2s;">확인</button>
       </div>
     </div>
   </div>

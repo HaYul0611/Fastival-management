@@ -28,8 +28,8 @@ import java.util.List;
  * 덕분에 API 엔드포인트의 hasRole() 인가 규칙이 정상 작동하게 됩니다.
  * 
  * 지원 토큰 형식:
- *   - festio-admin-jwt-token-7777         → ROLE_ADMIN
- *   - festio-jwt-token-{userId}           → DB app_user.role 기준
+ * - festio-admin-jwt-token-7777 → ROLE_ADMIN
+ * - festio-jwt-token-{userId} → DB app_user.role 기준
  */
 @Component
 public class StaffTokenAuthFilter extends OncePerRequestFilter {
@@ -39,8 +39,8 @@ public class StaffTokenAuthFilter extends OncePerRequestFilter {
 
     @Override
     protected void doFilterInternal(HttpServletRequest request,
-                                    HttpServletResponse response,
-                                    FilterChain filterChain) throws ServletException, IOException {
+            HttpServletResponse response,
+            FilterChain filterChain) throws ServletException, IOException {
 
         String token = request.getHeader("Authorization");
 
@@ -77,8 +77,8 @@ public class StaffTokenAuthFilter extends OncePerRequestFilter {
 
                 // 인증 정보 생성 및 SecurityContext 에 등록
                 if (principalName != null && !authorities.isEmpty()) {
-                    UsernamePasswordAuthenticationToken authentication =
-                            new UsernamePasswordAuthenticationToken(principalName, null, authorities);
+                    UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(
+                            principalName, null, authorities);
                     SecurityContextHolder.getContext().setAuthentication(authentication);
                 }
 

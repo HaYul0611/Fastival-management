@@ -76,6 +76,9 @@ public class Festival {
     @Column(name = "company_intro_url", columnDefinition = "TEXT")
     private String companyIntroUrl; // 회사 소개서 PDF 파일 경로
 
+    @Column(name = "description_html", columnDefinition = "TEXT")
+    private String descriptionHtml; // 관리자가 편집한 상세페이지 탭 HTML 내용
+
     @Transient
     @Builder.Default
     private Boolean isNew = false;

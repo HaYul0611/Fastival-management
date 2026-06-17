@@ -123,4 +123,32 @@ public class UserController {
             return ResponseEntity.internalServerError().body("프로필 업데이트 중 오류가 발생했습니다.");
         }
     }
+    @DeleteMapping("/me")
+    public ResponseEntity<?> withdrawUser(@RequestHeader(value = "Authorization", required = false) String token) {
+        try {
+            String userId = null;
+            if (token == null) {
+                return ResponseEntity.status(401).body("로그인이 필요합니다.");
+            }
+            if (token.startsWith("festio-jwt-token-")) {
+                userId = token.substring("festio-jwt-token-".length());
+            } else if (token.equals("festio-admin-jwt-token-7777")) {
+                UserVo admin = userService.findByEmail("admin@gmail.com");
+                if (admin != null) {
+                    userId = admin.getId();
+                } else {
+                    return ResponseEntity.status(401).body("관리자 계정이 존재하지 않습니다.");
+                }
+            } else {
+                return ResponseEntity.status(401).body("로그인이 필요합니다.");
+            }
+
+            userService.withdrawUser(userId);
+            return ResponseEntity.ok("회원 탈퇴가 완료되었습니다.");
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        } catch (Exception e) {
+            return ResponseEntity.internalServerError().body("회원 탈퇴 처리 중 오류가 발생했습니다.");
+        }
+    }
 }

@@ -46,7 +46,25 @@
 
   let headerHtml = '';
 
-  // 4. 로그인 및 권한 상태 확인
+  // 4. 로그인 및 권한 상태 확인, 세션 만료 처리 (2시간)
+  const EXPIRY_TIME_MS = 2 * 60 * 60 * 1000;
+  const loginTimestamp = localStorage.getItem('loginTimestamp') || sessionStorage.getItem('loginTimestamp');
+  if (loginTimestamp) {
+    if (new Date().getTime() - parseInt(loginTimestamp) > EXPIRY_TIME_MS) {
+      ['isLoggedIn', 'userToken', 'userRole', 'userName', 'email', 'userPhone', 'userSpecificRole', 'loginTimestamp', 'savedEmail'].forEach(k => {
+        if (k !== 'savedEmail') { // savedEmail(기억하기)는 예외
+          localStorage.removeItem(k);
+        }
+        sessionStorage.removeItem(k);
+      });
+      if (!path.endsWith('login.html')) {
+        alert('일정 시간이 지나 로그아웃 되었습니다. 다시 로그인 해주세요.');
+        window.location.href = '/login.html';
+        return;
+      }
+    }
+  }
+
   const isLoggedIn = localStorage.getItem('isLoggedIn') === 'true' || sessionStorage.getItem('isLoggedIn') === 'true' || !!localStorage.getItem('userToken') || !!sessionStorage.getItem('userToken');
   const userRole = localStorage.getItem('userRole') || sessionStorage.getItem('userRole') || 'CLIENT';
 
@@ -73,8 +91,8 @@
       </a>`;
   }
 
-  // 모드 전환 버튼 CSS 인라인 주입 (별도 CSS 파일 불필요)
-  if (modeSwitchBtnHtml && !document.getElementById('mode-switch-styles')) {
+  // 모드 전환 버튼 및 헤더 반응형 CSS 인라인 주입 (별도 CSS 파일 불필요)
+  if (!document.getElementById('mode-switch-styles')) {
     const style = document.createElement('style');
     style.id = 'mode-switch-styles';
     style.textContent = `
@@ -112,12 +130,12 @@
         transform: translateY(-1px);
         box-shadow: 0 3px 10px rgba(42,193,188,0.2);
       }
-      @media (max-width: 480px) {
+      @media (max-width: 768px) {
         .mode-btn-label { display: none; }
         .header-mode-switch-btn { padding: 8px; border-radius: 50%; }
         .desktop-only { display: none !important; }
       }
-      @media (min-width: 1024px) {
+      @media (min-width: 769px) {
         .mobile-only { display: none !important; }
         /* 데스크톱에서는 header-back-btn 대신 로고와 메뉴를 보여줌 */
         .header-back-btn { display: none !important; }
@@ -135,8 +153,36 @@
   if (isMypage) {
     rightAction = `<button class="header-icon-btn ${detailHideClass}" id="btn-logout" aria-label="로그아웃" title="로그아웃">${logoutSvg}</button>`;
   } else {
+    const userName = localStorage.getItem('userName') || sessionStorage.getItem('userName') || '회원';
+    const userBadgeSvg = `<svg viewBox="0 0 24 24" style="position:absolute; bottom:-2px; right:-2px; width:14px; height:14px; border-radius:50%; background:#fff; border: 2px solid #fff;" fill="#3b82f6"><circle cx="12" cy="12" r="12"/><path d="M9 16.2L4.8 12l-1.4 1.4L9 19 21 7l-1.4-1.4L9 16.2z" fill="#fff"/></svg>`;
+    const avatarCircleHtml = `
+      <div style="position:relative; width:38px; height:38px; border-radius:50%; background:linear-gradient(135deg, #e0e7ff 0%, #c7d2fe 100%); display:flex; align-items:center; justify-content:center; flex-shrink:0;">
+        <svg viewBox="0 0 24 24" fill="none" stroke="#4f46e5" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:20px; height:20px;"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+        ${userBadgeSvg}
+      </div>
+    `;
+
     rightAction = isLoggedIn
-      ? `<a href="mypage.html" class="header-icon-btn ${detailHideClass}" aria-label="마이페이지" title="마이페이지">${mypageSvg}</a>`
+      ? `<a href="mypage.html" class="desktop-only" style="display:inline-flex; align-items:center; gap:10px; text-decoration:none; cursor:pointer;" aria-label="마이페이지">
+           ${avatarCircleHtml}
+           <div style="display:flex; flex-direction:column; justify-content:center;">
+             <style>
+               @font-face {
+                 font-family: 'CookieRun';
+                 src: url('https://fastly.jsdelivr.net/gh/projectnoonnu/noonfonts_2001@1.1/CookieRun-Regular.woff') format('woff');
+                 font-weight: 400;
+               }
+               @font-face {
+                 font-family: 'CookieRun';
+                 src: url('https://fastly.jsdelivr.net/gh/projectnoonnu/noonfonts_2001@1.1/CookieRun-Regular.woff') format('woff');
+                 font-weight: 700;
+               }
+             </style>
+             <span style="font-size:0.8rem; color:#4b5563; letter-spacing:-0.3px; line-height:1.4;">반가워요, <b style="font-family: 'CookieRun', sans-serif; font-size:0.95rem; color:#111827; font-weight:700; margin:0 2px;">${userName}</b>님!</span>
+             <span style="font-size:0.8rem; color:#4b5563; letter-spacing:-0.3px; line-height:1.4;">오늘 행사를 함께 즐겨볼까요?</span>
+           </div>
+         </a>
+         <a href="mypage.html" class="header-icon-btn mobile-only ${detailHideClass}" aria-label="마이페이지">${mypageSvg}</a>`
       : `<a href="login.html" class="header-text-btn ${detailHideClass}" aria-label="로그인">로그인</a>`;
   }
 
@@ -163,7 +209,10 @@
         <a href="mypage.html" class="header-text-btn ${detailHideClass}" aria-label="MY티켓">${ticketSvg}MY티켓</a>
         <div class="header-search-bar ${detailHideClass}" role="search">${searchSvg}<input type="search" class="header-search-input" id="headerSearch" placeholder="행사명, 아티스트 검색" autocomplete="off" aria-label="검색"></div>
         <button class="header-icon-btn mobile-search-btn ${detailHideClass}" data-open-modal="modal-mobile-search" aria-label="검색">${searchSvg}</button>
-        <button class="header-icon-btn ${detailHideClass}" aria-label="알림">${alarmSvg}</button>
+        <button class="header-icon-btn ${detailHideClass}" id="btnHeaderNotification" aria-label="알림" style="position:relative;">
+          ${alarmSvg}
+          <span id="notificationBadge" style="display:none; position:absolute; top:2px; right:2px; background:#ef4444; color:white; font-size:10px; font-weight:bold; border-radius:10px; padding:2px 5px; line-height:1; min-width:14px; text-align:center; transform:scale(0.9);">0</span>
+        </button>
         ${rightAction}
       </div>
     </header>

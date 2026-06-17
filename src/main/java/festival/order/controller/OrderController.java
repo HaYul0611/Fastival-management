@@ -2,9 +2,9 @@ package festival.order.controller;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.JdbcTemplate;
-import org.springframework.web.bind.annotation.*;
-
 import java.util.*;
+
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/api/order")
@@ -14,22 +14,51 @@ public class OrderController {
     private JdbcTemplate jdbcTemplate;
 
     @GetMapping("/fnb")
-    public List<Map<String, Object>> getFnbOrders() {
-        String sql = "SELECT oi.id as item_id, p.name as product_name, oi.quantity, p.price, oi.item_status, oi.updated_at "
-                +
-                "FROM order_item oi " +
-                "JOIN product p ON oi.product_id = p.id " +
-                "WHERE oi.product_type = 'FOOD' " +
-                "ORDER BY oi.updated_at DESC";
+    public List<Map<String, Object>> getFnbOrders(
+            @RequestHeader(value = "Authorization", required = false) String authHeader) {
+        String userId = null;
+        if (authHeader != null && authHeader.startsWith("Bearer ")) {
+            String token = authHeader.substring(7);
+            if (token.startsWith("festio-jwt-token-")) {
+                userId = token.substring("festio-jwt-token-".length());
+            } else if (token.equals("festio-admin-jwt-token-7777")) {
+                try {
+                    userId = jdbcTemplate.queryForObject(
+                            "SELECT id FROM app_user WHERE email = 'admin@gmail.com'", String.class);
+                } catch (Exception e) {
+                    // 무시
+                }
+            }
+        }
 
-        List<Map<String, Object>> rows = jdbcTemplate.queryForList(sql);
+        String sql;
+        List<Map<String, Object>> rows;
+        if (userId != null) {
+            sql = "SELECT oi.id as item_id, p.name as product_name, oi.quantity, p.price, oi.item_status, oi.updated_at "
+                    +
+                    "FROM order_item oi " +
+                    "JOIN product p ON oi.product_id = p.id " +
+                    "JOIN orders o ON oi.order_id = o.id " +
+                    "WHERE oi.product_type = 'FOOD' AND o.user_id = ? " +
+                    "ORDER BY oi.updated_at DESC";
+            rows = jdbcTemplate.queryForList(sql, userId);
+        } else {
+            sql = "SELECT oi.id as item_id, p.name as product_name, oi.quantity, p.price, oi.item_status, oi.updated_at "
+                    +
+                    "FROM order_item oi " +
+                    "JOIN product p ON oi.product_id = p.id " +
+                    "JOIN orders o ON oi.order_id = o.id " +
+                    "WHERE oi.product_type = 'FOOD' AND o.user_id IS NULL " +
+                    "ORDER BY oi.updated_at DESC";
+            rows = jdbcTemplate.queryForList(sql);
+        }
 
         List<Map<String, Object>> result = new ArrayList<>();
         for (Map<String, Object> row : rows) {
             Map<String, Object> order = new HashMap<>();
 
             Long itemId = ((Number) row.get("item_id")).longValue();
-            order.put("id", "ORD-ITEM-" + itemId);
+            order.put("id", String.format("F%011d", itemId));
             order.put("type", "FOOD");
 
             String itemStatus = (String) row.get("item_status");
@@ -64,7 +93,7 @@ public class OrderController {
     public Map<String, String> updateFnbStatus(@PathVariable("id") String idStr,
             @RequestBody Map<String, String> payload) {
         String nextStatus = payload.get("status");
-        Long itemId = Long.parseLong(idStr.replace("ORD-ITEM-", ""));
+        Long itemId = Long.parseLong(idStr.substring(1));
 
         String sql = "UPDATE order_item SET item_status = ? WHERE id = ?";
         jdbcTemplate.update(sql, nextStatus, itemId);
@@ -90,7 +119,7 @@ public class OrderController {
             Map<String, Object> order = new HashMap<>();
 
             Long itemId = ((Number) row.get("item_id")).longValue();
-            order.put("id", "ORD-ITEM-" + itemId);
+            order.put("id", String.format("G%011d", itemId));
             order.put("type", "GOODS");
 
             String itemStatus = (String) row.get("item_status");
@@ -123,7 +152,7 @@ public class OrderController {
     public Map<String, String> updateGoodsStatus(@PathVariable("id") String idStr,
             @RequestBody Map<String, String> payload) {
         String nextStatus = payload.get("status");
-        Long itemId = Long.parseLong(idStr.replace("ORD-ITEM-", ""));
+        Long itemId = Long.parseLong(idStr.substring(1));
 
         String sql = "UPDATE order_item SET item_status = ? WHERE id = ?";
         jdbcTemplate.update(sql, nextStatus, itemId);
@@ -201,12 +230,9 @@ public class OrderController {
 
     private String generateRandomTicketNumber() {
         String chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
-        StringBuilder sb = new StringBuilder("TKT-");
+        StringBuilder sb = new StringBuilder("T");
         Random rnd = new Random();
-        for (int i = 0; i < 4; i++)
-            sb.append(chars.charAt(rnd.nextInt(chars.length())));
-        sb.append("-");
-        for (int i = 0; i < 4; i++)
+        for (int i = 0; i < 11; i++)
             sb.append(chars.charAt(rnd.nextInt(chars.length())));
         return sb.toString();
     }
@@ -309,12 +335,32 @@ public class OrderController {
         // QR 텍스트 데이터 및 고유 난수 생성
         String ticketNum = generateRandomTicketNumber();
 
+        // userToken에서 userId 파싱 (정합성 추가)
+        String userToken = (String) payload.get("userToken");
+        Long userId = null;
+        if (userToken != null) {
+            if (userToken.startsWith("festio-jwt-token-")) {
+                try {
+                    userId = Long.parseLong(userToken.substring("festio-jwt-token-".length()));
+                } catch (Exception e) {
+                    // 무시
+                }
+            } else if (userToken.equals("festio-admin-jwt-token-7777")) {
+                try {
+                    userId = jdbcTemplate.queryForObject(
+                            "SELECT id FROM app_user WHERE email = 'admin@gmail.com'", Long.class);
+                } catch (Exception e) {
+                    // 무시
+                }
+            }
+        }
+
         // INSERT 후 생성된 orderId 반환
         String insertSql = "INSERT INTO orders (user_id, festival_id, total_price, payment_status, created_at, seat_ids, is_entered, ticket_type, ticket_number) "
                 +
-                "VALUES (NULL, ?, ?, 'PAID', NOW(), ?, false, 'ONSITE', ?) RETURNING id";
+                "VALUES (?, ?, ?, 'PAID', NOW(), ?, false, 'ONSITE', ?) RETURNING id";
 
-        Long orderId = jdbcTemplate.queryForObject(insertSql, Long.class, festivalId, totalPrice, seatIdsStr,
+        Long orderId = jdbcTemplate.queryForObject(insertSql, Long.class, userId, festivalId, totalPrice, seatIdsStr,
                 ticketNum);
 
         // 보안: TOTP 전용 비밀키 생성 후 저장
@@ -363,12 +409,47 @@ public class OrderController {
     }
 
     @GetMapping("/tickets/qr")
-    public List<Map<String, Object>> getQrTickets() {
-        String sql = "SELECT id as order_id, qr_code, is_entered, seat_ids, ticket_number " +
-                "FROM orders " +
-                "WHERE qr_code IS NOT NULL " +
-                "ORDER BY id DESC";
-        List<Map<String, Object>> rows = jdbcTemplate.queryForList(sql);
+    public List<Map<String, Object>> getQrTickets(
+            @RequestHeader(value = "Authorization", required = false) String authHeader) {
+        Long userId = null;
+        if (authHeader != null && authHeader.startsWith("Bearer ")) {
+            String token = authHeader.substring(7);
+            if (token.startsWith("festio-jwt-token-")) {
+                try {
+                    userId = Long.parseLong(token.substring("festio-jwt-token-".length()));
+                } catch (Exception e) {
+                    // 무시
+                }
+            } else if (token.equals("festio-admin-jwt-token-7777")) {
+                try {
+                    userId = jdbcTemplate.queryForObject(
+                            "SELECT id FROM app_user WHERE email = 'admin@gmail.com'", Long.class);
+                } catch (Exception e) {
+                    // 무시
+                }
+            }
+        }
+
+        String sql;
+        List<Map<String, Object>> rows;
+        if (userId != null) {
+            sql = "SELECT o.id as order_id, o.qr_code, o.is_entered, o.seat_ids, o.ticket_number, o.created_at, o.total_price, f.name as event_name, f.start_date as event_date "
+                    +
+                    "FROM orders o " +
+                    "LEFT JOIN festival f ON o.festival_id = f.id " +
+                    "WHERE o.qr_code IS NOT NULL AND o.user_id = ? " +
+                    "ORDER BY o.id DESC";
+            rows = jdbcTemplate.queryForList(sql, userId);
+        } else {
+            sql = "SELECT o.id as order_id, o.qr_code, o.is_entered, o.seat_ids, o.ticket_number, o.created_at, o.total_price, f.name as event_name, f.start_date as event_date "
+                    +
+                    "FROM orders o " +
+                    "LEFT JOIN festival f ON o.festival_id = f.id " +
+                    "WHERE o.qr_code IS NOT NULL AND o.user_id IS NULL " +
+                    "ORDER BY o.id DESC";
+            rows = jdbcTemplate.queryForList(sql);
+        }
+
         List<Map<String, Object>> result = new ArrayList<>();
 
         for (Map<String, Object> row : rows) {
@@ -384,6 +465,11 @@ public class OrderController {
 
             map.put("ticketNumber", row.get("ticket_number"));
             map.put("seats", row.get("seat_ids"));
+            map.put("createdAt", row.get("created_at") != null ? row.get("created_at").toString() : "");
+            map.put("totalPrice", row.get("total_price") != null ? ((Number) row.get("total_price")).intValue() : 0);
+            map.put("eventName", row.get("event_name") != null ? row.get("event_name") : "페스티벌 예매 티켓");
+            map.put("eventDate", row.get("event_date") != null ? row.get("event_date").toString() : "");
+
             Boolean isEntered = (Boolean) row.get("is_entered");
             if (isEntered != null && isEntered) {
                 map.put("used", "true");
@@ -554,7 +640,7 @@ public class OrderController {
                     }
                 }
             } catch (Exception e) {
-                System.err.println("Refund seat return error: " + e.getMessage());
+                e.printStackTrace();
             }
         }
 

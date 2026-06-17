@@ -45,6 +45,61 @@ document.addEventListener('DOMContentLoaded', () => {
   let timerSeconds = 180; // 3분
   let isEmailVerified = false;
 
+  // --- 기존 입력 데이터 복구 (이메일의 '인증번호 입력하기' 버튼을 눌러서 온 경우에만 복구) ---
+  const savedData = localStorage.getItem('pendingRegistration');
+  if (savedData && window.location.search.includes('fromEmail=true')) {
+    try {
+      const data = JSON.parse(savedData);
+      if (emailInput && data.email) emailInput.value = data.email;
+      if (pwInput && data.password) pwInput.value = data.password;
+      if (pwConfirmInput && data.confirmPassword) pwConfirmInput.value = data.confirmPassword;
+      if (nameInput && data.name) nameInput.value = data.name;
+      if (phoneInput && data.phone) phoneInput.value = data.phone;
+
+      const rrn1 = document.getElementById('registerRRN1');
+      if (rrn1 && data.rrn1) rrn1.value = data.rrn1;
+
+      const rrn2Elem = document.getElementById('registerRRN2');
+      if (rrn2Elem && data.rrn2) {
+        rrn2Elem.value = '*'.repeat(data.rrn2.length);
+        rrn2Elem.dataset.realValue = data.rrn2;
+      }
+
+      if (agreeTerms && data.agreeTerms) agreeTerms.checked = data.agreeTerms;
+      if (agreePrivacy && data.agreePrivacy) agreePrivacy.checked = data.agreePrivacy;
+      if (agreeMarketing && data.agreeMarketing) agreeMarketing.checked = data.agreeMarketing;
+
+      // 약관 UI 동기화
+      if (agreeAll) {
+        const allChecked = individualCheckboxes.every(item => item && item.checked);
+        agreeAll.checked = allChecked;
+      }
+
+      // 발송 상태 복원
+      if (data.timestamp) {
+        const elapsed = Math.floor((Date.now() - data.timestamp) / 1000);
+        if (elapsed < 180) {
+          if (authCodeSection) authCodeSection.classList.remove('hidden');
+          if (authStatus) authStatus.innerHTML = '<span class="auth-success">인증번호 발송 상태가 복구되었습니다.</span>';
+          if (btnSendAuthCode) {
+            btnSendAuthCode.textContent = '재발송';
+            btnSendAuthCode.disabled = false;
+          }
+          startTimer(180 - elapsed);
+        } else {
+          if (authCodeSection) authCodeSection.classList.remove('hidden');
+          if (authStatus) authStatus.innerHTML = '<span class="auth-error">인증 시간이 초과되었습니다. 재발송해주세요.</span>';
+          if (btnSendAuthCode) {
+            btnSendAuthCode.textContent = '재발송';
+            btnSendAuthCode.disabled = false;
+          }
+        }
+      }
+    } catch (e) {
+      console.error('기존 데이터 복구 실패', e);
+    }
+  }
+
   // --- 1. 비밀번호 표시 토글 ---
   function setupPasswordToggle(btn, input) {
     if (!btn || !input) return;
@@ -102,11 +157,41 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
+  // --- 3.5. 주민등록번호 뒷자리 동적 마스킹 ---
+  const rrn2Input = document.getElementById('registerRRN2');
+  if (rrn2Input) {
+    let realRRN2 = '';
+    rrn2Input.addEventListener('input', function (e) {
+      if (e.inputType === 'deleteContentBackward') {
+        realRRN2 = realRRN2.slice(0, -1);
+      } else if (e.inputType === 'insertFromPaste') {
+        const pasted = (e.data || '').replace(/[^0-9]/g, '');
+        realRRN2 += pasted;
+      } else if (e.data) {
+        const added = e.data.replace(/[^0-9]/g, '');
+        realRRN2 += added;
+      }
+      realRRN2 = realRRN2.substring(0, 7);
+
+      let masked = '';
+      if (realRRN2.length > 0) {
+        masked = realRRN2.charAt(0) + '●'.repeat(realRRN2.length - 1);
+      }
+      this.value = masked;
+      this.dataset.realValue = realRRN2;
+    });
+  }
+
   // --- 4. 이메일 인증 로직 ---
-  function startTimer() {
+  function startTimer(initialSeconds = 180) {
     clearInterval(authTimerInterval);
-    timerSeconds = 180;
-    authTimer.textContent = '03:00';
+    timerSeconds = initialSeconds;
+
+    // 초기 텍스트 즉시 반영
+    const m = String(Math.floor(timerSeconds / 60)).padStart(2, '0');
+    const s = String(timerSeconds % 60).padStart(2, '0');
+    authTimer.textContent = `${m}:${s}`;
+
     btnConfirmAuthCode.disabled = false;
 
     authTimerInterval = setInterval(() => {
@@ -134,10 +219,35 @@ document.addEventListener('DOMContentLoaded', () => {
     btnSendAuthCode.disabled = true;
     btnSendAuthCode.textContent = '발송 중...';
 
+    // 탭이 닫힐 경우를 대비해 현재까지 입력된 폼 데이터를 로컬 스토리지에 임시 백업
+    const rrn1Elem = document.getElementById('registerRRN1');
+    const rrn2Elem = document.getElementById('registerRRN2');
+    const backupData = {
+      email: email,
+      password: pwInput ? pwInput.value : '',
+      confirmPassword: pwConfirmInput ? pwConfirmInput.value : '',
+      name: nameInput ? nameInput.value : '',
+      phone: phoneInput ? phoneInput.value : '',
+      rrn1: rrn1Elem ? rrn1Elem.value : '',
+      rrn2: rrn2Elem ? (rrn2Elem.dataset.realValue || '') : '',
+      agreeTerms: agreeTerms ? agreeTerms.checked : false,
+      agreePrivacy: agreePrivacy ? agreePrivacy.checked : false,
+      agreeMarketing: agreeMarketing ? agreeMarketing.checked : false,
+      timestamp: Date.now()
+    };
+    localStorage.setItem('pendingRegistration', JSON.stringify(backupData));
+
     try {
-      // SMTP API 연동 (가상)
-      // const response = await fetch('/api/auth/send-email', { ... });
-      await new Promise(resolve => setTimeout(resolve, 1000)); // 통신 지연 시뮬레이션
+      const response = await fetch('/api/auth/send-email', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email })
+      });
+      const data = await response.json();
+
+      if (!response.ok || !data.success) {
+        throw new Error(data.message || '인증번호 발송 실패');
+      }
 
       authCodeSection.classList.remove('hidden');
       authStatus.innerHTML = '<span class="auth-success">인증번호가 발송되었습니다.</span>';
@@ -147,7 +257,7 @@ document.addEventListener('DOMContentLoaded', () => {
       startTimer();
     } catch (error) {
       console.error('이메일 발송 실패:', error);
-      showError('인증번호 발송에 실패했습니다. 잠시 후 다시 시도해주세요.');
+      showError('인증번호 발송에 실패했습니다: ' + (error.message || ''));
       btnSendAuthCode.textContent = '인증번호 발송';
       btnSendAuthCode.disabled = false;
     }
@@ -165,21 +275,34 @@ document.addEventListener('DOMContentLoaded', () => {
       }
 
       try {
-        // SMTP 인증 확인 API (가상)
-        // const response = await fetch('/api/auth/verify-email', { ... });
-        await new Promise(resolve => setTimeout(resolve, 500));
+        btnConfirmAuthCode.disabled = true;
+        btnConfirmAuthCode.textContent = '확인 중...';
+
+        const email = emailInput.value.trim();
+        const response = await fetch('/api/auth/verify-email', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email, code })
+        });
+        const data = await response.json();
+
+        if (!response.ok || !data.success) {
+          throw new Error(data.message || '잘못된 인증번호입니다.');
+        }
 
         clearInterval(authTimerInterval);
         isEmailVerified = true;
         authTimer.textContent = '';
-        btnConfirmAuthCode.disabled = true;
         btnConfirmAuthCode.textContent = '인증완료';
         btnResendAuthCode.disabled = true;
         emailAuthCodeInput.readOnly = true;
 
         authStatus.innerHTML = '<span class="auth-success">이메일 인증이 완료되었습니다.</span>';
       } catch (error) {
-        showError('잘못된 인증번호입니다.');
+        console.error(error);
+        showError(error.message || '잘못된 인증번호입니다.');
+        btnConfirmAuthCode.disabled = false;
+        btnConfirmAuthCode.textContent = '확인';
       }
     });
   }
@@ -294,9 +417,12 @@ document.addEventListener('DOMContentLoaded', () => {
       const confirmPassword = pwConfirmInput.value.trim();
       const name = nameInput.value.trim();
       const phone = phoneInput.value.trim();
+      const rrn1 = document.getElementById('registerRRN1') ? document.getElementById('registerRRN1').value.trim() : '';
+      const rrn2Elem = document.getElementById('registerRRN2');
+      const rrn2 = rrn2Elem ? (rrn2Elem.dataset.realValue || '') : '';
 
-      if (!email || !password || !confirmPassword || !name || !phone) {
-        showError('모든 필수 정보를 입력해주세요.');
+      if (!email || !password || !confirmPassword || !name || !phone || !rrn1 || rrn2.length !== 7) {
+        showError('모든 필수 정보를 올바르게 입력해주세요.');
         return;
       }
 
@@ -323,35 +449,80 @@ document.addEventListener('DOMContentLoaded', () => {
         return;
       }
 
+      // 성별 추출 (1,3,5,7: 남성 / 2,4,6,8: 여성)
+      let gender = '';
+      const genderDigit = parseInt(rrn2.charAt(0), 10);
+      if ([1, 3, 5, 7].includes(genderDigit)) {
+        gender = 'M';
+      } else if ([2, 4, 6, 8].includes(genderDigit)) {
+        gender = 'F';
+      } else {
+        gender = 'U';
+      }
+      localStorage.setItem('userGender', gender);
+
       try {
-        const requestData = { email, password, name, phone };
+        const sb = window.getSupabase();
+        if (!sb) throw new Error('Supabase가 연결되지 않았습니다.');
 
-        // 실제 연동 시 아래 주석 해제 및 사용
-        /*
-        const response = await fetch('/api/auth/register', {
+        // 1. 백엔드의 마스터키 강제 가입 API 호출 (이메일 인증 무시)
+        const response = await fetch('/api/auth/signup', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(requestData)
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ email: email, password: password })
         });
-        
-        if (response.ok) {
-          showSuccess('회원가입이 완료되었습니다! 로그인 후 이용해주세요.');
-          setTimeout(() => { window.location.href = 'login.html'; }, 1200);
-        } else {
-          const errMsg = await response.text();
-          showError(errMsg || '회원가입 처리에 실패했습니다.');
-        }
-        */
 
-        // 프론트엔드 UI/UX 확인용 가상 응답 처리
-        showSuccess('회원가입이 완료되었습니다! 로그인 후 이용해주세요.');
+        const result = await response.json();
+        if (!response.ok) {
+          throw new Error(result.message || '백엔드 가입 실패');
+        }
+
+        const userId = result.id;
+
+        // 2. 가입 즉시 프론트엔드 로그인 처리 (Session 획득)
+        const { error: signInError } = await sb.auth.signInWithPassword({
+          email: email,
+          password: password
+        });
+        if (signInError) throw signInError;
+
+        // 3. app_user 테이블에 나머지 회원정보 Insert
+        const { error: insertError } = await sb.from('app_user').insert({
+          id: userId,
+          email: email,
+          password: password,
+          name: name,
+          phone: phone,
+          role: 'ROLE_USER',
+          status: 'ACTIVE',
+          membership_grade: 'BRONZE',
+          balance: 0,
+          gender: gender,
+          profile_img: 'https://ui-avatars.com/api/?name=' + encodeURIComponent(name) + '&background=f3f4f6'
+        });
+
+        if (insertError) throw insertError;
+
+        // 로컬 스토리지에 로그인 세션 및 기본 정보 저장
+        localStorage.setItem('isLoggedIn', 'true');
+        localStorage.setItem('userName', name);
+        localStorage.setItem('userGender', gender);
+        localStorage.setItem('email', email);
+        localStorage.setItem('userPhone', phone);
+
+        // 가입 성공 시 임시 백업된 데이터 삭제
+        localStorage.removeItem('pendingRegistration');
+
+        showSuccess('회원가입이 완료되었습니다! 잠시 후 메인으로 이동합니다.');
         setTimeout(() => {
-          window.location.href = 'login.html';
+          window.location.href = 'index.html';
         }, 1200);
 
       } catch (error) {
         console.error('회원가입 에러:', error);
-        showError('회원가입 처리 중 예기치 못한 오류가 발생했습니다.');
+        showError('회원가입 처리 중 오류가 발생했습니다: ' + (error.message || ''));
       }
     });
   }

@@ -80,4 +80,43 @@ public class FestivalController {
     public ResponseEntity<List<festival.festival.domain.SeatMap>> getSeatsByZone(@RequestParam("zoneId") Long zoneId) {
         return ResponseEntity.ok(seatMapService.getSeatsByZone(zoneId));
     }
+
+
+    /**
+     * 특정 페스티벌 단건 마스터 데이터를 조회합니다.
+     * GET /api/festival/{id}
+     */
+    @GetMapping("/{id}")
+    public ResponseEntity<Festival> getFestivalById(@PathVariable("id") Long id) {
+        return festivalService.getFestival(id)
+                .map(ResponseEntity::ok)
+                .orElse(ResponseEntity.notFound().build());
+    }
+
+    /**
+     * 특정 페스티벌에 속한 구역 목록을 조회합니다.
+     * GET /api/festival/{id}/zones
+     */
+    @GetMapping("/{id}/zones")
+    public ResponseEntity<List<festival.festival.domain.FestivalZone>> getZonesByFestival(@PathVariable("id") Long id) {
+        List<festival.festival.domain.FestivalZone> zones = festivalService.getZonesByFestival(id);
+        List<festival.festival.domain.FestivalZone> allowedZones = zones.stream()
+                .filter(z -> !"DISABLED".equalsIgnoreCase(z.getStatus()))
+                .toList();
+        return ResponseEntity.ok(allowedZones);
+    }
+
+    /**
+     * 행사 상세 페이지의 탭 HTML 내용(공지사항, 상품설명, 환불규정 등)을 저장합니다.
+     * 관리자가 프론트엔드 빌더에서 편집 후 저장 버튼을 누르면 이 API가 호출됩니다.
+     * PUT /api/festival/{id}/description
+     */
+    @PutMapping("/{id}/description")
+    public ResponseEntity<Festival> updateDescription(
+            @PathVariable("id") Long id,
+            @RequestBody java.util.Map<String, String> body) {
+        String descriptionHtml = body.get("descriptionHtml");
+        Festival updatedFestival = festivalService.updateDescriptionHtml(id, descriptionHtml);
+        return ResponseEntity.ok(updatedFestival);
+    }
 }

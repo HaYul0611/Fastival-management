@@ -10,6 +10,24 @@ const $$ = (sel, ctx = document) => [...ctx.querySelectorAll(sel)];
 function on(el, evt, fn, opts) { if (el) el.addEventListener(evt, fn, opts); }
 function off(el, evt, fn) { if (el) el.removeEventListener(evt, fn); }
 
+// Global listener to close dropdowns when clicking outside
+document.addEventListener('click', (e) => {
+  const openDropdowns = $$('.open.custom-ticket-dropdown, .open.gallery-layout-dropdown, .open.mypage-more-dropdown, .cat-dropdown');
+  openDropdowns.forEach(dropdown => {
+    // Some dropdowns like cat-dropdown use display:none, others use .open class
+    if (dropdown.classList.contains('cat-dropdown')) {
+      const parentNav = dropdown.closest('.nav-item');
+      if (parentNav && !parentNav.contains(e.target)) {
+        dropdown.style.display = 'none';
+      }
+    } else {
+      if (!dropdown.contains(e.target)) {
+        dropdown.classList.remove('open');
+      }
+    }
+  });
+});
+
 /* ── 포맷 헬퍼 ─────────────────────────────────────────────── */
 function formatKRW(amount) {
   if (!amount || amount === 0) return '무료';
@@ -36,12 +54,12 @@ function maskName(name) {
 function calcDday(start, end) {
   if (!start) return '종료';
   const today = new Date(); today.setHours(0, 0, 0, 0);
-  const s = new Date(start); 
+  const s = new Date(start);
   if (isNaN(s)) return '종료';
   s.setHours(0, 0, 0, 0);
-  
+
   if (end) {
-    const e = new Date(end); 
+    const e = new Date(end);
     if (!isNaN(e)) {
       e.setHours(0, 0, 0, 0);
       if (today >= s && today <= e) {

@@ -33,6 +33,12 @@
   padding-bottom: 80px;
 }
 
+/* list.html 헤더 상시 흰색 배경 처리 (2번 이미지 형태) */
+.app-header {
+  background: var(--bg-surface1) !important;
+  border-bottom: 1px solid var(--border-subtle) !important;
+}
+
 .bento-card {
   min-height: 220px;
 }

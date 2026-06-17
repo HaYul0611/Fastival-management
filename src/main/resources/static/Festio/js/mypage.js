@@ -16,6 +16,7 @@
 
 /* ── 상태 관리 ───────────────────────────────────────────────── */
 let _member = null;
+let _dbTickets = [];       // 실제 DB 결제 완료 티켓 목록
 let _qrTimer = null;       // setInterval ID (3분 갱신)
 let _qrCountdown = 180;
 let _qrCountTimer = null;   // 1초 카운트다운
@@ -28,11 +29,70 @@ let _faceDetectLoop = null;
 /* QR SVG 원 둘레 (r=11) */
 const QR_CIRC = 2 * Math.PI * 11; // ≈ 69.1
 
+/* 실제 DB 결제 티켓 조회 API 연동 */
+async function fetchTickets() {
+  try {
+    const token = localStorage.getItem('userToken') || sessionStorage.getItem('userToken') || '';
+    const response = await fetch('/api/order/tickets/qr', {
+      headers: {
+        'Authorization': 'Bearer ' + token
+      }
+    });
+    if (response.ok) {
+      _dbTickets = await response.json();
+      console.log('실제 DB 티켓 조회 완료:', _dbTickets);
+    }
+  } catch (error) {
+    console.error('DB 티켓 로드 실패:', error);
+  }
+}
+
+/* 실제 DB 푸드트럭 주문 조회 API 연동 */
+async function fetchFoodOrders() {
+  try {
+    const token = localStorage.getItem('userToken') || sessionStorage.getItem('userToken') || '';
+    const response = await fetch('/api/order/fnb', {
+      headers: {
+        'Authorization': 'Bearer ' + token
+      }
+    });
+    if (response.ok) {
+      const fnbOrders = await response.json();
+      MOCK_FOOD_ORDERS = fnbOrders.map(f => {
+        const productName = f.items && f.items.length > 0 ? f.items[0].name : '푸드 상품';
+        const quantity = f.items && f.items.length > 0 ? f.items[0].quantity : 1;
+
+        let statusText = '주문 완료';
+        if (f.status === 'RECEIVED') statusText = '주문 접수';
+        else if (f.status === 'PREPARING') statusText = '조리 중';
+        else if (f.status === 'READY') statusText = '조리 완료 (픽업 대기)';
+        else if (f.status === 'PICKED_UP') statusText = '수령 완료';
+
+        return {
+          orderItemId: f.id,
+          storeName: '춘향이네 야시장',
+          productName: productName,
+          quantity: quantity,
+          selectedOptions: '기본 옵션',
+          pickupTimeSlot: f.timestamp ? f.timestamp.split('.')[0] : '실시간 업데이트',
+          totalPrice: f.price,
+          itemStatus: f.status || 'RECEIVED',
+          statusText: statusText,
+          qrToken: f.id
+        };
+      });
+      console.log('실제 DB 푸드트럭 주문 조회 완료:', MOCK_FOOD_ORDERS);
+    }
+  } catch (error) {
+    console.error('DB 푸드트럭 주문 로드 실패:', error);
+  }
+}
+
 /* ═══════════════════════════════════════════════════════════
    1. 인증 가드 & 로컬스토리지 연동 초기화
    ═══════════════════════════════════════════════════════════ */
 function checkAuth() {
-  const userToken = localStorage.getItem('userToken');
+  const userToken = localStorage.getItem('userToken') || sessionStorage.getItem('userToken');
   if (!userToken) {
     alert('로그인이 필요한 서비스입니다.');
     window.location.href = 'login.html';
@@ -42,7 +102,7 @@ function checkAuth() {
 }
 
 async function loadUserInfo() {
-  const userToken = localStorage.getItem('userToken');
+  const userToken = localStorage.getItem('userToken') || sessionStorage.getItem('userToken');
   if (!userToken) return;
 
   try {
@@ -166,59 +226,21 @@ function renderProfile() {
    3. DB 명세 준수 - 가상 예매(reservation) / 푸드트럭 주문(order_item) 바인딩
    ═══════════════════════════════════════════════════════════ */
 // MOCK 데이터 정의
-const MOCK_TICKETS = [
-  {
-    reservationId: 'RES-20260529-873',
-    eventName: '2026 워터밤 서울',
-    eventDate: '2026.07.01 (금)',
-    zoneName: '스탠딩 A구역',
-    quantity: 2,
-    totalPrice: 176000,
-    discountAmount: 10000,
-    paymentStatus: 'PAID', // PAID, PENDING, CANCELLED
-    itemStatus: '예매완료',
-    qrToken: 'X9Y8Z7W6V5U4'
-  },
-  {
-    reservationId: 'RES-20260530-109',
-    eventName: '2026 락 페스티벌',
-    eventDate: '2026.08.15 (토)',
-    zoneName: '지정석 R석',
-    quantity: 1,
-    totalPrice: 99000,
-    discountAmount: 0,
-    paymentStatus: 'PAID',
-    itemStatus: '입장완료',
-    qrToken: 'TA1B2C3D4E56'
-  }
-];
+const MOCK_TICKETS = [];
 
-const MOCK_FOOD_ORDERS = [
-  {
-    orderItemId: 'ORD-20260529-045',
-    storeName: '춘향이네 야시장 (Food Truck #3)',
-    productName: '오코노미야끼 & 야끼소바 세트',
-    quantity: 2,
-    selectedOptions: '치즈 토핑 추가, 아주 매운맛',
-    pickupTimeSlot: '13:00 - 13:30 (픽업 예정)',
-    totalPrice: 24000,
-    itemStatus: 'PREPARING', // ORDERED, PREPARING, READY, PICKED_UP
-    statusText: '조리 중 (대기번호 14번)',
-    qrToken: 'FA1B2C3D4E56'
-  },
-  {
-    orderItemId: 'ORD-20260529-077',
-    storeName: '맥스 킹 수제버거 (Booth #7)',
-    productName: '클래식 치즈버거 & 감자튀김 세트',
-    quantity: 1,
-    selectedOptions: '콜라 제로 변경',
-    pickupTimeSlot: '14:40 - 15:00 (수령 완료)',
-    totalPrice: 15000,
-    itemStatus: 'PICKED_UP',
-    statusText: '수령 완료',
-    qrToken: 'FF6E5D4C3B21'
+// --- FORMAT BARCODE ---
+function formatBarcode(rawCode, prefix) {
+  if (!rawCode) return prefix + '00000000000';
+  let clean = String(rawCode).replace(/[^A-Za-z0-9]/g, '').toUpperCase();
+  if (/^[A-Z]/.test(clean)) {
+    clean = clean.substring(1);
   }
-];
+  clean = prefix + clean;
+  if (clean.length > 12) return clean.substring(0, 12);
+  return clean.padEnd(12, '0');
+}
+
+let MOCK_FOOD_ORDERS = [];
 
 // 통계 렌더링
 function renderStats() {
@@ -228,7 +250,7 @@ function renderStats() {
   const statReviews = document.getElementById('statReviews');
   const statFoods = document.getElementById('statFoods');
 
-  if (statTickets) statTickets.textContent = MOCK_TICKETS.length;
+  if (statTickets) statTickets.textContent = MOCK_TICKETS.length + _dbTickets.length;
 
   // 찜 목록 - 실제 데이터 사용 (renderWishGrid에서 업데이트됨)
   if (statWishlists) statWishlists.textContent = '0';
@@ -243,7 +265,7 @@ function renderStats() {
   if (statFoods) statFoods.textContent = (typeof MOCK_FOOD_ORDERS !== 'undefined') ? MOCK_FOOD_ORDERS.length : 0;
 
   const ticketCount = document.getElementById('ticketCount');
-  if (ticketCount) ticketCount.textContent = `${MOCK_TICKETS.length + MOCK_FOOD_ORDERS.length}건`;
+  if (ticketCount) ticketCount.textContent = `${MOCK_TICKETS.length + _dbTickets.length + MOCK_FOOD_ORDERS.length}건`;
 }
 
 // 예매 내역 & 푸드트럭 픽업 내역 통합 렌더링
@@ -253,43 +275,94 @@ function renderReservationList() {
 
   let htmlContent = '';
 
+  const totalTicketCount = MOCK_TICKETS.length + _dbTickets.length;
+
   // 1. 축제 티켓 예매 섹션
   htmlContent += `
     <div class="mp-margin-b-24">
       <h3 class="mp-section-title">
-        <span class="mp-margin-r-8"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mp-icon-md"><path d="M2 9a3 3 0 0 1 0 6v2a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-2a3 3 0 0 1 0-6V7a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2Z"/><path d="M13 5v2"/><path d="M13 11v2"/><path d="M13 17v2"/></svg></span> 축제 티켓 예매 내역 (${MOCK_TICKETS.length}건)
+        <span class="mp-margin-r-8"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mp-icon-md"><path d="M2 9a3 3 0 0 1 0 6v2a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-2a3 3 0 0 1 0-6V7a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2Z"/><path d="M13 5v2"/><path d="M13 11v2"/><path d="M13 17v2"/></svg></span> 축제 티켓 예매 내역 (${totalTicketCount}건)
       </h3>
   `;
 
-  MOCK_TICKETS.forEach(t => {
-    const statusClass = t.itemStatus === '예매완료' ? 'status-완료' : 'status-입장';
-    htmlContent += `
-      <div class="mp-card" style="overflow: visible;">
-        <div class="mp-card-header">
-          <p class="mp-card-title">${t.eventName}</p>
-          <div style="display: flex; align-items: center; gap: 8px;">
-            <span class="mp-badge ${statusClass}">${t.itemStatus}</span>
-            <div class="custom-ticket-dropdown mypage-more-dropdown" tabindex="0" onclick="this.classList.toggle('open')" onblur="setTimeout(()=>this.classList.remove('open'), 200)" style="width: 24px; height: 24px; display: flex; align-items: center; justify-content: center; cursor: pointer; border-radius: 50%;">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width: 20px; height: 20px; color: var(--text-muted);"><circle cx="12" cy="5" r="1.5"/><circle cx="12" cy="12" r="1.5"/><circle cx="12" cy="19" r="1.5"/></svg>
-              <div class="custom-dropdown-options" style="right: -8px; left: auto; top: calc(100% + 4px); min-width: 150px; z-index: 100; box-shadow: 0 4px 12px rgba(0,0,0,0.1); border-radius: 8px; border: 1px solid var(--border-default);">
-                <div class="custom-dropdown-option" onclick="event.stopPropagation(); window.location.href='#'" style="display: flex; align-items: center; gap: 8px; font-size: 0.9rem; padding: 10px 16px;">
-                  <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z" /><line x1="3" y1="6" x2="21" y2="6" /><path d="M16 10a4 4 0 01-8 0" /></svg>
-                  굿즈 상품
-                </div>
-                <div class="custom-dropdown-option" onclick="event.stopPropagation(); window.location.href='#'" style="display: flex; align-items: center; gap: 8px; font-size: 0.9rem; padding: 10px 16px;">
-                  <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
-                  입점 점포
-                </div>
-                <div class="custom-dropdown-option" onclick="event.stopPropagation(); window.location.href='#'" style="display: flex; align-items: center; gap: 8px; font-size: 0.9rem; padding: 10px 16px; color: #ff4757;">
-                  <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
-                  취소/환불
-                </div>
-              </div>
-            </div>
+  // 실제 DB 결제 티켓 렌더링
+  _dbTickets.forEach(t => {
+    const isUsed = t.used === 'true';
+    const isCanceled = t.paymentStatus === 'CANCELED' || t.status === 'CANCELED';
+    let statusText = isUsed ? '입장완료' : '예매완료';
+    let statusClass = isUsed ? 'status-입장' : 'status-완료';
+    if (isCanceled) {
+      statusText = '입장취소';
+      statusClass = 'status-취소';
+    }
+    const quantity = t.seats ? t.seats.split(',').length : 1;
+    const formattedDate = t.eventDate ? t.eventDate.replace(/-/g, '.') : '추후 공지';
+
+    const kebabMenuStr = `
+      <div class="custom-ticket-dropdown mypage-more-dropdown" tabindex="0" onclick="this.classList.toggle('open')" onblur="setTimeout(()=>this.classList.remove('open'), 200)" style="width: 24px; height: 24px; display: flex; align-items: center; justify-content: center; cursor: pointer; border-radius: 50%;">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width: 20px; height: 20px; color: var(--text-muted);"><circle cx="12" cy="5" r="1.5"/><circle cx="12" cy="12" r="1.5"/><circle cx="12" cy="19" r="1.5"/></svg>
+        <div class="custom-dropdown-options" style="right: -8px; left: auto; top: calc(100% + 4px); min-width: 150px; z-index: 100; box-shadow: 0 4px 12px rgba(0,0,0,0.1); border-radius: 8px; border: 1px solid var(--border-default); background: #fff;">
+          <div class="custom-dropdown-option" onclick="event.stopPropagation(); window.location.href='/shop/shop.html?category=goods'" style="display: flex; align-items: center; gap: 8px; font-size: 0.9rem; padding: 10px 16px;">
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z" /><line x1="3" y1="6" x2="21" y2="6" /><path d="M16 10a4 4 0 01-8 0" /></svg>
+            굿즈 상품
+          </div>
+          <div class="custom-dropdown-option" onclick="event.stopPropagation(); window.location.href='/shop/shop.html?category=food'" style="display: flex; align-items: center; gap: 8px; font-size: 0.9rem; padding: 10px 16px;">
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
+            F&B
           </div>
         </div>
+      </div>
+    `;
+
+    htmlContent += `
+      <div class="mp-card" style="overflow: visible;">
+        <span class="mp-badge mp-badge-protruding ${statusClass}">${statusText}</span>
+        <div class="mp-card-header">
+          <p class="mp-card-title">${t.eventName}</p>
+          ${kebabMenuStr}
+        </div>
         <div class="mp-card-meta">
-          <div>예매 번호: <strong class="mp-color-primary">${t.reservationId}</strong></div>
+          <div>예매 번호: <strong class="mp-color-primary">${formatBarcode(t.ticketNumber || String(t.orderId), 'T')}</strong></div>
+          <div>관람 일시: ${formattedDate}</div>
+          <div>좌석 정보: ${t.seats || '자율석'} · 수량: ${quantity}매</div>
+          <div>결제 일시: ${t.createdAt ? t.createdAt.split(' ')[0] : ''}</div>
+        </div>
+        <div class="mp-card-footer">
+          <span class="mp-card-price">₩${(t.totalPrice || 0).toLocaleString()}</span>
+          ${!isUsed ? `<button class="btn btn-sm btn-outline mp-btn-sm" onclick="showTicketQr('${t.secret}')">입장 QR 확인</button>` : ''}
+        </div>
+      </div>
+    `;
+  });
+
+  // 기존 MOCK 티켓 렌더링
+  MOCK_TICKETS.forEach(t => {
+    const statusClass = t.itemStatus === '예매완료' ? 'status-완료' : 'status-입장';
+    const kebabMenuStr = `
+      <div class="custom-ticket-dropdown mypage-more-dropdown" tabindex="0" onclick="this.classList.toggle('open')" onblur="setTimeout(()=>this.classList.remove('open'), 200)" style="width: 24px; height: 24px; display: flex; align-items: center; justify-content: center; cursor: pointer; border-radius: 50%;">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width: 20px; height: 20px; color: var(--text-muted);"><circle cx="12" cy="5" r="1.5"/><circle cx="12" cy="12" r="1.5"/><circle cx="12" cy="19" r="1.5"/></svg>
+        <div class="custom-dropdown-options" style="right: -8px; left: auto; top: calc(100% + 4px); min-width: 150px; z-index: 100; box-shadow: 0 4px 12px rgba(0,0,0,0.1); border-radius: 8px; border: 1px solid var(--border-default); background: #fff;">
+          <div class="custom-dropdown-option" onclick="event.stopPropagation(); window.location.href='/shop/shop.html?category=goods'" style="display: flex; align-items: center; gap: 8px; font-size: 0.9rem; padding: 10px 16px;">
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z" /><line x1="3" y1="6" x2="21" y2="6" /><path d="M16 10a4 4 0 01-8 0" /></svg>
+            굿즈 상품 바로가기
+          </div>
+          <div class="custom-dropdown-option" onclick="event.stopPropagation(); window.location.href='/shop/shop.html?category=food'" style="display: flex; align-items: center; gap: 8px; font-size: 0.9rem; padding: 10px 16px;">
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
+            F&B 바로가기
+          </div>
+        </div>
+      </div>
+    `;
+
+    htmlContent += `
+      <div class="mp-card" style="overflow: visible;">
+        <span class="mp-badge mp-badge-protruding ${statusClass}">${t.itemStatus}</span>
+        <div class="mp-card-header">
+          <p class="mp-card-title">${t.eventName}</p>
+          ${kebabMenuStr}
+        </div>
+        <div class="mp-card-meta">
+          <div>예매 번호: <strong class="mp-color-primary">${formatBarcode(t.reservationId, 'T')}</strong></div>
           <div>관람 일시: ${t.eventDate}</div>
           <div>구역명: ${t.zoneName} · 수량: ${t.quantity}매</div>
         </div>
@@ -324,7 +397,7 @@ function renderReservationList() {
           <span class="mp-badge ${statusLabelClass}">${f.statusText}</span>
         </div>
         <div class="mp-card-meta">
-          <div>주문 번호: <strong class="mp-color-success">${f.orderItemId}</strong></div>
+          <div>주문 번호: <strong class="mp-color-success">${formatBarcode(f.orderItemId, 'F')}</strong></div>
           <div>상품명: ${f.productName} · 수량: ${f.quantity}개</div>
           <div>옵션: ${f.selectedOptions}</div>
           <div class="mp-color-success mp-weight-500" style="display: flex; align-items: center; gap: 6px;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mp-icon-sm" style="flex-shrink: 0;"><circle cx="12" cy="13" r="8"></circle><path d="M12 9v4l2 2"></path><path d="M12 2v2"></path><path d="M18 4l-1 1"></path></svg> <span>${f.pickupTimeSlot}</span></div>
@@ -575,17 +648,34 @@ function openQrModalView(token, type = 'TICKET') {
   const qrToken = token || _currentQrToken || 'FEST-NEW-XYZ123';
   console.log('사용할 QR 토큰:', qrToken);
 
-  // 행사명 및 상점명 조합
-  let baseEventName = (window.MOCK_TICKETS && MOCK_TICKETS[0])
-    ? (MOCK_TICKETS[0].eventName || '2026 워터밤 서울')
-    : '2026 워터밤 서울';
+  let finalTitle = '페스티벌 예매 티켓';
+  let dateText = '2026.07.01 13:00';
 
-  let finalTitle = baseEventName;
-
+  let displayCode = qrToken;
   if (type === 'FOOD') {
+    let baseEventName = (window.MOCK_TICKETS && MOCK_TICKETS[0])
+      ? (MOCK_TICKETS[0].eventName || '2026 워터밤 서울')
+      : '2026 워터밤 서울';
     const foodOrder = MOCK_FOOD_ORDERS.find(f => f.qrToken === token);
     if (foodOrder) {
       finalTitle = `${baseEventName} - ${foodOrder.storeName}`;
+      displayCode = foodOrder.orderItemId;
+    }
+  } else {
+    // TICKET인 경우: 실제 DB 티켓 먼저 찾기
+    const dbTicket = _dbTickets.find(t => t.secret === qrToken);
+    if (dbTicket) {
+      finalTitle = dbTicket.eventName;
+      dateText = dbTicket.eventDate ? dbTicket.eventDate.replace(/-/g, '.') : '';
+      // ticketNumber가 있으면 사용, 없으면 orderId 기반 12자리 생성
+      displayCode = dbTicket.ticketNumber || ('T' + String(dbTicket.orderId).padStart(11, '0'));
+    } else {
+      const mockTicket = MOCK_TICKETS.find(t => t.qrToken === qrToken);
+      if (mockTicket) {
+        finalTitle = mockTicket.eventName;
+        dateText = mockTicket.eventDate;
+        displayCode = mockTicket.reservationId;
+      }
     }
   }
 
@@ -610,10 +700,12 @@ function openQrModalView(token, type = 'TICKET') {
         historyList.innerHTML = '<div style="padding:16px; text-align:center; color:#94a3b8; font-size:0.9rem;">사용 이력이 없습니다.</div>';
       }
     } else {
+      const dbTicket = _dbTickets.find(t => t.secret === qrToken);
+      const isEntered = dbTicket ? dbTicket.used === 'true' : false;
       historyList.innerHTML = `
         <div class="qr-history-item" style="display:flex; justify-content:space-between; padding:12px 16px;">
-          <span style="color:#64748b; font-size:0.9rem;">입장 완료</span>
-          <span style="color:#64748b; font-size:0.9rem;">2026.07.01 13:00</span>
+          <span style="color:#64748b; font-size:0.9rem;">${isEntered ? '입장 완료' : '예매 완료 (미입장)'}</span>
+          <span style="color:#64748b; font-size:0.9rem;">${dateText}</span>
         </div>
       `;
     }
@@ -621,7 +713,7 @@ function openQrModalView(token, type = 'TICKET') {
 
   // QR 코드 텍스트
   const codeEl = document.getElementById('qrModalCode');
-  if (codeEl) codeEl.textContent = qrToken;
+  if (codeEl) codeEl.textContent = displayCode;
 
   // 마스킹 이름
   const userName = (_member && _member.name) ? _member.name : (localStorage.getItem('userName') || '이용자');
@@ -877,9 +969,10 @@ function generateQrToken(prefix = 'T') {
 }
 
 function initHeroQr() {
-  // MOCK_TICKETS에 qrToken이 있으면 사용, 없으면 12자리 호환 토큰 생성
+  // DB 결제 완료 티켓의 secret이 있으면 우선 사용, 없으면 MOCK_TICKETS에 qrToken이 있으면 사용, 없으면 생성
+  const dbToken = _dbTickets && _dbTickets[0] && _dbTickets[0].secret;
   const mockToken = MOCK_TICKETS && MOCK_TICKETS[0] && MOCK_TICKETS[0].qrToken;
-  const initialToken = mockToken || generateQrToken('T');
+  const initialToken = dbToken || mockToken || generateQrToken('T');
   _currentQrToken = initialToken;
 
   console.log('QR 초기화, 토큰:', initialToken);
@@ -1718,7 +1811,7 @@ function initProfileEditSave() {
         return;
       }
 
-      const userToken = localStorage.getItem('userToken');
+      const userToken = localStorage.getItem('userToken') || sessionStorage.getItem('userToken');
       try {
         const response = await fetch('/api/auth/update', {
           method: 'POST',
@@ -1929,6 +2022,8 @@ document.addEventListener('DOMContentLoaded', async () => {
   if (!checkAuth()) return;
 
   await loadUserInfo();
+  await fetchTickets(); // DB 실제 티켓 로드 추가!
+  await fetchFoodOrders(); // DB 실제 푸드트럭 주문 로드 추가!
   renderProfile();
 
   renderStats();
@@ -2266,9 +2361,9 @@ function openQrModalView(token, type = 'TICKET') {
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg>
               </div>
               <div class="qr-accordion-body">
-                <div class="qr-history-item"><span>입장 완료 (게이트 A)</span><span>2026.06.04 14:30</span></div>
-                <div class="qr-history-item"><span>MD 부스 인증</span><span>2026.06.04 15:15</span></div>
-                <div class="qr-history-item"><span>재입장 완료</span><span>2026.06.04 18:00</span></div>
+                <div class="qr-history-item"><span>입장 완료 (게이트 A)</span><span>26.06.04 14:30</span></div>
+                <div class="qr-history-item"><span>MD 부스 인증</span><span>26.06.04 15:15</span></div>
+                <div class="qr-history-item"><span>재입장 완료</span><span>26.06.04 18:00</span></div>
               </div>
             </div>
 
@@ -2290,7 +2385,24 @@ function openQrModalView(token, type = 'TICKET') {
 
   modal.style.display = 'flex';
   generateDynamicQR('dynamicQrCanvas', token, 140, type); // FIXED: pass 'type' to trigger 45deg tilt!
-  document.getElementById('dynamicQrCode').textContent = token;
+
+  let displayCode = token;
+  if (type === 'FOOD') {
+    const foodOrder = typeof MOCK_FOOD_ORDERS !== 'undefined' ? MOCK_FOOD_ORDERS.find(f => f.qrToken === token) : null;
+    if (foodOrder) displayCode = foodOrder.orderItemId;
+  } else if (type === 'GOODS') {
+    const goodsOrder = typeof MOCK_GOODS_ORDERS !== 'undefined' ? MOCK_GOODS_ORDERS.find(g => g.qrToken === token) : null;
+    if (goodsOrder) displayCode = goodsOrder.orderItemId;
+  } else {
+    const dbTicket = typeof _dbTickets !== 'undefined' ? _dbTickets.find(t => t.secret === token) : null;
+    if (dbTicket) {
+      displayCode = dbTicket.ticketNumber || ('T' + String(dbTicket.orderId).padStart(11, '0'));
+    } else {
+      const mockTicket = typeof MOCK_TICKETS !== 'undefined' ? MOCK_TICKETS.find(t => t.qrToken === token) : null;
+      if (mockTicket) displayCode = mockTicket.reservationId;
+    }
+  }
+  document.getElementById('dynamicQrCode').textContent = formatBarcode(displayCode, type === 'FOOD' ? 'F' : type === 'GOODS' ? 'G' : 'T');
 
   const qrCanvas = document.getElementById('dynamicQrCanvas');
 
@@ -2322,18 +2434,18 @@ function openQrModalView(token, type = 'TICKET') {
       accBody.innerHTML = `
         <div class="qr-history-item" style="display:flex; justify-content:space-between; align-items:center; padding:12px 16px;">
           <span style="color:#64748b; font-size:0.9rem;">굿즈 수령 완료</span>
-          <span style="color:#64748b; font-size:0.9rem;">2026.06.04 16:30</span>
+          <span style="color:#64748b; font-size:0.9rem;">26.06.04 16:30</span>
         </div>
       `;
     } else {
       accBody.innerHTML = `
         <div class="qr-history-item" style="display:flex; justify-content:space-between; align-items:center; padding:12px 16px;">
           <span style="color:#64748b; font-size:0.9rem;">입장 완료 (게이트 A)</span>
-          <span style="color:#64748b; font-size:0.9rem;">2026.06.04 14:30</span>
+          <span style="color:#64748b; font-size:0.9rem;">26.06.04 14:30</span>
         </div>
         <div class="qr-history-item" style="display:flex; justify-content:space-between; align-items:center; padding:12px 16px;">
           <span style="color:#64748b; font-size:0.9rem;">MD 부스 인증</span>
-          <span style="color:#64748b; font-size:0.9rem;">2026.06.04 15:15</span>
+          <span style="color:#64748b; font-size:0.9rem;">26.06.04 15:15</span>
         </div>
         <div class="qr-history-item" style="display:flex; justify-content:space-between; align-items:center; padding:12px 16px;">
           <span style="color:#64748b; font-size:0.9rem;">재입장 완료</span>

@@ -93,7 +93,7 @@ public class SeatMapService {
             label.insert(0, (char) ('A' + (temp % 26)));
             temp = (temp / 26) - 1;
         }
-        return label.toString() + "열";
+        return label.toString();
     }
 
     /**
@@ -172,5 +172,29 @@ public class SeatMapService {
         seatMapRepository.deleteByZoneId(zoneId);
         // 2. 구역 자체 삭제
         jdbcTemplate.update("DELETE FROM festival_zone WHERE id = ?", zoneId);
+    }
+
+    /**
+     * DB 내의 모든 좌석 정보를 디버깅용으로 반환합니다.
+     */
+    public List<SeatMap> getAllSeats() {
+        return seatMapRepository.findAll();
+    }
+
+    /**
+     * DB 내의 깨진 좌석 행 데이터를 복구하여 알파벳만 남깁니다.
+     */
+    @Transactional
+    public void fixSeatRows() {
+        List<SeatMap> seats = seatMapRepository.findAll();
+        for (SeatMap seat : seats) {
+            if (seat.getSeatRow() != null) {
+                String cleaned = seat.getSeatRow().replaceAll("[^a-zA-Z]", "");
+                if (!cleaned.equals(seat.getSeatRow()) && !cleaned.isEmpty()) {
+                    seat.setSeatRow(cleaned);
+                    seatMapRepository.save(seat);
+                }
+            }
+        }
     }
 }

@@ -14,7 +14,6 @@ import java.time.LocalDateTime;
 public class UserVo {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.UUID)
     private String id;
 
     @Column(nullable = false, unique = true, length = 100)
@@ -55,8 +54,14 @@ public class UserVo {
     @Builder.Default
     private LocalDateTime createdAt = LocalDateTime.now();
 
+    @Column(name = "withdrawn_at")
+    private LocalDateTime withdrawnAt;
+
     @PrePersist
     protected void onCreate() {
+        if (this.id == null) {
+            this.id = java.util.UUID.randomUUID().toString();
+        }
         if (this.createdAt == null) {
             this.createdAt = LocalDateTime.now();
         }

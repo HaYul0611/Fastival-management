@@ -79,6 +79,7 @@ document.addEventListener('DOMContentLoaded', () => {
           storage.setItem('email', result.email);
           storage.setItem('userPhone', result.phone || '');
           storage.setItem('isLoggedIn', 'true');
+          storage.setItem('loginTimestamp', new Date().getTime().toString());
 
           if (isAdmin) {
             storage.setItem('userRole', 'ADMIN');
@@ -176,6 +177,8 @@ document.addEventListener('DOMContentLoaded', () => {
       storage.setItem('userName', `${providerName} 유저`);
       storage.setItem('userRole', 'CLIENT');
       storage.setItem('email', `user@${providerName}.com`);
+      storage.setItem('userPhone', '010-1234-5678');
+      storage.setItem('loginTimestamp', new Date().getTime().toString());
 
       if (window.Auth) {
         window.Auth.save({

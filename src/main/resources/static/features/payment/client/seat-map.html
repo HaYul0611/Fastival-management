@@ -26,6 +26,77 @@
   <script src="/assets/js/config.js"></script>
 
   <style>
+    /* SweetAlert2 Modal Overlap Fix */
+    .swal2-container {
+      z-index: 99999999 !important;
+    }
+
+    /* Custom Range Slider Styling (Blue Theme) */
+    .custom-blue-range {
+      -webkit-appearance: none;
+      width: 100%;
+      height: 6px;
+      background: #e1e7f0;
+      border-radius: 4px;
+      outline: none;
+      margin: 10px 0;
+    }
+    .custom-blue-range::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 16px;
+      height: 16px;
+      border-radius: 50%;
+      background: #3f5efb;
+      cursor: pointer;
+      box-shadow: 0 0 4px rgba(63, 94, 251, 0.4);
+      transition: background 0.15s ease, transform 0.1s ease;
+    }
+    .custom-blue-range::-webkit-slider-thumb:hover {
+      background: #1a2e68;
+      transform: scale(1.15);
+    }
+    .custom-blue-range::-moz-range-thumb {
+      width: 16px;
+      height: 16px;
+      border-radius: 50%;
+      background: #3f5efb;
+      cursor: pointer;
+      box-shadow: 0 0 4px rgba(63, 94, 251, 0.4);
+      transition: background 0.15s ease, transform 0.1s ease;
+    }
+    .custom-blue-range::-moz-range-thumb:hover {
+      background: #1a2e68;
+      transform: scale(1.15);
+    }
+
+    /* ── 구역 삭제 모드 스타일 ── */
+    .delete-mode-hover {
+      cursor: crosshair !important;
+      outline: none;
+    }
+    .delete-mode-hover:hover {
+      fill: rgba(255, 62, 29, 0.22) !important;
+      stroke: #ff3e1d !important;
+      stroke-width: 2.5px !important;
+      filter: drop-shadow(0 0 6px rgba(255, 62, 29, 0.5));
+      transition: fill 0.15s ease, stroke 0.15s ease;
+    }
+
+    /* ── 구역 좌석 생성 상태 표시용 스타일 ── */
+    .zone-polygon.zone-has-seats {
+      stroke: #71dd37 !important; /* 녹색 실선 */
+      stroke-width: 3.5px !important;
+      stroke-dasharray: none !important;
+      filter: drop-shadow(0 0 4px rgba(113, 221, 55, 0.4));
+    }
+    .zone-polygon.zone-no-seats {
+      stroke: #8592a3 !important; /* 회색 점선 */
+      stroke-width: 1.5px !important;
+      stroke-dasharray: 4 4 !important;
+      opacity: 0.8;
+    }
+
     /* Premium Light Theme Styling matching Sneat Admin Template */
     body {
       font-family: 'Public Sans', 'Noto Sans KR', sans-serif;
@@ -284,7 +355,9 @@
       transition: transform 0.5s ease-in-out;
       transform-origin: center center;
       width: 100%;
-      min-height: 520px;
+      max-width: 650px;
+      aspect-ratio: 1 / 1;
+      margin: 0 auto;
       background: #f5f5f9;
       border-radius: 8px;
       border: 1px solid #d9dee3;
@@ -296,7 +369,7 @@
       left: 0;
       width: 100%;
       height: 100%;
-      background-size: contain;
+      background-size: 100% 100% !important;
       background-repeat: no-repeat;
       background-position: center center;
       z-index: 1;
@@ -331,6 +404,16 @@
     .zone-polygon.active {
       fill: rgba(113, 221, 55, 0.15);
       stroke: #71dd37;
+    }
+
+    .zone-polygon.zone-disabled {
+      fill: rgba(133, 146, 163, 0.25);
+      stroke: #8592a3;
+      stroke-dasharray: 4;
+    }
+
+    .zone-polygon.zone-disabled:hover {
+      fill: rgba(133, 146, 163, 0.45);
     }
 
     /* 드로잉 활성화 시 임시 폴리곤 및 점 스타일 */
@@ -395,6 +478,51 @@
       display: none;
       box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
     }
+    
+    /* 동적 추가 등급용 스타일 정의 */
+    .seat-custom-1 {
+      background: rgba(113, 221, 55, 0.08) !important;
+      border: 1px solid rgba(113, 221, 55, 0.6) !important;
+      color: #71dd37 !important;
+    }
+    .seat-custom-1:hover { background: rgba(113, 221, 55, 0.18) !important; }
+    
+    .seat-custom-2 {
+      background: rgba(255, 62, 29, 0.08) !important;
+      border: 1px solid rgba(255, 62, 29, 0.6) !important;
+      color: #ff3e1d !important;
+    }
+    .seat-custom-2:hover { background: rgba(255, 62, 29, 0.18) !important; }
+    
+    .seat-custom-3 {
+      background: rgba(130, 94, 251, 0.08) !important;
+      border: 1px solid rgba(130, 94, 251, 0.6) !important;
+      color: #825efb !important;
+    }
+    .seat-custom-3:hover { background: rgba(130, 94, 251, 0.18) !important; }
+    
+    .seat-custom-4 {
+      background: rgba(233, 30, 99, 0.08) !important;
+      border: 1px solid rgba(233, 30, 99, 0.6) !important;
+      color: #e91e63 !important;
+    }
+    .seat-custom-4:hover { background: rgba(233, 30, 99, 0.18) !important; }
+    
+    .seat-custom-5 {
+      background: rgba(0, 150, 136, 0.08) !important;
+      border: 1px solid rgba(0, 150, 136, 0.6) !important;
+      color: #009688 !important;
+    }
+    .seat-custom-5:hover { background: rgba(0, 150, 136, 0.18) !important; }
+
+    /* SVG 텍스트 가독성 최적화 및 외곽선 뭉개짐 방지 */
+    svg text {
+      stroke: none !important;
+      stroke-width: 0 !important;
+      paint-order: fill !important;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+    }
   </style>
 </head>
 
@@ -457,8 +585,7 @@
               <div class="col-lg-4 mb-6">
                 <div class="card mb-6">
                   <div class="card-header d-flex align-items-center justify-content-between">
-                    <h5 class="card-title m-0 fw-bold"><i class="bx bx-slider me-2 text-primary"></i>1. 대상 축제 & 구역 선택
-                    </h5>
+                    <h5 class="card-title m-0 fw-bold"><i class="bx bx-slider me-2 text-primary"></i>1. 대상 축제 선택</h5>
                   </div>
                   <div class="card-body pt-4">
                     <div class="mb-4">
@@ -467,83 +594,141 @@
                         <option value="">-- 페스티벌을 선택하세요 --</option>
                       </select>
                     </div>
-                    <div class="mb-4">
-                      <label class="form-label" for="zoneSelect">구역(Zone) 선택</label>
-                      <div class="input-group flex-nowrap">
-                        <select id="zoneSelect" class="form-select" disabled style="max-width: 60%;">
-                          <option value="">-- 구역을 먼저 선택하세요 --</option>
-                        </select>
-                        <button class="btn btn-outline-primary" type="button" id="btnCreateZone" disabled
-                          style="padding-left: 10px; padding-right: 10px;">
-                          <i class="bx bx-plus-circle me-1"></i>추가
-                        </button>
-                        <button class="btn btn-outline-danger" type="button" id="btnDeleteZone" disabled
-                          style="padding-left: 10px; padding-right: 10px;">
-                          <i class="bx bx-trash me-1"></i>삭제
-                        </button>
-                      </div>
+                    
+                    <!-- 사용자 노출 상태 제어 (허용 / 미허용) - 구역 선택 시 노출 -->
+                    <div class="d-flex align-items-center justify-content-between p-2 mt-3 bg-light rounded border" id="zoneStatusWrapper" style="display: none !important;">
+                      <span class="fs-7 fw-bold text-secondary"><i class="bx bx-show me-1"></i>사용자 예매 오픈:</span>
+                      <button class="btn btn-xs btn-success fw-bold" type="button" id="btnToggleZoneStatus">
+                        <i class="bx bx-check me-1"></i>허용 (예매 가능)
+                      </button>
                     </div>
                   </div>
                 </div>
 
-                <div class="card">
+
+
+                <!-- 2-1. 좌석 레이아웃 및 등급 편집기 -->
+                <div class="card mt-4" id="layoutEditorCard" style="display: none;">
                   <div class="card-header d-flex align-items-center justify-content-between">
-                    <h5 class="card-title m-0 fw-bold"><i class="bx bx-grid me-2 text-success"></i>2. 가변 좌석 격자판 대량 생성
-                    </h5>
+                    <h5 class="card-title m-0 fw-bold"><i class="bx bx-paint me-2 text-warning"></i>2-1. 좌석 레이아웃 편집기</h5>
                   </div>
                   <div class="card-body pt-4">
-                    <!-- 선택된 구역 정보 표시기 -->
-                    <div class="alert alert-info py-2 px-3 mb-3 d-flex align-items-center justify-content-between"
-                      style="font-size: 0.85rem;">
-                      <span><i class="bx bx-info-circle me-1"></i>대상 구역:</span>
-                      <span id="targetZoneLabel" class="fw-bold text-muted">-- 구역을 선택하세요 --</span>
-                    </div>
-                    <div class="row mb-4">
-                      <div class="col-6">
-                        <label class="form-label" for="rowCountInput">행 크기 (Row)</label>
-                        <input type="number" id="rowCountInput" class="form-control" placeholder="예: 10" min="1"
-                          max="50" value="10">
-                      </div>
-                      <div class="col-6">
-                        <label class="form-label" for="colCountInput">열 크기 (Col)</label>
-                        <input type="number" id="colCountInput" class="form-control" placeholder="예: 12" min="1"
-                          max="50" value="12">
-                      </div>
-                    </div>
                     <div class="mb-4">
-                      <label class="form-label" for="priceInput">기본 티켓 예매 가격 (₩)</label>
-                      <input type="number" id="priceInput" class="form-control" placeholder="예: 50000" min="0"
-                        step="1000" value="50000">
+                      <label class="form-label d-block">설정 모드 (드래그/클릭 편집)</label>
+                      <div class="d-flex flex-column gap-2">
+                        <div class="form-check">
+                          <input class="form-check-input" type="radio" name="layoutEditMode" id="modeInspect" value="조회" checked>
+                          <label class="form-check-label legend-item" for="modeInspect">
+                            <span class="legend-box" style="background: transparent; border: 1.5px solid #696cff; display: inline-flex; align-items: center; justify-content: center; width: 16px; height: 16px; border-radius: 3px;"><i class="bx bx-search text-primary" style="font-size: 10px; line-height: 1;"></i></span>
+                            조회 (상세 정보 & 예약 조회)
+                          </label>
+                        </div>
+                        <div class="form-check">
+                          <input class="form-check-input" type="radio" name="layoutEditMode" id="modeAvailable" value="빈자리">
+                          <label class="form-check-label legend-item" for="modeAvailable">
+                            <span class="legend-box" style="background: rgba(133, 146, 163, 0.08); border: 1px solid rgba(133, 146, 163, 0.4);"></span>
+                            빈자리 (일반 판매석)
+                          </label>
+                        </div>
+                        <div class="form-check">
+                          <input class="form-check-input" type="radio" name="layoutEditMode" id="modeStage" value="무대">
+                          <label class="form-check-label legend-item" for="modeStage">
+                            <span class="legend-box" style="background: #003366;"></span>
+                            무대 (STAGE 영역)
+                          </label>
+                        </div>
+                        <div class="form-check">
+                          <input class="form-check-input" type="radio" name="layoutEditMode" id="modeCorridor" value="통로">
+                          <label class="form-check-label legend-item" for="modeCorridor">
+                            <span class="legend-box" style="background: transparent; border: 1px dashed #d9dee3;"></span>
+                            통로 (통행 공백 영역)
+                          </label>
+                        </div>
+                        
+                        <div class="border-top my-2 pt-2">
+                          <label class="form-label fs-7">좌석 등급으로 변경</label>
+                        </div>
+                        <div class="form-check">
+                          <input class="form-check-input" type="radio" name="layoutEditMode" id="modeVIP" value="VIP">
+                          <label class="form-check-label legend-item" for="modeVIP">
+                            <span class="legend-box" style="background: rgba(255, 171, 0, 0.08); border: 1px solid rgba(255, 171, 0, 0.6);"></span>
+                            VIP석 변경
+                          </label>
+                        </div>
+                        <div class="form-check">
+                          <input class="form-check-input" type="radio" name="layoutEditMode" id="modeR" value="R">
+                          <label class="form-check-label legend-item" for="modeR">
+                            <span class="legend-box" style="background: rgba(105, 108, 255, 0.08); border: 1px solid rgba(105, 108, 255, 0.6);"></span>
+                            R석 변경
+                          </label>
+                        </div>
+                        <div class="form-check">
+                          <input class="form-check-input" type="radio" name="layoutEditMode" id="modeS" value="S">
+                          <label class="form-check-label legend-item" for="modeS">
+                            <span class="legend-box" style="background: rgba(3, 195, 236, 0.08); border: 1px solid rgba(3, 195, 236, 0.6);"></span>
+                            S석 변경
+                          </label>
+                        </div>
+                      </div>
                     </div>
-                    <button id="btnGenerate" class="btn btn-primary w-100 mt-2" disabled>
-                      <i class="bx bx-plus-circle me-2"></i>좌석 판 생성
+                    
+                    <div class="alert alert-warning py-2 px-3 mb-3" style="font-size: 0.8rem;">
+                      <i class="bx bx-mouse me-1"></i>마우스 클릭 또는 드래그(Drag)를 통해 다량의 좌석 속성을 일괄적으로 칠할 수 있습니다.
+                    </div>
+                    
+                    <button id="btnSaveLayout" class="btn btn-warning w-100">
+                      <i class="bx bx-save me-2"></i>레이아웃 저장
                     </button>
                   </div>
                 </div>
 
-                <!-- 3. 도면 배경 설정 카드 추가 -->
-                <div class="card mt-4">
+                <!-- 3-2. SVG 파일로 구역 일괄 가져오기 카드 -->
+                <div class="card mt-4" id="svgImportCard">
                   <div class="card-header d-flex align-items-center justify-content-between">
-                    <h5 class="card-title m-0 fw-bold"><i class="bx bx-image me-2 text-info"></i>3. 도면 배경 설정</h5>
+                    <h5 class="card-title m-0 fw-bold"><i class="bx bx-file-find me-2 text-primary"></i>3-2. SVG 구역 일괄 가져오기</h5>
                   </div>
                   <div class="card-body pt-4">
-                    <div class="mb-4">
-                      <label class="form-label" for="mapBgInput">배경 도면 이미지 (파일)</label>
-                      <input type="file" id="mapBgInput" class="form-control" accept="image/*">
+
+                    <!-- 현재 등록된 SVG 도면 상태 표시 -->
+                    <div id="currentSvgBgStatus" style="display: none;" class="mb-4 p-3 rounded" style="background: rgba(105, 108, 255, 0.05); border: 1px solid rgba(105, 108, 255, 0.3);">
+                      <div class="d-flex align-items-start justify-content-between gap-2">
+                        <div>
+                          <p class="mb-1 fw-bold text-primary" style="font-size: 0.82rem;">
+                            <i class="bx bx-check-circle me-1 text-success"></i>현재 등록된 SVG 도면
+                          </p>
+                          <p id="currentSvgBgFilename" class="mb-0 text-muted" style="font-size: 0.78rem; word-break: break-all;"></p>
+                        </div>
+                        <button id="btnDeleteAllSvgBg" type="button" class="btn btn-sm btn-danger flex-shrink-0" title="등록된 SVG 배경을 모든 구역에서 제거합니다">
+                          <i class="bx bx-trash me-1"></i>SVG 삭제
+                        </button>
+                      </div>
                     </div>
-                    <div class="mb-2">
-                      <label class="form-label d-flex justify-content-between" for="bgOpacityRange">
-                        <span>도면 투명도</span>
-                        <span id="opacityVal">50%</span>
-                      </label>
-                      <input type="range" id="bgOpacityRange" class="form-range" min="0" max="100" value="50">
+
+                    <div class="mb-3">
+                      <label class="form-label" for="svgImportInput">새 SVG 파일로 교체</label>
+                      <input type="file" id="svgImportInput" class="form-control" accept=".svg">
+                      <small class="text-muted mt-1 d-block">SVG 내의 polygon, rect, path 요소를 추출하여 자동으로 구역을 생성합니다.</small>
                     </div>
-                    <button id="btnSaveBg" class="btn btn-primary btn-sm w-100 mt-2" style="display: none;">
-                      <i class="bx bx-save me-1"></i>도면 저장
-                    </button>
-                    <button id="btnClearBg" class="btn btn-outline-danger btn-sm w-100 mt-2" style="display: none;">
-                      <i class="bx bx-trash me-1"></i>배경 지우기
-                    </button>
+                    <div id="svgParsedListWrapper" style="display: none;">
+                      <label class="form-label fw-bold text-dark mb-2"><i class="bx bx-list-check me-1"></i>추출된 구역 목록</label>
+                      <div class="table-responsive border rounded mb-3" style="max-height: 250px; overflow-y: auto;">
+                        <table class="table table-sm table-hover mb-0" style="font-size: 0.8rem;">
+                          <thead class="table-light">
+                            <tr>
+                              <th style="width: 10%;" class="text-center">선택</th>
+                              <th style="width: 45%;">구역 이름</th>
+                              <th style="width: 45%;">수용 인원</th>
+                            </tr>
+                          </thead>
+                          <tbody id="svgParsedListTbody">
+                            <!-- JS 동적 생성 -->
+                          </tbody>
+                        </table>
+                      </div>
+                      <button id="btnImportSvgZones" class="btn btn-success btn-sm w-100">
+                        <i class="bx bx-download me-1"></i>선택한 구역 가져오기 실행
+                      </button>
+                    </div>
                   </div>
                 </div>
 
@@ -551,28 +736,13 @@
                 <div class="card mt-4">
                   <div class="card-header d-flex align-items-center justify-content-between">
                     <h5 class="card-title m-0 fw-bold"><i class="bx bx-won me-2 text-warning"></i>3-1. 등급별 티켓 단가 설정</h5>
+                    <button type="button" class="btn btn-xs btn-primary" id="btnAddGrade">
+                      <i class="bx bx-plus me-1"></i>등급 추가
+                    </button>
                   </div>
                   <div class="card-body pt-4">
-                    <div class="row g-2 mb-3">
-                      <div class="col-6">
-                        <label class="form-label text-warning fw-bold" for="priceVipInput">VIP석 가격 (₩)</label>
-                        <input type="number" id="priceVipInput" class="form-control" value="150000" step="5000" min="0">
-                      </div>
-                      <div class="col-6">
-                        <label class="form-label text-primary fw-bold" for="priceRInput">R석 가격 (₩)</label>
-                        <input type="number" id="priceRInput" class="form-control" value="120000" step="5000" min="0">
-                      </div>
-                    </div>
-                    <div class="row g-2">
-                      <div class="col-6">
-                        <label class="form-label text-info fw-bold" for="priceSInput">S석 가격 (₩)</label>
-                        <input type="number" id="priceSInput" class="form-control" value="90000" step="5000" min="0">
-                      </div>
-                      <div class="col-6">
-                        <label class="form-label text-secondary fw-bold" for="priceNormalInput">일반석 가격 (₩)</label>
-                        <input type="number" id="priceNormalInput" class="form-control" value="50000" step="5000"
-                          min="0">
-                      </div>
+                    <div id="gradeSettingsContainer" class="d-flex flex-column gap-3">
+                      <!-- JS 동적 렌더링 -->
                     </div>
                     <small class="text-muted d-block mt-3">
                       <i class="bx bx-info-circle me-1"></i>설정 가격은 좌석을 새로 지정할 때 실시간 반영됩니다.
@@ -585,37 +755,63 @@
               <div class="col-lg-8 mb-6">
                 <div class="card h-100">
                   <div class="card-header d-flex flex-wrap align-items-center justify-content-between gap-3">
-                    <div class="d-flex align-items-center gap-2">
-                      <h5 class="card-title m-0 fw-bold"><i class="bx bx-map-alt me-2 text-warning"></i>4. 전체 페스티벌 구역 배치도</h5>
-                      <button type="button" id="btnToggleDraw" class="btn btn-xs btn-outline-danger ms-2">
-                        <i class="bx bx-edit me-1"></i>구역 드로잉 모드 ON
-                      </button>
-                      <button type="button" id="btnCompleteDraw" class="btn btn-xs btn-danger" style="display: none;">
-                        <i class="bx bx-check me-1"></i>드로잉 완료
-                      </button>
-                    </div>
+                    <h5 class="card-title m-0 fw-bold"><i class="bx bx-map-alt me-2 text-warning"></i>4. 전체 페스티벌 구역 배치도</h5>
                   </div>
 
                   <div class="card-body pt-4 d-flex flex-column h-100 justify-content-between"
-                    style="min-height: 520px;">
+                    style="min-height: 520px; position: relative; overflow: hidden;">
 
                     <!-- Interactive SVG Area -->
-                    <div class="grid-editor-container flex-grow-1" id="gridEditorContainer"
-                      style="position: relative; overflow: hidden; min-height: 520px; border-radius: 8px; border: 1px solid #d9dee3; display: flex; align-items: center; justify-content: center;">
+                    <div class="grid-editor-container-viewport" style="position: relative; overflow: hidden; width: 100%; max-width: 650px; aspect-ratio: 1 / 1; margin: 0 auto; border-radius: 8px; border: 1px solid #d9dee3;">
                       
-                      <!-- 1층: 배경 이미지 오버레이 (전체 페스티벌 도면) -->
-                      <div class="grid-bg-overlay" id="gridBgOverlay" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; background-size: contain; background-repeat: no-repeat; background-position: center center; opacity: 0.8; z-index: 1; pointer-events: none;"></div>
+                      <!-- 줌 아웃 버튼 -->
+                      <button type="button" id="btnZoomOut" class="btn btn-sm btn-secondary" style="position: absolute; top: 15px; right: 15px; z-index: 10; display: none; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);">
+                        <i class="bx bx-zoom-out me-1"></i>전체 도면 보기 (Zoom Out)
+                      </button>
 
-                      <!-- 2층: 구역 다각형을 그리고 감지할 SVG 레이어 -->
-                      <svg id="zoneSvgLayer" viewBox="0 0 1000 1000"
-                        style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 2; pointer-events: auto;">
-                        <!-- JS dynamic SVG polygons -->
-                      </svg>
+                      <div class="grid-editor-container" id="gridEditorContainer"
+                        style="position: relative; width: 100%; height: 100%; transition: transform 0.5s ease-in-out; transform-origin: center center;">
+                        
+                        <!-- 1층: 배경 이미지 오버레이 -->
+                        <div class="grid-bg-overlay" id="gridBgOverlay" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; background-size: 100% 100% !important; background-repeat: no-repeat; background-position: center center; opacity: 0.8; z-index: 1; pointer-events: none;"></div>
 
-                      <!-- 안내 문구 -->
-                      <div class="empty-state" id="emptyState" style="position: absolute; z-index: 4; pointer-events: none;">
+                        <!-- 2층: 구역 다각형을 그리고 감지할 SVG 레이어 (viewBox 0 0 1000 1000 강제) -->
+                        <svg id="zoneSvgLayer" viewBox="0 0 1000 1000"
+                          style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 2; pointer-events: auto;">
+                          <!-- SVG 내부 배경 이미지 엘리먼트 추가 (1000x1000 크기에 강제 정합) -->
+                          <image id="svgBgImage" x="0" y="0" width="1000" height="1000" preserveAspectRatio="none" style="opacity: 0.8; pointer-events: none;"/>
+                          
+                          <!-- Figma static background drawings (1000x1000 스케일 맞춤) -->
+                          <g id="figmaBackground" opacity="1" style="display: none;">
+                            <!-- Stage -->
+                            <g>
+                              <path d="M 125 75 L 875 75 L 850 180 L 150 180 Z" fill="#FFE5E5" stroke="#9ca3af" stroke-width="1.5" />
+                              <text x="500" y="140" text-anchor="middle" fill="#374151" font-size="28" font-weight="bold">Stage</text>
+                            </g>
+                            
+                            <!-- VIP존 -->
+                            <g class="figma-template-zone" data-template="vip" style="cursor: pointer;">
+                              <path d="M 312 225 L 687 225 L 675 345 L 325 345 Z" fill="#FFD4E5" stroke="#9ca3af" stroke-width="1.5" />
+                              <text x="500" y="290" text-anchor="middle" fill="#374151" font-size="20" font-weight="600">VIP존</text>
+                              <text x="500" y="320" text-anchor="middle" fill="#6b7280" font-size="14">100석</text>
+                            </g>
+                          </g>
+                          <!-- Dynamic SVG polygons drawn over it -->
+                          <g id="dynamicZonesLayer"></g>
+                        </svg>
+
+                        <!-- 3층: 개별 좌석 격자가 렌더링될 래퍼 영역 (grid-wrapper) -->
+                        <div class="grid-wrapper" id="gridWrapper" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 3; display: none; opacity: 0; pointer-events: none; transition: opacity 0.3s ease; box-sizing: border-box; padding: 20px; overflow: auto; background: rgba(245, 245, 249, 0.98); flex-direction: column; align-items: center; justify-content: flex-start;">
+                          <div class="stage-guide-bar mb-3 text-center py-2 bg-dark text-white fw-bold rounded" style="width: 100%; font-size: 14px; letter-spacing: 2px;">[ STAGE ]</div>
+                          <div class="seats-grid" id="seatsGrid" style="display: grid; gap: 6px; justify-content: center; align-content: center; margin: auto;"></div>
+                        </div>
+
+                      </div>
+
+                      <!-- 안내 문구 (숨김) -->
+                      <div class="empty-state" id="emptyState" style="position: absolute; z-index: 4; pointer-events: none; display: none;">
                         <i class="bx bx-select-multiple"></i>
-                        <span id="emptyStateText">구역 다각형을 클릭하면 해당 구역의 좌석 배치도 편집창(모달)이 열립니다.</span>
+                        <span id="emptyStateText">구역 다각형을 클릭하면 해당 구역의 좌석 배치도 편집창이 줌인됩니다.</span>
                       </div>
                     </div>
                   </div>
@@ -747,35 +943,230 @@
     document.addEventListener('DOMContentLoaded', () => {
       // DOM Elements
       const festivalSelect = document.getElementById('festivalSelect');
-      const zoneSelect = document.getElementById('zoneSelect');
-      const btnCreateZone = document.getElementById('btnCreateZone');
-      const btnDeleteZone = document.getElementById('btnDeleteZone');
+      const zoneStatusWrapper = document.getElementById('zoneStatusWrapper');
+      const btnToggleZoneStatus = document.getElementById('btnToggleZoneStatus');
       const rowCountInput = document.getElementById('rowCountInput');
       const colCountInput = document.getElementById('colCountInput');
-      const priceInput = document.getElementById('priceInput');
+      const defaultGradeSelect = document.getElementById('defaultGradeSelect');
       const btnGenerate = document.getElementById('btnGenerate');
+
+      // range 슬라이더 수치 표시 연동
+      const rowCountVal = document.getElementById('rowCountVal');
+      const colCountVal = document.getElementById('colCountVal');
+
+      if (rowCountInput && rowCountVal) {
+        rowCountInput.addEventListener('input', (e) => {
+          if (isLoadingSeats) return;
+          rowCountVal.textContent = e.target.value;
+          isGeneratingPreview = true;
+          previewSeatsGrid();
+        });
+      }
+      if (colCountInput && colCountVal) {
+        colCountInput.addEventListener('input', (e) => {
+          if (isLoadingSeats) return;
+          colCountVal.textContent = e.target.value;
+          isGeneratingPreview = true;
+          previewSeatsGrid();
+        });
+      }
+      if (defaultGradeSelect) {
+        defaultGradeSelect.addEventListener('change', () => {
+          if (isGeneratingPreview) {
+            previewSeatsGrid();
+          }
+        });
+      }
       const targetZoneLabel = document.getElementById('targetZoneLabel');
       const emptyState = document.getElementById('emptyState');
       const gridEditorContainer = document.getElementById('gridEditorContainer');
-
+      const btnZoomOut = document.getElementById('btnZoomOut');
+      const gridWrapper = document.getElementById('gridWrapper');
+      const seatsGrid = document.getElementById('seatsGrid');
+      const layoutEditorCard = document.getElementById('layoutEditorCard');
+      const btnSaveLayout = document.getElementById('btnSaveLayout');
       // 좌석 라벨 개별 수정 DOM 바인딩
       const editSeatRow = document.getElementById('editSeatRow');
       const editSeatNumber = document.getElementById('editSeatNumber');
       const btnSaveSeatLabel = document.getElementById('btnSaveSeatLabel');
 
-      // 드로잉 관련 DOM 바인딩
-      const btnToggleDraw = document.getElementById('btnToggleDraw');
-      const btnCompleteDraw = document.getElementById('btnCompleteDraw');
       const zoneSvgLayer = document.getElementById('zoneSvgLayer');
-      const emptyStateText = document.getElementById('emptyStateText');
 
-      // 도면 배경 엘리먼트 바인딩 (메인 화면)
-      const mapBgInput = document.getElementById('mapBgInput');
-      const bgOpacityRange = document.getElementById('bgOpacityRange');
-      const opacityVal = document.getElementById('opacityVal');
-      const btnSaveBg = document.getElementById('btnSaveBg');
-      const btnClearBg = document.getElementById('btnClearBg');
-      const gridBgOverlay = document.getElementById('gridBgOverlay');
+      const svgBgImage = document.getElementById('svgBgImage');
+
+      // 구역 좌석 편집기 모달 오픈 함수
+      function openSeatEditor(zoneId, zoneName) {
+        if (!zoneId) return;
+        modalZoneTitle.innerText = zoneName;
+
+        // 구역 배경 이미지가 있다면 모달용 배경 이미지로 설정
+        const curZone = currentZones.find(z => z.id == zoneId);
+        if (curZone && curZone.mapBgUrl) {
+          modalGridBgOverlay.style.backgroundImage = `url('${curZone.mapBgUrl}')`;
+        } else {
+          modalGridBgOverlay.style.backgroundImage = 'none';
+        }
+
+        // zoneId를 activeZoneId로 세팅 및 세션 보관
+        zoomState.activeZoneId = zoneId;
+        sessionStorage.setItem('selectedZoneId', zoneId);
+        updateZoneStatusUI(zoneId);
+
+        if (targetZoneLabel) {
+          targetZoneLabel.innerText = zoneName;
+          targetZoneLabel.classList.remove('text-muted');
+          targetZoneLabel.classList.add('text-primary');
+        }
+
+        // 좌석 로딩 후 모달 표출
+        loadSeats(zoneId).then(() => {
+          seatEditorModal.show();
+        });
+      }
+
+      // SVG 내부 구역 엘리먼트와 currentZones 데이터 바인딩
+      function bindSvgZoneEvents(svgRoot) {
+        if (!currentZones || currentZones.length === 0) return;
+
+        currentZones.forEach(zone => {
+          if (!zone.svgPoints) return;
+
+          // svgPoints 컬럼에 저장된 ID 값(예: zone-A 또는 #zone-A)을 기준으로 SVG 내부 탐색
+          const elementId = zone.svgPoints.replace('#', '');
+          const targetEl = svgRoot.getElementById(elementId) || svgRoot.querySelector(`[id="${elementId}"]`);
+
+          if (targetEl) {
+            targetEl.classList.add('zone-polygon');
+            targetEl.style.cursor = 'pointer';
+
+            // 좌석 배치 여부 클래스 및 툴팁 분기 적용
+            if (zone.hasSeats) {
+              targetEl.classList.remove('zone-no-seats');
+              targetEl.classList.add('zone-has-seats');
+            } else {
+              targetEl.classList.remove('zone-has-seats');
+              targetEl.classList.add('zone-no-seats');
+            }
+
+            // 마우스 호버 시 툴팁 추가
+            const title = targetEl.querySelector('title') || document.createElementNS('http://www.w3.org/2000/svg', 'title');
+            const seatStatusLabel = zone.hasSeats ? ' [좌석 설정 완료]' : ' [좌석 미설정]';
+            title.textContent = `${zone.zoneName} (정원: ${zone.safetyLimit}명)${seatStatusLabel}`;
+            if (!targetEl.querySelector('title')) {
+              targetEl.appendChild(title);
+            }
+
+            // 비활성화 구역에 대한 스타일 처리
+            if (zone.status === 'DISABLED') {
+              targetEl.classList.add('zone-disabled');
+              const fillElements = targetEl.querySelectorAll('.zone-fill, path, rect, polygon');
+              fillElements.forEach(fe => {
+                fe.style.fill = '#8592a3';
+                fe.style.opacity = '0.5';
+              });
+            } else {
+              targetEl.addEventListener('click', (e) => {
+                e.stopPropagation();
+                // 이전 선택 스타일 해제
+                svgRoot.querySelectorAll('.zone-polygon.selected, .selected').forEach(el => {
+                  el.classList.remove('selected');
+                });
+                targetEl.classList.add('selected');
+                
+                // 모달 편집창 띄우기
+                openSeatEditor(zone.id, zone.zoneName);
+              });
+            }
+          }
+        });
+      }
+
+      // 배경 이미지 설정 헬퍼 함수 (SVG의 경우 스크립트 실행 보장을 위해 Inline 로드 처리)
+      async function setBgImage(url) {
+        // 기존에 주입된 인라인 SVG 및 이미지 요소 클리어
+        const oldSvg = zoneSvgLayer.querySelector('.inline-imported-svg');
+        if (oldSvg) oldSvg.remove();
+
+        if (url && url !== 'none') {
+          // SVG 파일인 경우: 자바스크립트 실행 및 상호작용 보장을 위해 fetch 후 Inline 주입
+          if (url.toLowerCase().includes('.svg')) {
+            try {
+              const res = await fetch(url);
+              if (!res.ok) throw new Error('SVG 도면을 불러올 수 없습니다.');
+              const svgText = await res.text();
+
+              // 기존 이미지 요소 경로 제거
+              if (svgBgImage) {
+                svgBgImage.removeAttribute('href');
+                svgBgImage.removeAttributeNS('http://www.w3.org/1999/xlink', 'href');
+              }
+
+              const parser = new DOMParser();
+              const doc = parser.parseFromString(svgText, 'image/svg+xml');
+              const svgRoot = doc.documentElement;
+              svgRoot.classList.add('inline-imported-svg');
+              svgRoot.setAttribute('width', '100%');
+              svgRoot.setAttribute('height', '100%');
+              svgRoot.setAttribute('style', 'position: absolute; top:0; left:0; width:100%; height:100%; pointer-events: auto;');
+
+              // zoneSvgLayer에 인라인 SVG 주입
+              zoneSvgLayer.appendChild(svgRoot);
+
+              // SVG 내 임베디드 스크립트 복구 및 강제 실행 트리거
+              svgRoot.querySelectorAll('script').forEach(oldScript => {
+                try {
+                  const newScript = document.createElementNS('http://www.w3.org/2000/svg', 'script');
+                  newScript.textContent = oldScript.textContent;
+                  for (let i = 0; i < oldScript.attributes.length; i++) {
+                    const attr = oldScript.attributes[i];
+                    if (attr.name.includes('href')) {
+                      newScript.setAttributeNS('http://www.w3.org/1999/xlink', 'href', attr.value);
+                      newScript.setAttribute('href', attr.value);
+                    } else {
+                      newScript.setAttribute(attr.name, attr.value);
+                    }
+                  }
+                  oldScript.parentNode.replaceChild(newScript, oldScript);
+                } catch (e) {
+                  console.error('SVG 임베디드 스크립트 실행 실패:', e);
+                }
+              });
+
+              // 로드된 SVG 내 구역 엘리먼트들에 이벤트 바인딩 실행
+              bindSvgZoneEvents(svgRoot);
+
+            } catch (err) {
+              console.error('SVG 배경 인라인 로드 실패, 폴백 이미지로 전환:', err);
+              loadBgAsImageElement(url);
+            }
+          } else {
+            // PNG/JPG 등의 일반 이미지 파일인 경우
+            loadBgAsImageElement(url);
+          }
+        } else {
+          if (svgBgImage) {
+            svgBgImage.removeAttribute('href');
+            svgBgImage.removeAttributeNS('http://www.w3.org/1999/xlink', 'href');
+          }
+        }
+      }
+
+      // 비트맵/폴백 로드 헬퍼
+      function loadBgAsImageElement(url) {
+        if (svgBgImage) {
+          svgBgImage.setAttribute('href', url);
+          svgBgImage.setAttributeNS('http://www.w3.org/1999/xlink', 'href', url);
+        }
+      }
+
+      // SVG 일괄 가져오기 관련 DOM 바인딩
+      const svgImportInput = document.getElementById('svgImportInput');
+      const svgParsedListWrapper = document.getElementById('svgParsedListWrapper');
+      const svgParsedListTbody = document.getElementById('svgParsedListTbody');
+      const btnImportSvgZones = document.getElementById('btnImportSvgZones');
+      const btnDeleteAllSvgBg = document.getElementById('btnDeleteAllSvgBg');
+      const currentSvgBgStatus = document.getElementById('currentSvgBgStatus');
+      const currentSvgBgFilename = document.getElementById('currentSvgBgFilename');
 
       // 모달 엘리먼트 바인딩
       const seatEditorModalEl = document.getElementById('seatEditorModal');
@@ -796,22 +1187,43 @@
       const modalDashReservedPercent = document.getElementById('modalDashReservedPercent');
       const modalDashReservedProgressBar = document.getElementById('modalDashReservedProgressBar');
 
-      // 등급 단가 인풋 바인딩
-      const priceVipInput = document.getElementById('priceVipInput');
-      const priceRInput = document.getElementById('priceRInput');
-      const priceSInput = document.getElementById('priceSInput');
-      const priceNormalInput = document.getElementById('priceNormalInput');
+      // 등급 설정 영역 DOM 바인딩
+      const gradeSettingsContainer = document.getElementById('gradeSettingsContainer');
+      const btnAddGrade = document.getElementById('btnAddGrade');
+
+      // 등급 색상 정의 풀 (총 9개까지 지원하며 색상 톤 정의)
+      const GRADE_COLORS = [
+        { name: '기본(그레이)', class: 'seat-available', border: 'rgba(133, 146, 163, 0.4)', color: '#8592a3', bg: 'rgba(133, 146, 163, 0.08)' },
+        { name: '골드(VIP)', class: 'seat-vip', border: 'rgba(255, 171, 0, 0.6)', color: '#ffab00', bg: 'rgba(255, 171, 0, 0.08)' },
+        { name: '블루(R)', class: 'seat-r', border: 'rgba(105, 108, 255, 0.6)', color: '#696cff', bg: 'rgba(105, 108, 255, 0.08)' },
+        { name: '하늘색(S)', class: 'seat-s', border: 'rgba(3, 195, 236, 0.6)', color: '#03c3ec', bg: 'rgba(3, 195, 236, 0.08)' },
+        { name: '초록색', class: 'seat-custom-1', border: 'rgba(113, 221, 55, 0.6)', color: '#71dd37', bg: 'rgba(113, 221, 55, 0.08)' },
+        { name: '핑크색', class: 'seat-custom-2', border: 'rgba(255, 62, 29, 0.6)', color: '#ff3e1d', bg: 'rgba(255, 62, 29, 0.08)' },
+        { name: '보라색', class: 'seat-custom-3', border: 'rgba(130, 94, 251, 0.6)', color: '#825efb', bg: 'rgba(130, 94, 251, 0.08)' },
+        { name: '마젠타', class: 'seat-custom-4', border: 'rgba(233, 30, 99, 0.6)', color: '#e91e63', bg: 'rgba(233, 30, 99, 0.08)' },
+        { name: '청록색', class: 'seat-custom-5', border: 'rgba(0, 150, 136, 0.6)', color: '#009688', bg: 'rgba(0, 150, 136, 0.08)' }
+      ];
 
       // Global State
+      let seatGrades = JSON.parse(localStorage.getItem('adminSeatGrades')) || [
+        { name: '일반석', price: 50000, class: 'seat-available' },
+        { name: 'VIP석', price: 150000, class: 'seat-vip' },
+        { name: 'R석', price: 120000, class: 'seat-r' },
+        { name: 'S석', price: 90000, class: 'seat-s' }
+      ];
+
       let seatsData = [];
       let isDrawing = false;
-      let selectedMode = '일반석'; // '일반석', 'VIP석', 'R석', 'S석', '무대', '통로'
+      let selectedMode = '조회'; // '조회' (정보 조회), '일반석', 'VIP석' 등..
       let originalSeatsState = []; // 되돌리기용 복사본
       let activeCtrlSeatId = null; // 현재 오프캔버스 열람 중인 좌석 ID
       let currentZones = []; // 구역 정보 백업
+      let isGeneratingPreview = false; // 가상 미리보기 동작 제어 플래그
+      let isLoadingSeats = false; // DB 좌석 데이터 로딩 잠금 플래그
 
       // 드로잉 및 줌 상태 변수
       let isDrawingMode = false;
+      let isDeleteZoneMode = false; // 구역 삭제 모드
       let drawPoints = [];
       let zoomState = { zoomed: false, scale: 1, x: 0, y: 0, activeZoneId: null };
 
@@ -828,220 +1240,600 @@
       let activeAnchorIdx = -1;
       let activeEditZoneId = null;
 
-      // 대량 생성 기본 가격 변경 시 일반석 가격도 동기화
-      priceInput.addEventListener('input', (e) => {
-        priceNormalInput.value = e.target.value;
-      });
 
-      // 도면 배경 이미지 로컬 로더 바인딩 (미리보기 제거하고 저장 유도)
-      mapBgInput.addEventListener('change', (e) => {
-        const file = e.target.files[0];
-        if (file) {
-          btnSaveBg.style.display = 'block'; // 저장 버튼 표시
-          btnClearBg.style.display = 'block';
-          Swal.fire('알림', '도면 이미지를 영구 저장하려면 [도면 저장] 버튼을 눌러주세요.', 'info');
-        }
-      });
 
-      // 도면 배경 투명도 조절
-      bgOpacityRange.addEventListener('input', (e) => {
-        const val = e.target.value;
-        opacityVal.innerText = `${val}%`;
-        modalGridBgOverlay.style.opacity = val / 100;
-      });
 
-      // 도면 배경 저장 버튼 이벤트
-      btnSaveBg.addEventListener('click', async () => {
-        const zoneId = zoneSelect.value;
-        if (!zoneId) {
-          Swal.fire('경고', '배경 도면을 저장할 구역을 선택해 주세요.', 'warning');
+
+      // SVG 도면 전체 삭제 버튼 (모든 구역의 배경 일괄 제거)
+      btnDeleteAllSvgBg.addEventListener('click', async () => {
+        const festivalId = festivalSelect.value;
+        if (!festivalId) {
+          Swal.fire('경고', '페스티벌을 먼저 선택해 주세요.', 'warning');
           return;
         }
 
-        const file = mapBgInput.files[0];
-        if (!file) {
-          Swal.fire('경고', '저장할 파일이 없습니다.', 'warning');
+        const zonesWithBg = currentZones.filter(z => z.mapBgUrl);
+        if (zonesWithBg.length === 0) {
+          Swal.fire('알림', '등록된 SVG 배경 도면이 없습니다.', 'info');
           return;
         }
 
-        const formData = new FormData();
-        formData.append('file', file);
+        const confirmResult = await Swal.fire({
+          title: 'SVG 도면 삭제',
+          html: `현재 페스티벌의 <strong>모든 구역(${zonesWithBg.length}개)</strong>에 등록된 배경 도면을 삭제합니다.<br>
+                 <span class="text-danger" style="font-size: 0.85rem;">
+                   <i class="bx bx-error me-1"></i>삭제 후에는 새 SVG 파일을 다시 업로드해야 합니다.
+                 </span>`,
+          icon: 'warning',
+          showCancelButton: true,
+          confirmButtonText: '<i class="bx bx-trash me-1"></i>삭제 실행',
+          cancelButtonText: '취소',
+          confirmButtonColor: '#ff3e1d',
+          cancelButtonColor: '#8592a3'
+        });
+
+        if (!confirmResult.isConfirmed) return;
 
         try {
           Swal.showLoading();
-          const res = await fetch(`/api/admin/zones/${zoneId}/background`, {
-            method: 'POST',
-            headers: {
-              'Authorization': getAuthHeader()
-            },
-            body: formData
-          });
+          let failCount = 0;
 
-          if (!res.ok) throw new Error('도면 이미지 업로드에 실패했습니다.');
-          const data = await res.json();
-
-          // 전역 데이터 업데이트
-          const zoneIndex = currentZones.findIndex(z => z.id == zoneId);
-          if (zoneIndex !== -1) {
-            currentZones[zoneIndex].mapBgUrl = data.fileUrl;
+          // 배경이 등록된 모든 구역에 대해 DELETE 호출
+          for (const zone of zonesWithBg) {
+            try {
+              const res = await fetch(`/api/admin/zones/${zone.id}/background`, {
+                method: 'DELETE',
+                headers: { 'Authorization': getAuthHeader() }
+              });
+              if (res.ok) {
+                // 로컬 currentZones 데이터도 즉시 갱신
+                const idx = currentZones.findIndex(z => z.id === zone.id);
+                if (idx !== -1) currentZones[idx].mapBgUrl = null;
+              } else {
+                failCount++;
+              }
+            } catch {
+              failCount++;
+            }
           }
 
-          // 메인 화면 배경 이미지 및 모달 배경 이미지 즉시 갱신 반영
-          gridBgOverlay.style.backgroundImage = `url('${data.fileUrl}')`;
-          modalGridBgOverlay.style.backgroundImage = `url('${data.fileUrl}')`;
+          // 화면 초기화
+          setBgImage('none');
+          if (gridBgOverlay) gridBgOverlay.style.backgroundImage = 'none';
+          if (currentSvgBgStatus) currentSvgBgStatus.style.display = 'none';
+          svgImportInput.value = '';
+          clearSvgImport();
 
-          btnSaveBg.style.display = 'none';
-          btnClearBg.style.display = 'block';
-          mapBgInput.value = '';
-          Swal.fire('성공', '배경 도면 이미지가 서버와 DB에 저장되었습니다.', 'success');
+          if (failCount === 0) {
+            Swal.fire({
+              title: '삭제 완료',
+              text: `${zonesWithBg.length}개 구역의 SVG 배경 도면이 모두 제거되었습니다.\n새 SVG 파일을 업로드하여 교체할 수 있습니다.`,
+              icon: 'success'
+            });
+          } else {
+            Swal.fire('부분 완료', `${zonesWithBg.length - failCount}개는 삭제되었으나, ${failCount}개는 실패했습니다.`, 'warning');
+          }
+
         } catch (err) {
           Swal.fire('에러', err.message, 'error');
         }
       });
 
-      // 배경 도면 삭제
-      btnClearBg.addEventListener('click', async () => {
-        const zoneId = zoneSelect.value;
-        if (zoneId) {
-          try {
-            Swal.showLoading();
-            const res = await fetch(`/api/admin/zones/${zoneId}/background`, {
-              method: 'DELETE',
-              headers: {
-                'Authorization': getAuthHeader()
-              }
-            });
-
-            if (!res.ok) throw new Error('배경 이미지 제거에 실패했습니다.');
-
-            // 전역 데이터 업데이트
-            const zoneIndex = currentZones.findIndex(z => z.id == zoneId);
-            if (zoneIndex !== -1) {
-              currentZones[zoneIndex].mapBgUrl = null;
-            }
-          } catch (err) {
-            Swal.fire('에러', err.message, 'error');
-            return;
-          }
+      // SVG 일괄 가져오기 관련 변수 및 이벤트 핸들러
+      let parsedSvgZones = [];
+      
+      // SVG 미리보기 레이어 생성
+      const svgPreviewLayer = (() => {
+        let layer = document.getElementById('svgPreviewLayer');
+        if (!layer) {
+          layer = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+          layer.setAttribute('id', 'svgPreviewLayer');
+          zoneSvgLayer.appendChild(layer);
         }
+        return layer;
+      })();
 
-        // 배경 이미지 소거
-        gridBgOverlay.style.backgroundImage = 'none';
-        modalGridBgOverlay.style.backgroundImage = 'none';
-
-        mapBgInput.value = '';
-        btnClearBg.style.display = 'none';
-        btnSaveBg.style.display = 'none';
-        Swal.fire('완료', '배경 이미지가 제거되었습니다.', 'info');
-      });
-
-      // 임시 구역 다각형 상대 좌표 변수
-      let tempSvgPoints = null;
-
-      // 드로잉 모드 토글
-      btnToggleDraw.addEventListener('click', () => {
-        isDrawingMode = !isDrawingMode;
-        if (isDrawingMode) {
-          btnToggleDraw.className = 'btn btn-xs btn-success ms-2';
-          btnToggleDraw.innerHTML = '<i class="bx bx-check me-1"></i>드로잉 중...';
-          btnCompleteDraw.style.display = 'inline-block';
-          drawPoints = [];
-          // 기존 다각형들의 클릭 이벤트를 비활성화하고 임시로 다각형들을 흐리게 처리
-          document.querySelectorAll('.zone-polygon').forEach(p => {
-            p.style.opacity = '0.3';
-            p.style.pointerEvents = 'none';
-          });
-          Swal.fire('드로잉 모드 활성화', '배경 이미지 위를 마우스로 클릭하여 꼭짓점들을 찍어주세요. 더블클릭하면 닫힙니다.', 'info');
-        } else {
-          resetDrawingUI();
-        }
-      });
-
-      // 드로잉 완료 버튼
-      btnCompleteDraw.addEventListener('click', () => {
-        finishDrawing();
-      });
-
-      // SVG 드로잉 마우스 클릭 & 더블클릭 핸들러
-      zoneSvgLayer.addEventListener('click', (e) => {
-        if (!isDrawingMode) return;
-
-        // SVG 영역 내 0~1000 뷰박스 기준 상대 비율 좌표 산출
-        const rect = zoneSvgLayer.getBoundingClientRect();
-        const x = Math.round(((e.clientX - rect.left) / rect.width) * 1000);
-        const y = Math.round(((e.clientY - rect.top) / rect.height) * 1000);
-
-        // 유효 좌표 등록
-        drawPoints.push([x, y]);
-
-        // 시각적 피드백 점 추가
-        const circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
-        circle.setAttribute('cx', x);
-        circle.setAttribute('cy', y);
-        circle.setAttribute('r', '6');
-        circle.setAttribute('class', 'draw-point');
-        zoneSvgLayer.appendChild(circle);
-
-        // 이전 점과 선 연결
-        if (drawPoints.length > 1) {
-          const prev = drawPoints[drawPoints.length - 2];
-          const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
-          line.setAttribute('x1', prev[0]);
-          line.setAttribute('y1', prev[1]);
-          line.setAttribute('x2', x);
-          line.setAttribute('y2', y);
-          line.setAttribute('class', 'draw-line');
-          zoneSvgLayer.appendChild(line);
-        }
-      });
-
-      // 더블클릭 시 닫힌 다각형 완료
-      zoneSvgLayer.addEventListener('dblclick', (e) => {
-        if (!isDrawingMode) return;
-        e.preventDefault();
-        finishDrawing();
-      });
-
-      // 드로잉 완료 로직
-      function finishDrawing() {
-        if (drawPoints.length < 3) {
-          Swal.fire('드로잉 실패', '구역을 완성하려면 최소 3개 이상의 점이 필요합니다.', 'warning');
+      // SVG 파일 선택 이벤트
+      svgImportInput.addEventListener('change', (e) => {
+        const file = e.target.files[0];
+        if (!file) {
+          clearSvgImport();
           return;
         }
 
-        // 다각형 포인트 스트링 변환
-        tempSvgPoints = drawPoints.map(p => p.join(',')).join(' ');
+        const reader = new FileReader();
+        reader.onload = (event) => {
+          const svgText = event.target.result;
+          parsedSvgZones = parseSvgFile(svgText);
 
-        // 시각적 가다듬기: 임시 닫힌 다각형 추가
-        const polygon = document.createElementNS('http://www.w3.org/2000/svg', 'polygon');
-        polygon.setAttribute('points', tempSvgPoints);
-        polygon.setAttribute('class', 'draw-polygon');
-        zoneSvgLayer.appendChild(polygon);
+          if (parsedSvgZones.length === 0) {
+            Swal.fire('알림', '선택한 SVG 파일에서 유효한 구역(polygon, rect, path)을 찾지 못했습니다.', 'warning');
+            clearSvgImport();
+            return;
+          }
 
-        Swal.fire({
-          title: '구역 드로잉 완료',
-          text: '다각형 영역이 지정되었습니다. 우측 \'2. 구역 생성\' 창에서 구역 이름과 인원을 입력하여 저장하면 이 다각형으로 구역이 매핑됩니다.',
-          icon: 'success'
-        });
+          // 기존의 이미지 백그라운드 대신 인라인 SVG 직접 주입 및 스크립트 실행 활성화
+          if (svgBgImage) {
+            svgBgImage.removeAttribute('href');
+            svgBgImage.removeAttributeNS('http://www.w3.org/1999/xlink', 'href');
+          }
+          
+          // 기존에 삽입되었던 SVG 노드가 있다면 제거
+          const oldSvg = zoneSvgLayer.querySelector('.inline-imported-svg');
+          if (oldSvg) oldSvg.remove();
 
-        resetDrawingUI();
+          const parser = new DOMParser();
+          const doc = parser.parseFromString(svgText, 'image/svg+xml');
+          const svgRoot = doc.documentElement;
+          svgRoot.classList.add('inline-imported-svg');
+          svgRoot.setAttribute('width', '100%');
+          svgRoot.setAttribute('height', '100%');
+          svgRoot.setAttribute('style', 'position: absolute; top:0; left:0; width:100%; height:100%; pointer-events: auto; z-index: 1;');
+
+          // zoneSvgLayer의 맨 처음에 삽입하여 구역 다각형들이 위에 올 수 있게 처리
+          zoneSvgLayer.insertBefore(svgRoot, zoneSvgLayer.firstChild);
+
+          // SVG 내부 스크립트 복구 및 강제 실행
+          svgRoot.querySelectorAll('script').forEach(oldScript => {
+            try {
+              const newScript = document.createElementNS('http://www.w3.org/2000/svg', 'script');
+              newScript.textContent = oldScript.textContent;
+              for (let i = 0; i < oldScript.attributes.length; i++) {
+                const attr = oldScript.attributes[i];
+                if (attr.name.includes('href')) {
+                  newScript.setAttributeNS('http://www.w3.org/1999/xlink', 'href', attr.value);
+                  newScript.setAttribute('href', attr.value);
+                } else {
+                  newScript.setAttribute(attr.name, attr.value);
+                }
+              }
+              oldScript.parentNode.replaceChild(newScript, oldScript);
+            } catch (e) {
+              console.error('SVG 스크립트 실행 실패:', e);
+            }
+          });
+
+          // 임시 URL 저장 (배포 API용)
+          const svgBlob = new Blob([svgText], { type: 'image/svg+xml;charset=utf-8' });
+          const svgUrl = URL.createObjectURL(svgBlob);
+          zoneSvgLayer.dataset.tempImportUrl = svgUrl;
+
+          renderParsedZonesList();
+          drawPreviewZones();
+          svgParsedListWrapper.style.display = 'block';
+        };
+        reader.readAsText(file);
+      });
+
+      // SVG 파서 함수 (디자인용 불필요 데코레이션 요소 및 아이콘 등 필터링 강화)
+      function parseSvgFile(svgText) {
+        const parser = new DOMParser();
+        const doc = parser.parseFromString(svgText, 'image/svg+xml');
+        const svgRoot = doc.documentElement;
+
+        // 브라우저의 SVG 레이아웃 엔진을 통해 getCTM()을 호출하기 위해 임시로 DOM에 렌더링
+        const tempContainer = document.createElement('div');
+        tempContainer.style.position = 'absolute';
+        tempContainer.style.left = '-9999px';
+        tempContainer.style.top = '-9999px';
+        tempContainer.style.visibility = 'hidden';
+        tempContainer.appendChild(svgRoot);
+        document.body.appendChild(tempContainer);
+
+        const zones = [];
+
+        try {
+          // 특정 클래스(.zone)나 data-zone 속성이 마킹되어 있는 경우, 마킹된 노드들만 추출
+          const hasTaggedZones = svgRoot.querySelector('.zone, [data-zone="true"]') !== null;
+
+          // viewBox 또는 width/height를 활용한 스케일링 설정 (기본값: 1000x1000)
+          let viewBox = { x: 0, y: 0, w: 1000, h: 1000 };
+          const vbAttr = svgRoot.getAttribute('viewBox');
+          if (vbAttr) {
+            const parts = vbAttr.split(/[\s,]+/).map(Number);
+            if (parts.length === 4) {
+              viewBox = { x: parts[0], y: parts[1], w: parts[2], h: parts[3] };
+            }
+          } else {
+            const wAttr = parseFloat(svgRoot.getAttribute('width'));
+            const hAttr = parseFloat(svgRoot.getAttribute('height'));
+            if (!isNaN(wAttr) && !isNaN(hAttr)) {
+              viewBox = { x: 0, y: 0, w: wAttr, h: hAttr };
+            } else {
+              const bbox = svgRoot.getBBox();
+              if (bbox.width > 0 && bbox.height > 0) {
+                viewBox = { x: bbox.x, y: bbox.y, w: bbox.width, h: bbox.height };
+              }
+            }
+          }
+
+          // SVG 로컬 좌표 -> 1000x1000 캔버스로 매핑
+          function normalizePoint(x, y) {
+            const nx = ((x - viewBox.x) / viewBox.w) * 1000;
+            const ny = ((y - viewBox.y) / viewBox.h) * 1000;
+            return [Math.round(nx), Math.round(ny)];
+          }
+
+          function getElementName(el) {
+            const zoneGroup = el.closest('.zone, [data-zone="true"]');
+            const groupName = zoneGroup ? (zoneGroup.getAttribute('id') || zoneGroup.getAttribute('data-label') || '') : '';
+            return groupName || el.getAttribute('id') || el.getAttribute('name') || el.getAttribute('class') || '';
+          }
+
+          function getElementId(el) {
+            const zoneGroup = el.closest('.zone, [data-zone="true"]');
+            const id = zoneGroup ? zoneGroup.getAttribute('id') : el.getAttribute('id');
+            return id || '';
+          }
+
+          // 1. Polygons 파싱 (transform 반영 및 노이즈 필터링)
+          svgRoot.querySelectorAll('polygon').forEach((poly, idx) => {
+            if (hasTaggedZones && !poly.closest('.zone, [data-zone="true"]')) return;
+            // 클립패스, 정의태그 등 내부 템플릿 요소는 제외
+            if (poly.closest('defs, clipPath, mask, linearGradient')) return;
+
+            // 크기 필터링 (너무 작거나 한쪽이라도 화면을 가득 채우는 요소는 제외)
+            const bbox = poly.getBBox();
+            const targetWidth = (bbox.width / viewBox.w) * 1000;
+            const targetHeight = (bbox.height / viewBox.h) * 1000;
+            if (targetWidth < 15 || targetHeight < 15) return;
+            if (targetWidth > 950 || targetHeight > 950) return;
+
+            const matrix = poly.getCTM();
+            const pointsAttr = poly.getAttribute('points');
+            if (pointsAttr && matrix) {
+              const pairs = pointsAttr.trim().split(/[\s,]+/);
+              const transformedPairs = [];
+              for (let i = 0; i < pairs.length; i += 2) {
+                if (pairs[i] !== undefined && pairs[i+1] !== undefined) {
+                  const x = parseFloat(pairs[i]);
+                  const y = parseFloat(pairs[i+1]);
+                  const p = svgRoot.createSVGPoint();
+                  p.x = x;
+                  p.y = y;
+                  const tp = p.matrixTransform(matrix);
+                  transformedPairs.push(normalizePoint(tp.x, tp.y).join(','));
+                }
+              }
+              // 꼭짓점이 3개 이상 12개 이하인 형태만 구역 다각형으로 필터링
+              if (transformedPairs.length >= 3 && transformedPairs.length <= 12) {
+                zones.push({
+                  type: 'polygon',
+                  name: getElementName(poly) || `구역 ${zones.length + 1}`,
+                  elementId: getElementId(poly) || `zone-poly-${zones.length + 1}`,
+                  points: transformedPairs.join(' '),
+                  safetyLimit: 500
+                });
+              }
+            }
+          });
+
+          // 2. Rects 파싱 (transform 반영 및 노이즈 필터링)
+          svgRoot.querySelectorAll('rect').forEach((rect, idx) => {
+            if (hasTaggedZones && !rect.closest('.zone, [data-zone="true"]')) return;
+            if (rect.closest('defs, clipPath, mask, linearGradient')) return;
+
+            const bbox = rect.getBBox();
+            const targetWidth = (bbox.width / viewBox.w) * 800;
+            const targetHeight = (bbox.height / viewBox.h) * 660;
+            if (targetWidth < 15 || targetHeight < 15) return;
+            if (targetWidth > 750 || targetHeight > 610) return;
+
+            const matrix = rect.getCTM();
+            const x = parseFloat(rect.getAttribute('x')) || 0;
+            const y = parseFloat(rect.getAttribute('y')) || 0;
+            const w = parseFloat(rect.getAttribute('width')) || 0;
+            const h = parseFloat(rect.getAttribute('height')) || 0;
+            if (w > 0 && h > 0 && matrix) {
+              const corners = [
+                { x, y },
+                { x: x + w, y },
+                { x: x + w, y: y + h },
+                { x, y: y + h }
+              ];
+              const transformedPairs = corners.map(c => {
+                const p = svgRoot.createSVGPoint();
+                p.x = c.x;
+                p.y = c.y;
+                const tp = p.matrixTransform(matrix);
+                return normalizePoint(tp.x, tp.y).join(',');
+              });
+              zones.push({
+                type: 'rect',
+                name: getElementName(rect) || `구역 ${zones.length + 1}`,
+                elementId: getElementId(rect) || `zone-rect-${zones.length + 1}`,
+                points: transformedPairs.join(' '),
+                safetyLimit: 500
+              });
+            }
+          });
+
+          // 3. Paths 파싱 (getPointAtLength 샘플링 기법 도입으로 곡선/원호 패스 완벽 지원)
+          svgRoot.querySelectorAll('path').forEach((path, idx) => {
+            if (hasTaggedZones && !path.closest('.zone, [data-zone="true"]')) return;
+            if (path.closest('defs, clipPath, mask, linearGradient')) return;
+
+            const d = path.getAttribute('d') || '';
+            // 닫히지 않은 라인(z/Z 미포함)이거나getTotalLength가 없으면 구역 배치용 도형이 아니므로 필터링
+            if (!d.toLowerCase().includes('z') || !path.getTotalLength) return;
+
+            const bbox = path.getBBox();
+            const targetWidth = (bbox.width / viewBox.w) * 800;
+            const targetHeight = (bbox.height / viewBox.h) * 660;
+            if (targetWidth < 15 || targetHeight < 15) return;
+            if (targetWidth > 750 || targetHeight > 610) return;
+
+            const matrix = path.getCTM();
+            if (matrix) {
+              try {
+                const totalLength = path.getTotalLength();
+                if (totalLength <= 0) return;
+
+                // 패스의 곡선을 다각형 꼭짓점으로 변환하기 위한 샘플링 (구역 지정을 위해 8개 지점 추출)
+                const sampleCount = 8;
+                const transformedPairs = [];
+                
+                for (let i = 0; i < sampleCount; i++) {
+                  const distance = (totalLength * i) / sampleCount;
+                  const pt = path.getPointAtLength(distance);
+                  
+                  const p = svgRoot.createSVGPoint();
+                  p.x = pt.x;
+                  p.y = pt.y;
+                  const tp = p.matrixTransform(matrix);
+                  
+                  transformedPairs.push(normalizePoint(tp.x, tp.y).join(','));
+                }
+
+                // 중복 제거
+                const uniquePairs = transformedPairs.filter((item, index) => transformedPairs.indexOf(item) === index);
+                
+                if (uniquePairs.length >= 3) {
+                  zones.push({
+                    type: 'path',
+                    name: getElementName(path) || `구역 ${zones.length + 1}`,
+                    elementId: getElementId(path) || `zone-path-${zones.length + 1}`,
+                    points: uniquePairs.join(' '),
+                    safetyLimit: 500
+                  });
+                }
+              } catch (e) {
+                console.error('Path 샘플링 중 에러 발생:', e);
+              }
+            }
+          });
+        } catch (err) {
+          console.error('SVG 파싱 에러:', err);
+        } finally {
+          document.body.removeChild(tempContainer);
+        }
+
+        return zones;
       }
 
-      // 드로잉 UI 리셋
-      function resetDrawingUI() {
-        isDrawingMode = false;
-        btnToggleDraw.className = 'btn btn-xs btn-outline-danger ms-2';
-        btnToggleDraw.innerHTML = '<i class="bx bx-edit me-1"></i>구역 드로잉 모드 ON';
-        btnCompleteDraw.style.display = 'none';
-
-        // 임시 드로잉 마커(점, 선)만 골라서 소거
-        document.querySelectorAll('.draw-point, .draw-line').forEach(el => el.remove());
-
-        // 기존 구역 다각형 복구
-        document.querySelectorAll('.zone-polygon').forEach(p => {
-          p.style.opacity = '1';
-          p.style.pointerEvents = 'auto';
+      // 파싱된 구역 리스트 HTML 렌더링
+      function renderParsedZonesList() {
+        svgParsedListTbody.innerHTML = '';
+        parsedSvgZones.forEach((zone, idx) => {
+          const tr = document.createElement('tr');
+          tr.innerHTML = `
+            <td class="text-center align-middle">
+              <input type="checkbox" class="form-check-input svg-zone-checkbox" data-index="${idx}" checked>
+            </td>
+            <td class="align-middle">
+              <input type="text" class="form-control form-control-sm svg-zone-name-input" data-index="${idx}" value="${zone.name}">
+            </td>
+            <td class="align-middle">
+              <input type="number" class="form-control form-control-sm svg-zone-limit-input" data-index="${idx}" value="${zone.safetyLimit}" min="1">
+            </td>
+          `;
+          svgParsedListTbody.appendChild(tr);
         });
+
+        // 리스트 변경 시 실시간 동기화
+        svgParsedListTbody.querySelectorAll('.svg-zone-name-input').forEach(input => {
+          input.addEventListener('input', (e) => {
+            const idx = parseInt(e.target.dataset.index);
+            parsedSvgZones[idx].name = e.target.value;
+            drawPreviewZones();
+          });
+        });
+
+        svgParsedListTbody.querySelectorAll('.svg-zone-limit-input').forEach(input => {
+          input.addEventListener('input', (e) => {
+            const idx = parseInt(e.target.dataset.index);
+            parsedSvgZones[idx].safetyLimit = parseInt(e.target.value) || 500;
+          });
+        });
+      }
+
+      // 파싱된 구역 임시 드로잉 프리뷰
+      function drawPreviewZones() {
+        svgPreviewLayer.innerHTML = '';
+
+        // 가져오기 프리뷰 화면에서 은은한 하이라이트 제공 (기존의 난잡한 다각형 덧그리기 방지)
+        // zoneSvgLayer에 삽입된 원본 SVG 객체 내부를 직접 조작
+        const svgDoc = zoneSvgLayer.querySelector('.inline-imported-svg') || zoneSvgLayer.querySelector('svg');
+        if (!svgDoc) return;
+
+        // 이전에 적용된 임시 프리뷰 스타일 일괄 초기화
+        svgDoc.querySelectorAll('.temp-preview-zone').forEach(el => {
+          el.classList.remove('temp-preview-zone');
+          el.style.stroke = '';
+          el.style.strokeWidth = '';
+          el.style.strokeDasharray = '';
+          el.style.fill = '';
+          el.style.cursor = '';
+        });
+
+        parsedSvgZones.forEach((zone, idx) => {
+          const checkbox = svgParsedListTbody.querySelector(`.svg-zone-checkbox[data-index="${idx}"]`);
+          if (checkbox && !checkbox.checked) return;
+
+          // Element ID로 타겟 요소를 SVG 내부에서 안전하게 탐색
+          const elementId = zone.elementId;
+          const targetEl = svgDoc.getElementById(elementId) || svgDoc.querySelector(`[id="${elementId}"]`);
+          if (targetEl) {
+            targetEl.classList.add('temp-preview-zone');
+            targetEl.style.transition = 'all 0.3s ease';
+            targetEl.style.stroke = '#696cff';
+            targetEl.style.strokeWidth = '3px';
+            targetEl.style.strokeDasharray = '5,5';
+            targetEl.style.fill = 'rgba(105, 108, 255, 0.15)';
+            targetEl.style.cursor = 'help';
+
+            // 마우스 툴팁 부착
+            const title = targetEl.querySelector('title') || document.createElementNS('http://www.w3.org/2000/svg', 'title');
+            title.textContent = `[가져오기 예정] ${zone.name}`;
+            if (!targetEl.querySelector('title')) {
+              targetEl.appendChild(title);
+            }
+          }
+        });
+      }
+
+      // 체크박스 상태 변경 시 프리뷰 업데이트
+      svgParsedListTbody.addEventListener('change', (e) => {
+        if (e.target.classList.contains('svg-zone-checkbox')) {
+          drawPreviewZones();
+        }
+      });
+
+      // 가져오기 실행 (첫 번째 구역 생성 후 도면 업로드 -> 나머지 구역 배경 자동 공유)
+      btnImportSvgZones.addEventListener('click', async () => {
+        const festivalId = festivalSelect.value;
+        if (!festivalId) {
+          Swal.fire('경고', '페스티벌을 먼저 선택해 주세요.', 'warning');
+          return;
+        }
+
+        const selectedCheckboxes = svgParsedListTbody.querySelectorAll('.svg-zone-checkbox:checked');
+        if (selectedCheckboxes.length === 0) {
+          Swal.fire('알림', '가져올 구역을 최소 하나 이상 선택해 주세요.', 'warning');
+          return;
+        }
+
+        const confirmResult = await Swal.fire({
+          title: '구역 가져오기 실행',
+          text: `선택하신 ${selectedCheckboxes.length}개의 구역을 등록하고, 업로드한 SVG 파일을 좌석 배치도 배경 도면으로 설정하시겠습니까?`,
+          icon: 'question',
+          showCancelButton: true,
+          confirmButtonText: '가져오기',
+          cancelButtonText: '취소',
+          confirmButtonColor: '#696cff'
+        });
+
+        if (confirmResult.isConfirmed) {
+          try {
+            Swal.showLoading();
+            let successCount = 0;
+            let uploadedBgUrl = null;
+
+            // 1단계: 첫 번째 구역 생성
+            const firstCheckbox = selectedCheckboxes[0];
+            const firstIdx = parseInt(firstCheckbox.dataset.index);
+            const firstZone = parsedSvgZones[firstIdx];
+
+            const firstPayload = {
+              festivalId: parseInt(festivalId),
+              zoneName: firstZone.name,
+              safetyLimit: firstZone.safetyLimit,
+              svgPoints: firstZone.elementId || firstZone.points
+            };
+
+            const firstRes = await fetch('/api/admin/zones', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                'Authorization': getAuthHeader()
+              },
+              body: JSON.stringify(firstPayload)
+            });
+
+            if (firstRes.ok) {
+              successCount++;
+              const createdFirstZone = await firstRes.json();
+
+              // 2단계: 첫 번째 구역에 업로드한 SVG 파일을 배경으로 전송
+              const file = svgImportInput.files[0];
+              if (file) {
+                const formData = new FormData();
+                formData.append('file', file);
+
+                const uploadRes = await fetch(`/api/admin/zones/${createdFirstZone.id}/background`, {
+                  method: 'POST',
+                  headers: {
+                    'Authorization': getAuthHeader()
+                  },
+                  body: formData
+                });
+
+                if (uploadRes.ok) {
+                  const uploadData = await uploadRes.json();
+                  uploadedBgUrl = uploadData.fileUrl; // 업로드된 SVG 도면 URL
+                }
+              }
+            }
+
+            // 3단계: 나머지 구역 생성 (이 때 획득한 배경 URL을 payload에 포함하여 공유 설정)
+            for (let i = 1; i < selectedCheckboxes.length; i++) {
+              const cb = selectedCheckboxes[i];
+              const idx = parseInt(cb.dataset.index);
+              const zone = parsedSvgZones[idx];
+
+              const payload = {
+                festivalId: parseInt(festivalId),
+                zoneName: zone.name,
+                safetyLimit: zone.safetyLimit,
+                svgPoints: zone.elementId || zone.points
+              };
+              if (uploadedBgUrl) {
+                payload.mapBgUrl = uploadedBgUrl;
+              }
+
+              const res = await fetch('/api/admin/zones', {
+                method: 'POST',
+                headers: {
+                  'Content-Type': 'application/json',
+                  'Authorization': getAuthHeader()
+                },
+                body: JSON.stringify(payload)
+              });
+
+              if (res.ok) {
+                successCount++;
+              }
+            }
+
+            Swal.fire('가져오기 완료', `${successCount}개의 구역이 성공적으로 생성되었으며, 업로드한 SVG 도면이 배경으로 등록되었습니다.`, 'success');
+            clearSvgImport();
+            await refreshZones(festivalId);
+          } catch (err) {
+            Swal.fire('에러', err.message, 'error');
+          }
+        }
+      });
+
+      // 가져오기 완료 및 리셋
+      function clearSvgImport() {
+        svgImportInput.value = '';
+        svgParsedListWrapper.style.display = 'none';
+        svgParsedListTbody.innerHTML = '';
+        parsedSvgZones = [];
+        svgPreviewLayer.innerHTML = '';
+
+        // 임시 SVG Blob URL 해제 및 원래 배경으로 복구
+        if (zoneSvgLayer.dataset.tempImportUrl) {
+          URL.revokeObjectURL(zoneSvgLayer.dataset.tempImportUrl);
+          delete zoneSvgLayer.dataset.tempImportUrl;
+        }
+        const festivalId = festivalSelect.value;
+        if (festivalId) {
+          refreshZones(festivalId); // 내부에서 currentSvgBgStatus를 최신 상태로 재동기화
+        } else {
+          setBgImage('none');
+          if (currentSvgBgStatus) currentSvgBgStatus.style.display = 'none';
+        }
       }
 
       // 모달 닫힐 때의 리셋 이벤트 추가 (메인 뷰 선택 상태 및 배경 도면은 유지)
@@ -1061,164 +1853,6 @@
         });
       });
 
-      // SVG 영역 내 다각형 드래그 및 꼭짓점 앵커 드래그 실시간 매핑
-      zoneSvgLayer.addEventListener('mousemove', (e) => {
-        const rect = zoneSvgLayer.getBoundingClientRect();
-        const curX = Math.round(((e.clientX - rect.left) / rect.width) * 1000);
-        const curY = Math.round(((e.clientY - rect.top) / rect.height) * 1000);
-
-        // A. 앵커 리사이즈 핸들링
-        if (isDraggingAnchor && draggedPolygon && activeAnchorIdx !== -1) {
-          const clampedX = Math.max(0, Math.min(1000, curX));
-          const clampedY = Math.max(0, Math.min(1000, curY));
-
-          originalPointsArray[activeAnchorIdx] = [clampedX, clampedY];
-
-          const pointsStr = originalPointsArray.map(p => p.join(',')).join(' ');
-          draggedPolygon.setAttribute('points', pointsStr);
-
-          // 해당 앵커 원 위치도 실시간 업데이트
-          const anchor = zoneSvgLayer.querySelector(`.resize-anchor[data-index="${activeAnchorIdx}"]`);
-          if (anchor) {
-            anchor.setAttribute('cx', clampedX.toString());
-            anchor.setAttribute('cy', clampedY.toString());
-          }
-          return;
-        }
-
-        // B. 다각형 전체 드래그 이동 핸들링
-        if (isDraggingPolygon && draggedPolygon) {
-          const dx = curX - dragStartX;
-          const dy = curY - dragStartY;
-
-          // 미세한 흔들림은 드래그 이동으로 판단하지 않음 (오클릭 방지)
-          if (Math.abs(dx) > 3 || Math.abs(dy) > 3) {
-            dragHasMoved = true;
-          }
-
-          if (dragHasMoved) {
-            // 다각형 꼭짓점 이동
-            const newPoints = originalPointsArray.map(p => {
-              const nx = Math.max(0, Math.min(1000, p[0] + dx)); // SVG 뷰박스 범위 내로 고정 제한
-              const ny = Math.max(0, Math.min(1000, p[1] + dy));
-              return [nx, ny];
-            });
-            const pointsStr = newPoints.map(p => p.join(',')).join(' ');
-            draggedPolygon.setAttribute('points', pointsStr);
-
-            // 활성화된 앵커 원 위치도 함께 실시간 이동
-            newPoints.forEach((p, idx) => {
-              const anchor = zoneSvgLayer.querySelector(`.resize-anchor[data-index="${idx}"]`);
-              if (anchor) {
-                anchor.setAttribute('cx', p[0].toString());
-                anchor.setAttribute('cy', p[1].toString());
-              }
-            });
-          }
-        }
-      });
-
-      // 드래그 드롭 및 좌표 DB 업데이트
-      zoneSvgLayer.addEventListener('mouseup', async (e) => {
-        // A. 앵커 리사이즈 완료 시
-        if (isDraggingAnchor && draggedPolygon) {
-          const polygon = draggedPolygon;
-          const zoneId = activeEditZoneId;
-
-          isDraggingAnchor = false;
-          activeAnchorIdx = -1;
-          draggedPolygon = null;
-
-          const svgPoints = polygon.getAttribute('points');
-          try {
-            const res = await fetch(`/api/admin/zones/${zoneId}/points`, {
-              method: 'PUT',
-              headers: {
-                'Content-Type': 'application/json',
-                'Authorization': getAuthHeader()
-              },
-              body: JSON.stringify({ svgPoints })
-            });
-
-            if (!res.ok) throw new Error('구역 크기 저장에 실패했습니다.');
-
-            const Toast = Swal.mixin({
-              toast: true,
-              position: 'top-end',
-              showConfirmButton: false,
-              timer: 1500,
-              timerProgressBar: false
-            });
-            Toast.fire({
-              icon: 'success',
-              title: '구역 크기 및 형태가 변경되었습니다.'
-            });
-
-            // 구역 리스트 리프레시
-            const festivalId = festivalSelect.value;
-            if (festivalId) {
-              await refreshZones(festivalId);
-            }
-          } catch (err) {
-            Swal.fire('에러', err.message, 'error');
-          }
-          return;
-        }
-
-        // B. 다각형 전체 이동 완료 시
-        if (isDraggingPolygon && draggedPolygon) {
-          const polygon = draggedPolygon;
-          const hasMoved = dragHasMoved;
-
-          isDraggingPolygon = false;
-          draggedPolygon = null;
-
-          if (hasMoved) {
-            const zoneId = polygon.getAttribute('data-zone-id');
-            const svgPoints = polygon.getAttribute('points');
-
-            try {
-              const res = await fetch(`/api/admin/zones/${zoneId}/points`, {
-                method: 'PUT',
-                headers: {
-                  'Content-Type': 'application/json',
-                  'Authorization': getAuthHeader()
-                },
-                body: JSON.stringify({ svgPoints })
-              });
-
-              if (!res.ok) throw new Error('구역 위치 저장에 실패했습니다.');
-
-              const Toast = Swal.mixin({
-                toast: true,
-                position: 'top-end',
-                showConfirmButton: false,
-                timer: 1500,
-                timerProgressBar: false
-              });
-              Toast.fire({
-                icon: 'success',
-                title: '구역 배치가 성공적으로 변경되었습니다.'
-              });
-
-              const festivalId = festivalSelect.value;
-              if (festivalId) {
-                await refreshZones(festivalId);
-              }
-            } catch (err) {
-              Swal.fire('에러', err.message, 'error');
-            }
-          }
-        }
-      });
-
-      // SVG 영역을 아예 벗어날 때 앵커 소거
-      zoneSvgLayer.addEventListener('mouseleave', () => {
-        if (isDraggingPolygon || isDraggingAnchor) return; // 드래그 중엔 유지
-        document.querySelectorAll('.resize-anchor').forEach(el => el.remove());
-        activeEditZoneId = null;
-      });
-
       // Authorization Header Helper
       function getAuthHeader() {
         const token = localStorage.getItem('userToken') || sessionStorage.getItem('userToken');
@@ -1227,22 +1861,305 @@
 
       // 등급 판별 헬퍼 함수
       function getGradeClass(price) {
-        const vip = Number(priceVipInput.value);
-        const r = Number(priceRInput.value);
-        const s = Number(priceSInput.value);
-
-        if (price === vip) return 'seat-vip';
-        if (price === r) return 'seat-r';
-        if (price === s) return 'seat-s';
-        return 'seat-available'; // 일반석
+        const matched = seatGrades.find(g => g.price === Number(price));
+        return matched ? matched.class : 'seat-available';
       }
 
-      // Event listener for editor mode switch
-      document.querySelectorAll('input[name="editorMode"]').forEach(radio => {
-        radio.addEventListener('change', (e) => {
-          selectedMode = e.target.value;
+      // 3-1. 등급 단가 설정 UI 렌더러
+      function renderGradeSettings() {
+        if (!gradeSettingsContainer) return;
+        gradeSettingsContainer.innerHTML = '';
+
+        seatGrades.forEach((grade, idx) => {
+          const colorMeta = GRADE_COLORS.find(c => c.class === grade.class) || GRADE_COLORS[0];
+          
+          const rowDiv = document.createElement('div');
+          rowDiv.className = 'row g-2 align-items-center mb-1';
+          
+          rowDiv.innerHTML = `
+            <div class="col-5">
+              <label class="form-label fw-bold mb-1" style="color: ${colorMeta.color};">
+                <i class="bx bx-tag me-1"></i>${grade.name}
+              </label>
+              <input type="text" class="form-control form-control-sm bg-light fw-bold" value="${grade.name}" readonly style="border-color: ${colorMeta.border}; color: ${colorMeta.color};">
+            </div>
+            <div class="col-5">
+              <label class="form-label text-muted mb-1">단가 (₩)</label>
+              <input type="number" class="form-control form-control-sm grade-price-input" data-index="${idx}" value="${grade.price}" step="5000" min="0">
+            </div>
+            <div class="col-2 text-end pt-4">
+              <button type="button" class="btn btn-sm btn-icon btn-outline-danger btn-delete-grade" data-index="${idx}" ${seatGrades.length <= 1 ? 'disabled' : ''}>
+                <i class="bx bx-trash"></i>
+              </button>
+            </div>
+          `;
+          gradeSettingsContainer.appendChild(rowDiv);
         });
-      });
+
+        // 가격 실시간 변경 동기화 이벤트 바인딩
+        gradeSettingsContainer.querySelectorAll('.grade-price-input').forEach(input => {
+          input.addEventListener('input', (e) => {
+            const idx = parseInt(e.target.dataset.index);
+            seatGrades[idx].price = Number(e.target.value) || 0;
+            localStorage.setItem('adminSeatGrades', JSON.stringify(seatGrades));
+          });
+        });
+
+        // 등급 삭제 이벤트 바인딩
+        gradeSettingsContainer.querySelectorAll('.btn-delete-grade').forEach(btn => {
+          btn.addEventListener('click', (e) => {
+            const idx = parseInt(e.currentTarget.dataset.index);
+            const deletedGrade = seatGrades[idx];
+            
+            Swal.fire({
+              title: '등급 삭제',
+              text: `[${deletedGrade.name}] 등급을 삭제하시겠습니까? (이 등급으로 배치된 기존 좌석의 레이아웃 단가는 일반석 기준으로 리마운트됩니다.)`,
+              icon: 'warning',
+              showCancelButton: true,
+              confirmButtonColor: '#ff3e1d',
+              cancelButtonColor: '#8592a3',
+              confirmButtonText: '삭제 실행',
+              cancelButtonText: '취소'
+            }).then(result => {
+              if (result.isConfirmed) {
+                seatGrades.splice(idx, 1);
+                localStorage.setItem('adminSeatGrades', JSON.stringify(seatGrades));
+                
+                // 전역 선택 모드 재설정 (일반석 디폴트)
+                if (selectedMode === deletedGrade.name) {
+                  selectedMode = seatGrades[0].name;
+                }
+                
+                renderGradeSettings();
+                syncDefaultGradeDropdown();
+                syncModalEditorMode();
+                
+                // 모달이 열려 있는 상태라면 좌석 배치도도 재렌더링
+                const zoneId = zoomState.activeZoneId;
+                if (zoneId && seatsData.length > 0) {
+                  renderGrid(seatsData);
+                }
+                Swal.fire('삭제 완료', '해당 등급이 성공적으로 삭제되었습니다.', 'success');
+              }
+            });
+          });
+        });
+      }
+
+      // 대량 생성용 드롭다운 동기화
+      function syncDefaultGradeDropdown() {
+        const dropdown = document.getElementById('defaultGradeSelect');
+        if (!dropdown) return;
+        
+        const currentVal = dropdown.value;
+        dropdown.innerHTML = '';
+        
+        seatGrades.forEach((grade, idx) => {
+          const opt = document.createElement('option');
+          opt.value = grade.name;
+          opt.textContent = grade.name;
+          if (currentVal === grade.name || (!currentVal && idx === 0)) {
+            opt.selected = true;
+          }
+          dropdown.appendChild(opt);
+        });
+      }
+
+      // 모달 편집 색칠 모드 동적 동기화
+      function syncModalEditorMode() {
+        const container = document.getElementById('modalEditorModeContainer');
+        if (!container) return;
+        container.innerHTML = '';
+
+        // A. 정보 조회 모드 (기본 조회 기능 활성화)
+        const radioView = document.createElement('input');
+        radioView.type = 'radio';
+        radioView.className = 'btn-check';
+        radioView.name = 'editorMode';
+        radioView.id = 'modeSys_조회';
+        radioView.value = '조회';
+        if (selectedMode === '조회') {
+          radioView.checked = true;
+        }
+
+        const labelView = document.createElement('label');
+        labelView.className = 'btn btn-sm btn-outline-primary';
+        labelView.style.borderColor = 'rgba(105, 108, 255, 0.6)';
+        labelView.style.color = '#696cff';
+        labelView.style.background = radioView.checked ? 'rgba(105, 108, 255, 0.08)' : 'transparent';
+        labelView.style.marginRight = '8px';
+        labelView.style.marginBottom = '8px';
+        labelView.setAttribute('for', 'modeSys_조회');
+        labelView.innerHTML = `<i class="bx bx-search-alt me-1"></i>정보 조회`;
+
+        radioView.addEventListener('change', (e) => {
+          selectedMode = e.target.value;
+          syncModalEditorModeStyles();
+        });
+
+        container.appendChild(radioView);
+        container.appendChild(labelView);
+
+        // B. 등급석 라디오 렌더링
+        seatGrades.forEach((grade, idx) => {
+          const colorMeta = GRADE_COLORS.find(c => c.class === grade.class) || GRADE_COLORS[0];
+          
+          const radio = document.createElement('input');
+          radio.type = 'radio';
+          radio.className = 'btn-check';
+          radio.name = 'editorMode';
+          radio.id = `modeCustom_${idx}`;
+          radio.value = grade.name;
+          
+          if (selectedMode === grade.name) {
+            radio.checked = true;
+          }
+
+          const label = document.createElement('label');
+          label.className = `btn btn-sm btn-outline-secondary`;
+          label.style.borderColor = colorMeta.border;
+          label.style.color = colorMeta.color;
+          label.style.background = radio.checked ? colorMeta.bg : 'transparent';
+          label.style.marginRight = '8px';
+          label.style.marginBottom = '8px';
+          label.setAttribute('for', `modeCustom_${idx}`);
+          label.innerHTML = `<i class="bx bx-purchase-tag me-1"></i>${grade.name}`;
+          
+          radio.addEventListener('change', (e) => {
+            selectedMode = e.target.value;
+            syncModalEditorModeStyles();
+          });
+
+          container.appendChild(radio);
+          container.appendChild(label);
+        });
+
+        // C. 시스템 모드 (무대, 통로, 보류석) 라디오 렌더링
+        const systemModes = [
+          { value: '무대', label: '무대 설정', icon: 'bx bx-desktop', border: 'rgba(71, 85, 105, 0.6)', color: '#475569', bg: 'rgba(71, 85, 105, 0.08)' },
+          { value: '통로', label: '통로 설정', icon: 'bx bx-directions', border: 'rgba(255, 62, 29, 0.6)', color: '#ff3e1d', bg: 'rgba(255, 62, 29, 0.08)' },
+          { value: '보류석', label: '보류석 설정', icon: 'bx bx-lock-alt', border: 'rgba(255, 62, 29, 0.6)', color: '#ff3e1d', bg: 'rgba(255, 62, 29, 0.08)' }
+        ];
+
+        systemModes.forEach(mode => {
+          const radio = document.createElement('input');
+          radio.type = 'radio';
+          radio.className = 'btn-check';
+          radio.name = 'editorMode';
+          radio.id = `modeSys_${mode.value}`;
+          radio.value = mode.value;
+          if (selectedMode === mode.value) {
+            radio.checked = true;
+          }
+
+          const label = document.createElement('label');
+          label.className = `btn btn-sm btn-outline-secondary`;
+          label.style.borderColor = mode.border;
+          label.style.color = mode.color;
+          label.style.background = radio.checked ? mode.bg : 'transparent';
+          label.style.marginRight = '8px';
+          label.style.marginBottom = '8px';
+          label.setAttribute('for', `modeSys_${mode.value}`);
+          label.innerHTML = `<i class="${mode.icon} me-1"></i>${mode.label}`;
+
+          radio.addEventListener('change', (e) => {
+            selectedMode = e.target.value;
+            syncModalEditorModeStyles();
+          });
+
+          container.appendChild(radio);
+          container.appendChild(label);
+        });
+      }
+
+      function syncModalEditorModeStyles() {
+        const container = document.getElementById('modalEditorModeContainer');
+        if (!container) return;
+        
+        container.querySelectorAll('input[name="editorMode"]').forEach(radio => {
+          const label = container.querySelector(`label[for="${radio.id}"]`);
+          if (!label) return;
+          
+          const val = radio.value;
+          const isChecked = radio.checked;
+          
+          const grade = seatGrades.find(g => g.name === val);
+          if (grade) {
+            const colorMeta = GRADE_COLORS.find(c => c.class === grade.class) || GRADE_COLORS[0];
+            label.style.background = isChecked ? colorMeta.bg : 'transparent';
+          } else {
+            let bg = 'transparent';
+            if (isChecked) {
+              if (val === '조회') bg = 'rgba(105, 108, 255, 0.08)';
+              else if (val === '무대') bg = 'rgba(71, 85, 105, 0.08)';
+              else bg = 'rgba(255, 62, 29, 0.08)';
+            }
+            label.style.background = bg;
+          }
+        });
+      }
+
+      // 등급 추가 버튼 클릭 이벤트 바인딩
+      if (btnAddGrade) {
+        btnAddGrade.addEventListener('click', async () => {
+          const usedClasses = seatGrades.map(g => g.class);
+          // 안 쓴 커스텀 색상을 우선순위로 매칭
+          const availableColor = GRADE_COLORS.find(c => !usedClasses.includes(c.class)) || GRADE_COLORS[GRADE_COLORS.length - 1];
+
+          const { value: formValues } = await Swal.fire({
+            title: '새로운 티켓 등급 추가',
+            html:
+              '<div class="mb-3 text-start">' +
+              '  <label class="form-label fw-bold" style="color: #566a7f;">등급명 (Grade Name)</label>' +
+              '  <input id="swal-grade-name" class="form-control" placeholder="예: A석, B석, Standing">' +
+              '</div>' +
+              '<div class="mb-3 text-start">' +
+              '  <label class="form-label fw-bold" style="color: #566a7f;">기본 가격 (₩)</label>' +
+              '  <input type="number" id="swal-grade-price" class="form-control" value="80000" min="0" step="5000">' +
+              '</div>',
+            focusConfirm: false,
+            showCancelButton: true,
+            confirmButtonText: '등급 추가',
+            cancelButtonText: '취소',
+            confirmButtonColor: '#696cff',
+            cancelButtonColor: '#8592a3',
+            preConfirm: () => {
+              const name = document.getElementById('swal-grade-name').value.trim();
+              const price = parseInt(document.getElementById('swal-grade-price').value, 10) || 0;
+              if (!name) {
+                Swal.showValidationMessage('등급 이름을 입력해 주세요.');
+                return false;
+              }
+              if (seatGrades.some(g => g.name.toLowerCase() === name.toLowerCase())) {
+                Swal.showValidationMessage('이미 동일한 이름의 등급이 존재합니다.');
+                return false;
+              }
+              return { name, price };
+            }
+          });
+
+          if (formValues) {
+            seatGrades.push({
+              name: formValues.name,
+              price: formValues.price,
+              class: availableColor.class
+            });
+            localStorage.setItem('adminSeatGrades', JSON.stringify(seatGrades));
+            
+            renderGradeSettings();
+            syncDefaultGradeDropdown();
+            syncModalEditorMode();
+            
+            // 모달이 열려 있는 상태라면 좌석 배치도도 재렌더링
+            const zoneId = zoomState.activeZoneId;
+            if (zoneId && seatsData.length > 0) {
+              renderGrid(seatsData);
+            }
+            
+            Swal.fire('성공', `[${formValues.name}] 등급이 추가되었습니다.`, 'success');
+          }
+        });
+      }
 
       // 1. 페이지 로드 시 백엔드 API (GET /api/admin/festivals) 호출
       async function fetchFestivals() {
@@ -1275,31 +2192,50 @@
           if (!res.ok) throw new Error('구역 목록을 가져오지 못했습니다.');
           const zones = await res.json();
 
-          zoneSelect.innerHTML = '<option value="">-- 구역을 선택하세요 --</option>';
           if (zones.length === 0) {
             currentZones = []; // 백업 초기화
-            zoneSelect.innerHTML += '<option value="">등록된 구역이 없습니다.</option>';
-            zoneSelect.disabled = true;
-            btnCreateZone.disabled = false;
-            zoneSvgLayer.innerHTML = ''; // 다각형 레이어 초기화
+            const dynamicLayer = document.getElementById('dynamicZonesLayer');
+            if (dynamicLayer) {
+              dynamicLayer.innerHTML = '';
+            } else {
+              zoneSvgLayer.innerHTML = '';
+            }
             return;
           }
 
           currentZones = zones; // 백업 저장
 
-          zones.forEach(zone => {
-            const selectedAttr = (selectZoneId && zone.id == selectZoneId) ? 'selected' : '';
-            zoneSelect.innerHTML += `<option value="${zone.id}" ${selectedAttr}>${zone.zoneName}</option>`;
-          });
-          zoneSelect.disabled = false;
-          btnCreateZone.disabled = false;
+          // 만약 등록된 구역 중에 배경 도면이 등록된 구역이 있다면 메인 화면 배경 이미지로 설정
+          const zoneWithBg = zones.find(z => z.mapBgUrl);
+          if (zoneWithBg && zoneWithBg.mapBgUrl) {
+            setBgImage(zoneWithBg.mapBgUrl);
+
+            // SVG 도면 상태 패널 표시
+            if (currentSvgBgStatus) {
+              const urlParts = zoneWithBg.mapBgUrl.split('/');
+              const fname = urlParts[urlParts.length - 1];
+              currentSvgBgFilename.textContent = fname;
+              currentSvgBgStatus.style.display = 'block';
+              currentSvgBgStatus.style.background = 'rgba(105, 108, 255, 0.05)';
+              currentSvgBgStatus.style.border = '1px solid rgba(105, 108, 255, 0.3)';
+            }
+          } else {
+            setBgImage('none');
+
+            // SVG 도면 상태 패널 숨김
+            if (currentSvgBgStatus) {
+              currentSvgBgStatus.style.display = 'none';
+            }
+          }
+
+
 
           // SVG 레이어에 구역 다각형 지도 그리기 연동
           drawZonesOnSvg(zones);
 
           // 만약 구역을 새로 생성하여 자동 선택시켰을 경우, 좌석 목록도 즉시 리로드 처리
           if (selectZoneId) {
-            btnGenerate.disabled = false;
+            updateZoneStatusUI(selectZoneId);
 
             // 대상 구역 레이블 업데이트
             const selectedZone = zones.find(z => z.id == selectZoneId);
@@ -1318,198 +2254,204 @@
 
       // SVG 다각형 구역 렌더링 및 줌인 바인딩
       function drawZonesOnSvg(zones) {
-        zoneSvgLayer.innerHTML = ''; // 기존 다각형 삭제
-
-        if (!zones || zones.length === 0) return;
-
-        zones.forEach(zone => {
-          if (!zone.svgPoints) return;
-
-          const polygon = document.createElementNS('http://www.w3.org/2000/svg', 'polygon');
-          polygon.setAttribute('points', zone.svgPoints);
-          polygon.setAttribute('class', 'zone-polygon');
-          polygon.setAttribute('data-zone-id', zone.id);
-
-          // 구역 명칭 툴팁 타이틀 부여
-          const title = document.createElementNS('http://www.w3.org/2000/svg', 'title');
-          title.textContent = `${zone.zoneName} (정원: ${zone.safetyLimit}명)`;
-          polygon.appendChild(title);
-
-          // 마우스 호버 시 조절 꼭짓점 앵커 노출
-          polygon.addEventListener('mouseenter', () => {
-            if (isDrawingMode || zoomState.zoomed || isDraggingPolygon || isDraggingAnchor) return;
-            showResizeAnchors(polygon, zone.id);
-          });
-
-          // 마우스 드래그 시작 바인딩
-          polygon.addEventListener('mousedown', (e) => {
-            if (isDrawingMode || zoomState.zoomed) return;
-            e.stopPropagation();
-
-            // 드래그 시 앵커 갱신 노출 보장
-            showResizeAnchors(polygon, zone.id);
-
-            isDraggingPolygon = true;
-            draggedPolygon = polygon;
-            dragHasMoved = false;
-
-            const rect = zoneSvgLayer.getBoundingClientRect();
-            dragStartX = Math.round(((e.clientX - rect.left) / rect.width) * 1000);
-            dragStartY = Math.round(((e.clientY - rect.top) / rect.height) * 1000);
-
-            const pointsAttr = polygon.getAttribute('points');
-            originalPointsArray = pointsAttr.trim().split(/\s+/).map(pair => {
-              const [x, y] = pair.split(',').map(Number);
-              return [x, y];
-            });
-          });
-
-          // 클릭 줌인 리스너 -> 모달 오픈 연동
-          polygon.addEventListener('click', (e) => {
-            if (isDrawingMode) return;
-            if (dragHasMoved) {
-              // 드래그하여 옮긴 뒤에는 모달이 발동하지 않도록 제어
-              e.stopPropagation();
-              return;
-            }
-            e.stopPropagation();
-            sessionStorage.setItem('selectedZoneId', zone.id); // 세션 저장
-            openSeatEditor(zone.id, zone.zoneName);
-          });
-
-          zoneSvgLayer.appendChild(polygon);
-        });
+        // 이미 setBgImage 내에서 bindSvgZoneEvents를 호출하여 처리하므로,
+        // 여기서는 inline SVG 루트가 존재할 경우 다시 이벤트를 바인딩해주는 역할만 수행합니다.
+        const svgRoot = zoneSvgLayer.querySelector('.inline-imported-svg');
+        if (svgRoot) {
+          bindSvgZoneEvents(svgRoot);
+        }
       }
 
-      // 특정 구역 다각형 꼭짓점 조절용 앵커 렌더링 함수
-      function showResizeAnchors(polygonEl, zoneId) {
-        // 기존 앵커들 모두 제거
-        document.querySelectorAll('.resize-anchor').forEach(el => el.remove());
+      // 마우스 전역 드래그 감지
+      let isMouseDown = false;
+      let selectedSeatsMap = new Map();
 
-        if (!polygonEl) return;
+      document.addEventListener('mousedown', () => {
+        isMouseDown = true;
+      });
+      document.addEventListener('mouseup', () => {
+        isMouseDown = false;
+      });
 
-        activeEditZoneId = zoneId;
+      // 특정 등급에 따른 가격 획득
+      function getPriceForGrade(grade) {
+        const matched = seatGrades.find(g => g.name === grade || g.class.includes(grade.toLowerCase()));
+        if (matched) return matched.price;
+        if (grade === 'VIP') return 150000;
+        if (grade === 'R') return 120000;
+        if (grade === 'S') return 90000;
+        return 50000; // 일반석 디폴트
+      }
 
-        const pointsAttr = polygonEl.getAttribute('points');
-        if (!pointsAttr) return;
+      // 줌인된 상태에서 좌석 격자 데이터 로드 및 렌더링
+      async function loadSeatsForLayout(zoneId) {
+        try {
+          seatsGrid.innerHTML = '<div class="text-center text-muted py-4"><i class="bx bx-loader-alt bx-spin fs-4"></i> 로딩 중...</div>';
+          selectedSeatsMap.clear();
 
-        const pts = pointsAttr.trim().split(/\s+/).map(pair => pair.split(',').map(Number));
-
-        pts.forEach((pt, idx) => {
-          if (pt.length < 2) return;
-          const [x, y] = pt;
-
-          const anchor = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
-          anchor.setAttribute('cx', x.toString());
-          anchor.setAttribute('cy', y.toString());
-          anchor.setAttribute('r', '8');
-          anchor.setAttribute('class', 'resize-anchor');
-          anchor.setAttribute('data-zone-id', zoneId);
-          anchor.setAttribute('data-index', idx.toString());
-
-          // 앵커 마우스 드래그 시작 리스너
-          anchor.addEventListener('mousedown', (e) => {
-            if (isDrawingMode || zoomState.zoomed) return;
-            e.stopPropagation();
-
-            isDraggingAnchor = true;
-            activeAnchorIdx = idx;
-            draggedPolygon = polygonEl;
-
-            const pAttr = polygonEl.getAttribute('points');
-            originalPointsArray = pAttr.trim().split(/\s+/).map(pair => pair.split(',').map(Number));
+          const res = await fetch(`/api/admin/zones/${zoneId}/seats`, {
+            headers: { 'Authorization': getAuthHeader() }
           });
+          if (!res.ok) throw new Error('좌석 목록 조회 실패');
+          
+          const seats = await res.json();
+          seatsGrid.innerHTML = '';
 
-          zoneSvgLayer.appendChild(anchor);
-        });
-      }
-
-      // 구역 클릭 시 모달 열기 및 데이터 연동
-      async function openSeatEditor(zoneId, zoneName) {
-        modalZoneTitle.innerText = zoneName;
-
-        // 구역 배경 도면 매핑
-        const curZone = currentZones.find(z => z.id == zoneId);
-        if (curZone && curZone.mapBgUrl) {
-          modalGridBgOverlay.style.backgroundImage = `url('${curZone.mapBgUrl}')`;
-          gridBgOverlay.style.backgroundImage = `url('${curZone.mapBgUrl}')`; // 메인 화면 배경도 갱신
-          btnClearBg.style.display = 'block';
-          btnSaveBg.style.display = 'none';
-        } else {
-          modalGridBgOverlay.style.backgroundImage = 'none';
-          btnClearBg.style.display = 'none';
-          btnSaveBg.style.display = 'none';
-        }
-
-        // 대상 구역 레이블 업데이트
-        if (targetZoneLabel) {
-          targetZoneLabel.innerText = zoneName;
-          targetZoneLabel.classList.remove('text-muted');
-          targetZoneLabel.classList.add('text-primary');
-        }
-
-        // 구역 삭제 버튼 활성화
-        if (btnDeleteZone) {
-          btnDeleteZone.disabled = false;
-        }
-
-        // 구역 선택박스 값 동기화
-        zoneSelect.value = zoneId;
-
-        // 좌석 로드 및 렌더링
-        await loadSeats(zoneId);
-
-        // 모달 팝업 표출
-        seatEditorModal.show();
-      }
-
-      // 2-2. 구역 신규 추가 이벤트 바인딩
-      btnCreateZone.addEventListener('click', async () => {
-        const festivalId = festivalSelect.value;
-        if (!festivalId) return;
-
-        const { value: formValues } = await Swal.fire({
-          title: '새로운 구역 추가',
-          html:
-            '<div class="mb-3 text-start">' +
-            '  <label class="form-label fw-bold" style="color: #566a7f;">구역명 (Zone Name)</label>' +
-            '  <input id="swal-zone-name" class="form-control" placeholder="예: A구역, 스탠딩 레드존">' +
-            '</div>' +
-            '<div class="mb-3 text-start">' +
-            '  <label class="form-label fw-bold" style="color: #566a7f;">안전 수용인원 (Safety Limit)</label>' +
-            '  <input type="number" id="swal-safety-limit" class="form-control" value="500" min="1">' +
-            '</div>',
-          focusConfirm: false,
-          showCancelButton: true,
-          confirmButtonText: '구역 생성',
-          cancelButtonText: '취소',
-          confirmButtonColor: '#696cff',
-          cancelButtonColor: '#8592a3',
-          preConfirm: () => {
-            const zoneName = document.getElementById('swal-zone-name').value.trim();
-            const safetyLimit = document.getElementById('swal-safety-limit').value;
-            if (!zoneName) {
-              Swal.showValidationMessage('구역명을 입력해주세요.');
-              return false;
-            }
-            return { zoneName, safetyLimit: parseInt(safetyLimit) || 500 };
+          if (seats.length === 0) {
+            seatsGrid.innerHTML = '<div class="text-center text-muted py-4">생성된 좌석이 없습니다.<br>상단 \'좌석 격자판 대량 생성\' 폼에서 먼저 생성해 주세요.</div>';
+            return;
           }
+
+          // 행과 열의 최댓값을 구함
+          let maxRow = 1;
+          let maxCol = 1;
+          seats.forEach(s => {
+            if (s.seatRow > maxRow) maxRow = s.seatRow;
+            if (s.seatNumber > maxCol) maxCol = s.seatNumber;
+          });
+
+          // CSS Grid 템플릿 설정
+          seatsGrid.style.gridTemplateRows = `repeat(${maxRow}, minmax(36px, 1fr))`;
+          seatsGrid.style.gridTemplateColumns = `repeat(${maxCol}, minmax(36px, 1fr))`;
+
+          // 2차원 공간 매핑
+          const seatMatrix = Array.from({ length: maxRow }, () => Array(maxCol).fill(null));
+          seats.forEach(s => {
+            seatMatrix[s.seatRow - 1][s.seatNumber - 1] = s;
+          });
+
+          // DOM 셀 렌더링
+          for (let r = 0; r < maxRow; r++) {
+            for (let c = 0; c < maxCol; c++) {
+              const seat = seatMatrix[r][c];
+              const cell = document.createElement('div');
+              cell.className = 'seat-cell';
+              
+              if (!seat) {
+                // 빈 데이터 영역은 통로로 처리
+                cell.classList.add('seat-corridor');
+              } else {
+                cell.dataset.seatId = seat.id;
+                cell.dataset.rowLabel = seat.rowLabel || `${r + 1}행`;
+                cell.dataset.colNum = seat.seatNumber;
+                
+                // 상태별 클래스 매핑
+                if (seat.status === '무대') {
+                  cell.classList.add('seat-stage');
+                  cell.innerHTML = 'STAGE';
+                } else if (seat.status === '통로') {
+                  cell.classList.add('seat-corridor');
+                } else if (seat.status === 'PAID' || seat.status === 'RESERVED') {
+                  cell.classList.add('seat-reserved');
+                  cell.innerHTML = `<i class="bx bx-lock-alt"></i>`;
+                  const tooltip = document.createElement('title');
+                  tooltip.textContent = `판매완료 (${seat.rowLabel}-${seat.seatNumber})`;
+                  cell.appendChild(tooltip);
+                } else {
+                  // 빈자리 또는 등급별 색상 부여
+                  const gradeClass = getGradeClass(seat.price);
+                  cell.classList.add(gradeClass);
+                  
+                  let displayLabel = seat.rowLabel ? `${seat.rowLabel}-${seat.seatNumber}` : `${r+1}-${c+1}`;
+                  cell.innerHTML = `${displayLabel}<span class="seat-price-tag">₩${seat.price.toLocaleString()}</span>`;
+                }
+
+                // 드래그/클릭 바인딩
+                cell.addEventListener('mousedown', (e) => {
+                  e.preventDefault();
+                  const currentMode = document.querySelector('input[name="layoutEditMode"]:checked').value;
+                  if (currentMode === '조회') {
+                    if (seat.status !== '무대' && seat.status !== '통로') {
+                      showSeatReservationDetails(seat);
+                    }
+                  } else {
+                    applyEditToCell(cell);
+                  }
+                });
+                cell.addEventListener('mouseenter', () => {
+                  const currentMode = document.querySelector('input[name="layoutEditMode"]:checked').value;
+                  if (currentMode !== '조회' && isMouseDown) {
+                    applyEditToCell(cell);
+                  }
+                });
+              }
+
+              seatsGrid.appendChild(cell);
+            }
+          }
+
+        } catch (err) {
+          seatsGrid.innerHTML = `<div class="text-danger p-3">${err.message}</div>`;
+        }
+      }
+
+      // 셀 상태 및 등급 실시간 색칠 함수
+      function applyEditToCell(cellEl) {
+        if (cellEl.classList.contains('seat-reserved')) return; // 판매 완료는 잠금
+
+        const seatId = cellEl.dataset.seatId;
+        const currentMode = document.querySelector('input[name="layoutEditMode"]:checked').value;
+        if (currentMode === '조회') return; // 조회 모드에서는 색칠 차단
+        
+        cellEl.className = 'seat-cell'; // 초기화
+        
+        let status = '빈자리';
+        let price = getPriceForGrade(currentMode);
+
+        if (currentMode === '무대') {
+          cellEl.classList.add('seat-stage');
+          cellEl.innerHTML = 'STAGE';
+          status = '무대';
+        } else if (currentMode === '통로') {
+          cellEl.classList.add('seat-corridor');
+          cellEl.innerHTML = '';
+          status = '통로';
+        } else {
+          status = '빈자리';
+          if (currentMode === 'VIP') {
+            cellEl.classList.add('seat-vip');
+            cellEl.innerHTML = `VIP<span class="seat-price-tag">₩${price.toLocaleString()}</span>`;
+          } else if (currentMode === 'R') {
+            cellEl.classList.add('seat-r');
+            cellEl.innerHTML = `R<span class="seat-price-tag">₩${price.toLocaleString()}</span>`;
+          } else if (currentMode === 'S') {
+            cellEl.classList.add('seat-s');
+            cellEl.innerHTML = `S<span class="seat-price-tag">₩${price.toLocaleString()}</span>`;
+          } else {
+            cellEl.classList.add('seat-available');
+            cellEl.innerHTML = `${cellEl.dataset.rowLabel}-${cellEl.dataset.colNum}<span class="seat-price-tag">₩${price.toLocaleString()}</span>`;
+          }
+        }
+
+        selectedSeatsMap.set(seatId, {
+          id: parseInt(seatId),
+          status: status,
+          price: price
+        });
+      }
+
+      // 레이아웃 저장 버튼 바인딩
+      btnSaveLayout.addEventListener('click', async () => {
+        if (selectedSeatsMap.size === 0) {
+          Swal.fire('알림', '수정된 좌석 데이터가 없습니다.', 'info');
+          return;
+        }
+
+        const confirmSave = await Swal.fire({
+          title: '레이아웃 저장',
+          text: `${selectedSeatsMap.size}개 좌석의 변경사항을 영구 저장하시겠습니까?`,
+          icon: 'question',
+          showCancelButton: true,
+          confirmButtonText: '저장',
+          cancelButtonText: '취소'
         });
 
-        if (formValues) {
+        if (confirmSave.isConfirmed) {
           try {
             Swal.showLoading();
-
-            // 드로잉 데이터 결합 및 API 경로 준수
-            const payload = {
-              festivalId: parseInt(festivalId),
-              zoneName: formValues.zoneName,
-              safetyLimit: formValues.safetyLimit,
-              svgPoints: tempSvgPoints || '0,0 200,0 200,200 0,200'
-            };
-
-            const res = await fetch('/api/admin/zones', {
-              method: 'POST',
+            const payload = Array.from(selectedSeatsMap.values());
+            const res = await fetch('/api/admin/seats/layout', {
+              method: 'PUT',
               headers: {
                 'Content-Type': 'application/json',
                 'Authorization': getAuthHeader()
@@ -1517,72 +2459,41 @@
               body: JSON.stringify(payload)
             });
 
-            if (!res.ok) throw new Error('구역 생성 도중 오류가 발생했습니다.');
-            const newZone = await res.json();
+            if (!res.ok) throw new Error('레이아웃 저장 중 오류가 발생했습니다.');
 
-            Swal.fire('완료', `[${newZone.zoneName}] 구역이 성공적으로 생성되었습니다.`, 'success');
-
-            // 사용된 드로잉 임시값 및 임시 다각형 소거
-            tempSvgPoints = null;
-            document.querySelectorAll('.draw-polygon').forEach(el => el.remove());
-
-            // 구역 드롭다운 갱신 및 신규 생성된 구역 자동 선택
-            await refreshZones(festivalId, newZone.id);
+            Swal.fire('성공', '좌석 레이아웃과 등급이 성공적으로 업데이트되었습니다.', 'success');
+            selectedSeatsMap.clear();
+            
+            // 실시간 재렌더링
+            if (zoomState.activeZoneId) {
+              await loadSeatsForLayout(zoomState.activeZoneId);
+            }
           } catch (err) {
             Swal.fire('에러', err.message, 'error');
           }
         }
       });
 
-      // 2-2-1. 구역 삭제 이벤트 바인딩
-      btnDeleteZone.addEventListener('click', async () => {
-        const zoneId = zoneSelect.value;
+
+
+      // Figma 기본 배치도 노출 여부 동기화 함수
+      function updateFigmaBackgroundVisibility() {
         const festivalId = festivalSelect.value;
-        if (!zoneId || !festivalId) return;
-
-        const selectedOptionText = zoneSelect.options[zoneSelect.selectedIndex].text;
-
-        const confirmResult = await Swal.fire({
-          title: '구역 삭제 경고',
-          html: `정말로 <strong>[${selectedOptionText}]</strong> 구역을 삭제하시겠습니까?<br><span class="text-danger" style="font-size: 0.85rem;"><i class="bx bx-error me-1"></i>삭제 시 해당 구역에 포함된 모든 좌석 정보가 영구 삭제됩니다.</span>`,
-          icon: 'warning',
-          showCancelButton: true,
-          confirmButtonText: '삭제 실행',
-          cancelButtonText: '취소',
-          confirmButtonColor: '#ff3e1d',
-          cancelButtonColor: '#8592a3'
-        });
-
-        if (confirmResult.isConfirmed) {
-          try {
-            Swal.showLoading();
-
-            const res = await fetch(`/api/admin/zones/${zoneId}`, {
-              method: 'DELETE',
-              headers: {
-                'Authorization': getAuthHeader()
-              }
-            });
-
-            if (!res.ok) throw new Error('구역 삭제 도중 오류가 발생했습니다.');
-
-            Swal.fire('삭제 완료', '구역 및 하위 좌석들이 성공적으로 삭제되었습니다.', 'success');
-
-            // 줌 아웃 및 화면 초기화
-            zoomOut();
-            clearGrid();
-
-            // 구역 정보 갱신
-            await refreshZones(festivalId);
-          } catch (err) {
-            Swal.fire('에러', err.message, 'error');
+        const selectedText = festivalSelect.options[festivalSelect.selectedIndex]?.text || '';
+        const figmaBg = document.getElementById('figmaBackground');
+        if (figmaBg) {
+          if (festivalId && (festivalId === '1' || selectedText.includes('서울 재즈') || selectedText.toLowerCase().includes('jazz'))) {
+            figmaBg.style.display = 'block';
+          } else {
+            figmaBg.style.display = 'none';
           }
         }
-      });
+      }
 
       // 2-3. 특정 페스티벌 선택 시 구역 목록 조회
       festivalSelect.addEventListener('change', async (e) => {
         const festivalId = e.target.value;
+        updateFigmaBackgroundVisibility();
 
         if (festivalId) {
           sessionStorage.setItem('selectedFestivalId', festivalId);
@@ -1592,59 +2503,94 @@
         }
 
         // 초기화
-        zoneSelect.innerHTML = '<option value="">-- 구역을 선택하세요 --</option>';
-        zoneSelect.disabled = true;
-        btnCreateZone.disabled = true;
         btnGenerate.disabled = true;
         clearGrid();
 
         if (!festivalId) return;
 
-        btnCreateZone.disabled = false;
         await refreshZones(festivalId);
       });
 
-      // 3. 특정 구역 선택 시 모달 오픈 연동
-      zoneSelect.addEventListener('change', async (e) => {
-        const zoneId = e.target.value;
-
-        if (zoneId) {
-          sessionStorage.setItem('selectedZoneId', zoneId);
-        } else {
-          sessionStorage.removeItem('selectedZoneId');
-        }
-
+      // 구역 활성화 상태 제어 UI 업데이트
+      function updateZoneStatusUI(zoneId) {
         if (!zoneId) {
-          btnGenerate.disabled = true;
-          if (targetZoneLabel) {
-            targetZoneLabel.innerText = '-- 구역을 선택하세요 --';
-            targetZoneLabel.classList.remove('text-primary');
-            targetZoneLabel.classList.add('text-muted');
-          }
-          modalGridWrapper.innerHTML = '';
+          if (zoneStatusWrapper) zoneStatusWrapper.style.setProperty('display', 'none', 'important');
+          return;
+        }
+        const zone = currentZones.find(z => z.id == zoneId);
+        if (!zone) {
+          if (zoneStatusWrapper) zoneStatusWrapper.style.setProperty('display', 'none', 'important');
           return;
         }
 
-        // 드롭다운 변경 시 레이블 업데이트 및 모달 오픈
-        const selectedOptionText = zoneSelect.options[zoneSelect.selectedIndex].text;
-        if (targetZoneLabel) {
-          targetZoneLabel.innerText = selectedOptionText;
-          targetZoneLabel.classList.remove('text-muted');
-          targetZoneLabel.classList.add('text-primary');
+        if (zoneStatusWrapper) zoneStatusWrapper.style.setProperty('display', 'flex', 'important');
+        
+        if (zone.status === 'DISABLED') {
+          btnToggleZoneStatus.className = 'btn btn-xs btn-danger fw-bold';
+          btnToggleZoneStatus.innerHTML = '<i class="bx bx-x me-1"></i>미허용 (숨김 중)';
+        } else {
+          btnToggleZoneStatus.className = 'btn btn-xs btn-success fw-bold';
+          btnToggleZoneStatus.innerHTML = '<i class="bx bx-check me-1"></i>허용 (예매 가능)';
         }
+      }
 
-        // 메인 화면 배경 이미지 미리 연동 (이미지가 존재할 때만 덮어씀, 없으면 이전 배경 유지)
-        const curZone = currentZones.find(z => z.id == zoneId);
-        if (curZone && curZone.mapBgUrl) {
-          gridBgOverlay.style.backgroundImage = `url('${curZone.mapBgUrl}')`;
-        }
+      // 구역 활성화 상태 토글 API 연동
+      if (btnToggleZoneStatus) {
+        btnToggleZoneStatus.addEventListener('click', async () => {
+          const zoneId = zoomState.activeZoneId;
+          if (!zoneId) return;
 
-        btnGenerate.disabled = false;
-        openSeatEditor(zoneId, selectedOptionText);
-      });
+          try {
+            const res = await fetch(`/api/admin/zones/${zoneId}/toggle-status`, {
+              method: 'PUT',
+              headers: {
+                'Authorization': getAuthHeader()
+              }
+            });
+
+            if (!res.ok) {
+              const errData = await res.json();
+              throw new Error(errData.message || '상태 변경 중 오류가 발생했습니다.');
+            }
+
+            const updatedZone = await res.json();
+            
+            // 업데이트된 구역 데이터를 currentZones 배열에 반영
+            const idx = currentZones.findIndex(z => z.id == zoneId);
+            if (idx !== -1) {
+              currentZones[idx] = updatedZone;
+            }
+
+            // UI 업데이트
+            updateZoneStatusUI(zoneId);
+            
+            // SVG 구역 다시 그리기 (비활성화 스타일 반영)
+            drawZonesOnSvg(currentZones);
+
+            // 다각형의 하이라이트/엑티브 스타일 유지
+            const activePolygon = document.querySelector(`.zone-polygon[data-zone-id="${zoneId}"]`);
+            if (activePolygon) {
+              activePolygon.classList.add('active');
+            }
+
+            Swal.fire({
+              title: '성공',
+              text: `구역 노출 상태가 ${updatedZone.status === 'DISABLED' ? '미허용(숨김)' : '허용(노출)'}으로 변경되었습니다.`,
+              icon: 'success',
+              timer: 1500,
+              showConfirmButton: false
+            });
+
+          } catch (err) {
+            Swal.fire('에러', err.message, 'error');
+          }
+        });
+      }
 
       // 좌석 목록 로드 API 호출
       async function loadSeats(zoneId) {
+        isLoadingSeats = true;
+        isGeneratingPreview = false;
         if (zoneId) {
           btnGenerate.disabled = false;
         }
@@ -1661,27 +2607,54 @@
           originalSeatsState = JSON.parse(JSON.stringify(seatsData));
 
           if (seatsData.length === 0) {
-            modalGridWrapper.style.display = 'block';
-            modalGridWrapper.classList.add('active');
-            modalGridWrapper.innerHTML = '<div class="text-center py-5 text-muted"><i class="bx bx-error-alt fs-1 d-block mb-3 text-warning"></i>구역에 생성된 좌석이 없습니다.<br>좌측 \'3. 좌석 생성\' 메뉴에서 크기를 설정해 좌석 판을 생성해 주세요.</div>';
-            btnModalReset.disabled = true;
-            btnModalSaveLayout.disabled = true;
+            // DB에 좌석이 없으면 Grid Generator 기본값(12열×10행)으로 자동 미리보기 렌더링
+            isGeneratingPreview = true;
+            previewSeatsGrid();
           } else {
+            // DB에 존재하는 실제 행/열 크기를 계산하여 슬라이더 값에 세팅
+            let maxRow = 1;
+            let maxCol = 1;
+            
+            function getRowIndexFromLabel(label) {
+              const cleanLabel = (label || "").replace("열", "").trim().toUpperCase();
+              let index = 0;
+              for (let i = 0; i < cleanLabel.length; i++) {
+                index = index * 26 + (cleanLabel.charCodeAt(i) - 64);
+              }
+              return index;
+            }
+
+            seatsData.forEach(s => {
+              const rIdx = getRowIndexFromLabel(s.seatRow || "");
+              if (rIdx > maxRow) maxRow = rIdx;
+              if (s.seatNumber > maxCol) maxCol = s.seatNumber;
+            });
+
+            if (rowCountInput && rowCountVal) {
+              rowCountInput.value = maxRow;
+              rowCountVal.textContent = maxRow;
+            }
+            if (colCountInput && colCountVal) {
+              colCountInput.value = maxCol;
+              colCountVal.textContent = maxCol;
+            }
+
             renderGrid(seatsData);
             btnModalReset.disabled = false;
             btnModalSaveLayout.disabled = false;
           }
         } catch (err) {
           Swal.fire('에러', err.message, 'error');
+        } finally {
+          isLoadingSeats = false;
         }
       }
 
       // 4. 가변 좌석 격자판 대량 생성 (POST /api/admin/seats/generate)
       btnGenerate.addEventListener('click', async () => {
-        const zoneId = zoneSelect.value;
+        const zoneId = zoomState.activeZoneId;
         const rowCount = parseInt(rowCountInput.value);
         const colCount = parseInt(colCountInput.value);
-        const price = parseInt(priceInput.value);
 
         if (!zoneId) {
           Swal.fire('알림', '구역을 먼저 선택해 주세요.', 'warning');
@@ -1692,46 +2665,88 @@
           return;
         }
         if (isNaN(colCount) || colCount <= 0 || colCount > 50) {
-          Swal.fire('all', '열 크기를 1~50 사이로 입력해 주세요.', 'warning');
-          return;
-        }
-        if (isNaN(price) || price < 0) {
-          Swal.fire('알림', '가격을 올바르게 입력해 주세요.', 'warning');
+          Swal.fire('알림', '열 크기를 1~50 사이로 입력해 주세요.', 'warning');
           return;
         }
 
-        Swal.fire({
-          title: '좌석 판 생성 확인',
-          text: '기존에 등록되어 있던 해당 구역의 좌석 데이터는 모두 삭제되고 새로 생성됩니다. 진행하시겠습니까?',
-          icon: 'warning',
-          showCancelButton: true,
-          confirmButtonColor: '#6366f1',
-          cancelButtonColor: '#475569',
-          confirmButtonText: '네, 생성합니다',
-          cancelButtonText: '취소'
-        }).then(async (result) => {
-          if (result.isConfirmed) {
-            try {
-              Swal.showLoading();
-              const res = await fetch('/api/admin/seats/generate', {
-                method: 'POST',
-                headers: {
-                  'Content-Type': 'application/json',
-                  'Authorization': getAuthHeader()
-                },
-                body: JSON.stringify({ zoneId, rowCount, colCount, price })
-              });
+        // 선택된 기본 등급에 맞추어 단가 설정값을 가져옴
+        const gradeName = defaultGradeSelect.value;
+        const matched = seatGrades.find(g => g.name === gradeName);
+        const price = matched ? matched.price : 50000;
 
-              if (!res.ok) throw new Error('좌석판 생성 중 에러가 발생했습니다.');
+        try {
+          Swal.showLoading();
+          const res = await fetch('/api/admin/seats/generate', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': getAuthHeader()
+            },
+            body: JSON.stringify({ zoneId, rowCount, colCount, price })
+          });
 
-              Swal.fire('완료', '좌석 격자판이 새로 생성되었습니다.', 'success');
-              await loadSeats(zoneId);
-            } catch (err) {
-              Swal.fire('에러', err.message, 'error');
-            }
+          if (!res.ok) throw new Error('좌석판 생성 중 에러가 발생했습니다.');
+
+          Swal.fire({
+            title: '완료',
+            text: '좌석 격자판이 새로 생성되었습니다.',
+            icon: 'success',
+            timer: 1000,
+            showConfirmButton: false
+          });
+          await loadSeats(zoneId);
+          // 구역 목록 새로고침하여 SVG 테두리 상태 갱신
+          const festivalId = festivalSelect.value;
+          if (festivalId) {
+            await refreshZones(festivalId, zoneId);
           }
-        });
+        } catch (err) {
+          Swal.fire('에러', err.message, 'error');
+        }
       });
+
+      // 실시간 가상 좌석 미리보기 생성 함수 (슬라이더 연동용)
+      function previewSeatsGrid() {
+        const rowCount = parseInt(rowCountInput.value);
+        const colCount = parseInt(colCountInput.value);
+        const gradeName = defaultGradeSelect.value;
+        const matched = seatGrades.find(g => g.name === gradeName);
+        const price = matched ? matched.price : 50000;
+
+        const tempSeats = [];
+        
+        function getRowLabel(rowNum) {
+          let label = "";
+          let temp = rowNum;
+          while (temp > 0) {
+            let m = (temp - 1) % 26;
+            label = String.fromCharCode(65 + m) + label;
+            temp = Math.floor((temp - 1) / 26);
+          }
+          return label;
+        }
+
+        for (let r = 1; r <= rowCount; r++) {
+          const rowLabel = getRowLabel(r);
+          for (let c = 1; c <= colCount; c++) {
+            tempSeats.push({
+              id: `temp-${r}-${c}`,
+              seatRow: rowLabel,
+              seatNumber: c,
+              status: 'AVAILABLE',
+              price: price,
+              isReserved: false
+            });
+          }
+        }
+
+        seatsData = tempSeats;
+        renderGrid(seatsData);
+
+        btnModalReset.disabled = true;
+        // 미리보기 상태에서는 Generate Layout 버튼으로 저장 안내
+        btnModalSaveLayout.disabled = true;
+      }
 
       // 5. 시각적 격자판(CSS Grid) 실시간 드로잉 렌더러
       function renderGrid(seats) {
@@ -1740,8 +2755,8 @@
         modalGridWrapper.innerHTML = '';
 
         // 행 레이블 고유값 추출 (예: 'A열', 'B열' ...)
-        const rows = [...new Set(seats.map(s => s.seatRow))].sort((a, b) => {
-          return a.localeCompare(b, undefined, { numeric: true, sensitivity: 'base' });
+        const rows = [...new Set(seats.map(s => s.seatRow || ""))].sort((a, b) => {
+          return (a || "").localeCompare(b || "", undefined, { numeric: true, sensitivity: 'base' });
         });
 
         // 각 행의 최대 열 번호 계산
@@ -1788,20 +2803,27 @@
 
               // Drag & Click Events
               cell.addEventListener('mousedown', (e) => {
+                if (selectedMode === '조회') return;
                 isDrawing = true;
                 updateCellState(cell);
               });
-
+ 
               cell.addEventListener('mouseenter', () => {
+                if (selectedMode === '조회') return;
                 if (isDrawing) {
                   updateCellState(cell);
                 }
               });
-
-              // 개별 좌석 클릭 시 관제 상세 정보 바인딩
+ 
+              // 개별 좌석 클릭 시
               cell.addEventListener('click', () => {
-                if (seat.status !== '무대' && seat.status !== '통로') {
-                  showSeatReservationDetails(seat);
+                if (selectedMode === '조회') {
+                  if (seat.status !== '무대' && seat.status !== '통로') {
+                    showSeatReservationDetails(seat);
+                  }
+                } else {
+                  // 조회 모드가 아닌 경우, 단순 클릭으로도 설정된 모드로 채색 적용
+                  updateCellState(cell);
                 }
               });
             } else {
@@ -1831,21 +2853,10 @@
         if (!seat) return;
 
         // 프론트 모드에 따른 상태 및 가격 설정
-        if (selectedMode === '일반석') {
+        const matchedGrade = seatGrades.find(g => g.name === selectedMode);
+        if (matchedGrade) {
           seat.status = '빈자리';
-          seat.price = Number(priceNormalInput.value);
-          seat.isReserved = false;
-        } else if (selectedMode === 'VIP석') {
-          seat.status = '빈자리';
-          seat.price = Number(priceVipInput.value);
-          seat.isReserved = false;
-        } else if (selectedMode === 'R석') {
-          seat.status = '빈자리';
-          seat.price = Number(priceRInput.value);
-          seat.isReserved = false;
-        } else if (selectedMode === 'S석') {
-          seat.status = '빈자리';
-          seat.price = Number(priceSInput.value);
+          seat.price = matchedGrade.price;
           seat.isReserved = false;
         } else if (selectedMode === '무대') {
           seat.status = '무대';
@@ -1857,7 +2868,6 @@
           seat.isReserved = true;
         } else if (selectedMode === '보류석') {
           seat.status = '보류';
-          // 보류 지정 시 기존 등급 단가는 유지하되, isReserved 플래그를 true로 바꾸어 일반 관객 예매를 원천 차단
           seat.isReserved = true;
         }
 
@@ -1959,12 +2969,10 @@
         document.getElementById('ctrlSeatName').innerText = `${seat.seatRow} ${seat.seatNumber}번`;
 
         let gradeName = '일반석';
-        const vip = Number(priceVipInput.value);
-        const r = Number(priceRInput.value);
-        const s = Number(priceSInput.value);
-        if (seat.price === vip) gradeName = 'VIP석';
-        else if (seat.price === r) gradeName = 'R석';
-        else if (seat.price === s) gradeName = 'S석';
+        const matched = seatGrades.find(g => g.price === Number(seat.price));
+        if (matched) {
+          gradeName = matched.name;
+        }
 
         document.getElementById('ctrlSeatGrade').innerText = `${gradeName} (₩${seat.price.toLocaleString()})`;
 
@@ -2039,7 +3047,7 @@
 
       // 6. 레이아웃 확정 저장 (PUT /api/admin/seats/layout)
       btnModalSaveLayout.addEventListener('click', async () => {
-        const zoneId = zoneSelect.value;
+        const zoneId = zoomState.activeZoneId;
         if (!zoneId || seatsData.length === 0) return;
 
         // 변경 사항 필터링 (상태 및 단가 모두 업데이트)
@@ -2064,6 +3072,11 @@
 
           Swal.fire('성공', '좌석 레이아웃 배치 정보가 DB에 최종 반영되었습니다.', 'success');
           await loadSeats(zoneId);
+          // 구역 목록 새로고침하여 SVG 테두리 상태 갱신
+          const festivalId = festivalSelect.value;
+          if (festivalId) {
+            await refreshZones(festivalId, zoneId);
+          }
         } catch (err) {
           Swal.fire('에러', err.message, 'error');
         }
@@ -2119,12 +3132,15 @@
           if (offcanvas) offcanvas.hide();
 
           // 구역 재조회하여 실시간 리렌더링
-          const zoneId = zoneSelect.value;
+          const zoneId = zoomState.activeZoneId;
           if (zoneId) {
             await loadSeats(zoneId);
+            if (zoomState.zoomed && zoomState.activeZoneId == zoneId) {
+              await loadSeatsForLayout(zoneId);
+            }
           }
         } catch (err) {
-          Swal.fire('에러', err.message, 'error');
+          Swal.fire('error', err.message, 'error');
         }
       });
 
@@ -2132,13 +3148,15 @@
       function clearGrid() {
         seatsData = [];
         originalSeatsState = [];
-        btnModalReset.disabled = true;
-        btnModalSaveLayout.disabled = true;
-        btnGenerate.disabled = true; // 좌석 생성 버튼 비활성화
         if (btnDeleteZone) {
           btnDeleteZone.disabled = true;
         }
-        updateDashboardStats([]); // 대시보드 통계 비활성화
+        if (zoneStatusWrapper) {
+          zoneStatusWrapper.style.setProperty('display', 'none', 'important');
+        }
+        if (seatsGrid) {
+          seatsGrid.innerHTML = '';
+        }
         showEmptyState('페스티벌과 구역을 선택하거나 좌석 판을 생성해주세요.');
       }
 
@@ -2149,6 +3167,11 @@
 
       // 초기 시작 및 자동 복원
       async function initAndRestore() {
+        // 동적 등급 설정 렌더링 및 동기화
+        renderGradeSettings();
+        syncDefaultGradeDropdown();
+        syncModalEditorMode();
+
         await fetchFestivals();
         
         const savedFestivalId = sessionStorage.getItem('selectedFestivalId');
@@ -2156,34 +3179,61 @@
         
         if (savedFestivalId) {
           festivalSelect.value = savedFestivalId;
+          updateFigmaBackgroundVisibility();
           
           // 구역 목록 조회
           await refreshZones(savedFestivalId);
-          
-          if (savedZoneId) {
-            // 구역 선택박스 값 복원
-            zoneSelect.value = savedZoneId;
-            
-            // 대상 구역 레이블 업데이트
-            const selectedOptionText = zoneSelect.options[zoneSelect.selectedIndex]?.text;
-            if (targetZoneLabel && selectedOptionText) {
-              targetZoneLabel.innerText = selectedOptionText;
-              targetZoneLabel.classList.remove('text-muted');
-              targetZoneLabel.classList.add('text-primary');
-            }
-            btnGenerate.disabled = false;
-            
-            // 모달 오픈 연동 및 메인 배경 이미지 복원
-            if (savedZoneId && selectedOptionText) {
-              const curZone = currentZones.find(z => z.id == savedZoneId);
-              if (curZone && curZone.mapBgUrl) {
-                gridBgOverlay.style.backgroundImage = `url('${curZone.mapBgUrl}')`;
-              }
-              openSeatEditor(savedZoneId, selectedOptionText);
-            }
-          }
         }
       }
+      // Figma 템플릿 구역 클릭 이벤트 연동
+      document.querySelectorAll('.figma-template-zone').forEach(el => {
+        el.addEventListener('click', (e) => {
+          if (isDrawingMode) return;
+          e.stopPropagation();
+
+          const template = el.getAttribute('data-template');
+          const zoneNameMap = {
+            'vip': 'VIP존',
+            'f1': 'F1',
+            'f2': 'F2',
+            'f3': 'F3',
+            'standing': '스탠딩존',
+            'a-left': 'A존 (좌)',
+            'a-right': 'A존 (우)',
+            'f4-left': 'F4 (좌)',
+            'f4-right': 'F4 (우)'
+          };
+          const targetZoneName = zoneNameMap[template];
+          if (!targetZoneName) return;
+
+          // 이미 생성된 구역이 있는지 검색
+          const existingZone = currentZones.find(z => z.zoneName === targetZoneName);
+          if (existingZone) {
+            // 이미 존재하면 해당 구역 편집(모달) 오픈
+            openSeatEditor(existingZone.id, existingZone.zoneName);
+          } else {
+            // 존재하지 않으면 신규 추가 모달 오픈
+            const festivalId = festivalSelect.value;
+            if (!festivalId) {
+              Swal.fire('알림', '페스티벌을 먼저 선택해 주세요.', 'warning');
+              return;
+            }
+
+            // 구역 추가 버튼을 클릭해 새 창 띄우고, select 드롭다운에서 해당 템플릿을 선택하도록 모사
+            btnCreateZone.click();
+
+            // SweetAlert2 창이 뜬 직후 dropdown 값을 템플릿으로 변경하고 change 이벤트 발송
+            setTimeout(() => {
+              const swalSelect = document.getElementById('swal-template-select');
+              if (swalSelect) {
+                swalSelect.value = template;
+                swalSelect.dispatchEvent(new Event('change'));
+              }
+            }, 100);
+          }
+        });
+      });
+
       initAndRestore();
     });
   </script>
@@ -2198,44 +3248,67 @@
           <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
         </div>
         <div class="modal-body">
+          <!-- 좌석 격자판 대량 생성 제어판 (바/슬라이더형) -->
+          <div class="card border mb-4 shadow-sm" style="background: #ffffff; border-radius: 8px;">
+            <div class="card-body py-4 px-4">
+              <div class="d-flex align-items-center gap-2 mb-3">
+                <i class="bx bx-grid text-primary fs-4"></i>
+                <span class="fw-bold text-dark" style="font-size: 0.9rem; letter-spacing: 0.5px; text-transform: uppercase;">GRID GENERATOR</span>
+              </div>
+              
+              <div class="row g-4">
+                <!-- 열 (Columns) 슬라이더 -->
+                <div class="col-md-4 col-12">
+                  <div class="d-flex justify-content-between align-items-center mb-1">
+                    <label class="form-label mb-0 fw-semibold text-secondary" for="colCountInput">Columns</label>
+                    <span id="colCountVal" class="fw-bold text-dark fs-6">12</span>
+                  </div>
+                  <input type="range" id="colCountInput" class="form-range custom-blue-range" min="4" max="40" value="12">
+                  <div class="d-flex justify-content-between text-muted" style="font-size: 0.75rem; margin-top: 2px;">
+                    <span>4</span>
+                    <span>40</span>
+                  </div>
+                </div>
+
+                <!-- 행 (Rows) 슬라이더 -->
+                <div class="col-md-4 col-12">
+                  <div class="d-flex justify-content-between align-items-center mb-1">
+                    <label class="form-label mb-0 fw-semibold text-secondary" for="rowCountInput">Rows</label>
+                    <span id="rowCountVal" class="fw-bold text-dark fs-6">10</span>
+                  </div>
+                  <input type="range" id="rowCountInput" class="form-range custom-blue-range" min="2" max="30" value="10">
+                  <div class="d-flex justify-content-between text-muted" style="font-size: 0.75rem; margin-top: 2px;">
+                    <span>2</span>
+                    <span>30</span>
+                  </div>
+                </div>
+
+                <!-- 기본 좌석 등급 선택 -->
+                <div class="col-md-4 col-12">
+                  <label class="form-label fw-semibold text-secondary mb-1" for="defaultGradeSelect">Default Grade</label>
+                  <select id="defaultGradeSelect" class="form-select form-select-sm" style="height: 34px;">
+                    <option value="NORMAL" selected>일반석</option>
+                    <option value="VIP">VIP석</option>
+                    <option value="R">R석</option>
+                    <option value="S">S석</option>
+                  </select>
+                </div>
+              </div>
+
+              <!-- 생성 버튼 -->
+              <div class="mt-4">
+                <button id="btnGenerate" class="btn w-100 fw-bold" style="background: #1a2e68; color: #ffffff; border: none; padding: 10px; border-radius: 6px;">
+                  <i class="bx bx-play me-1"></i>Generate Layout
+                </button>
+              </div>
+            </div>
+          </div>
+
           <!-- 설정 모드 (드래그/클릭으로 채색) -->
           <div class="mb-4">
             <div class="form-label mb-2 fw-bold">설정 모드 (드래그/클릭으로 채색)</div>
-            <div class="d-flex flex-wrap gap-2">
-              <input type="radio" class="btn-check" name="editorMode" id="modeNormal" value="일반석" checked>
-              <label class="btn btn-sm btn-outline-secondary" for="modeNormal">
-                <i class="bx bx-purchase-tag me-1"></i>일반석 설정
-              </label>
-
-              <input type="radio" class="btn-check" name="editorMode" id="modeVIP" value="VIP석">
-              <label class="btn btn-sm btn-outline-warning" for="modeVIP">
-                <i class="bx bxs-crown me-1"></i>VIP석 설정
-              </label>
-
-              <input type="radio" class="btn-check" name="editorMode" id="modeR" value="R석">
-              <label class="btn btn-sm btn-outline-primary" for="modeR">
-                <i class="bx bx-star me-1"></i>R석 설정
-              </label>
-
-              <input type="radio" class="btn-check" name="editorMode" id="modeS" value="S석">
-              <label class="btn btn-sm btn-outline-info" for="modeS">
-                <i class="bx bx-certification me-1"></i>S석 설정
-              </label>
-
-              <input type="radio" class="btn-check" name="editorMode" id="modeStage" value="무대">
-              <label class="btn btn-sm btn-outline-dark" for="modeStage">
-                <i class="bx bx-desktop me-1"></i>무대 설정
-              </label>
-
-              <input type="radio" class="btn-check" name="editorMode" id="modeCorridor" value="통로">
-              <label class="btn btn-sm btn-outline-danger" for="modeCorridor">
-                <i class="bx bx-directions me-1"></i>통로 설정
-              </label>
-
-              <input type="radio" class="btn-check" name="editorMode" id="modeHold" value="보류석">
-              <label class="btn btn-sm btn-outline-danger" for="modeHold">
-                <i class="bx bx-lock-alt me-1"></i>보류석 설정
-              </label>
+            <div class="d-flex flex-wrap gap-2" id="modalEditorModeContainer">
+              <!-- JS 동적 렌더링 (일반석, VIP석, R석, S석 및 커스텀 등급 + 무대, 통로, 보류석) -->
             </div>
           </div>
 
