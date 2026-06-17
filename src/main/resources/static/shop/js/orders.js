@@ -65,7 +65,7 @@ function renderOrderCard(order) {
     const isDone2 = order.status === 'READY_FOR_PICKUP' || order.status === 'COMPLETED';
     const isDone3 = order.status === 'COMPLETED';
     steps = `
-      <div class="st-line"><div class="st-progress" style="width:${isDone3 ? 100 : (isDone2 ? 66 : 33)}%;"></div></div>
+      <div class="st-line"><div class="st-progress" style="width:${isDone3 ? 100 : (isDone2 ? 66 : 33)}%;"><span class="st-truck">🏃</span></div></div>
       <div class="st-step done"><div class="st-dot"></div><div class="st-label">결제완료</div></div>
       <div class="st-step ${isDone2 ? 'done' : 'active'}"><div class="st-dot"></div><div class="st-label">조리 준비</div></div>
       <div class="st-step ${isDone3 ? 'done' : (isDone2 ? 'active' : '')}"><div class="st-dot"></div><div class="st-label">수령전</div></div>
@@ -77,7 +77,7 @@ function renderOrderCard(order) {
     const isDone2 = order.status === 'SHIPPING' || order.status === 'DELIVERED';
     const isDone3 = order.status === 'DELIVERED';
     steps = `
-      <div class="st-line"><div class="st-progress" style="width:${isDone3 ? 100 : (isDone2 ? 66 : 33)}%;"></div></div>
+      <div class="st-line"><div class="st-progress" style="width:${isDone3 ? 100 : (isDone2 ? 66 : 33)}%;"><span class="st-truck">🚚</span></div></div>
       <div class="st-step done"><div class="st-dot"></div><div class="st-label">결제완료</div></div>
       <div class="st-step ${isDone2 ? 'done' : 'active'}"><div class="st-dot"></div><div class="st-label">배송준비</div></div>
       <div class="st-step ${isDone3 ? 'done' : (isDone2 ? 'active' : '')}"><div class="st-dot"></div><div class="st-label">배송중</div></div>
