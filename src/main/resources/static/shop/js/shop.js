@@ -224,6 +224,19 @@ document.addEventListener('DOMContentLoaded', () => {
   window.FS.renderHeader();
   window.FS.startMockAlerts();
 
+  /* URL 파라미터로 카테고리 초기화 */
+  const params = new URLSearchParams(window.location.search);
+  const catParam = params.get('category');
+  if (catParam) {
+    S.cat = catParam;
+    document.querySelectorAll('.cat-btn').forEach(x => {
+      x.classList.toggle('on', x.dataset.cat === S.cat);
+    });
+    document.querySelectorAll('.ftag').forEach(x => {
+      x.classList.toggle('on', x.dataset.cat === S.cat);
+    });
+  }
+
   /* 카테고리 탭 (cat-strip) */
   document.querySelectorAll('.cat-btn').forEach(b => {
     b.addEventListener('click', () => {

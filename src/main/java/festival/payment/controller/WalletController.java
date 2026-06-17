@@ -23,7 +23,6 @@ public class WalletController {
 
     private final UserRepository userRepository;
     private final RestTemplate restTemplate;
-    private final org.springframework.jdbc.core.JdbcTemplate jdbcTemplate;
 
     /** 포트원 V1 아이디 (실제 계정 식별코드) */
     private static final String IMP_KEY = "1637473843534869";
@@ -43,7 +42,10 @@ public class WalletController {
         HttpEntity<Map<String, String>> request = new HttpEntity<>(body, headers);
 
         try {
-            ResponseEntity<Map> response = restTemplate.postForEntity(url, request, Map.class);
+            ResponseEntity<Map<String, Object>> response = restTemplate.exchange(url, HttpMethod.POST, request,
+                    new org.springframework.core.ParameterizedTypeReference<Map<String, Object>>() {
+                    });
+            @SuppressWarnings("unchecked")
             Map<String, Object> responseMap = (Map<String, Object>) response.getBody().get("response");
             return (String) responseMap.get("access_token");
         } catch (Exception e) {
@@ -61,8 +63,12 @@ public class WalletController {
         headers.setBearerAuth(accessToken);
         HttpEntity<Void> request = new HttpEntity<>(headers);
 
-        ResponseEntity<Map> response = restTemplate.exchange(url, HttpMethod.GET, request, Map.class);
-        return (Map<String, Object>) response.getBody().get("response");
+        ResponseEntity<Map<String, Object>> response = restTemplate.exchange(url, HttpMethod.GET, request,
+                new org.springframework.core.ParameterizedTypeReference<Map<String, Object>>() {
+                });
+        @SuppressWarnings("unchecked")
+        Map<String, Object> responseMap = (Map<String, Object>) response.getBody().get("response");
+        return responseMap;
     }
 
     /**

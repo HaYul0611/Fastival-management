@@ -34,11 +34,12 @@ window.initCommentUI = function () {
     }
   }
 
-  // 탭 내부의 기본 빈 텍스트 영역 숨김 처리 (리뷰 탭 콘텐츠가 바로 붙도록)
+  // 탭 내부의 기본 빈 텍스트 영역 숨김 처리는 .tab-empty-text 에만 적용해야 함.
+  // .tab-content-inner 전체를 숨기면 페이지 빌더 실시간 동기화가 보이지 않는 문제가 발생함.
   const innerContent = tabReviewContainer.querySelector('.tab-content-inner');
-  if (innerContent) {
-    innerContent.style.display = 'none';
-  }
+  // if (innerContent) {
+  //   innerContent.style.display = 'none';
+  // }
 
   // 이미 초기화된 경우 중복 방지
   if (document.getElementById('dynamic-comments-section')) return;

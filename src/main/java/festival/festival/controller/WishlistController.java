@@ -15,7 +15,6 @@ public class WishlistController {
 
     private final WishlistService wishlistService;
 
-    // TODO: 연동 시 실제 세션/로그인 유저 ID 사용
     private final String MOCK_USER_ID = "test-user";
 
     @GetMapping

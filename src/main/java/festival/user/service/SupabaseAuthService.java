@@ -16,7 +16,7 @@ import java.util.Map;
 public class SupabaseAuthService {
 
     private final RestTemplate restTemplate = new RestTemplate();
-    
+
     // 환경에 따라 properties에서 주입받는 것이 좋으나, 빠른 해결을 위해 하드코딩
     private static final String SUPABASE_URL = "https://loqsekbplftdjphzewmx.supabase.co";
     private static final String SERVICE_ROLE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxvcXNla2JwbGZ0ZGpwaHpld214Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3OTc3Mzk0NiwiZXhwIjoyMDk1MzQ5OTQ2fQ.3MFHCa4uA2_P8tz99QfgVcy2r3uuqDYKJagA1PWnu1g";
@@ -37,7 +37,9 @@ public class SupabaseAuthService {
         HttpEntity<Map<String, Object>> requestEntity = new HttpEntity<>(body, headers);
 
         try {
-            ResponseEntity<Map> response = restTemplate.exchange(url, HttpMethod.POST, requestEntity, Map.class);
+            ResponseEntity<Map<String, Object>> response = restTemplate.exchange(url, HttpMethod.POST, requestEntity,
+                    new org.springframework.core.ParameterizedTypeReference<Map<String, Object>>() {
+                    });
             return response.getBody();
         } catch (Exception e) {
             log.error("Supabase Admin API Error: ", e);

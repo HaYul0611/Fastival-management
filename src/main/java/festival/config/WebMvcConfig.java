@@ -5,8 +5,6 @@ import org.springframework.http.CacheControl;
 import org.springframework.web.servlet.config.annotation.ResourceHandlerRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
-import java.time.Duration;
-
 @Configuration
 public class WebMvcConfig implements WebMvcConfigurer {
     @Override
@@ -15,6 +13,6 @@ public class WebMvcConfig implements WebMvcConfigurer {
         // 개발 중 JS, CSS 파일이 브라우저에 캐시되어 반영되지 않는 문제를 방지합니다.
         registry.addResourceHandler("/**")
                 .addResourceLocations("classpath:/static/")
-                .setCacheControl(CacheControl.noCache().noStore().mustRevalidate());
+                .setCacheControl(CacheControl.noStore().mustRevalidate());
     }
 }
