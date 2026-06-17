@@ -629,7 +629,12 @@ function generateModalQR(token) {
 let _currentQrToken = '';
 
 function showTicketQr(token) {
-  openQrModalView(token, 'TICKET');
+  const dbTicket = _dbTickets.find(t => t.secret === token);
+  if (dbTicket) {
+      window.location.href = `/features/user/ticket/view.html?orderId=${dbTicket.orderId}&secret=${token}`;
+  } else {
+      openQrModalView(token, 'TICKET');
+  }
 }
 
 function showFoodQr(token) {

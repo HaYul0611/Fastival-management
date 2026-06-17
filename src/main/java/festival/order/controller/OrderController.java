@@ -487,7 +487,7 @@ public class OrderController {
         if (qrText == null || !qrText.startsWith("TOTP:")) {
             insertScanLog(-1L, 1L, false); // 형식이 맞지 않는 스캔도 실패로 기록
             res.put("status", "INVALID");
-            res.put("message", "올바른 동적(TOTP) 모바일 티켓 형식이 아닙니다.");
+            res.put("message", "올바른 동적(TOTP) 모바일 티켓 형식이 아닙니다. [입력값: " + qrText + "]");
             return res;
         }
 
