@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1.0" />
+  <title>마이페이지 | FESTIO SHOP</title>
+  <link rel="stylesheet" href="css/common.css" />
+  <link rel="stylesheet" href="css/mypage.css" />
+  <script src="https://js.tosspayments.com/v1/payment"></script>
+</head>
+
+<body>
+  <header class="site-header"></header>
+
+  <main class="mypage-layout">
+    <!-- 사이드바 -->
+    <aside class="mp-sidebar">
+      <a href="mypage.html" class="active">내 정보 / 설정</a>
+      <a href="orders.html">주문/배송조회</a>
+    </aside>
+
+    <!-- 콘텐츠 -->
+    <section class="mp-content">
+      <h1 class="mp-title">마이페이지</h1>
+
+      <div class="mp-card">
+        <div class="mp-profile-sec">
+          <div class="mp-profile">
+            <div class="mp-avatar" id="avatarContainer" style="cursor:pointer; position:relative; overflow:hidden;">
+              <img src="https://via.placeholder.com/64" id="mypageAvatar"
+                style="width:100%;height:100%;object-fit:cover;" alt="Avatar"
+                onerror="this.style.display='none'; document.getElementById('avatarFallback').style.display='block';">
+              <svg id="avatarFallback" style="display:none;" width="24" height="24" viewBox="0 0 24 24" fill="none">
+                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" stroke="#A1A1AA" stroke-width="2"
+                  stroke-linecap="round" />
+                <circle cx="12" cy="7" r="4" stroke="#A1A1AA" stroke-width="2" stroke-linecap="round" />
+              </svg>
+              <div class="avatar-overlay"
+                style="position:absolute; bottom:0; left:0; width:100%; height:24px; background:rgba(0,0,0,0.5); display:flex; justify-content:center; align-items:center;">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2">
+                  <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path>
+                  <circle cx="12" cy="13" r="4"></circle>
+                </svg>
+              </div>
+              <input type="file" id="avatarUpload" accept="image/*" style="display:none;">
+            </div>
+            <div class="mp-user-info">
+              <div class="mp-name" id="mpName">회원님</div>
+              <div class="mp-email" id="mpEmail">user@example.com</div>
+            </div>
+            <div class="mp-tier badge-emerald" id="mpTier">BRONZE 등급</div>
+          </div>
+
+          <!-- 프로그레스 바 -->
+          <div class="tier-progress-wrap" style="margin-top:20px; padding-top:20px; border-top:1px solid var(--g150);">
+            <div
+              style="display:flex; justify-content:space-between; font-size:12px; font-weight:700; color:var(--g500); margin-bottom:8px;">
+              <span>누적 15,000P 달성 시 다음 등급 (SILVER)</span>
+              <span style="color:var(--black);" id="mpSpentTxt">0P / 15,000P</span>
+            </div>
+            <div class="progress-bg"
+              style="width:100%; height:8px; background:var(--g100); border-radius:4px; overflow:hidden;">
+              <div class="progress-bar" id="mpProgressBar"
+                style="width: 0%; height:100%; background:var(--blue); transition:width 0.5s;"></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="mp-points-box">
+          <div style="display:flex; align-items:center; gap:10px;">
+            <span>FESTIO Pay 잔여 포인트</span>
+            <button class="btn-outline-sm" id="btnChargePay"
+              style="padding:4px 12px; border-radius:12px; border:1px solid var(--g300); background:#fff; font-size:12px; font-weight:700; cursor:pointer;">충전하기</button>
+          </div>
+          <span class="mp-point-val"><span id="mpPoints">0</span> <span class="p-unit">P</span></span>
+        </div>
+      </div>
+
+      <h2 class="mp-sub-title">알림 설정</h2>
+      <div class="mp-settings">
+        <div class="mp-set-row">
+          <div class="mp-set-text">
+            <strong>현장수령 및 조리 완료 알림</strong>
+            <p>푸드트럭 조리가 완료되거나 굿즈 픽업이 준비되면 알려드려요.</p>
+          </div>
+          <label class="toggle-switch"><input type="checkbox" id="notiFood" checked><span class="slider"></span></label>
+        </div>
+        <div class="mp-set-row">
+          <div class="mp-set-text">
+            <strong>일반 배송 진행상황 알림</strong>
+            <p>부피가 큰 상품이나 예약 상품의 배송 출발 및 완료 알림을 받습니다.</p>
+          </div>
+          <label class="toggle-switch"><input type="checkbox" id="notiShip" checked><span class="slider"></span></label>
+        </div>
+        <div class="mp-set-row">
+          <div class="mp-set-text">
+            <strong>이벤트 및 마케팅 혜택 알림</strong>
+            <p>한정판 콜라보레이션 굿즈 오픈 소식 등을 전해드려요.</p>
+          </div>
+          <label class="toggle-switch"><input type="checkbox" id="notiMark"><span class="slider"></span></label>
+        </div>
+      </div>
+
+    </section>
+  </main>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="js/supabase_client.js"></script>
+  <script src="js/common.js"></script>
+  <script src="js/mypage.js"></script>
+</body>
+
+</html>

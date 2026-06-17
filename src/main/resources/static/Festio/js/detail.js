@@ -2999,6 +2999,26 @@ window.updateGalleryPreview = function (targetId) {
     html = '<div class="gallery-slider">';
     images.forEach(src => { html += `<div class="gallery-slider-item"><img src="${src}" alt="갤러리 이미지"></div>`; });
     html += '</div>';
+  } else if (layout === 'filmstrip') {
+    html = '<div class="gallery-filmstrip">';
+    images.forEach(src => { html += `<div class="gallery-filmstrip-item"><img src="${src}" alt="갤러리 이미지"></div>`; });
+    html += '</div>';
+  } else if (layout === 'polaroid') {
+    html = '<div class="gallery-polaroid-new">';
+    images.forEach(src => { html += `<div class="gallery-polaroid-new-item"><div class="polaroid-img-wrap"><img src="${src}" alt="갤러리 이미지"></div></div>`; });
+    html += '</div>';
+  } else if (layout === 'collage') {
+    html = '<div class="gallery-collage">';
+    images.forEach(src => { html += `<div class="gallery-collage-item"><img src="${src}" alt="갤러리 이미지"></div>`; });
+    html += '</div>';
+  } else if (layout === 'fullwidth') {
+    html = '<div class="gallery-fullwidth">';
+    images.forEach(src => { html += `<div class="gallery-fullwidth-item"><img src="${src}" alt="갤러리 이미지"></div>`; });
+    html += '</div>';
+  } else if (layout === 'tiled') {
+    html = '<div class="gallery-tiled">';
+    images.forEach(src => { html += `<div class="gallery-tiled-item"><img src="${src}" alt="갤러리 이미지"></div>`; });
+    html += '</div>';
   }
 
   inner.innerHTML = html;

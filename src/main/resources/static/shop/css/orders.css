@@ -1,0 +1,220 @@
+/* ================================================================
+   FESTIO SHOP — orders.css
+   ================================================================ */
+
+.orders-list {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.order-card {
+  background: var(--white);
+  border: 1px solid var(--g200);
+  border-radius: var(--r16);
+  padding: 24px;
+  box-shadow: var(--sh1);
+}
+
+.order-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid var(--g150);
+}
+
+.order-date {
+  font-size: 15px;
+  font-weight: 800;
+  color: var(--black);
+}
+
+.order-no {
+  font-size: 13px;
+  color: var(--g500);
+  margin-left: 8px;
+}
+
+.order-detail-btn {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--blue);
+}
+
+/* 주문 항목들 */
+.order-items {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.order-item {
+  display: flex;
+  gap: 20px;
+  align-items: flex-start;
+}
+
+.oi-img {
+  width: 90px;
+  height: 90px;
+  border-radius: var(--r12);
+  background: var(--g100);
+  object-fit: cover;
+  flex-shrink: 0;
+}
+
+.oi-info {
+  flex: 1;
+}
+
+.oi-status {
+  display: inline-block;
+  padding: 4px 10px;
+  border-radius: var(--rpill);
+  font-size: 12px;
+  font-weight: 800;
+  margin-bottom: 8px;
+}
+
+.oi-status.pickup {
+  background: rgba(16, 185, 129, 0.1);
+  color: #059669;
+}
+
+.oi-status.shipping {
+  background: rgba(0, 199, 255, 0.1);
+  color: #009BD6;
+}
+
+.oi-name {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--black);
+  margin-bottom: 4px;
+}
+
+.oi-opt {
+  font-size: 13px;
+  color: var(--g500);
+  margin-bottom: 12px;
+}
+
+.oi-price {
+  font-size: 16px;
+  font-weight: 800;
+  color: var(--black);
+}
+
+/* 상태 트래커바 */
+.status-tracker {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 24px;
+  background: var(--g50);
+  padding: 20px 32px;
+  border-radius: var(--r12);
+  position: relative;
+}
+
+.st-step {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  position: relative;
+  z-index: 2;
+}
+
+.st-dot {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: var(--white);
+  border: 3px solid var(--g300);
+  transition: all var(--trans);
+}
+
+.st-step.active .st-dot {
+  background: var(--white);
+  border-color: var(--black);
+}
+
+.st-step.done .st-dot {
+  background: var(--black);
+  border-color: var(--black);
+}
+
+.st-label {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--g400);
+}
+
+.st-step.active .st-label,
+.st-step.done .st-label {
+  color: var(--black);
+}
+
+/* 트래커 라인 */
+.st-line {
+  position: absolute;
+  top: 31px;
+  left: 50px;
+  right: 50px;
+  height: 2px;
+  background: var(--g200);
+  z-index: 1;
+}
+
+.st-progress {
+  height: 100%;
+  background: var(--black);
+  width: 0%;
+  /* 동적 제어 */
+  transition: width 0.3s ease;
+}
+
+.order-actions {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 20px;
+  padding-top: 20px;
+  border-top: 1px dashed var(--g200);
+}
+
+.btn-qr {
+  background: var(--black);
+  color: #fff;
+  border: none;
+  border-radius: var(--rpill);
+  padding: 10px 24px;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  transition: background var(--trans);
+}
+
+.btn-qr:hover {
+  background: var(--g800);
+}
+
+@media(max-width: 768px) {
+  .status-tracker {
+    padding: 16px;
+  }
+
+  .st-label {
+    font-size: 11px;
+  }
+
+  .st-line {
+    left: 30px;
+    right: 30px;
+  }
+}

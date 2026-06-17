@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1.0" />
+  <title>주문/배송조회 — FESTIO SHOP</title>
+  <link rel="stylesheet" href="css/common.css" />
+  <link rel="stylesheet" href="css/mypage.css" />
+  <link rel="stylesheet" href="css/orders.css" />
+  <style>
+    /* 스켈레톤 로딩 */
+    .skeleton {
+      background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+      background-size: 200% 100%;
+      animation: skel 1.5s infinite;
+      border-radius: var(--r8);
+    }
+
+    @keyframes skel {
+      0% {
+        background-position: 200% 0;
+      }
+
+      100% {
+        background-position: -200% 0;
+      }
+    }
+
+    .sk-card {
+      height: 280px;
+      margin-bottom: 24px;
+      border-radius: var(--r16);
+    }
+
+    /* QR 모달 */
+    .qr-modal {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.6);
+      z-index: 1000;
+      justify-content: center;
+      align-items: center;
+      opacity: 0;
+      transition: opacity 0.3s;
+    }
+
+    .qr-modal.show {
+      display: flex;
+      opacity: 1;
+    }
+
+    .qr-content {
+      background: #fff;
+      width: 320px;
+      border-radius: 20px;
+      padding: 32px 24px;
+      text-align: center;
+      position: relative;
+      transform: translateY(20px);
+      transition: transform 0.3s;
+    }
+
+    .qr-modal.show .qr-content {
+      transform: translateY(0);
+    }
+
+    .qr-close {
+      position: absolute;
+      top: 16px;
+      right: 16px;
+      background: none;
+      border: none;
+      font-size: 24px;
+      cursor: pointer;
+    }
+
+    .qr-img {
+      width: 200px;
+      height: 200px;
+      margin: 20px auto;
+      background: #f0f0f0;
+    }
+  </style>
+</head>
+
+<body>
+  <header class="site-header"></header>
+
+  <main class="mypage-layout">
+    <aside class="mp-sidebar">
+      <a href="mypage.html">내 정보 / 설정</a>
+      <a href="orders.html" class="active">주문/배송조회</a>
+    </aside>
+
+    <section class="mp-content">
+      <h1 class="mp-title">주문/배송조회</h1>
+
+      <div id="ordersList" class="orders-list">
+        <!-- 스켈레톤 로딩 -->
+        <div class="skeleton sk-card"></div>
+        <div class="skeleton sk-card"></div>
+      </div>
+
+    </section>
+  </main>
+
+  <!-- QR 팝업 모달 -->
+  <div class="qr-modal" id="qrModal">
+    <div class="qr-content">
+      <button class="qr-close" id="qrClose">&times;</button>
+      <h3 style="font-size:18px; font-weight:800; margin-bottom:8px;">현장 수령 픽업증</h3>
+      <p style="font-size:13px; color:var(--g500); margin-bottom:20px;">푸드트럭 또는 부스 직원에게 아래 QR코드를 보여주세요.</p>
+      <div class="qr-img">
+        <img src="img/sample_qr.png" id="qrImage" style="width:100%; height:100%;" alt="QR"
+          onerror="this.src='https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=FESTIO_PICKUP_SAMPLE'">
+      </div>
+      <p style="font-size:14px; font-weight:700; color:var(--blue);" id="qrOrderNo">주문번호: -</p>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="js/supabase_client.js"></script>
+  <script src="js/common.js"></script>
+  <script src="js/orders.js"></script>
+</body>
+
+</html>

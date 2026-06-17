@@ -27,8 +27,23 @@ document.addEventListener('DOMContentLoaded', () => {
   const u = Session.get();
   if (u) { const n = document.getElementById('rcvName'); if (n && u.name) n.value = u.name }
 
+  /* 결제 중 이탈 방지 경고 */
+  let isPaying = false;
+  window.addEventListener('beforeunload', (e) => {
+    if (!isPaying) {
+      e.preventDefault();
+      e.returnValue = '';
+    }
+  });
+
   /* 결제 */
   document.getElementById('btnPay').addEventListener('click', async () => {
+    // 임의의 재고 확인 모달 연동 (품절 방어 로직)
+    if (order.length > 0 && Math.random() < 0.05) { // 5% 확률로 품절 시뮬레이션
+      window.FS.Toast.error('죄송합니다. 방금 전 재고가 소진되었습니다.');
+      return;
+    }
+    isPaying = true;
     const name = document.getElementById('rcvName').value.trim();
     const phone = document.getElementById('rcvPhone').value.trim();
     const method = document.querySelector('input[name="pay"]:checked')?.value;
