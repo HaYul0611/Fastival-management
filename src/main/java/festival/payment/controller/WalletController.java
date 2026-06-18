@@ -176,4 +176,56 @@ public class WalletController {
         result.put("name", user.getName());
         return ResponseEntity.ok(result);
     }
+
+    /**
+     * FESTIO Pay 결제 차감 (SHOP 연동용)
+     * POST /api/wallet/pay
+     * Body: { "amount": 15000 }
+     */
+    @PostMapping("/pay")
+    @Transactional
+    public ResponseEntity<?> pay(@RequestBody Map<String, Object> body, @RequestHeader(value = "Authorization", required = false) String token) {
+        if (token == null) {
+            return ResponseEntity.status(401).body("로그인이 필요합니다.");
+        }
+        
+        Integer amount = (Integer) body.get("amount");
+        if (amount == null || amount <= 0) {
+            return ResponseEntity.badRequest().body("유효하지 않은 결제 금액입니다.");
+        }
+
+        String userId = null;
+        if (token.startsWith("festio-jwt-token-")) {
+            userId = token.substring("festio-jwt-token-".length());
+        } else if (token.equals("festio-admin-jwt-token-7777")) {
+            UserVo admin = userRepository.findByEmail("admin@gmail.com").orElse(null);
+            if (admin != null) {
+                userId = admin.getId();
+            } else {
+                return ResponseEntity.status(401).body("관리자 계정이 존재하지 않습니다.");
+            }
+        } else {
+            return ResponseEntity.status(401).body("로그인이 필요합니다.");
+        }
+
+        UserVo user = userRepository.findById(userId).orElse(null);
+        if (user == null) {
+            return ResponseEntity.status(404).body("사용자를 찾을 수 없습니다.");
+        }
+
+        int currentBalance = user.getBalance() != null ? user.getBalance() : 0;
+        if (currentBalance < amount) {
+            return ResponseEntity.badRequest().body("잔액이 부족합니다. (현재 잔액: " + currentBalance + "원)");
+        }
+
+        // 잔액 차감
+        user.setBalance(currentBalance - amount);
+        userRepository.save(user);
+
+        Map<String, Object> result = new HashMap<>();
+        result.put("success", true);
+        result.put("deductedAmount", amount);
+        result.put("newBalance", user.getBalance());
+        return ResponseEntity.ok(result);
+    }
 }

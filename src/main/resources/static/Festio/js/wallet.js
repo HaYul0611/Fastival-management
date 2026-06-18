@@ -2,9 +2,9 @@
    FESTIO Pay (wallet) — 실제 PG 결제 충전 연동
    ═══════════════════════════════════════════════════════════ */
 
-let _walletHistory     = [];
-let _walletBalance     = 0;
-let _walletFilter      = 'all';
+let _walletHistory = [];
+let _walletBalance = 0;
+let _walletFilter = 'all';
 let _walletInitialized = false;
 
 /* ─ 잔액 카드 갱신 ──────────────────────────────────────── */
@@ -12,10 +12,10 @@ function renderWalletBalance(balance, userName) {
   _walletBalance = balance;
   const amountEl = document.getElementById('walletBalanceAmount');
   const headerEl = document.getElementById('walletBalanceHeader');
-  const nameEl   = document.getElementById('walletUserName');
+  const nameEl = document.getElementById('walletUserName');
   if (amountEl) amountEl.textContent = balance.toLocaleString();
   if (headerEl) headerEl.textContent = `잔액 ${balance.toLocaleString()}원`;
-  if (nameEl)   nameEl.textContent = userName || (typeof _member !== 'undefined' && _member && _member.name) || '-';
+  if (nameEl) nameEl.textContent = userName || (typeof _member !== 'undefined' && _member && _member.name) || '-';
 }
 
 /* ─ 거래 내역 렌더링 ────────────────────────────────────── */
@@ -83,14 +83,14 @@ async function requestWalletCharge(amount) {
     const member = (typeof _member !== 'undefined') ? _member : null;
 
     IMP.request_pay({
-      pg:           'html5_inicis.INIpayTest',
-      pay_method:   'card',
+      pg: 'html5_inicis.INIpayTest',
+      pay_method: 'card',
       merchant_uid: orderUid,
-      name:         `FESTIO Pay 충전 ${amount.toLocaleString()}원`,
-      amount:       amount,
-      buyer_email:  (member && member.email) || '',
-      buyer_name:   (member && member.name)  || '이용자',
-      buyer_tel:    (member && member.phone) || '010-0000-0000',
+      name: `FESTIO Pay 충전 ${amount.toLocaleString()}원`,
+      amount: amount,
+      buyer_email: (member && member.email) || '',
+      buyer_name: (member && member.name) || '이용자',
+      buyer_tel: (member && member.phone) || '010-0000-0000',
     }, async (rsp) => {
       if (rsp.success) {
         try {
@@ -100,7 +100,7 @@ async function requestWalletCharge(amount) {
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ impUid: rsp.imp_uid, amount, userToken: token })
           });
-          
+
           let data;
           const contentType = res.headers.get('content-type');
           if (contentType && contentType.includes('application/json')) {
@@ -139,14 +139,28 @@ async function initWalletTab() {
       quickGrid.querySelectorAll('.quick-charge-btn').forEach(b => b.classList.remove('selected'));
       btn.classList.add('selected');
       const input = document.getElementById('walletChargeInput');
-      if (input) input.value = btn.dataset.amount;
+      if (input) input.value = parseInt(btn.dataset.amount).toLocaleString();
+    });
+  }
+
+  // 금액 콤마 자동 입력 이벤트
+  const chargeInputObj = document.getElementById('walletChargeInput');
+  if (chargeInputObj) {
+    chargeInputObj.addEventListener('input', (e) => {
+      let val = e.target.value.replace(/[^0-9]/g, '');
+      if (val) {
+        e.target.value = parseInt(val).toLocaleString();
+      } else {
+        e.target.value = '';
+      }
     });
   }
 
   // 충전 실행 함수
   const doCharge = async () => {
-    const input  = document.getElementById('walletChargeInput');
-    const amount = parseInt(input ? input.value : '0');
+    const input = document.getElementById('walletChargeInput');
+    const amountStr = input ? input.value : '0';
+    const amount = parseInt(amountStr.replace(/,/g, '') || 0);
 
     if (!amount || amount < 1000) {
       if (window.Toast) Toast.warn('최소 1,000원 이상 입력해주세요.');
@@ -167,7 +181,7 @@ async function initWalletTab() {
 
       const now = new Date();
       const pad = n => String(n).padStart(2, '0');
-      const dateStr = `${now.getFullYear()}.${pad(now.getMonth()+1)}.${pad(now.getDate())} ${pad(now.getHours())}:${pad(now.getMinutes())}`;
+      const dateStr = `${now.getFullYear()}.${pad(now.getMonth() + 1)}.${pad(now.getDate())} ${pad(now.getHours())}:${pad(now.getMinutes())}`;
       _walletHistory.unshift({ type: 'charge', desc: '카드 충전', amount, date: dateStr });
 
       if (input) input.value = '';

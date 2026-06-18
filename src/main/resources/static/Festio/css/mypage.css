@@ -862,8 +862,8 @@
 }
 
 .wallet-filter-btn.active {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  border-color: transparent;
+  background: #667eea;
+  border-color: #667eea;
   color: white;
 }
 
@@ -2855,6 +2855,23 @@
   position: relative;
 }
 
+.hero-grade.mp-badge-protruding {
+  position: absolute;
+  top: -12px;
+  left: 16px;
+  background: linear-gradient(135deg, #FF6B6B 0%, #FF4757 100%);
+  color: white;
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-size: 0.75rem;
+  font-weight: bold;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  z-index: 10;
+}
+
 .hero-grade-badge {
   position: absolute;
   top: -10px;
@@ -3281,7 +3298,7 @@
 .mp-badge-protruding {
   position: absolute;
   top: -12px;
-  left: -12px;
+  left: 12px;
   z-index: 10;
   border-radius: 8px;
   box-shadow: 0 4px 10px rgba(0, 0, 0, 0.18);
@@ -3304,6 +3321,14 @@
 .mp-badge-protruding.status-대기 {
   background: #f59e0b;
   color: #fff;
+}
+
+@media (max-width: 1023px) {
+
+  .mypage-left,
+  .mypage-sidenav {
+    display: none !important;
+  }
 }
 
 .mp-badge-protruding.status-취소 {

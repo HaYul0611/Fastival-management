@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="ko">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
@@ -7,22 +8,34 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
     <link rel="stylesheet" href="css/view.css" />
 </head>
+
 <body>
     <div class="ticket-container">
-        <div class="title">FESTIO TICKET</div>
-        <div class="subtitle">입장 시 스태프에게 보여주세요</div>
-        
-        <div class="totp-code" id="totp-display">------</div>
-        
-        <div class="qr-box" id="qr-box">
+        <button class="back-btn" onclick="history.back()">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+                stroke-linecap="round" stroke-linejoin="round">
+                <path d="M15 18l-6-6 6-6" />
+            </svg>
+        </button>
+        <div class="title" style="margin-top: 10px;">FESTIO TICKET</div>
+        <div class="subtitle">입장 시 스태프에게 아래 QR코드를 보여주세요</div>
+
+        <div class="qr-wrapper">
             <div id="qr-code"></div>
+            <div class="qr-scan-line"></div>
         </div>
-        
+
+        <div class="user-name">
+            <span id="grade-badge" class="badge badge-bronze">BRONZE</span>
+            <span id="user-display">이용자</span>
+        </div>
+        <div class="totp-code" id="code-display">------</div>
+
         <div class="timer-container">
             <div class="timer-bar" id="timer-bar"></div>
         </div>
-        <div class="timer-text"><span id="timer-sec">30</span>초 후 코드가 새로고침됩니다.</div>
-        
+        <div class="timer-text"><span id="timer-sec">03:00</span> 후 자동 갱신</div>
+
         <div class="warning">
             ※ 캡처된 화면은 사용할 수 없습니다.<br>
             ※ 스크린샷 방지 보안이 적용된 티켓입니다.
@@ -31,4 +44,5 @@
 
     <script src="js/view.js"></script>
 </body>
+
 </html>

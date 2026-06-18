@@ -91,7 +91,7 @@ public class Fastival1Application {
 					jdbcTemplate.update(
 						"INSERT INTO app_user (email, password, name, phone, role, membership_grade, balance, status, store_id) " +
 						"VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
-						"staff@gmail.com", encodedPw, "매장스태프", "010-1111-1111", "ROLE_FOOD_STAFF", "BRONZE", 0, "ACTIVE", 1L
+						"staff@gmail.com", encodedPw, "매장스태프", "010-1111-1111", "ROLE_FOOD_STAFF", "SVIP", 0, "ACTIVE", 1L
 					);
 					System.out.println("[Init] Created default staff account (staff@gmail.com / Password123!)");
 				}

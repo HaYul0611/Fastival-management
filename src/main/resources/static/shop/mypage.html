@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1.0" />
+  <title>마이페이지 | FESTIO SHOP</title>
+  <link rel="stylesheet" href="css/common.css" />
+  <link rel="stylesheet" href="css/mypage.css" />
+  <!-- PortOne (iamport) SDK -->
+  <script src="https://cdn.iamport.kr/v1/iamport.js"></script>
+</head>
+
+<body>
+  <header class="site-header"></header>
+
+  <main class="mypage-layout">
+    <!-- 사이드바 -->
+    <aside class="mp-sidebar">
+      <a href="mypage.html" class="active">내 정보 / 설정</a>
+      <a href="orders.html">주문/배송조회</a>
+    </aside>
+
+    <!-- 콘텐츠 -->
+    <section class="mp-content">
+      <h1 class="mp-title">마이페이지</h1>
+
+      <div class="mp-card">
+        <div class="mp-profile-sec" style="display:flex; flex-direction:column; gap:24px;">
+          <!-- 프로필 정보 영역 (가로 배치) -->
+          <div class="mp-profile-main">
+
+            <!-- 아바타 -->
+            <div class="mp-avatar-wrapper" style="position:relative;">
+              <div class="mp-avatar" id="avatarContainer"
+                style="width:96px; height:96px; border-radius:50%; cursor:pointer; position:relative; overflow:hidden; border:2px solid var(--g100); background:#f8f9fa;">
+                <img
+                  src="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><path fill='%23ccc' d='M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z'/></svg>"
+                  id="mypageAvatar" style="width:100%;height:100%;object-fit:cover;" alt="Avatar"
+                  onerror="this.src='data:image/svg+xml;utf8,<svg xmlns=\'http://www.w3.org/2000/svg\' viewBox=\'0 0 24 24\'><path fill=\'%23ccc\' d=\'M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z\'/></svg>'">
+                <svg id="avatarFallback"
+                  style="display:none; width:100%; height:100%; padding:20px; box-sizing:border-box;"
+                  viewBox="0 0 24 24" fill="none">
+                  <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" stroke="#A1A1AA" stroke-width="2"
+                    stroke-linecap="round" />
+                  <circle cx="12" cy="7" r="4" stroke="#A1A1AA" stroke-width="2" stroke-linecap="round" />
+                </svg>
+                <!-- 호버 오버레이 (라이트 그레이) -->
+                <div class="avatar-overlay"
+                  style="position:absolute; top:0; left:0; width:100%; height:100%; background:rgba(200, 200, 200, 0.7); display:none; justify-content:center; align-items:center; transition:0.2s;">
+                  <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#333" stroke-width="2">
+                    <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path>
+                    <circle cx="12" cy="13" r="4"></circle>
+                  </svg>
+                </div>
+                <input type="file" id="avatarUpload" accept="image/*" style="display:none;">
+              </div>
+              <!-- 아바타 삭제 X 버튼 (우상단 반쯤 튀어나옴, hover 시 보이게 JS 처리) -->
+              <button id="btnDeleteAvatar"
+                style="display:none; position:absolute; top:-2px; right:-2px; width:28px; height:28px; background:rgba(255,255,255,0.9); color:#333; border-radius:8px; border:1px solid #ddd; font-size:24px; cursor:pointer; align-items:center; justify-content:center; padding:0; line-height:1; z-index:10; box-shadow:0 2px 4px rgba(0,0,0,0.1);">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                  stroke-linecap="round" stroke-linejoin="round">
+                  <line x1="18" y1="6" x2="6" y2="18"></line>
+                  <line x1="6" y1="6" x2="18" y2="18"></line>
+                </svg>
+              </button>
+            </div>
+
+            <!-- 텍스트 정보 -->
+            <div class="mp-text-info">
+              <div class="mp-user-info-row">
+                <div class="mp-name" id="mpName">관리자님</div>
+                <div class="mp-email" id="mpEmail">admin@gmail.com</div>
+                <button class="btn-outline-sm btn-edit-profile" id="btnEditProfile">수정하기</button>
+              </div>
+              <div class="mp-tier badge-emerald" id="mpTier" style="display:inline-block; margin-bottom:12px;">BRONZE 등급
+              </div>
+
+              <!-- 프로그레스 바 -->
+              <div class="tier-progress-wrap">
+                <div
+                  style="display:flex; justify-content:space-between; align-items:center; font-size:12px; font-weight:700; color:var(--g500); margin-bottom:8px;">
+                  <span style="display:flex; align-items:center; gap:6px;">
+                    누적 15,000P 달성 시 다음 등급
+                    <span id="nextTierBadge"
+                      style="display:inline-block; padding:2px 8px; border-radius:12px; background:var(--g200); color:var(--g700); font-size:11px;">SILVER</span>
+                  </span>
+                  <span style="color:var(--black);" id="mpSpentTxt">0P / 15,000P</span>
+                </div>
+                <div class="progress-bg"
+                  style="width:100%; height:8px; background:var(--g100); border-radius:4px; overflow:hidden;">
+                  <div class="progress-bar" id="mpProgressBar"
+                    style="width: 0%; height:100%; background:var(--blue); transition:width 0.5s;"></div>
+                </div>
+              </div>
+            </div>
+
+          </div>
+
+          <!-- 수정하기 폼 (기본 숨김) -->
+          <div id="inlineEditForm"
+            style="display:none; background:var(--g50); padding:24px; border-radius:12px; border:1px solid var(--g200);">
+            <h3 style="font-size:16px; font-weight:800; margin-bottom:16px;">회원 정보 수정</h3>
+            <div style="display:flex; flex-direction:column; gap:16px; margin-bottom:24px;">
+              <div>
+                <label style="font-size:13px; font-weight:700; color:var(--g600); margin-bottom:6px; display:block;">새
+                  비밀번호</label>
+                <input type="password" id="editPwd"
+                  style="width:100%; padding:10px; border:1px solid var(--g300); border-radius:8px;"
+                  placeholder="변경할 비밀번호 입력">
+              </div>
+              <div>
+                <label style="font-size:13px; font-weight:700; color:var(--g600); margin-bottom:6px; display:block;">새
+                  비밀번호 확인</label>
+                <input type="password" id="editPwdConfirm"
+                  style="width:100%; padding:10px; border:1px solid var(--g300); border-radius:8px;"
+                  placeholder="비밀번호 다시 입력">
+              </div>
+            </div>
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+              <button id="btnWithdraw"
+                style="background:none; border:none; color:#ef4444; font-size:13px; font-weight:700; cursor:pointer; text-decoration:underline;">회원
+                탈퇴</button>
+              <div style="display:flex; gap:8px;">
+                <button id="btnEditCancel" class="btn-outline-sm"
+                  style="padding:8px 16px; border-radius:8px; border:1px solid var(--g300); background:#fff; font-weight:700; cursor:pointer;">취소</button>
+                <button id="btnEditSave" class="btn-primary"
+                  style="padding:8px 16px; border-radius:8px; background:var(--blue); color:#fff; border:none; font-weight:700; cursor:pointer;">저장</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="mp-points-box"
+          style="margin-top:24px; padding-top:24px; border-top:1px solid var(--g150); display:flex; justify-content:space-between; align-items:center;">
+          <div style="display:flex; align-items:center; gap:10px;">
+            <span style="font-weight:700; font-size:16px;">FESTIO Pay 잔여 포인트</span>
+            <button class="btn-outline-sm" id="btnChargePay"
+              style="padding:6px 14px; border-radius:14px; border:1px solid var(--g300); background:#fff; font-size:13px; font-weight:800; cursor:pointer; transition:0.2s;">충전하기</button>
+          </div>
+          <span class="mp-point-val" style="font-size:24px; font-weight:900;"><span id="mpPoints">0</span> <span
+              class="p-unit" style="font-size:16px;">P</span></span>
+        </div>
+      </div>
+
+      <!-- 거래 내역 (FESTIO Pay) -->
+      <div style="margin-bottom: 40px;">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+          <h2 class="mp-sub-title" style="margin-bottom:0;">거래 내역</h2>
+          <div style="display:flex;gap:6px;" id="shopWalletFilterBtns">
+            <button class="wallet-filter-btn active" data-filter="all">전체</button>
+            <button class="wallet-filter-btn" data-filter="charge">충전</button>
+            <button class="wallet-filter-btn" data-filter="use">사용</button>
+          </div>
+        </div>
+        <div id="shopWalletHistoryList"
+          style="display:flex;flex-direction:column;gap:2px;background:#fff;border:1px dashed var(--g300);border-radius:16px;padding:12px;">
+          <div style="padding:40px 0;text-align:center;align-items:center;">
+            <p style="font-size:18px;font-weight:800;color:var(--black);margin-bottom:8px;">거래 내역이 없습니다</p>
+            <p style="font-size:14px;color:var(--g500);">충전 또는 결제 내역이 발생하면 이곳에 표시됩니다.</p>
+          </div>
+        </div>
+      </div>
+
+      <h2 class="mp-sub-title">알림 설정</h2>
+      <div class="mp-settings">
+        <div class="mp-set-row">
+          <div class="mp-set-text">
+            <strong>현장수령 및 조리 완료 알림</strong>
+            <p>푸드트럭 조리가 완료되거나 굿즈 픽업이 준비되면 알려드려요.</p>
+          </div>
+          <label class="toggle-switch"><input type="checkbox" id="notiFood" checked><span class="slider"></span></label>
+        </div>
+        <div class="mp-set-row">
+          <div class="mp-set-text">
+            <strong>일반 배송 진행상황 알림</strong>
+            <p>부피가 큰 상품이나 예약 상품의 배송 출발 및 완료 알림을 받습니다.</p>
+          </div>
+          <label class="toggle-switch"><input type="checkbox" id="notiShip" checked><span class="slider"></span></label>
+        </div>
+        <div class="mp-set-row">
+          <div class="mp-set-text">
+            <strong>이벤트 및 마케팅 혜택 알림</strong>
+            <p>한정판 콜라보레이션 굿즈 오픈 소식 등을 전해드려요.</p>
+          </div>
+          <label class="toggle-switch"><input type="checkbox" id="notiMark"><span class="slider"></span></label>
+        </div>
+      </div>
+
+    </section>
+  </main>
+
+  <div id="withdrawModal"
+    style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.6); z-index:2000; justify-content:center; align-items:center; opacity:0; transition:opacity 0.3s;">
+    <div
+      style="background:#fff; width:340px; border-radius:16px; padding:32px 24px; text-align:center; transform:translateY(20px); transition:transform 0.3s;"
+      id="withdrawModalContent">
+      <div
+        style="width:48px; height:48px; border-radius:50%; background:#fee2e2; color:#ef4444; display:flex; justify-content:center; align-items:center; margin:0 auto 16px;">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path>
+          <line x1="12" y1="9" x2="12" y2="13"></line>
+          <line x1="12" y1="17" x2="12.01" y2="17"></line>
+        </svg>
+      </div>
+      <h3 style="font-size:18px; font-weight:800; margin-bottom:12px;">정말 탈퇴하시겠습니까?</h3>
+      <p style="font-size:14px; color:var(--g600); margin-bottom:24px; line-height:1.5;">회원 탈퇴 시 모든 결제 내역과<br>보유 중인 잔여
+        포인트가 소멸되며<br>복구할 수 없습니다.</p>
+      <div style="display:flex; gap:10px;">
+        <button id="btnWithdrawCancel"
+          style="flex:1; padding:12px; border-radius:10px; border:none; background:var(--g100); color:var(--g700); font-size:14px; font-weight:700; cursor:pointer;">취소</button>
+        <button id="btnWithdrawConfirm"
+          style="flex:1; padding:12px; border-radius:10px; border:none; background:#ef4444; color:#fff; font-size:14px; font-weight:700; cursor:pointer;">탈퇴하기</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- FESTIO Pay 충전 모달 -->
+  <div id="chargeModal"
+    style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.6); z-index:2000; justify-content:center; align-items:center; opacity:0; transition:opacity 0.3s;">
+    <div
+      style="background:#fff; width:380px; border-radius:16px; padding:32px 24px; box-shadow:0 10px 25px rgba(0,0,0,0.1); transform:translateY(20px); transition:transform 0.3s;"
+      id="chargeModalContent">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:24px;">
+        <h3 style="font-size:18px; font-weight:800; color:#1e293b; margin:0;">FESTIO Pay 충전</h3>
+        <button id="btnChargeClose" style="background:none; border:none; cursor:pointer; color:#64748b;">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="18" y1="6" x2="6" y2="18"></line>
+            <line x1="6" y1="6" x2="18" y2="18"></line>
+          </svg>
+        </button>
+      </div>
+
+      <!-- 빠른 충전 금액 버튼 -->
+      <div style="margin-bottom:24px;">
+        <div style="font-size:0.9rem;font-weight:700;color:#1e293b;margin-bottom:12px;">빠른 충전</div>
+        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;" id="shopQuickChargeGrid">
+          <button class="shop-quick-charge-btn" data-amount="10000"
+            style="padding:10px 0; border-radius:8px; border:1px solid #e2e8f0; background:#f8fafc; font-size:14px; font-weight:600; color:#475569; cursor:pointer; transition:all 0.2s;">1만원</button>
+          <button class="shop-quick-charge-btn" data-amount="30000"
+            style="padding:10px 0; border-radius:8px; border:1px solid #e2e8f0; background:#f8fafc; font-size:14px; font-weight:600; color:#475569; cursor:pointer; transition:all 0.2s;">3만원</button>
+          <button class="shop-quick-charge-btn" data-amount="50000"
+            style="padding:10px 0; border-radius:8px; border:1px solid #e2e8f0; background:#f8fafc; font-size:14px; font-weight:600; color:#475569; cursor:pointer; transition:all 0.2s;">5만원</button>
+          <button class="shop-quick-charge-btn" data-amount="100000"
+            style="padding:10px 0; border-radius:8px; border:1px solid #e2e8f0; background:#f8fafc; font-size:14px; font-weight:600; color:#475569; cursor:pointer; transition:all 0.2s;">10만원</button>
+          <button class="shop-quick-charge-btn" data-amount="200000"
+            style="padding:10px 0; border-radius:8px; border:1px solid #e2e8f0; background:#f8fafc; font-size:14px; font-weight:600; color:#475569; cursor:pointer; transition:all 0.2s;">20만원</button>
+          <button class="shop-quick-charge-btn" data-amount="500000"
+            style="padding:10px 0; border-radius:8px; border:1px solid #e2e8f0; background:#f8fafc; font-size:14px; font-weight:600; color:#475569; cursor:pointer; transition:all 0.2s;">50만원</button>
+        </div>
+      </div>
+
+      <!-- 직접 입력 충전 -->
+      <div style="background:#f8fafc;border-radius:14px;padding:16px;border:1px solid #e2e8f0;">
+        <div style="font-size:0.85rem;font-weight:700;color:#475569;margin-bottom:10px;">직접 입력</div>
+        <div style="display:flex;gap:8px;">
+          <div style="flex:1;position:relative;">
+            <span
+              style="position:absolute;left:12px;top:50%;transform:translateY(-50%);color:#64748b;font-weight:600;">₩</span>
+            <input type="text" id="shopWalletChargeInput" placeholder="충전할 금액"
+              style="width:100%;padding:10px 12px 10px 28px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:0.95rem;font-family:inherit;outline:none;box-sizing:border-box;"
+              onfocus="this.style.borderColor='#667eea'" onblur="this.style.borderColor='#e2e8f0'">
+          </div>
+          <button id="btnShopWalletChargeConfirm" style="
+            background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);
+            color:white;border:none;border-radius:10px;
+            padding:10px 18px;font-weight:700;font-size:0.9rem;
+            cursor:pointer;white-space:nowrap;
+            box-shadow:0 4px 12px rgba(102,126,234,0.3);
+            transition:all 0.2s;
+          ">결제 진행</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="js/supabase_client.js"></script>
+  <script src="js/common.js"></script>
+  <script src="js/mypage.js"></script>
+</body>
+
+</html>

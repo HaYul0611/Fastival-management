@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1.0" />
+  <title>주문/배송조회 | FESTIO SHOP</title>
+  <link rel="stylesheet" href="css/common.css" />
+  <link rel="stylesheet" href="css/mypage.css" />
+  <link rel="stylesheet" href="css/orders.css" />
+  <style>
+    /* 스켈레톤 로딩 */
+    .skeleton {
+      background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+      background-size: 200% 100%;
+      animation: skel 1.5s infinite;
+      border-radius: var(--r8);
+    }
+
+    @keyframes skel {
+      0% {
+        background-position: 200% 0;
+      }
+
+      100% {
+        background-position: -200% 0;
+      }
+    }
+
+    .sk-card {
+      height: 280px;
+      margin-bottom: 24px;
+      border-radius: var(--r16);
+    }
+
+    /* QR 모달 */
+    .qr-modal {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.6);
+      z-index: 1000;
+      justify-content: center;
+      align-items: center;
+      opacity: 0;
+      transition: opacity 0.3s;
+    }
+
+    .qr-modal.show {
+      display: flex;
+      opacity: 1;
+    }
+
+    .qr-content {
+      background: #fff;
+      width: 320px;
+      border-radius: 20px;
+      padding: 32px 24px;
+      text-align: center;
+      position: relative;
+      transform: translateY(20px);
+      transition: transform 0.3s;
+    }
+
+    .qr-modal.show .qr-content {
+      transform: translateY(0);
+    }
+
+    .qr-close {
+      position: absolute;
+      top: 16px;
+      right: 16px;
+      background: none;
+      border: none;
+      font-size: 24px;
+      cursor: pointer;
+    }
+
+    .qr-img {
+      width: 200px;
+      height: 200px;
+      margin: 20px auto;
+      background: #f0f0f0;
+    }
+  </style>
+</head>
+
+<body>
+  <header class="site-header"></header>
+
+  <main class="mypage-layout">
+    <aside class="mp-sidebar">
+      <a href="mypage.html">내 정보 / 설정</a>
+      <a href="orders.html" class="active">주문/배송조회</a>
+    </aside>
+
+    <section class="mp-content">
+      <h1 class="mp-title">주문/배송조회</h1>
+
+      <div id="ordersList" class="orders-list">
+        <!-- 스켈레톤 로딩 -->
+        <div class="skeleton sk-card"></div>
+        <div class="skeleton sk-card"></div>
+      </div>
+
+    </section>
+  </main>
+
+  <!-- QR 팝업 모달 -->
+  <div class="qr-modal" id="qrModal">
+    <div class="qr-content">
+      <button class="qr-close" id="qrClose">&times;</button>
+      <h3 style="font-size:18px; font-weight:800; margin-bottom:8px;">현장 수령 픽업증</h3>
+      <p style="font-size:13px; color:var(--g500); margin-bottom:20px; line-height:1.4;">
+        푸드트럭 또는 부스 직원에게<br>아래 QR코드를 보여주세요.
+      </p>
+      <div class="qr-img"
+        style="position:relative; overflow:hidden; mask-image:url('data:image/svg+xml;utf8,<svg viewBox=\'0 0 100 100\' xmlns=\'http://www.w3.org/2000/svg\'><path d=\'M50 88 C 50 88 5 60 5 30 C 5 5 45 5 50 25 C 55 5 95 5 95 30 C 95 60 50 88 50 88 Z\' fill=\'black\' /></svg>'); mask-size:contain; mask-position:center; mask-repeat:no-repeat; -webkit-mask-image:url('data:image/svg+xml;utf8,<svg viewBox=\'0 0 100 100\' xmlns=\'http://www.w3.org/2000/svg\'><path d=\'M50 88 C 50 88 5 60 5 30 C 5 5 45 5 50 25 C 55 5 95 5 95 30 C 95 60 50 88 50 88 Z\' fill=\'black\' /></svg>'); -webkit-mask-size:contain; -webkit-mask-position:center; -webkit-mask-repeat:no-repeat;">
+        <img src="img/sample_qr.png" id="qrImage"
+          style="width:100%; height:100%; transform:translateY(11px) rotate(45deg) scale(0.5); z-index:1; position:relative;"
+          alt="QR"
+          onerror="this.src='https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=FESTIO_PICKUP_SAMPLE&margin=0&format=svg'">
+      </div>
+      <p style="font-size:16px; font-weight:800; color:var(--blue);" id="qrOrderNo">주문번호: -</p>
+      <div id="totpWrap" style="margin-top: 24px; padding-top: 16px; border-top: 1px dashed var(--g200);">
+        <div
+          style="font-size:24px; letter-spacing:8px; font-family:monospace; font-weight:900; color:#0284c7; margin-bottom:12px;"
+          id="totpCode">------</div>
+        <div style="width:100%; height:6px; background:var(--g200); border-radius:4px; overflow:hidden;">
+          <div id="totpTimerBar" style="height:100%; background:#0ea5e9; width:100%; transition:width 1s linear;">
+          </div>
+        </div>
+        <div
+          style="display:flex; justify-content:center; align-items:center; gap:6px; font-size:12px; color:var(--g600); margin-top:8px;">
+          <svg id="btnResetTotp" style="cursor:pointer;" width="14" height="14" viewBox="0 0 24 24" fill="none"
+            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="1 4 1 10 7 10"></polyline>
+            <path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"></path>
+          </svg>
+          <span>남은 시간 <span id="totpTimeTxt" style="font-weight:800; color:#0ea5e9;">03:00</span></span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 주문 상세 모달 -->
+  <div class="qr-modal" id="orderDetailModal">
+    <div class="qr-content"
+      style="width: 440px; text-align: left; max-height: 80vh; display:flex; flex-direction:column;">
+      <button class="qr-close" id="odClose">&times;</button>
+      <h3 style="font-size:20px; font-weight:900; margin-bottom:16px;">주문 상세 내역</h3>
+      <div id="odContent" style="overflow-y: auto; flex:1; padding-right:8px;">
+        <!-- 상세 내용 렌더링 영역 -->
+      </div>
+    </div>
+  </div>
+
+  <!-- 리뷰 작성 모달 -->
+  <div class="qr-modal" id="reviewModal" style="backdrop-filter:none; background:rgba(0,0,0,0.5);">
+    <div class="qr-content"
+      style="width: 440px; text-align: left; max-height: 90vh; display:flex; flex-direction:column; padding: 24px;">
+      <button class="qr-close" onclick="closeReviewModal()">&times;</button>
+      <h3 style="font-size:20px; font-weight:900; margin-bottom:16px;">리뷰 작성</h3>
+      <div style="flex:1; overflow-y:auto; padding-right:4px;">
+
+        <!-- 별점 영역 -->
+        <div style="margin-bottom:20px;">
+          <div style="font-weight:700; margin-bottom:8px;">상품은 어떠셨나요?</div>
+          <div style="display:flex; align-items:center; gap:8px;">
+            <div class="rv-star-container" style="display:flex; gap:4px;">
+              <!-- 1점 -->
+              <div class="rv-star-wrap" style="position:relative; width:28px; height:28px; flex-shrink:0;">
+                <div id="rvStar1" class="rv-star rv-empty"></div>
+                <div class="rv-star-click left" onclick="setRating(0.5)"></div>
+                <div class="rv-star-click right" onclick="setRating(1)"></div>
+              </div>
+              <!-- 2점 -->
+              <div class="rv-star-wrap" style="position:relative; width:28px; height:28px; flex-shrink:0;">
+                <div id="rvStar2" class="rv-star rv-empty"></div>
+                <div class="rv-star-click left" onclick="setRating(1.5)"></div>
+                <div class="rv-star-click right" onclick="setRating(2)"></div>
+              </div>
+              <!-- 3점 -->
+              <div class="rv-star-wrap" style="position:relative; width:28px; height:28px; flex-shrink:0;">
+                <div id="rvStar3" class="rv-star rv-empty"></div>
+                <div class="rv-star-click left" onclick="setRating(2.5)"></div>
+                <div class="rv-star-click right" onclick="setRating(3)"></div>
+              </div>
+              <!-- 4점 -->
+              <div class="rv-star-wrap" style="position:relative; width:28px; height:28px; flex-shrink:0;">
+                <div id="rvStar4" class="rv-star rv-empty"></div>
+                <div class="rv-star-click left" onclick="setRating(3.5)"></div>
+                <div class="rv-star-click right" onclick="setRating(4)"></div>
+              </div>
+              <!-- 5점 -->
+              <div class="rv-star-wrap" style="position:relative; width:28px; height:28px; flex-shrink:0;">
+                <div id="rvStar5" class="rv-star rv-empty"></div>
+                <div class="rv-star-click left" onclick="setRating(4.5)"></div>
+                <div class="rv-star-click right" onclick="setRating(5)"></div>
+              </div>
+            </div>
+            <span id="rvScoreTxt" style="font-size:16px; font-weight:800; color:var(--g700);">(0.0)</span>
+          </div>
+        </div>
+
+        <!-- 사진 첨부 영역 -->
+        <div style="margin-bottom:20px;">
+          <div style="font-weight:700; margin-bottom:8px;">사진 첨부</div>
+          <input type="file" id="rvImageInput" multiple accept="image/*" style="display:none;"
+            onchange="handleReviewImageSelect(event)">
+          <!-- 이미지 첨부 대형 버튼 -->
+          <button onclick="triggerReviewImageUpload()"
+            style="width:100%; height:120px; border:1px dashed var(--g400); border-radius:12px; background:var(--white); cursor:pointer; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:8px;">
+            <div
+              style="width:40px; height:40px; border-radius:50%; background:var(--white); border:1px solid var(--g200); display:flex; align-items:center; justify-content:center; color:var(--g600); box-shadow:0 2px 4px rgba(0,0,0,0.05);">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                stroke-linecap="round" stroke-linejoin="round">
+                <line x1="12" y1="5" x2="12" y2="19"></line>
+                <line x1="5" y1="12" x2="19" y2="12"></line>
+              </svg>
+            </div>
+            <span style="font-size:14px; color:var(--g600); font-weight:700;">이미지 선택</span>
+          </button>
+
+          <!-- 첨부된 썸네일 영역 (가로 스크롤) -->
+          <div style="display:flex; align-items:center; gap:8px; margin-top:12px;">
+            <button onclick="scrollReviewThumbs(-1)"
+              style="width:24px; height:60px; border:none; background:transparent; cursor:pointer; flex-shrink:0;">&lt;</button>
+            <div id="rvThumbContainer"
+              style="flex:1; height:60px; display:flex; gap:8px; overflow-x:auto; scroll-behavior:smooth; -ms-overflow-style:none; scrollbar-width:none;">
+              <div style="color:var(--g400); font-size:13px; line-height:60px;">사진을 첨부해주세요.</div>
+            </div>
+            <button onclick="scrollReviewThumbs(1)"
+              style="width:24px; height:60px; border:none; background:transparent; cursor:pointer; flex-shrink:0;">&gt;</button>
+          </div>
+        </div>
+
+        <!-- 텍스트 리뷰 영역 -->
+        <div style="margin-bottom:20px;">
+          <div style="font-weight:700; margin-bottom:8px;">리뷰 작성</div>
+          <textarea id="rvText" placeholder="이 제품에 대한 솔직한 리뷰를 남겨주세요."
+            style="width:100%; height:120px; padding:12px; border:1px solid var(--g300); border-radius:8px; resize:none; font-family:inherit;"></textarea>
+        </div>
+
+        <button onclick="submitReview()"
+          style="width:100%; padding:14px; background:var(--black); color:var(--white); font-weight:800; font-size:16px; border:none; border-radius:8px; cursor:pointer;">리뷰
+          등록하기</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="js/supabase_client.js"></script>
+  <script src="js/common.js"></script>
+  <script src="js/orders.js"></script>
+</body>
+
+</html>

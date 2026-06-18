@@ -235,7 +235,7 @@
       <div class="modal-body">
         <div class="mobile-search-form" style="display: flex; gap: 10px; align-items: center;">
           <div class="mobile-search-input-wrap" style="flex: 1; display: flex; align-items: center; background: rgba(0,0,0,0.05); border-radius: 8px; padding: 0 12px;">
-            <svg class="icon search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:18px;height:18px;color:#666;">
+            <svg class="icon search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:18px;height:18px;color:#4f46e5;">
               <circle cx="11" cy="11" r="8" />
               <line x1="21" y1="21" x2="16.65" y2="16.65" />
             </svg>

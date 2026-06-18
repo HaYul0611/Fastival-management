@@ -1,0 +1,392 @@
+/* ================================================================
+   FESTIO SHOP — mypage.css
+   ================================================================ */
+
+.mypage-layout {
+  display: flex;
+  gap: 40px;
+  padding: 40px 28px 80px;
+  max-width: var(--max-w);
+  margin: 0 auto;
+}
+
+/* ── 좌측 사이드바 ── */
+.mp-sidebar {
+  flex: 0 0 220px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.mp-sidebar a {
+  padding: 14px 16px;
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--g600);
+  border-radius: var(--r12);
+  transition: all var(--trans);
+}
+
+.mp-sidebar a:hover {
+  background: var(--g100);
+  color: var(--black);
+}
+
+.mp-sidebar a.active {
+  background: var(--black);
+  color: #fff;
+  font-weight: 800;
+}
+
+/* ── 우측 콘텐츠 ── */
+.mp-content {
+  flex: 1;
+}
+
+.mp-title {
+  font-size: 26px;
+  font-weight: 900;
+  letter-spacing: -.5px;
+  color: var(--black);
+  margin-bottom: 24px;
+}
+
+/* 유저 프로필 카드 */
+.mp-card {
+  background: var(--white);
+  border: 1px solid var(--g200);
+  border-radius: var(--r20);
+  padding: 32px;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  box-shadow: var(--sh1);
+  margin-bottom: 32px;
+}
+
+.btn-outline-sm {
+  padding: 6px 12px;
+  border-radius: 12px;
+  border: 1px solid var(--g300);
+  background: #fff;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: 0.2s;
+}
+
+.btn-outline-sm:hover {
+  background: var(--g50);
+}
+
+.mp-profile-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.mp-profile-main {
+  display: flex;
+  gap: 24px;
+  align-items: center;
+}
+
+.mp-text-info {
+  flex: 1;
+  min-width: 0;
+  /* flex 자식 내 텍스트 줄바꿈 보장 */
+}
+
+.mp-user-info-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 8px;
+  flex-wrap: wrap;
+}
+
+.mp-user-info {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.mp-avatar {
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  background: var(--g100);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--g500);
+}
+
+.mp-name {
+  font-size: 20px;
+  font-weight: 800;
+  color: var(--black);
+  margin-bottom: 4px;
+}
+
+.mp-email {
+  font-size: 14px;
+  color: var(--g500);
+}
+
+.mp-tier-badge {
+  background: linear-gradient(135deg, #10B981, #059669);
+  /* 에메랄드 예시 */
+  color: #fff;
+  padding: 6px 14px;
+  border-radius: var(--rpill);
+  font-size: 13px;
+  font-weight: 800;
+  display: inline-block;
+  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+}
+
+.mp-pay-box {
+  background: var(--g50);
+  border-radius: var(--r12);
+  padding: 20px 24px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.mp-pay-label {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--g700);
+}
+
+.mp-pay-val {
+  font-size: 24px;
+  font-weight: 900;
+  color: var(--black);
+}
+
+.mp-pay-val span {
+  font-size: 14px;
+  color: var(--g500);
+  font-weight: 600;
+  margin-left: 2px;
+}
+
+/* 섹션 타이틀 */
+.mp-section-h3 {
+  font-size: 18px;
+  font-weight: 800;
+  color: var(--black);
+  margin-bottom: 16px;
+}
+
+/* 알림 설정 리스트 */
+.mp-settings {
+  background: var(--white);
+  border: 1px solid var(--g200);
+  border-radius: var(--r16);
+  padding: 0 24px;
+}
+
+.mp-set-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 24px 0;
+  border-bottom: 1px solid var(--g150);
+  gap: 16px;
+  /* 토글과 텍스트 간격 */
+}
+
+.mp-set-row:last-child {
+  border-bottom: none;
+}
+
+.mp-set-text {
+  flex: 1;
+  /* 텍스트 영역이 남은 공간 차지, 토글 침범 방지 */
+  word-break: keep-all;
+}
+
+.mp-set-text strong {
+  display: block;
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--black);
+  margin-bottom: 4px;
+}
+
+.mp-set-text p {
+  font-size: 13px;
+  color: var(--g500);
+}
+
+/* iOS 스타일 토글 스위치 */
+.toggle-switch {
+  position: relative;
+  display: inline-block;
+  width: 48px;
+  height: 26px;
+}
+
+.toggle-switch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.slider {
+  position: absolute;
+  cursor: pointer;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: var(--g300);
+  transition: .3s;
+  border-radius: 26px;
+}
+
+.slider:before {
+  position: absolute;
+  content: "";
+  height: 20px;
+  width: 20px;
+  left: 3px;
+  bottom: 3px;
+  background-color: white;
+  transition: .3s;
+  border-radius: 50%;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+input:checked+.slider {
+  background-color: var(--success);
+}
+
+input:checked+.slider:before {
+  transform: translateX(22px);
+}
+
+/* 거래 내역 필터 버튼 */
+.wallet-filter-btn {
+  padding: 4px 12px;
+  border: 1.5px solid var(--g200);
+  border-radius: 20px;
+  background: white;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--g500);
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.wallet-filter-btn.active {
+  background: #667eea;
+  border-color: #667eea;
+  color: white;
+}
+
+/* 거래 내역 아이템 */
+.wallet-history-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 16px;
+  border-bottom: 1px solid var(--g100);
+  transition: background 0.2s;
+  border-radius: 12px;
+}
+
+.wallet-history-item:hover {
+  background: var(--g50);
+}
+
+.wallet-history-item:last-child {
+  border-bottom: none;
+}
+
+@media(max-width: 768px) {
+  .mypage-layout {
+    flex-direction: column;
+    padding: 12px 16px 60px;
+    gap: 12px;
+  }
+
+  .mp-card {
+    padding: 24px 20px;
+  }
+
+  .mp-settings {
+    padding: 0 16px;
+  }
+
+  .mp-sidebar {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    overflow-x: auto;
+    padding-bottom: 12px;
+    margin-bottom: 4px;
+    gap: 8px;
+    border-bottom: 1px solid var(--g200);
+    width: 100%;
+  }
+
+  .mp-sidebar::-webkit-scrollbar {
+    display: none;
+  }
+
+  .mp-sidebar a {
+    white-space: nowrap;
+    padding: 8px 16px;
+    font-size: 14px;
+    background: var(--g50);
+    border-radius: 20px;
+  }
+
+  .mp-sidebar a.active {
+    background: var(--black);
+    color: #fff;
+  }
+
+  .mp-profile-top {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 16px;
+  }
+
+  .mp-profile-main {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 16px;
+  }
+
+  .mp-user-info {
+    flex-wrap: wrap;
+  }
+
+  .mp-user-info-row {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+  }
+
+  .mp-user-info-row .btn-edit-profile {
+    margin-left: 0 !important;
+    margin-top: 4px;
+  }
+
+  .mp-name {
+    word-break: keep-all;
+    white-space: nowrap;
+  }
+
+  .mp-points-box {
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    gap: 12px;
+  }
+}

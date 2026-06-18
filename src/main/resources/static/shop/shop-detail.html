@@ -1,119 +1,131 @@
 <!DOCTYPE html>
 <html lang="ko">
+
 <head>
-  <meta charset="UTF-8"/>
-  <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
-  <title>상품 상세 — FESTIO SHOP</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com"/>
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
-  <link rel="stylesheet" href="css/common.css"/>
-  <link rel="stylesheet" href="css/shop-detail.css"/>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1.0" />
+  <title>상품 상세 | FESTIO SHOP</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link rel="stylesheet" href="css/common.css" />
+  <link rel="stylesheet" href="css/shop-detail.css" />
 </head>
+
 <body class="detail-page">
-<header class="site-header" id="siteHeader"></header>
+  <header class="site-header" id="siteHeader"></header>
 
-<main>
-  <div class="container">
+  <main>
+    <div class="container">
 
-    <!-- 브레드크럼 -->
-    <nav class="bc" aria-label="현재 위치">
-      <a href="shop.html">홈</a>
-      <span class="sep" aria-hidden="true">
-        <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M4 2l4 4-4 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
-      </span>
-      <span class="cur" id="bcCur">상품 상세</span>
-    </nav>
-
-    <!-- 상세 레이아웃 -->
-    <div class="detail-wrap" id="detailWrap">
-
-      <!-- 갤러리 -->
-      <div class="gal" id="galSection">
-        <div class="gal-main" id="galMain" aria-label="상품 대표 이미지">
-          <div class="gal-placeholder" id="galPlaceholder"></div>
-        </div>
-        <div class="gal-thumbs" id="galThumbs" role="list" aria-label="상품 이미지 목록"></div>
-      </div>
-
-      <!-- 상품 정보 -->
-      <div class="det-info" id="detInfo">
-        <div class="det-brand" id="detBrand"></div>
-        <h1 class="det-name" id="detName"></h1>
-        <div class="det-badges" id="detBadges"></div>
-
-        <div class="det-price-block">
-          <div class="det-price-lbl">판매가</div>
-          <div class="det-price-row">
-            <span class="det-price" id="detPrice"></span>
-            <span class="det-price-unit">원</span>
-          </div>
-        </div>
-
-        <div class="det-hr"></div>
-
-        <!-- 옵션 -->
-        <div class="det-opts" id="detOpts"></div>
-
-        <!-- 수량 -->
-        <div class="qty-row">
-          <span class="qty-lbl">수량</span>
-          <div class="qty-ctrl" role="group" aria-label="수량 조절">
-            <button class="qty-btn" id="qtyMinus" aria-label="수량 줄이기">
-              <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M2 7h10" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
-            </button>
-            <span class="qty-num" id="qtyNum" aria-live="polite">1</span>
-            <button class="qty-btn" id="qtyPlus" aria-label="수량 늘리기">
-              <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M7 2v10M2 7h10" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
-            </button>
-          </div>
-        </div>
-
-        <div class="det-hr"></div>
-
-        <!-- 합산 -->
-        <div class="total-row">
-          <span class="total-lbl">총 합산 금액</span>
-          <div class="total-price-wrap">
-            <span class="total-num" id="totalNum">0</span>
-            <span class="total-unit">원</span>
-          </div>
-        </div>
-
-        <!-- 액션 -->
-        <div class="det-actions">
-          <button class="btn-cart-det" id="btnCart">
-            <svg width="19" height="19" viewBox="0 0 19 19" fill="none" aria-hidden="true">
-              <path d="M2 2h1.8l2.4 8.8A2 2 0 0 0 8 12.5h8a2 2 0 0 0 1.95-1.56L19 7H5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
-              <circle cx="8.5" cy="16.5" r="1.5" fill="currentColor"/>
-              <circle cx="15" cy="16.5" r="1.5" fill="currentColor"/>
-            </svg>
-            장바구니
-          </button>
-          <button class="btn-buy-det" id="btnBuy">바로 구매</button>
-        </div>
-
-        <button class="btn-wish-det" id="btnWish" aria-pressed="false" aria-label="찜하기">
-          <svg width="16" height="16" viewBox="0 0 16 16" fill="none" class="wish-svg">
-            <path d="M8 14S2 10.2 2 5.8A3.6 3.6 0 0 1 8 3.6 3.6 3.6 0 0 1 14 5.8C14 10.2 8 14 8 14z"
-              stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/>
+      <!-- 브레드크럼 -->
+      <nav class="bc" aria-label="현재 위치">
+        <a href="shop.html">홈</a>
+        <span class="sep" aria-hidden="true">
+          <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+            <path d="M4 2l4 4-4 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" />
           </svg>
-          <span id="wishText">찜하기</span>
-        </button>
+        </span>
+        <span class="cur" id="bcCur">상품 상세</span>
+      </nav>
+
+      <!-- 상세 레이아웃 -->
+      <div class="detail-wrap" id="detailWrap">
+
+        <!-- 갤러리 -->
+        <div class="gal" id="galSection">
+          <div class="gal-main" id="galMain" aria-label="상품 대표 이미지">
+            <div class="gal-placeholder" id="galPlaceholder"></div>
+          </div>
+          <div class="gal-thumbs" id="galThumbs" role="list" aria-label="상품 이미지 목록"></div>
+        </div>
+
+        <!-- 상품 정보 -->
+        <div class="det-info" id="detInfo">
+          <div class="det-brand" id="detBrand"></div>
+          <h1 class="det-name" id="detName"></h1>
+          <div class="det-badges" id="detBadges"></div>
+
+          <div class="det-price-block">
+            <div class="det-price-lbl">판매가</div>
+            <div class="det-price-row">
+              <span class="det-price" id="detPrice"></span>
+              <span class="det-price-unit">원</span>
+            </div>
+          </div>
+
+          <div class="det-hr"></div>
+
+          <!-- 옵션 -->
+          <div class="det-opts" id="detOpts"></div>
+
+          <!-- 수량 -->
+          <div class="qty-row">
+            <span class="qty-lbl">수량</span>
+            <div class="qty-ctrl" role="group" aria-label="수량 조절">
+              <button class="qty-btn" id="qtyMinus" aria-label="수량 줄이기">
+                <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+                  <path d="M2 7h10" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" />
+                </svg>
+              </button>
+              <span class="qty-num" id="qtyNum" aria-live="polite">1</span>
+              <button class="qty-btn" id="qtyPlus" aria-label="수량 늘리기">
+                <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+                  <path d="M7 2v10M2 7h10" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" />
+                </svg>
+              </button>
+            </div>
+          </div>
+
+          <div class="det-hr"></div>
+
+          <!-- 합산 -->
+          <div class="total-row">
+            <span class="total-lbl">총 합산 금액</span>
+            <div class="total-price-wrap">
+              <span class="total-num" id="totalNum">0</span>
+              <span class="total-unit">원</span>
+            </div>
+          </div>
+
+          <!-- 액션 -->
+          <div class="det-actions">
+            <button class="btn-cart-det" id="btnCart">
+              <svg width="19" height="19" viewBox="0 0 19 19" fill="none" aria-hidden="true">
+                <path d="M2 2h1.8l2.4 8.8A2 2 0 0 0 8 12.5h8a2 2 0 0 0 1.95-1.56L19 7H5" stroke="currentColor"
+                  stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" />
+                <circle cx="8.5" cy="16.5" r="1.5" fill="currentColor" />
+                <circle cx="15" cy="16.5" r="1.5" fill="currentColor" />
+              </svg>
+              장바구니
+            </button>
+            <button class="btn-buy-det" id="btnBuy">바로 구매</button>
+          </div>
+
+          <button class="btn-wish-det" id="btnWish" aria-pressed="false" aria-label="찜하기">
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none" class="wish-svg">
+              <path d="M8 14S2 10.2 2 5.8A3.6 3.6 0 0 1 8 3.6 3.6 3.6 0 0 1 14 5.8C14 10.2 8 14 8 14z"
+                stroke="currentColor" stroke-width="1.5" stroke-linejoin="round" />
+            </svg>
+            <span id="wishText">찜하기</span>
+          </button>
+        </div>
+
+      </div>
+
+      <!-- 탭 -->
+      <div class="det-tab-area">
+        <div class="det-tabs" id="detTabs" role="tablist"></div>
+        <div id="detTabContent"></div>
       </div>
 
     </div>
+  </main>
 
-    <!-- 탭 -->
-    <div class="det-tab-area">
-      <div class="det-tabs" id="detTabs" role="tablist"></div>
-      <div id="detTabContent"></div>
-    </div>
-
-  </div>
-</main>
-
-<script src="js/common.js"></script>
-<script src="js/shop.js"></script>
-<script src="js/shop-detail.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="js/supabase_client.js"></script>
+  <script src="js/common.js"></script>
+  <script src="js/shop.js"></script>
+  <script src="js/shop-detail.js"></script>
 </body>
+
 </html>

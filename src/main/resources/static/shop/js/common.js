@@ -27,19 +27,20 @@ function renderHeader() {
   const logged = Session.isLoggedIn();
   const user = Session.get();
   el.innerHTML = `
-  <div class="container hdr-inner">
-    <a href="shop.html" class="hdr-logo" aria-label="FESTIO SHOP 홈">
-      <div class="hdr-logo-mark">
-        <svg width="22" height="22" viewBox="0 0 22 22" fill="none">
-          <path d="M4 5h14M4 11h10M4 17h12" stroke="#fff" stroke-width="2.2" stroke-linecap="round"/>
-          <circle cx="18" cy="17" r="3" fill="#FF2D55"/>
+  <div class="container hdr-inner" style="display:flex; align-items:center;">
+    <div style="display:flex; align-items:center; gap:2px;">
+      <a href="javascript:history.back()" class="hdr-back-btn" aria-label="뒤로가기" style="display:flex; align-items:center; justify-content:center; width:32px; height:32px;">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="15 18 9 12 15 6"></polyline>
         </svg>
-      </div>
-      <div class="hdr-logo-text">
-        <span class="hdr-logo-name">FESTIO</span>
-        <span class="hdr-logo-sub">SHOP</span>
-      </div>
-    </a>
+      </a>
+      <a href="shop.html" class="hdr-logo" aria-label="FESTIO SHOP 홈">
+        <div class="hdr-logo-text">
+          <span class="hdr-logo-name festio-gradient">FESTIO</span>
+          <span class="hdr-logo-sub">SHOP</span>
+        </div>
+      </a>
+    </div>
 
     <div class="hdr-search">
       <span class="hdr-search-icon" aria-hidden="true">
@@ -48,10 +49,41 @@ function renderHeader() {
           <path d="M11 11l3.5 3.5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
         </svg>
       </span>
-      <input type="search" id="hdrSearch" placeholder="굿즈, 푸드트럭, 브랜드 검색…" autocomplete="off" aria-label="상품 검색"/>
+      <input type="search" id="festioGlobalSearch" name="festio_q" placeholder="굿즈, 푸드트럭, 브랜드 검색…" autocomplete="new-password" aria-label="상품 검색"/>
     </div>
 
     <div class="hdr-actions">
+      ${logged ? `
+      <div class="hdr-noti-menu" style="position:relative;">
+        <button class="hdr-icon-btn" id="btnNotiDrop" aria-label="알림">
+          <svg width="22" height="22" viewBox="0 0 22 22" fill="none">
+            <path d="M11 2a5 5 0 0 0-5 5v3.5l-2 3v1h14v-1l-2-3V7a5 5 0 0 0-5-5z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/>
+            <path d="M9 16.5a2 2 0 0 0 4 0" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
+          </svg>
+          <span class="cart-badge" style="background:var(--blue);">2</span>
+        </button>
+        <div class="noti-dropdown" id="notiDropdown">
+          <div class="noti-head">알림 <span class="noti-count">2</span></div>
+          <div class="noti-list">
+            <a href="orders.html" class="noti-item unread">
+              <div class="noti-dot"></div>
+              <div class="noti-text">
+                <strong>조리 완료</strong><br/>
+                스모크 바베큐 버거 픽업해주세요! (1번 트럭)
+              </div>
+            </a>
+            <a href="orders.html" class="noti-item unread">
+              <div class="noti-dot"></div>
+              <div class="noti-text">
+                <strong>배송 출발</strong><br/>
+                FESTIO 2026 OFFICIAL 티셔츠 배송이 시작되었습니다.
+              </div>
+            </a>
+          </div>
+          <a href="mypage.html" class="noti-foot">알림 설정 및 전체보기</a>
+        </div>
+      </div>` : ''}
+
       <a href="cart.html" class="hdr-icon-btn" aria-label="장바구니">
         <svg width="22" height="22" viewBox="0 0 22 22" fill="none">
           <path d="M2.5 2.5h2.2l2.6 9.6A2 2 0 0 0 9.2 13.5H17a2 2 0 0 0 1.95-1.57L20.5 6.5H5.5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
@@ -62,7 +94,18 @@ function renderHeader() {
       </a>
 
       ${logged
-      ? `<button class="hdr-login-btn" id="btnLogout">${user?.name || '회원'}님 ▾</button>`
+      ? `<div class="hdr-user-menu" style="position:relative;">
+           <button class="hdr-login-btn" id="btnUserDrop" style="display:flex;align-items:center;gap:6px;">
+             <img src="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><path fill='%23ccc' d='M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z'/></svg>" id="hdrAvatar" style="width:24px;height:24px;border-radius:50%;object-fit:cover;" alt="Avatar" onerror="this.src='data:image/svg+xml;utf8,<svg xmlns=\\'http://www.w3.org/2000/svg\\' viewBox=\\'0 0 24 24\\'><path fill=\\'%23ccc\\' d=\\'M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z\\'/></svg>'">
+             <span>${user?.name || '회원'}님 ▾</span>
+           </button>
+           <div class="user-dropdown" id="userDropdown">
+             <a href="mypage.html">마이페이지</a>
+             <a href="orders.html">주문/배송조회</a>
+             <div class="ud-hr"></div>
+             <button id="btnLogout">로그아웃</button>
+           </div>
+         </div>`
       : `<button class="hdr-login-btn" id="btnOpenLogin">로그인</button>`
     }
     </div>
@@ -76,9 +119,52 @@ function renderHeader() {
   });
 
   const bLogin = document.getElementById('btnOpenLogin');
+  const bUserDrop = document.getElementById('btnUserDrop');
+  const drop = document.getElementById('userDropdown');
+  const bNotiDrop = document.getElementById('btnNotiDrop');
+  const notiDrop = document.getElementById('notiDropdown');
   const bLogout = document.getElementById('btnLogout');
+
   if (bLogin) bLogin.addEventListener('click', () => LoginModal.open());
-  if (bLogout) bLogout.addEventListener('click', () => { Session.logout(); location.reload() });
+
+  if (bUserDrop && drop) {
+    bUserDrop.addEventListener('click', (e) => {
+      e.stopPropagation();
+      drop.classList.toggle('show');
+      if (notiDrop) notiDrop.classList.remove('show');
+    });
+  }
+
+  if (bNotiDrop && notiDrop) {
+    bNotiDrop.addEventListener('click', (e) => {
+      e.stopPropagation();
+      notiDrop.classList.toggle('show');
+      if (drop) drop.classList.remove('show');
+    });
+  }
+
+  document.addEventListener('click', (e) => {
+    if (drop && !e.target.closest('.hdr-user-menu')) drop.classList.remove('show');
+    if (notiDrop && !e.target.closest('.hdr-noti-menu')) notiDrop.classList.remove('show');
+  });
+
+  if (bLogout) bLogout.addEventListener('click', () => {
+    Session.logout();
+    location.reload();
+  });
+
+  // Supabase 아바타 연동
+  if (logged && window.ShopDB) {
+    const email = localStorage.getItem('email');
+    if (email) {
+      window.ShopDB.getProfile(email).then(profile => {
+        if (profile && profile.avatar_url) {
+          const avt = document.getElementById('hdrAvatar');
+          if (avt) avt.src = profile.avatar_url;
+        }
+      });
+    }
+  }
 }
 
 function refreshCartBadge() {
