@@ -234,7 +234,14 @@
 .pcard-img-area.cat-goods{background:linear-gradient(135deg,#FFF0F3 0%,#FFD6E0 100%)}
 .pcard-img-area.cat-collab{background:linear-gradient(135deg,#F3EDFF 0%,#E0D0FF 100%)}
 
-/* 플레이스홀더 SVG 아이콘 */
+/* 플레이스홀더 SVG 아이콘 및 상품 이미지 */
+.pcard-img{
+  width:100%;height:100%;
+  object-fit:cover;
+  transition:transform .35s ease;
+}
+.pcard:hover:not(.sold) .pcard-img{transform:scale(1.06)}
+
 .pcard-placeholder{
   width:100%;height:100%;
   display:flex;align-items:center;justify-content:center;

@@ -4,76 +4,8 @@
    목데이터 · 필터링 · 카드 렌더링 · 찜
    ================================================================ */
 
-/* ── 목 데이터 ──────────────────────────────────────────────── */
-const PRODUCTS = [
-  /* ── 공식 굿즈 ── */
-  {
-    id: 1, cat: 'goods', brand: 'FESTIO Official', name: 'FESTIO 2026 로고 후드집업', price: 79000, stock: 12, wait: null,
-    opts: [{ label: '색상', vals: ['블랙', '화이트', '차콜그레이'] }, { label: '사이즈', vals: ['S', 'M', 'L', 'XL', '2XL'] }]
-  },
-  {
-    id: 2, cat: 'goods', brand: 'FESTIO Official', name: 'FESTIO 캔버스 토트백 (대)', price: 38000, stock: 5, wait: null,
-    opts: [{ label: '색상', vals: ['오트밀', '블랙'] }]
-  },
-  {
-    id: 3, cat: 'goods', brand: 'FESTIO Official', name: 'FESTIO 한정판 키링 세트 (3종)', price: 18000, stock: 0, wait: null,
-    opts: [{ label: '종류', vals: ['A세트', 'B세트'] }]
-  },
-  {
-    id: 4, cat: 'goods', brand: 'FESTIO Official', name: 'FESTIO 포토카드 팩 (랜덤 8종)', price: 12000, stock: 80, wait: null,
-    opts: []
-  },
-  {
-    id: 5, cat: 'goods', brand: 'FESTIO Official', name: 'FESTIO 홀로그램 스티커 시트', price: 6000, stock: 200, wait: null,
-    opts: []
-  },
-  {
-    id: 6, cat: 'goods', brand: 'FESTIO Official', name: 'FESTIO 2026 아크릴 스탠드', price: 15000, stock: 3, wait: null,
-    opts: [{ label: '버전', vals: ['A형', 'B형', 'C형', 'D형', 'E형'] }]
-  },
-  /* ── 아티스트 컬래버 ── */
-  {
-    id: 7, cat: 'collab', brand: 'DAWN × FESTIO', name: '[DAWN 콜라보] 그래픽 오버핏 티셔츠', price: 59000, stock: 8, wait: null,
-    opts: [{ label: '사이즈', vals: ['S', 'M', 'L', 'XL'] }]
-  },
-  {
-    id: 8, cat: 'collab', brand: 'DAWN × FESTIO', name: '[DAWN 콜라보] A2 포스터', price: 22000, stock: 0, wait: null,
-    opts: [{ label: '버전', vals: ['Ver.A', 'Ver.B'] }]
-  },
-  {
-    id: 9, cat: 'collab', brand: 'NewJeans × FESTIO', name: '[NJ 콜라보] 에코백', price: 35000, stock: 14, wait: null,
-    opts: [{ label: '색상', vals: ['민트', '베이비핑크', '화이트'] }]
-  },
-  {
-    id: 10, cat: 'collab', brand: 'NewJeans × FESTIO', name: '[NJ 콜라보] 엽서 세트 (10종)', price: 9000, stock: 60, wait: null,
-    opts: []
-  },
-  /* ── 푸드트럭 ── */
-  {
-    id: 11, cat: 'food', brand: '스모크하우스 BBQ 1호차', name: '스모크 바베큐 풀드포크 버거', price: 13000, stock: 99, wait: 10,
-    opts: [{ label: '사이드', vals: ['감자튀김', '코울슬로', '생략'] }, { label: '음료', vals: ['콜라', '사이다', '생략'] }]
-  },
-  {
-    id: 12, cat: 'food', brand: '스모크하우스 BBQ 1호차', name: '풀드포크 핫도그 + 치즈', price: 9000, stock: 99, wait: 7,
-    opts: [{ label: '소스', vals: ['오리지널BBQ', '스파이시BBQ'] }]
-  },
-  {
-    id: 13, cat: 'food', brand: '타코야끼 본점 2호차', name: '새우 타코 세트 (3개)', price: 8000, stock: 0, wait: 0,
-    opts: []
-  },
-  {
-    id: 14, cat: 'food', brand: '타코야끼 본점 2호차', name: '문어 타코야끼 (6개)', price: 7000, stock: 99, wait: 8,
-    opts: [{ label: '소스', vals: ['마요네즈', '폰즈', '스파이시마요'] }]
-  },
-  {
-    id: 15, cat: 'food', brand: '그린볼 샐러드 3호차', name: '그레인 파워볼 (선택 단백질)', price: 12000, stock: 20, wait: 5,
-    opts: [{ label: '단백질', vals: ['닭가슴살', '연어', '두부'] }, { label: '드레싱', vals: ['시저', '발사믹', '레몬허브'] }]
-  },
-  {
-    id: 16, cat: 'food', brand: '버블티 페스타 4호차', name: '망고 타로 버블티', price: 7500, stock: 99, wait: 3,
-    opts: [{ label: '당도', vals: ['25%', '50%', '75%', '100%'] }, { label: '얼음', vals: ['적게', '보통', '많이'] }]
-  },
-];
+/* ── 데이터 상태 ────────────────────────────────────────────── */
+let PRODUCTS = [];
 
 window.FS_PRODUCTS = PRODUCTS;
 
@@ -153,7 +85,9 @@ function cardHTML(p) {
       </svg>
     </button>
 
-    <div class="pcard-placeholder">${placeholder(p.cat)}</div>
+    ${p.imageUrl
+      ? `<img src="${p.imageUrl}" alt="${p.name}" class="pcard-img">`
+      : `<div class="pcard-placeholder">${placeholder(p.cat)}</div>`}
 
     ${sold ? `<div class="sold-cover" aria-hidden="true"><span class="sold-label">SOLD OUT</span></div>` : ''}
   </div>
@@ -165,8 +99,10 @@ function cardHTML(p) {
     <h3 class="pcard-name">${p.name}</h3>
     <div class="pcard-foot">
       <div class="pcard-price">
-        <span class="pcard-price-num">${p.price.toLocaleString()}</span>
-        <span class="pcard-price-unit">원</span>
+        ${p.isStorePlaceholder
+          ? `<span class="pcard-price-num" style="font-size:13px;color:var(--g400);">상품 준비 중</span>`
+          : `<span class="pcard-price-num">${p.price.toLocaleString()}</span><span class="pcard-price-unit">원</span>`
+        }
       </div>
       <div class="pcard-meta">${stock}</div>
     </div>
@@ -227,7 +163,19 @@ document.addEventListener('DOMContentLoaded', () => {
   /* URL 파라미터로 카테고리 초기화 */
   const params = new URLSearchParams(window.location.search);
   const catParam = params.get('category');
-  if (catParam) {
+  const festivalId = params.get('festivalId') || params.get('eventNo') || sessionStorage.getItem('currentFestivalId') || '11';
+
+  // festivalId가 있는 경우 — 해당 축제의 모든 입점 업체를 보여주기 위해 'all' 필터로 설정
+  // festivalId 없이 category만 있는 경우 — category 필터 적용
+  if (festivalId && (params.get('festivalId') || params.get('eventNo'))) {
+    S.cat = 'all';
+    document.querySelectorAll('.cat-btn').forEach(x => {
+      x.classList.toggle('on', x.dataset.cat === 'all');
+    });
+    document.querySelectorAll('.ftag').forEach(x => {
+      x.classList.toggle('on', x.dataset.cat === 'all');
+    });
+  } else if (catParam) {
     S.cat = catParam;
     document.querySelectorAll('.cat-btn').forEach(x => {
       x.classList.toggle('on', x.dataset.cat === S.cat);
@@ -236,6 +184,114 @@ document.addEventListener('DOMContentLoaded', () => {
       x.classList.toggle('on', x.dataset.cat === S.cat);
     });
   }
+  
+  // 로딩 인디케이터 렌더링
+  const grid = document.getElementById('prodGrid');
+  if (grid) {
+    grid.innerHTML = '<div style="grid-column: 1/-1; text-align: center; color: var(--g500); padding: 60px 0; font-size: 15px; font-weight: 600;">입점 상점 및 상품 목록을 불러오는 중...</div>';
+  }
+
+  // 1. 해당 페스티벌에 입점 승인 완료된 상점 목록 Fetch
+  fetch(`/api/stores?festivalId=${festivalId}`)
+    .then(res => {
+      if (!res.ok) throw new Error('입점 상점 정보를 불러올 수 없습니다.');
+      return res.json();
+    })
+    .then(async stores => {
+      console.log('[Shop] Loaded stores for festival:', festivalId, stores);
+
+      if (stores.length === 0) {
+        if (grid) {
+          grid.innerHTML = '<div style="grid-column: 1/-1; text-align: center; color: var(--g500); padding: 60px 0; font-size: 15px; font-weight: 600;">이 축제에 입점된 상점이 없습니다.</div>';
+        }
+        return;
+      }
+
+      // 2. 각 상점별 상품 목록 병렬 Fetch 수행
+      const productPromises = stores.map(store => {
+        // 카테고리 매핑 규칙
+        let storeCatMapped = 'goods';
+        const storeCat = (store.category || '').toLowerCase();
+        if (storeCat === 'food' || storeCat === 'drink') {
+          storeCatMapped = 'food';
+        } else if (storeCat === 'collab') {
+          storeCatMapped = 'collab';
+        }
+
+        return fetch(`/api/stores/${store.id}/products`)
+          .then(res => res.ok ? res.json() : [])
+          .then(products => {
+            // 상품이 있으면 상품 카드 목록 반환
+            if (products.length > 0) {
+              return products.map(p => {
+                // 푸드트럭 대기 시간 분석
+                let wait = null;
+                if (storeCatMapped === 'food') {
+                  const waitMatch = (store.notice || '').match(/(\d+)분/);
+                  wait = waitMatch ? parseInt(waitMatch[1], 10) : 10;
+                }
+
+                // 상품 옵션그룹 파싱
+                let opts = [];
+                if (p.optionGroupsJson) {
+                  try { opts = JSON.parse(p.optionGroupsJson); } catch (e) { opts = []; }
+                }
+
+                return {
+                  id: p.id,
+                  cat: storeCatMapped,
+                  brand: store.name,
+                  name: p.productName,
+                  price: p.price || 0,
+                  stock: p.availableStock !== undefined ? p.availableStock : (p.currentStock || 0),
+                  wait: wait,
+                  opts: opts,
+                  imageUrl: p.imageUrl
+                };
+              });
+            }
+
+            // 상품이 없으면 상점 자체를 대표 카드로 표시 (상품 준비 중)
+            console.log(`[Shop] Store ${store.name}(id:${store.id}) has no products - showing store placeholder card`);
+            let wait = null;
+            if (storeCatMapped === 'food') {
+              const waitMatch = (store.notice || '').match(/(\d+)분/);
+              wait = waitMatch ? parseInt(waitMatch[1], 10) : null;
+            }
+            return [{
+              id: `store_${store.id}`,  // 상점 식별자 (상품 ID와 구분)
+              cat: storeCatMapped,
+              brand: store.name,
+              name: `${store.name} — 상품 준비 중`,
+              price: 0,
+              stock: 0,
+              wait: wait,
+              opts: [],
+              imageUrl: null,
+              isStorePlaceholder: true  // 상점 대표 카드 플래그
+            }];
+          })
+          .catch(err => {
+            console.error(`[Shop] Failed to load products for store ${store.id}:`, err);
+            return [];
+          });
+      });
+
+      // 모든 상점의 상품 조회가 끝날 때까지 병렬 대기
+      const nestedLists = await Promise.all(productPromises);
+      PRODUCTS = nestedLists.flat();
+      window.FS_PRODUCTS = PRODUCTS;
+      console.log('[Shop] Loaded & formatted products list:', PRODUCTS);
+
+      // 화면 렌더링
+      render();
+    })
+    .catch(err => {
+      console.error('[Shop] Failed to fetch data from database:', err);
+      if (grid) {
+        grid.innerHTML = `<div style="grid-column: 1/-1; text-align: center; color: #ff4d4f; padding: 40px; font-weight: 600;">데이터 로딩 실패: ${err.message}</div>`;
+      }
+    });
 
   /* 카테고리 탭 (cat-strip) */
   document.querySelectorAll('.cat-btn').forEach(b => {
@@ -269,6 +325,4 @@ document.addEventListener('DOMContentLoaded', () => {
 
   /* 검색 */
   document.addEventListener('shop:search', e => { S.q = e.detail.q; render() });
-
-  render();
 });

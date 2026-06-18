@@ -43,15 +43,10 @@ public class OrderController {
                     "ORDER BY oi.updated_at DESC";
             rows = jdbcTemplate.queryForList(sql, userId);
         } else {
-            sql = "SELECT oi.id as item_id, p.name as product_name, oi.quantity, p.price, oi.item_status, oi.updated_at "
-                    +
-                    "FROM order_item oi " +
-                    "JOIN product p ON oi.product_id = p.id " +
-                    "JOIN orders o ON oi.order_id = o.id " +
-                    "WHERE oi.product_type = 'FOOD' AND o.user_id IS NULL " +
-                    "ORDER BY oi.updated_at DESC";
-            rows = jdbcTemplate.queryForList(sql);
+            // 비로그인 상태일 때는 빈 리스트를 반환하여 현장 주문 내역이 임의 유저에게 노출되지 않도록 함
+            rows = new ArrayList<>();
         }
+
 
         List<Map<String, Object>> result = new ArrayList<>();
         for (Map<String, Object> row : rows) {
@@ -337,23 +332,20 @@ public class OrderController {
 
         // userToken에서 userId 파싱 (정합성 추가)
         String userToken = (String) payload.get("userToken");
-        Long userId = null;
+        String userId = null;
         if (userToken != null) {
             if (userToken.startsWith("festio-jwt-token-")) {
-                try {
-                    userId = Long.parseLong(userToken.substring("festio-jwt-token-".length()));
-                } catch (Exception e) {
-                    // 무시
-                }
+                userId = userToken.substring("festio-jwt-token-".length());
             } else if (userToken.equals("festio-admin-jwt-token-7777")) {
                 try {
                     userId = jdbcTemplate.queryForObject(
-                            "SELECT id FROM app_user WHERE email = 'admin@gmail.com'", Long.class);
+                            "SELECT id FROM app_user WHERE email = 'admin@gmail.com'", String.class);
                 } catch (Exception e) {
                     // 무시
                 }
             }
         }
+
 
         // INSERT 후 생성된 orderId 반환
         String insertSql = "INSERT INTO orders (user_id, festival_id, total_price, payment_status, created_at, seat_ids, is_entered, ticket_type, ticket_number) "
@@ -411,29 +403,26 @@ public class OrderController {
     @GetMapping("/tickets/qr")
     public List<Map<String, Object>> getQrTickets(
             @RequestHeader(value = "Authorization", required = false) String authHeader) {
-        Long userId = null;
+        String userId = null;
         if (authHeader != null && authHeader.startsWith("Bearer ")) {
             String token = authHeader.substring(7);
             if (token.startsWith("festio-jwt-token-")) {
-                try {
-                    userId = Long.parseLong(token.substring("festio-jwt-token-".length()));
-                } catch (Exception e) {
-                    // 무시
-                }
+                userId = token.substring("festio-jwt-token-".length());
             } else if (token.equals("festio-admin-jwt-token-7777")) {
                 try {
                     userId = jdbcTemplate.queryForObject(
-                            "SELECT id FROM app_user WHERE email = 'admin@gmail.com'", Long.class);
+                            "SELECT id FROM app_user WHERE email = 'admin@gmail.com'", String.class);
                 } catch (Exception e) {
                     // 무시
                 }
             }
         }
 
+
         String sql;
         List<Map<String, Object>> rows;
         if (userId != null) {
-            sql = "SELECT o.id as order_id, o.qr_code, o.is_entered, o.seat_ids, o.ticket_number, o.created_at, o.total_price, f.name as event_name, f.start_date as event_date "
+            sql = "SELECT o.id as order_id, o.festival_id, o.qr_code, o.is_entered, o.seat_ids, o.ticket_number, o.created_at, o.total_price, f.name as event_name, f.start_date as event_date "
                     +
                     "FROM orders o " +
                     "LEFT JOIN festival f ON o.festival_id = f.id " +
@@ -441,14 +430,10 @@ public class OrderController {
                     "ORDER BY o.id DESC";
             rows = jdbcTemplate.queryForList(sql, userId);
         } else {
-            sql = "SELECT o.id as order_id, o.qr_code, o.is_entered, o.seat_ids, o.ticket_number, o.created_at, o.total_price, f.name as event_name, f.start_date as event_date "
-                    +
-                    "FROM orders o " +
-                    "LEFT JOIN festival f ON o.festival_id = f.id " +
-                    "WHERE o.qr_code IS NOT NULL AND o.user_id IS NULL " +
-                    "ORDER BY o.id DESC";
-            rows = jdbcTemplate.queryForList(sql);
+            // 비로그인 상태일 때는 빈 리스트를 반환하여 현장 예매 내역이 임의 유저에게 노출되지 않도록 함
+            rows = new ArrayList<>();
         }
+
 
         List<Map<String, Object>> result = new ArrayList<>();
 
@@ -469,6 +454,8 @@ public class OrderController {
             map.put("totalPrice", row.get("total_price") != null ? ((Number) row.get("total_price")).intValue() : 0);
             map.put("eventName", row.get("event_name") != null ? row.get("event_name") : "페스티벌 예매 티켓");
             map.put("eventDate", row.get("event_date") != null ? row.get("event_date").toString() : "");
+            map.put("festivalId", row.get("festival_id"));
+            map.put("festival_id", row.get("festival_id"));
 
             Boolean isEntered = (Boolean) row.get("is_entered");
             if (isEntered != null && isEntered) {

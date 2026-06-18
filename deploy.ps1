@@ -1,6 +1,7 @@
 # 1. 최신 작업 소스 코드를 festival 폴더로 복사 (빌드 및 임시 파일 제외)
-Copy-Item -Path src, gradle, build.gradle, settings.gradle, gradlew, gradlew.bat -Destination festival -Recurse -Force
+Copy-Item -Path src, gradle, build.gradle, settings.gradle, gradlew, gradlew.bat, uploads -Destination festival -Recurse -Force
 Copy-Item -Path .gitignore -Destination festival\ -Force
+
 
 # 2. festival 폴더로 이동
 cd festival

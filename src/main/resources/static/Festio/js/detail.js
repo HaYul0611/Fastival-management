@@ -35,7 +35,9 @@ const TOSS_CLIENT_KEY = 'test_ck_D5GePWvyJnrK0W0k6q8gLzN97Emo';
 ─────────────────────────────────────────────────────────── */
 function getEventNo() {
   const params = new URLSearchParams(window.location.search);
-  return parseInt(params.get('eventNo')) || 1;
+  const eventNo = parseInt(params.get('eventNo')) || 1;
+  sessionStorage.setItem('currentFestivalId', eventNo);
+  return eventNo;
 }
 
 /* ═══════════════════════════════════════════════════════════
