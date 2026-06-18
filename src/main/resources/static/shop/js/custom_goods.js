@@ -178,14 +178,9 @@ Style: Nearest-neighbor scaling pixel look, simple shading, limited palette, pur
     } catch (error) {
       clearInterval(interval);
       overlay.style.display = 'none';
-      console.error(error);
 
-      const isCustomError = error.message.includes('부팅 중');
-      let msg = isCustomError ? error.message : 'AI 생성 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요.';
-
-      if (error.name === 'TypeError' && error.message === 'Failed to fetch') {
-        msg = '네트워크 오류가 발생했습니다. (DNS 조회 실패 또는 인터넷 연결 불안정)\\n인터넷 연결 상태나 방화벽/VPN 설정을 확인해주세요.';
-      }
+      // 서버에서 전달된 에러 메시지가 있으면 그걸 보여주고, 아니면 기본 에러를 띄움
+      const msg = error.message || 'AI 생성 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요.';
 
       if (window.Toast) window.Toast.error(msg, { duration: 5000 });
       else alert(msg);

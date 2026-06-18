@@ -24,6 +24,9 @@ public class AiController {
         if (apiKey == null || apiKey.isEmpty() || apiKey.equals("YOUR_HUGGING_FACE_API_KEY")) {
             apiKey = envApiKey;
         }
+        if (apiKey != null) {
+            apiKey = apiKey.trim();
+        }
 
         String url = "https://api-inference.huggingface.co/models/black-forest-labs/FLUX.1-schnell";
 
@@ -46,10 +49,11 @@ public class AiController {
             return ResponseEntity.status(e.getStatusCode()).body(e.getResponseBodyAsString());
         } catch (Exception e) {
             e.printStackTrace();
-            if (e.getMessage() != null && e.getMessage().contains("UnknownHostException")) {
-                return ResponseEntity.status(HttpStatus.BAD_GATEWAY).body("{\"error\": \"DNS_ERROR\"}");
+            String errorMsg = e.getMessage() != null ? e.getMessage().replace("\"", "\\\"") : "Unknown Error";
+            if (errorMsg.contains("UnknownHostException")) {
+                return ResponseEntity.status(HttpStatus.BAD_GATEWAY).body("{\"error\": \"DNS_ERROR\", \"message\": \"DNS 서버를 찾을 수 없습니다.\"}");
             }
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("{\"error\": \"SERVER_ERROR\"}");
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("{\"error\": \"SERVER_ERROR\", \"message\": \"" + errorMsg + "\"}");
         }
     }
 }

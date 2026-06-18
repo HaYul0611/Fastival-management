@@ -5,6 +5,20 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width,initial-scale=1.0,viewport-fit=cover">
   <title>FESTIO | 마이페이지</title>
+  <style id="auth-hide">
+    body {
+      opacity: 0 !important;
+      visibility: hidden !important;
+    }
+  </style>
+  <script>
+    if (!localStorage.getItem('userToken') && !sessionStorage.getItem('userToken')) {
+      alert('로그인이 필요한 서비스입니다.');
+      window.location.replace('login.html');
+    } else {
+      document.getElementById('auth-hide').remove();
+    }
+  </script>
   <link rel="stylesheet" href="css/common.css?v=2">
   <link rel="stylesheet" href="css/mypage.css?v=2">
 </head>
