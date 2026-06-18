@@ -11,12 +11,19 @@ import java.util.HashMap;
 @RequestMapping("/api/ai")
 public class AiController {
 
+    @org.springframework.beans.factory.annotation.Value("${HF_API_KEY:}")
+    private String envApiKey;
+
     private final RestTemplate restTemplate = new RestTemplate();
 
     @PostMapping("/generate")
     public ResponseEntity<?> generateAiAvatar(@RequestBody Map<String, String> request) {
         String prompt = request.get("prompt");
+        // 프론트엔드에서 보낸 키가 없으면 환경변수(.env)의 키를 사용합니다.
         String apiKey = request.get("apiKey");
+        if (apiKey == null || apiKey.isEmpty() || apiKey.equals("YOUR_HUGGING_FACE_API_KEY")) {
+            apiKey = envApiKey;
+        }
 
         String url = "https://api-inference.huggingface.co/models/black-forest-labs/FLUX.1-schnell";
 
