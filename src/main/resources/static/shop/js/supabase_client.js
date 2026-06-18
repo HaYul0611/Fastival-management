@@ -69,6 +69,29 @@ window.ShopDB = (function () {
       const { data, error } = await sb.from('shop_notifications').select('*').eq('profile_id', profileId).order('created_at', { ascending: false }).limit(5);
       if (error) { console.error('Supabase getNoti Error:', error); return []; }
       return data;
+    },
+    async getWalletHistory(email) {
+      const sb = getClient();
+      if (!sb) return [];
+      const { data, error } = await sb.from('shop_wallet_history').select('*').eq('user_email', email).order('created_at', { ascending: false });
+      if (error) { 
+        // 테이블이 없을 경우 로컬 스토리지 폴백
+        return JSON.parse(localStorage.getItem('shopWalletHistory_' + email) || '[]');
+      }
+      return data;
+    },
+    async addWalletHistory(historyObj) {
+      const sb = getClient();
+      if (!sb) return null;
+      const { data, error } = await sb.from('shop_wallet_history').insert([historyObj]).select().single();
+      if (error) {
+        // 테이블이 없을 경우 로컬 스토리지 폴백
+        let localHist = JSON.parse(localStorage.getItem('shopWalletHistory_' + historyObj.user_email) || '[]');
+        localHist.unshift(historyObj);
+        localStorage.setItem('shopWalletHistory_' + historyObj.user_email, JSON.stringify(localHist));
+        return historyObj;
+      }
+      return data;
     }
   };
 })();

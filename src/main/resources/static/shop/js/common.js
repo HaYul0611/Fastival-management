@@ -60,25 +60,12 @@ function renderHeader() {
             <path d="M11 2a5 5 0 0 0-5 5v3.5l-2 3v1h14v-1l-2-3V7a5 5 0 0 0-5-5z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/>
             <path d="M9 16.5a2 2 0 0 0 4 0" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
           </svg>
-          <span class="cart-badge" style="background:var(--blue);">2</span>
+          <span class="cart-badge" id="notiBadgeCount" style="background:var(--blue); display:none;">0</span>
         </button>
         <div class="noti-dropdown" id="notiDropdown">
-          <div class="noti-head">알림 <span class="noti-count">2</span></div>
-          <div class="noti-list">
-            <a href="orders.html" class="noti-item unread">
-              <div class="noti-dot"></div>
-              <div class="noti-text">
-                <strong>조리 완료</strong><br/>
-                스모크 바베큐 버거 픽업해주세요! (1번 트럭)
-              </div>
-            </a>
-            <a href="orders.html" class="noti-item unread">
-              <div class="noti-dot"></div>
-              <div class="noti-text">
-                <strong>배송 출발</strong><br/>
-                FESTIO 2026 OFFICIAL 티셔츠 배송이 시작되었습니다.
-              </div>
-            </a>
+          <div class="noti-head">알림 <span class="noti-count" id="notiHeadCount">0</span></div>
+          <div class="noti-list" id="notiListContainer">
+            <!-- 동적 알림 로드 -->
           </div>
           <a href="mypage.html" class="noti-foot">알림 설정 및 전체보기</a>
         </div>
@@ -165,6 +152,61 @@ function renderHeader() {
       });
     }
   }
+
+  if (logged) {
+    fetchNotifications();
+    setInterval(fetchNotifications, 10000); // 10초마다 알림 폴링 (DB 반영 실시간 폴링)
+  }
+}
+
+async function fetchNotifications() {
+  if (!Session.isLoggedIn()) return;
+  const token = localStorage.getItem('userToken') || sessionStorage.getItem('userToken');
+  if (!token) return;
+
+  try {
+    const res = await fetch('/api/order/notifications', {
+      headers: { 'Authorization': 'Bearer ' + token }
+    });
+    if (!res.ok) return;
+    const notifs = await res.json();
+    
+    const badge = document.getElementById('notiBadgeCount');
+    const headCount = document.getElementById('notiHeadCount');
+    const listContainer = document.getElementById('notiListContainer');
+    
+    if (badge && headCount && listContainer) {
+      if (notifs.length > 0) {
+        badge.style.display = 'flex';
+        badge.textContent = notifs.length;
+        headCount.textContent = notifs.length;
+        
+        listContainer.innerHTML = notifs.map(n => {
+          let title = '';
+          let msg = '';
+          if (n.status === 'COOKING') { title = '상품 준비 중'; msg = `[${n.name}] 조리/포장이 시작되었습니다.`; }
+          else if (n.status === 'READY') { title = '준비 완료'; msg = `[${n.name}] 준비 완료! 픽업해주세요.`; }
+          else if (n.status === 'SERVED') { title = '수령 완료'; msg = `[${n.name}] 정상 수령 처리되었습니다.`; }
+          else if (n.status === 'SHIPPED') { title = '배송 출발'; msg = `[${n.name}] 배송이 시작되었습니다.`; }
+          else { title = '알림'; msg = `[${n.name}] 상태가 변경되었습니다.`; }
+          
+          return `
+            <a href="orders.html" class="noti-item unread">
+              <div class="noti-dot"></div>
+              <div class="noti-text">
+                <strong>${title}</strong><br/>
+                ${msg}
+              </div>
+            </a>
+          `;
+        }).join('');
+      } else {
+        badge.style.display = 'none';
+        headCount.textContent = '0';
+        listContainer.innerHTML = '<div style="padding: 16px; text-align: center; color: #888;">새로운 알림이 없습니다.</div>';
+      }
+    }
+  } catch(e) {}
 }
 
 function refreshCartBadge() {
@@ -320,14 +362,8 @@ function requireLogin(cb) {
 
 /* ── 목 알림 (WebSocket 연동 포인트) ───────────────────────── */
 function startMockAlerts() {
-  /* TODO: FESTIO WebSocket STOMP 연동으로 교체 */
-  const Q = [
-    { title: '조리 완료', msg: '스모크 바베큐 버거 픽업해주세요! (1번 트럭)', type: 'success', t: 5000 },
-    { title: '품절 임박', msg: 'FESTIO 로고 후드집업 (M·블랙) 잔여 2개', type: 'warning', t: 13000 },
-    { title: '주문 접수', msg: '망고 버블티 조리 시작 — 약 3분 소요', type: 'info', t: 22000 },
-  ];
-  Q.forEach(({ title, msg, type, t }) => setTimeout(() => Toast.show({ title, msg, type }), t));
+  // DB 연동으로 변경되어 Mock 기능 제거
 }
 
 /* ── 전역 노출 ──────────────────────────────────────────────── */
-window.FS = { Session, Toast, LoginModal, renderHeader, refreshCartBadge, requireLogin, startMockAlerts };
+window.FS = { Session, Toast, LoginModal, renderHeader, refreshCartBadge, requireLogin, startMockAlerts, fetchNotifications };
