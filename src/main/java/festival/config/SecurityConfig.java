@@ -27,6 +27,8 @@ public class SecurityConfig {
                 // ===================================================
                 // [API 인가 장벽] REST API 엔드포인트만 Spring Security로 보호
                 // ===================================================
+                // 일반 상점 조회 API: 누구나 접근 가능
+                .requestMatchers("/api/stores/**").permitAll()
                 // 어드민 REST API: ROLE_ADMIN 만 허용
                 .requestMatchers("/api/admin/**").hasRole("ADMIN")
                 // 스탭 로그인 API: 누구나 접근 가능해야 함

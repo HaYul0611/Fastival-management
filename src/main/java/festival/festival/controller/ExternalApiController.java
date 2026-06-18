@@ -44,13 +44,18 @@ public class ExternalApiController {
         String url = String.format("http://apis.data.go.kr/B551011/KorService1/searchFestival1?serviceKey=%s&MobileOS=ETC&MobileApp=AppTest&_type=json&arrange=A&eventStartDate=%s&pageNo=%d&numOfRows=%d", 
                 TOUR_KEY, eventStartDate, pageNo, numOfRows);
         try {
-            byte[] responseBytes = restTemplate.getForObject(url, byte[].class);
+            java.net.URI uri = java.net.URI.create(url);
+            byte[] responseBytes = restTemplate.getForObject(uri, byte[].class);
             String response = responseBytes != null ? new String(responseBytes, java.nio.charset.StandardCharsets.UTF_8) : "";
             return ResponseEntity.ok()
                     .contentType(MediaType.parseMediaType("application/json;charset=UTF-8"))
                     .body(response);
         } catch (Exception e) {
-            return ResponseEntity.status(500).body("{\"error\":\"" + e.getMessage() + "\"}");
+            System.err.println("Tour API Error: " + e.getMessage());
+            // 공공데이터 API 오류 시 마이페이지 등 대시보드가 깨지지 않도록 정상적인 빈 JSON 구조 반환
+            return ResponseEntity.ok()
+                    .contentType(MediaType.parseMediaType("application/json;charset=UTF-8"))
+                    .body("{\"response\":{\"header\":{\"resultCode\":\"99\",\"resultMsg\":\"Tour API Error\"},\"body\":{\"items\":{\"item\":[]},\"numOfRows\":100,\"pageNo\":1,\"totalCount\":0}}}");
         }
     }
 }

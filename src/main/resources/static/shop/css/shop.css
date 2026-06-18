@@ -439,7 +439,14 @@
   background: linear-gradient(135deg, #F3EDFF 0%, #E0D0FF 100%)
 }
 
-/* 플레이스홀더 SVG 아이콘 */
+/* 플레이스홀더 SVG 아이콘 및 상품 이미지 */
+.pcard-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform .35s ease;
+}
+
 .pcard-placeholder {
   width: 100%;
   height: 100%;
@@ -449,8 +456,9 @@
   transition: transform .35s ease;
 }
 
+.pcard:hover:not(.sold) .pcard-img,
 .pcard:hover:not(.sold) .pcard-placeholder {
-  transform: scale(1.06)
+  transform: scale(1.06);
 }
 
 /* 품절 오버레이 */
