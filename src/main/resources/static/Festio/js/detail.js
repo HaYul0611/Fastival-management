@@ -91,6 +91,15 @@ function renderEventDetail(detail) {
     }
   }
 
+  // 최근 본 상품 기록
+  if (window.RecentViewed) {
+    window.RecentViewed.add({
+      eventNo: getEventNo(),
+      name: detail.eventName,
+      thumbnailUrl: detail.thumbnailUrl || detail.thumbnail_url
+    });
+  }
+
   // 장소 탭 지도 및 링크 동기화
   const tabVenue = document.getElementById('tab-venue');
   if (tabVenue) {
@@ -417,7 +426,7 @@ function selectZone(zoneNo, zone, svgEl) {
   $$('.figma-template-zone').forEach(el => {
     if (el && el.classList) el.classList.remove('selected');
   });
-  
+
   if (svgEl) {
     if (svgEl.classList) {
       svgEl.classList.add('selected');
@@ -430,7 +439,7 @@ function selectZone(zoneNo, zone, svgEl) {
   $$('.zone-legend-item').forEach(li => {
     if (li && li.classList) li.classList.remove('active');
   });
-  
+
   const legendItem = $(`.zone-legend-item[data-zone-no="${zoneNo}"]`);
   if (legendItem) {
     if (legendItem.classList) {
@@ -459,7 +468,7 @@ function updateQtyDisplay() {
 function updateZoneInfoPanel(zone) {
   const panel = document.querySelector('.zone-info-panel');
   if (!panel) return;
-  
+
   if (panel.classList) {
     panel.classList.add('visible');
   } else if (typeof panel.addClass === 'function') {
@@ -604,6 +613,31 @@ function openSeatSelectionModal(zoneNo, zone) {
   confirmBtn.disabled = true;
   _selectedSeats = [];
   updateSelectedSeatsSummary();
+
+  // 모달 내부 슬라이딩 스텝1 초기화
+  const sliderWrapper = document.getElementById('seatSliderWrapper');
+  if (sliderWrapper) sliderWrapper.style.transform = 'translateX(0)';
+
+  const modalMiniMap = document.getElementById('modalMiniMap');
+  const venueSvgLayer = document.getElementById('venueSvgLayer');
+  if (modalMiniMap && venueSvgLayer) {
+    modalMiniMap.innerHTML = venueSvgLayer.innerHTML;
+    // 하이라이트 애니메이션 적용
+    const poly = modalMiniMap.querySelector(`[data-zone-no="${zoneNo}"]`);
+    if (poly) {
+      poly.classList.add('zone-highlighted');
+    }
+  }
+
+  const modalSelectedZoneName = document.getElementById('modalSelectedZoneName');
+  if (modalSelectedZoneName) modalSelectedZoneName.textContent = zone.zoneName || '선택 구역';
+
+  // 인원 수 다중 리스트 초기화 (성인 1, 나머지 0)
+  document.querySelectorAll('.ticket-qty-value').forEach(el => {
+    if (el.dataset.type === 'adult') el.textContent = '1';
+    else el.textContent = '0';
+  });
+  document.getElementById('btnNextToSeatGrid').dataset.zoneNo = zoneNo;
 
   // 모달 열기
   Modal.open('modal-select-seats');
@@ -751,8 +785,9 @@ function toggleSeatSelection(cell, seat) {
     cell.classList.remove('selected');
   } else {
     // 선택
-    if (_selectedSeats.length >= 4) {
-      Toast.warning('최대 4석까지 선택 가능합니다.');
+    const maxAllowed = window._currentModalQty || 4;
+    if (_selectedSeats.length >= maxAllowed) {
+      if (window.Toast) Toast.warning(`선택한 인원수(${maxAllowed}석)만큼만 선택 가능합니다.`);
       return;
     }
     _selectedSeats.push(seat);
@@ -1320,6 +1355,13 @@ function initBookingBtn() {
 
   on($('#btn-payment-cancel'), 'click', () => {
     Modal.close('modal-payment');
+  });
+
+  // 모달 외부 클릭 시 닫기
+  on(document, 'click', (e) => {
+    if (e.target.id === 'modal-select-seats') {
+      Modal.close('modal-select-seats');
+    }
   });
 
   // 좌석 선택 완료 버튼 리스너 추가
@@ -3411,3 +3453,181 @@ function makeVenueEditor(tab, sidebarContainer) {
     Toast.success('오시는 길 정보가 라이브 화면에 업데이트되었습니다.');
   });
 }
+
+// 좌석 선택 모달 내 슬라이딩 및 다중 인원 조절 이벤트
+document.addEventListener('DOMContentLoaded', () => {
+  const btnNext = document.getElementById('btnNextToSeatGrid');
+  const btnPrev = document.getElementById('btnPrevToStep1');
+  const sliderWrapper = document.getElementById('seatSliderWrapper');
+  const btnConfirmSeats = document.getElementById('btn-confirm-seats');
+
+  // [+] [-] 다중 권종 수량 조절 이벤트
+  document.querySelectorAll('.btn-ticket-minus, .btn-ticket-plus').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      const type = e.target.dataset.type;
+      const isPlus = e.target.classList.contains('btn-ticket-plus');
+      const valSpan = document.querySelector(`.ticket-qty-value[data-type="${type}"]`);
+      if (!valSpan) return;
+
+      let val = parseInt(valSpan.textContent || '0');
+
+      // 총 인원수가 4명을 넘지 않도록 검증
+      if (isPlus) {
+        let currentTotal = 0;
+        document.querySelectorAll('.ticket-qty-value').forEach(el => currentTotal += parseInt(el.textContent || '0'));
+        if (currentTotal < 4) {
+          if (val < 4) val++;
+        } else {
+          if (window.Toast) Toast.warn('최대 4명까지만 선택 가능합니다.');
+          return;
+        }
+      } else {
+        if (val > 0) val--;
+      }
+      valSpan.textContent = val;
+    });
+  });
+
+  if (btnNext && sliderWrapper) {
+    btnNext.addEventListener('click', () => {
+      let totalQty = 0;
+      const types = {};
+
+      document.querySelectorAll('.ticket-qty-value').forEach(el => {
+        const type = el.dataset.type;
+        const count = parseInt(el.textContent || '0');
+        types[type] = count;
+        totalQty += count;
+      });
+
+      if (totalQty < 1) {
+        if (window.Toast) Toast.warn('인원수를 최소 1명 이상 선택해주세요.');
+        return;
+      }
+
+      window._currentModalQty = totalQty;
+      window._currentModalTicketTypes = types; // {adult: 2, teen: 1, child: 0}
+
+      // Step 2로 슬라이드
+      sliderWrapper.style.transform = 'translateX(-50%)';
+    });
+  }
+
+  if (btnPrev && sliderWrapper) {
+    btnPrev.addEventListener('click', () => {
+      sliderWrapper.style.transform = 'translateX(0)';
+    });
+  }
+
+  if (btnConfirmSeats) {
+    btnConfirmSeats.addEventListener('click', () => {
+      if (!window._selectedSeats || window._selectedSeats.length === 0) return;
+      if (window._selectedSeats.length !== window._currentModalQty) {
+        if (window.Toast) Toast.warn(`선택한 인원수(${window._currentModalQty}명)와 동일한 수의 좌석을 선택해주세요.`);
+        return;
+      }
+
+      // 1. 우측 예매 확인 영역에 권종/인원 설정 반영 (다중 권종 렌더링)
+      const ticketSelectionList = document.getElementById('ticketSelectionList');
+      if (ticketSelectionList) {
+        ticketSelectionList.innerHTML = '';
+        const typeMap = { adult: '성인', teen: '청소년', child: '어린이/아동' };
+
+        let html = '';
+        Object.entries(window._currentModalTicketTypes).forEach(([type, count]) => {
+          if (count > 0) {
+            html += `
+              <div class="qty-selector-wrap" style="display: flex; align-items: center; justify-content: space-between; gap: 0.5rem; margin-bottom: 8px; background: var(--bg-surface1); padding: 8px 12px; border-radius: 6px; border: 1px solid var(--border-default);">
+                <span style="font-weight: 600; color: var(--text-main); font-size: 0.95rem;">${typeMap[type]}</span>
+                <span style="font-weight: 700; color: var(--color-primary);">${count}명</span>
+              </div>
+            `;
+          }
+        });
+        ticketSelectionList.innerHTML = html;
+      }
+
+      // 2. 우측 예매 확인 영역에 선택한 구역 이름 반영
+      const ctaZoneName = document.getElementById('ctaZoneName');
+      const modalSelectedZoneName = document.getElementById('modalSelectedZoneName');
+      if (ctaZoneName && modalSelectedZoneName) {
+        ctaZoneName.textContent = modalSelectedZoneName.textContent;
+      }
+
+      // 3. 우측 좌석 목록 및 합계 금액 연동
+      const selectedSeatsList = document.getElementById('selectedSeatsList');
+      const selectedCountBadge = document.getElementById('selectedCountBadge');
+      const ctaTotal = document.getElementById('ctaTotal');
+
+      if (selectedSeatsList) {
+        selectedSeatsList.innerHTML = window._selectedSeats.map(s => {
+          const badgeClass = s.cls === 'seat-vip' ? 'vip' : s.cls === 'seat-r' ? 'r' : s.cls === 'seat-s' ? 's' : 'available';
+          return `
+            <li class="seat-list-item">
+              <div class="seat-info-left">
+                <span class="seat-badge ${badgeClass}">${s.grade}</span>
+                <span class="seat-text">${s.label}</span>
+              </div>
+              <span class="seat-price-text">${s.price.toLocaleString()}원</span>
+            </li>
+          `;
+        }).join('');
+      }
+
+      if (selectedCountBadge) {
+        selectedCountBadge.textContent = `${window._selectedSeats.length}석`;
+      }
+
+      if (ctaTotal) {
+        const total = window._selectedSeats.reduce((sum, s) => sum + s.price, 0);
+        ctaTotal.textContent = `￦ ${total.toLocaleString()}원`;
+      }
+
+      // 4. 모달 닫기
+      if (window.Modal) Modal.close('modal-select-seats');
+    });
+  }
+
+  /* ────────────────────────────────────────────────────────
+     커스텀 SVG 툴팁 적용 (마우스 포인터 따라다니는 박스)
+  ──────────────────────────────────────────────────────── */
+  const tooltip = document.getElementById('custom-svg-tooltip');
+
+  // 전체 화면(또는 도면 컨테이너)에서 mousemove 이벤트를 잡을 수도 있지만, 
+  // 동적으로 생성되는 #userGridBgOverlay 또는 .zone-polygon 등에 이벤트 위임 처리
+  document.addEventListener('mouseover', (e) => {
+    const polygon = e.target.closest('[data-zone-no]');
+    // SVG 요소 중 data-zone-no를 가진 요소일 경우
+    if (polygon) {
+      const titleEl = polygon.querySelector('title');
+      if (titleEl && tooltip) {
+        // 기존 title 속성의 기본 툴팁이 뜨지 않도록 처리
+        if (!polygon.dataset.tooltipText) {
+          polygon.dataset.tooltipText = titleEl.textContent;
+          titleEl.textContent = ''; // 브라우저 기본 툴팁 방지
+        }
+        tooltip.textContent = polygon.dataset.tooltipText;
+        tooltip.style.display = 'block';
+      } else if (polygon.dataset.tooltipText && tooltip) {
+        tooltip.textContent = polygon.dataset.tooltipText;
+        tooltip.style.display = 'block';
+      }
+    }
+  });
+
+  document.addEventListener('mousemove', (e) => {
+    if (tooltip && tooltip.style.display === 'block') {
+      tooltip.style.left = (e.pageX + 15) + 'px';
+      tooltip.style.top = (e.pageY + 15) + 'px';
+    }
+  });
+
+  document.addEventListener('mouseout', (e) => {
+    const polygon = e.target.closest('[data-zone-no]');
+    if (polygon) {
+      if (tooltip) {
+        tooltip.style.display = 'none';
+      }
+    }
+  });
+});

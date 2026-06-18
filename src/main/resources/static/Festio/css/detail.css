@@ -1633,6 +1633,35 @@ body.edit-mode .detail-tabs-section .detail-tab-content.active {
 /* =========================================================
    [EDIT MODE] 사이드바 카드형 디자인 추가
 ========================================================= */
+@keyframes zone-highlight-pulse {
+  0% {
+    filter: drop-shadow(0 4px 6px rgba(106, 77, 255, 0.2)) brightness(1);
+    transform: scale(1) translateY(0);
+  }
+
+  50% {
+    filter: drop-shadow(0 12px 24px rgba(106, 77, 255, 0.7)) brightness(1.15);
+    transform: scale(1.02) translateY(-2px);
+  }
+
+  100% {
+    filter: drop-shadow(0 4px 6px rgba(106, 77, 255, 0.2)) brightness(1);
+    transform: scale(1) translateY(0);
+  }
+}
+
+.zone-highlighted {
+  animation: zone-highlight-pulse 2.5s ease-in-out infinite;
+  transform-origin: center;
+  transform-box: fill-box;
+}
+
+.zone-highlighted:hover> :not(:first-child) {
+  fill: #ffffff !important;
+  filter: drop-shadow(0 0 6px rgba(106, 77, 255, 1)) drop-shadow(0 0 12px rgba(106, 77, 255, 0.8)) !important;
+  transition: all 0.2s ease-in-out;
+}
+
 .builder-sidebar {
   background: var(--bg-surface1);
   border: 1px solid var(--border-default);
@@ -1770,6 +1799,13 @@ body.edit-mode .detail-tabs-section .detail-tab-content.active {
   padding: 2rem;
   border-radius: 16px;
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+}
+
+/* =========================================================
+   좌석 선택 다단계 슬라이딩 모달 관련 스타일
+========================================================= */
+.slider-step {
+  transition: opacity 0.3s ease;
 }
 
 
@@ -2948,15 +2984,28 @@ body.edit-mode .detail-tabs-section .detail-tab-content.active {
 }
 
 .zone-polygon:hover {
-  fill: rgba(106, 77, 255, 0.15);
-  stroke: rgba(106, 77, 255, 0.8);
-  stroke-width: 2.5;
+  filter: drop-shadow(0 4px 10px rgba(106, 77, 255, 0.4)) brightness(1.1);
+  transform: scale(1.02);
+  transform-origin: center;
+  transform-box: fill-box;
 }
 
 .zone-polygon.selected {
-  fill: rgba(106, 77, 255, 0.25) !important;
-  stroke: rgba(106, 77, 255, 1) !important;
-  stroke-width: 2.5 !important;
+  filter: drop-shadow(0 8px 16px rgba(106, 77, 255, 0.8)) brightness(1.15);
+  transform: scale(1.02);
+  transform-origin: center;
+  transform-box: fill-box;
+}
+
+/* 텍스트 요소에 글로우 및 스케일업 효과 적용 */
+.zone-polygon:hover text,
+.zone-polygon:hover tspan,
+.zone-polygon.selected text,
+.zone-polygon.selected tspan {
+  fill: #ffffff !important;
+  font-size: 1.1em !important;
+  filter: drop-shadow(0 0 6px rgba(106, 77, 255, 1)) drop-shadow(0 0 12px rgba(106, 77, 255, 0.8)) !important;
+  transition: all 0.2s ease-in-out;
 }
 
 .zone-polygon.sold-out {
@@ -2971,18 +3020,7 @@ body.edit-mode .detail-tabs-section .detail-tab-content.active {
   transition: all 0.2s ease;
 }
 
-.figma-template-zone:hover path {
-  fill-opacity: 0.8;
-  stroke: var(--color-primary, #6A4DFF);
-  stroke-width: 2;
-}
 
-.figma-template-zone.selected path {
-  fill: #6A4DFF !important;
-  fill-opacity: 0.3 !important;
-  stroke: #6A4DFF !important;
-  stroke-width: 3.5 !important;
-}
 
 .figma-template-zone.sold-out {
   cursor: not-allowed;

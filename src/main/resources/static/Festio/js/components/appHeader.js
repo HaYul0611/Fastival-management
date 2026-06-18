@@ -59,7 +59,12 @@
       });
       if (!path.endsWith('login.html')) {
         alert('일정 시간이 지나 로그아웃 되었습니다. 다시 로그인 해주세요.');
-        window.location.href = '/Festio/login.html';
+        // Festio와 shop 모두 작동하도록 상대경로 또는 올바른 절대경로 처리
+        if (path.includes('/shop/')) {
+          window.location.href = '/shop/login.html';
+        } else {
+          window.location.href = '/Festio/login.html';
+        }
         return;
       }
     }
@@ -166,19 +171,7 @@
       ? `<a href="mypage.html" class="desktop-only" style="display:inline-flex; align-items:center; gap:10px; text-decoration:none; cursor:pointer;" aria-label="마이페이지">
            ${avatarCircleHtml}
            <div style="display:flex; flex-direction:column; justify-content:center;">
-             <style>
-               @font-face {
-                 font-family: 'CookieRun';
-                 src: url('https://fastly.jsdelivr.net/gh/projectnoonnu/noonfonts_2001@1.1/CookieRun-Regular.woff') format('woff');
-                 font-weight: 400;
-               }
-               @font-face {
-                 font-family: 'CookieRun';
-                 src: url('https://fastly.jsdelivr.net/gh/projectnoonnu/noonfonts_2001@1.1/CookieRun-Regular.woff') format('woff');
-                 font-weight: 700;
-               }
-             </style>
-             <span style="font-size:0.8rem; color:#4b5563; letter-spacing:-0.3px; line-height:1.4;">반가워요, <b style="font-family: 'CookieRun', sans-serif; font-size:0.95rem; color:#111827; font-weight:700; margin:0 2px;">${userName}</b>님!</span>
+             <span style="font-size:0.85rem; color:#4b5563; letter-spacing:-0.3px; line-height:1.4;">반가워요, <b style="font-size:0.95rem; color:#111827; font-weight:700; margin:0 2px;">${userName}</b>님!</span>
              <span style="font-size:0.8rem; color:#4b5563; letter-spacing:-0.3px; line-height:1.4;">오늘 행사를 함께 즐겨볼까요?</span>
            </div>
          </a>

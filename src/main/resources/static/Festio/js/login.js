@@ -111,14 +111,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
           // 권한별 목적지 리다이렉트 설정 (항상 홈 화면으로 진입 후 헤더 버튼으로 모드 전환)
           let redirectUrl = '/index.html'; // ※ 반드시 절대 경로 사용 (login.html 위치 기준 상대경로 문제 방지)
-          let successMsg = '로그인에 성공하였습니다!';
+          let successMsg = '로그인 되었습니다.<br>편안한 행사정보 즐겨보세요!';
 
           if (isAdmin) {
-            successMsg = '관리자 로그인 성공! 메인화면 상단의 [관리자 모드 전환] 버튼을 통해 관리 콘솔로 이동할 수 있습니다.';
+            successMsg = '관리자 로그인!<br>메인화면 상단의 [관리자 모드 전환] 버튼을 통해<br>관리 콘솔로 이동할 수 있습니다.';
           } else if (isStaff) {
-            successMsg = '가맹점주(STAFF) 로그인 성공! 메인화면 상단의 [업주 모드 전환] 버튼을 통해 매장 관리 포털로 이동할 수 있습니다.';
+            successMsg = '가맹점주(STAFF) 로그인!<br>메인화면 상단의 [업주 모드 전환] 버튼을 통해<br>매장 관리 포털로 이동할 수 있습니다.';
           } else {
-            successMsg = '로그인에 성공하였습니다! 축제를 마음껏 즐겨보세요.';
+            successMsg = '로그인 되었습니다.<br>편안한 행사 즐겨보세요!';
           }
 
           if (window.Toast) {
