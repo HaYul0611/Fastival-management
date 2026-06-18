@@ -91,6 +91,15 @@ function renderEventDetail(detail) {
     }
   }
 
+  // 최근 본 상품 기록
+  if (window.RecentViewed) {
+    window.RecentViewed.add({
+      eventNo: getEventNo(),
+      name: detail.eventName,
+      thumbnailUrl: detail.thumbnailUrl || detail.thumbnail_url
+    });
+  }
+
   // 장소 탭 지도 및 링크 동기화
   const tabVenue = document.getElementById('tab-venue');
   if (tabVenue) {
@@ -417,7 +426,7 @@ function selectZone(zoneNo, zone, svgEl) {
   $$('.figma-template-zone').forEach(el => {
     if (el && el.classList) el.classList.remove('selected');
   });
-  
+
   if (svgEl) {
     if (svgEl.classList) {
       svgEl.classList.add('selected');
@@ -430,7 +439,7 @@ function selectZone(zoneNo, zone, svgEl) {
   $$('.zone-legend-item').forEach(li => {
     if (li && li.classList) li.classList.remove('active');
   });
-  
+
   const legendItem = $(`.zone-legend-item[data-zone-no="${zoneNo}"]`);
   if (legendItem) {
     if (legendItem.classList) {
@@ -459,7 +468,7 @@ function updateQtyDisplay() {
 function updateZoneInfoPanel(zone) {
   const panel = document.querySelector('.zone-info-panel');
   if (!panel) return;
-  
+
   if (panel.classList) {
     panel.classList.add('visible');
   } else if (typeof panel.addClass === 'function') {

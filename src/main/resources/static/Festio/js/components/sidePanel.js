@@ -111,7 +111,7 @@ const SIDE_PANEL_HTML = `
         <a href="guide.html?tab=tab-faq" class="side-subitem">FAQ</a>
         <a href="guide.html?tab=tab-partner" class="side-subitem">티켓판매/제휴문의</a>
       </div>
-      <button class="side-link-item">
+      <button class="side-link-item" onclick="if(window.Toast) window.Toast.info('추후 이벤트 업데이트 예정입니다.'); else alert('추후 이벤트 업데이트 예정입니다.');">
         <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
           stroke-linejoin="round">
           <polygon
