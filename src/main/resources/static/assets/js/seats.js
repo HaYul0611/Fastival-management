@@ -29,17 +29,26 @@ export function getSeatStats() {
   return stats;
 }
 
-export function renderSeatMap(containerId, onSeatClick) {
+export function renderSeatMap(containerId, onSeatClick, targetZone = null) {
   const container = document.getElementById(containerId);
   if (!container) return;
 
-  const zones = Array.from(new Set(Object.keys(DB.seats).map(id => id.split("-")[0]))).sort();
+  let zones = Array.from(new Set(Object.keys(DB.seats).map(id => DB.seats[id].zone))).filter(z => z).sort();
+  if (targetZone) {
+    // Exact match 우선, 없으면 포함 여부로 유연하게 처리 (브라우저 캐시로 인해 ui.js가 옛날 버전인 경우 대비)
+    zones = zones.filter(z => z === targetZone || z.includes(targetZone) || targetZone.includes(z));
+  }
+
+  if (targetZone && zones.length === 0) {
+    container.innerHTML = `<div style="text-align:center; padding: 50px; color: var(--text-muted);">해당 구역에는 등록된 좌석이 없습니다.</div>`;
+    return;
+  }
 
   let badgesHtml = zones.map(z => `<div class="zone-badge">구역 ${z}</div>`).join('');
   let zonesHtml = zones.map(z => `
     <div class="theater-zone" id="theater-zone-${z.toLowerCase()}" style="padding: 10px; background: rgba(0,0,0,0.2); border-radius: 8px;">
-      <div style="text-align:center; color:#ffd65c; font-weight:bold; margin-bottom:10px;">${z} 구역</div>
-      <div class="zone-seats-container" id="zone-container-${z.toLowerCase()}" style="display:flex; flex-wrap:wrap; gap:5px; justify-content:center; max-width: 150px;"></div>
+      <div style="text-align:center; color:#ffd65c; font-weight:bold; margin-bottom:10px;">${z}</div>
+      <div class="zone-seats-container" id="zone-container-${z.toLowerCase()}" style="display:grid; gap:5px; justify-content:center;"></div>
     </div>
   `).join('');
 
@@ -73,21 +82,42 @@ export function renderSeatMap(containerId, onSeatClick) {
     if (!zoneContainer) return;
 
     const zoneSeats = Object.keys(DB.seats)
-      .filter(id => id.startsWith(zone))
-      .sort((a, b) => parseInt(a.split("-")[1]) - parseInt(b.split("-")[1]));
+      .filter(id => {
+        const seatZone = DB.seats[id].zone;
+        return seatZone === zone || seatZone.includes(zone) || zone.includes(seatZone);
+      });
+
+    if (zoneSeats.length === 0) return;
+
+    const rows = [...new Set(zoneSeats.map(id => DB.seats[id].seatRow || ''))]
+      .filter(r => r)
+      .sort((a, b) => a.localeCompare(b, undefined, {numeric: true, sensitivity: 'base'}));
+    
+    const maxCol = Math.max(...zoneSeats.map(id => parseInt(DB.seats[id].number) || 1), 1);
+
+    zoneContainer.style.gridTemplateRows = `repeat(${rows.length}, 32px)`;
+    zoneContainer.style.gridTemplateColumns = `repeat(${maxCol}, 32px)`;
 
     zoneSeats.forEach(seatId => {
       const seatData = DB.seats[seatId];
+      if (!seatData) return;
+
       const seatEl = document.createElement("div");
       seatEl.className = `seat seat-${seatData.status.toLowerCase()}`;
       seatEl.setAttribute("data-seat-id", seatId);
       seatEl.id = `seat-node-${seatId}`;
       
-      const seatNumOnly = seatId.split("-")[1];
+      const rowIndex = rows.indexOf(seatData.seatRow) + 1;
+      const colIndex = parseInt(seatData.number) || 0;
       
+      if (rowIndex > 0) seatEl.style.gridRow = rowIndex.toString();
+      if (colIndex > 0) seatEl.style.gridColumn = colIndex.toString();
+      
+      let displayNum = seatData.number || "";
+
       seatEl.innerHTML = `
-        <span class="seat-number">${seatNumOnly}</span>
-        <span class="seat-tooltip">좌석: ${seatId}<br>${getStatusLabel(seatData.status)}<br>${seatData.holder || '지정 고객 없음'}</span>
+        <span class="seat-number">${displayNum}</span>
+        <span class="seat-tooltip">좌석: ${seatData.seatRow} ${displayNum}번<br>${getStatusLabel(seatData.status)}<br>${seatData.holder || '지정 고객 없음'}</span>
       `;
 
       if (seatData.status === "AVAILABLE") {

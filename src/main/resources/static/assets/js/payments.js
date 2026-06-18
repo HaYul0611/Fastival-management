@@ -1,7 +1,16 @@
 // Toss Payments checkout simulator & transaction cancellation module
 import { DB, publish, saveDB } from './store.js';
 
-export function calculateTicketPrice(seasonId, rateId) {
+export function calculateTicketPrice(seatId, seasonId, rateId) {
+  const seat = DB.seats[seatId];
+  const basePrice = (seat && seat.price) ? seat.price : 0;
+  
+  // 만약 좌석에 고유 가격이 설정되어 있다면 그 가격을 우선적으로 사용합니다.
+  if (basePrice > 0) {
+    return basePrice;
+  }
+  
+  // 좌석 고유 가격이 없는 경우 예전 모의 데이터 방식 유지
   const season = DB.options.seasons.find(s => s.id === seasonId) || DB.options.seasons[0];
   const rate = DB.options.rates.find(r => r.id === rateId) || DB.options.rates[0];
   

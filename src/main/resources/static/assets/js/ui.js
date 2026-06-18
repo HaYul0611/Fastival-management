@@ -1035,20 +1035,45 @@ async function renderTicketingScreen() {
   const view = document.getElementById("view-ticketing");
   if (!view) return;
 
+  // 1. Fetch available festivals
+  let festivals = [];
   try {
-    const res = await fetch('/api/order/seats?zones=A,B,C');
-    if (res.ok) {
-      const allSeats = await res.json();
-      DB.seats = {};
-      allSeats.forEach(s => {
-        DB.seats[s.id] = {
-          status: s.isEntered ? "ENTERED" : (s.isReserved ? "RESERVED" : "AVAILABLE"),
-          holder: s.isReserved ? "예약됨" : null
-        };
-      });
+    const festRes = await fetch('/api/festival');
+    if (festRes.ok) {
+      festivals = await festRes.json();
     }
-  } catch(e) {
-    console.error("Failed to fetch reserved seats", e);
+  } catch (e) {
+    console.error("Failed to fetch festivals", e);
+  }
+
+  // Set default festival
+  let currentFestivalId = festivals.length > 0 ? festivals[0].id : null;
+
+  // Function to load seats for a specific festival
+  const loadSeatsForFestival = async (festivalId) => {
+    try {
+      const res = await fetch(`/api/order/seats?festivalId=${festivalId}`);
+      if (res.ok) {
+        const allSeats = await res.json();
+        DB.seats = {};
+        allSeats.forEach(s => {
+          DB.seats[s.id] = {
+            status: s.isEntered ? "ENTERED" : (s.isReserved ? "RESERVED" : "AVAILABLE"),
+            holder: s.isReserved ? "예약됨" : null,
+            seatRow: s.seatRow,
+            number: s.number,
+            zone: s.zone,
+            price: s.price
+          };
+        });
+      }
+    } catch(e) {
+      console.error("Failed to fetch reserved seats", e);
+    }
+  };
+
+  if (currentFestivalId) {
+    await loadSeatsForFestival(currentFestivalId);
   }
 
   const seasons = DB.options.seasons;
@@ -1058,18 +1083,26 @@ async function renderTicketingScreen() {
   const defaultRate = rates[0];
 
   view.innerHTML = `
-    <div class="ticketing-grid" style="display:flex; flex-wrap: wrap; gap:20px; align-items: flex-start;">
-      <div class="panel-rigid" style="flex: 1 1 300px; width: 100%;">
-        <div class="panel-header-rigid">현장 매표소 발권 및 티켓 커스텀 설정</div>
-        <div class="panel-body-rigid">
-          <form id="ticketing-form">
-            <div class="form-group-rigid" style="margin-bottom: 15px;">
-              <label style="display: flex; justify-content: space-between; align-items: center;">
+    <div class="ticketing-grid" style="display:flex; gap:20px; height: calc(100vh - 120px); overflow: hidden;">
+      <!-- 좌측 폼 영역 (고정 너비, 세로 스크롤) -->
+      <div class="panel-rigid" style="width: 400px; flex-shrink: 0; display: flex; flex-direction: column; overflow: hidden;">
+        <div class="panel-header-rigid" style="flex-shrink: 0;">현장 매표소 발권 및 티켓 커스텀 설정</div>
+        <div class="panel-body-rigid" style="flex: 1; overflow-y: auto; display: flex; flex-direction: column;">
+          <form id="ticketing-form" style="display: flex; flex-direction: column; height: 100%;">
+            <div class="form-group-rigid" style="margin-bottom: 15px; flex-shrink: 0;">
+              <label>진행 행사 (Festival) 선택</label>
+              <select id="ticketing-festival-select" class="input-rigid" style="width: 100%; padding: 10px;">
+                ${festivals.map(f => `<option value="${f.id}" ${f.id === currentFestivalId ? 'selected' : ''}>${f.name} (${f.startDate} ~ ${f.endDate})</option>`).join('')}
+              </select>
+            </div>
+            
+            <div class="form-group-rigid" style="display: flex; flex-direction: column; flex: 1; min-height: 200px; margin-bottom: 15px;">
+              <label style="display: flex; justify-content: space-between; align-items: center; flex-shrink: 0; margin-bottom: 5px;">
                 <span>선택된 좌석 목록 및 이용 고객 지정</span>
                 <span id="selected-seats-count-lbl" style="font-size: 12px; color: var(--text-muted); font-weight: normal;">0개 선택됨</span>
               </label>
-              <div class="selected-seats-table-container" style="max-height: 250px; overflow-y: auto; overflow-x: auto; border: 1px solid var(--border-color); background: #1a202c; border-radius: 2px;">
-                <table class="table-rigid" style="margin: 0; font-size: 12px; min-width: 350px;">
+              <div class="selected-seats-table-container" style="flex: 1; overflow-y: auto; overflow-x: auto; border: 1px solid var(--border-color); background: #1a202c; border-radius: 2px;">
+                <table class="table-rigid" style="margin: 0; font-size: 12px; width: 100%; min-width: 350px;">
                   <thead>
                     <tr>
                       <th style="padding: 8px 10px;">좌석</th>
@@ -1086,24 +1119,46 @@ async function renderTicketingScreen() {
               </div>
             </div>
 
-            <div class="price-display-box-rigid" style="margin-top: 15px; background: rgba(16, 185, 129, 0.1); border: 2px solid var(--color-green); padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; border-radius: 4px;">
-              <span style="color: #fff; font-weight: 800; font-size: 14px;">최종 합산 결제 금액</span>
-              <strong id="ticket-final-price-lbl" style="color: var(--color-green); font-size: 24px; font-family: var(--font-mono);">0원</strong>
-            </div>
+            <div style="flex-shrink: 0;">
+              <div class="price-display-box-rigid" style="margin-top: 15px; background: rgba(16, 185, 129, 0.1); border: 2px solid var(--color-green); padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; border-radius: 4px;">
+                <span style="color: #fff; font-weight: 800; font-size: 14px;">최종 합산 결제 금액</span>
+                <strong id="ticket-final-price-lbl" style="color: var(--color-green); font-size: 24px; font-family: var(--font-mono);">0원</strong>
+              </div>
 
-            <button type="button" id="btn-request-ticket-pay" class="btn btn-rigid btn-green" style="width: 100%; font-weight:bold; margin-top:20px; padding: 15px; font-size: 15px;">
-              [결제요청] Toss Payments 일괄 결제창 호출
-            </button>
+              <button type="button" id="btn-request-ticket-pay" class="btn btn-rigid btn-green" style="width: 100%; font-weight:bold; margin-top:20px; padding: 15px; font-size: 15px;">
+                [결제요청] Toss 일괄 결제창 호출
+              </button>
+            </div>
           </form>
         </div>
       </div>
 
-      <div class="panel-rigid" style="flex: 1.5 1 300px; width: 100%; overflow: hidden;">
-        <div class="panel-header-rigid">실시간 좌석 배치도 및 가용 좌석 모니터 (원클릭 좌석 선택)</div>
-        <div class="panel-body-rigid" style="overflow-x: auto; padding-bottom: 20px;">
-          <div id="ticketing-seat-map-container" style="min-width: 600px;">
-            <!-- Theater amphitheater map draws here -->
+      <!-- 우측 SVG 도면 영역 -->
+      <div class="panel-rigid" style="flex: 1; min-width: 0; display: flex; flex-direction: column; overflow: hidden;">
+        <div class="panel-header-rigid" style="display:flex; justify-content: space-between; align-items:center; flex-shrink: 0;">
+          <span>실시간 전체 구역 배치도 (SVG)</span>
+        </div>
+        <div class="panel-body-rigid" style="flex: 1; overflow: hidden; padding: 0; background: #000; position:relative; display: flex; flex-direction: column;" id="ticketing-svg-map-container">
+          <div style="color:var(--text-muted); margin: auto; padding:50px;">배치도를 불러오는 중입니다...</div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- 상세 좌석표 모달 -->
+    <div id="seat-map-modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 9999; justify-content: center; align-items: center; padding: 20px;">
+      <div style="background: #1a202c; border: 1px solid var(--border-color); border-radius: 8px; width: 100%; max-width: 900px; max-height: 90vh; display: flex; flex-direction: column; overflow: hidden; box-shadow: 0 10px 30px rgba(0,0,0,0.5);">
+        <div style="padding: 15px 20px; border-bottom: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center; background: #2d3748;">
+          <h3 style="margin: 0; font-size: 18px; color: #fff;">상세 좌석 선택</h3>
+          <button type="button" id="btn-close-seat-modal" style="background: transparent; border: none; color: #fff; font-size: 24px; cursor: pointer;">&times;</button>
+        </div>
+        <div class="panel-body-rigid" style="overflow: auto; padding: 20px; flex: 1; min-height: 400px; max-height: 70vh;">
+          <div id="ticketing-seat-map-container" style="min-width: 600px; display: flex; justify-content: center;">
+            <div style="text-align:center; padding: 50px; color: var(--text-muted);">위의 지도에서 구역을 클릭하세요.</div>
           </div>
+        </div>
+        <div style="padding: 15px 20px; border-top: 1px solid var(--border-color); display: flex; justify-content: flex-end; background: #2d3748;">
+          <button type="button" id="btn-confirm-seat-modal" class="btn btn-rigid btn-green" style="padding: 10px 30px; font-weight: bold; border-radius: 4px;">선택 완료</button>
         </div>
       </div>
     </div>
@@ -1113,12 +1168,12 @@ async function renderTicketingScreen() {
   const updateSelectedSeatsUI = () => {
     const tbody = document.getElementById("selected-seats-tbody");
     if (!tbody) return;
-
+    
     tbody.innerHTML = "";
     let totalPrice = 0;
 
     if (selectedSeats.length === 0) {
-      tbody.innerHTML = `<tr><td colspan="5" class="text-center" style="color:#a0aec0; padding: 30px 0;">선택된 좌석이 없습니다.<br>배치도의 빈 좌석을 클릭하세요.</td></tr>`;
+      tbody.innerHTML = `<tr><td colspan="5" class="text-center" style="color:#a0aec0; padding: 30px 0;">선택된 좌석이 없습니다.<br>모달창에서 좌석을 선택하세요.</td></tr>`;
       document.getElementById("ticket-final-price-lbl").innerText = "0원";
       document.getElementById("selected-seats-count-lbl").innerText = "0개 선택됨";
 
@@ -1132,7 +1187,7 @@ async function renderTicketingScreen() {
     document.getElementById("selected-seats-count-lbl").innerText = `${selectedSeats.length}개 선택됨`;
 
     selectedSeats.forEach((item, index) => {
-      const price = calculateTicketPrice(item.seasonId, item.rateId);
+      const price = calculateTicketPrice(item.seatId, item.seasonId, item.rateId);
       totalPrice += price;
 
       const tr = document.createElement("tr");
@@ -1211,12 +1266,98 @@ async function renderTicketingScreen() {
     updateSelectedSeatsUI();
   };
 
-  // Render theater seat map
-  renderSeatMap("ticketing-seat-map-container", handleSeatToggle);
-  window.activeSeatClickHandler = handleSeatToggle;
+  // Load SVG Map Function
+  const loadSvgMapForFestival = async (festivalId) => {
+    const svgContainer = document.getElementById("ticketing-svg-map-container");
+    if (!svgContainer) return;
+    
+    try {
+      const res = await fetch(`/api/festival/${festivalId}/zones`);
+      if (res.ok) {
+        const zones = await res.json();
+        const zoneWithBg = zones.find(z => z.mapBgUrl);
+        
+        svgContainer.innerHTML = '';
+        if (zoneWithBg && zoneWithBg.mapBgUrl && zoneWithBg.mapBgUrl.toLowerCase().includes('.svg')) {
+          const bgRes = await fetch(zoneWithBg.mapBgUrl);
+          const svgText = await bgRes.text();
+          
+          const parser = new DOMParser();
+          const doc = parser.parseFromString(svgText, 'image/svg+xml');
+          const svgRoot = doc.documentElement;
+          
+          // Remove inline onclick handlers from SVG to prevent ReferenceError: selectZone is not defined
+          svgRoot.querySelectorAll('[onclick]').forEach(el => {
+             el.removeAttribute('onclick');
+          });
+          
+          svgRoot.setAttribute('width', '100%');
+          svgRoot.setAttribute('height', '100%');
+          svgRoot.style.pointerEvents = 'auto';
+          svgContainer.appendChild(svgRoot);
+          
+          zones.forEach(zone => {
+            if (!zone.svgPoints) return;
+            const elementId = zone.svgPoints.replace('#', '');
+            const targetEl = svgRoot.getElementById(elementId) || svgRoot.querySelector(`[id="${elementId}"]`);
+            if (targetEl) {
+              targetEl.classList.add('zone-polygon');
+              targetEl.style.cursor = 'pointer';
+              targetEl.style.fill = 'rgba(105, 108, 255, 0.2)';
+              targetEl.style.stroke = '#696cff';
+              targetEl.style.strokeWidth = '2px';
+              
+              targetEl.addEventListener('click', () => {
+                // Remove selected from others
+                svgRoot.querySelectorAll('.selected-zone-polygon').forEach(el => {
+                  el.classList.remove('selected-zone-polygon');
+                  el.style.fill = 'rgba(105, 108, 255, 0.2)';
+                });
+                targetEl.classList.add('selected-zone-polygon');
+                targetEl.style.fill = 'rgba(255, 171, 0, 0.5)';
+                
+                // Clear and redraw seat map for this specific zone
+                const container = document.getElementById("ticketing-seat-map-container");
+                container.innerHTML = ""; 
+                // Render seat map for this zone using the exact DB zone name
+                renderSeatMap("ticketing-seat-map-container", handleSeatToggle, zone.zoneName);
+                
+                // 모달 띄우기
+                document.getElementById('seat-map-modal').style.display = 'flex';
+              });
+            }
+          });
+        } else {
+          svgContainer.innerHTML = '<div style="color:var(--text-muted); text-align:center; padding:50px;">등록된 SVG 배치도가 없습니다. 좌측에서 직접 페스티벌을 다시 선택해주세요.</div>';
+          // 모달에는 모든 좌석을 띄울지, 아니면 버튼을 따로 만들지 결정해야 함
+          // 우선 빈 화면으로 유지
+          const container = document.getElementById("ticketing-seat-map-container");
+          container.innerHTML = '<div style="text-align:center; padding: 50px; color: var(--text-muted);">배치도가 없습니다.</div>'; 
+        }
+      }
+    } catch(e) {
+      console.error("Failed to load SVG zones", e);
+      svgContainer.innerHTML = '<div style="color:var(--text-muted); text-align:center; padding:50px;">SVG 배치도를 불러오는데 실패했습니다.</div>';
+    }
+  };
 
-  // Initial draw of selected list (empty state)
-  updateSelectedSeatsUI();
+  // Initial draw
+  if (currentFestivalId) {
+    await loadSvgMapForFestival(currentFestivalId);
+  }
+
+  // Handle Festival Change
+  document.getElementById("ticketing-festival-select").addEventListener("change", async (e) => {
+    currentFestivalId = e.target.value;
+    selectedSeats = []; // Reset selections
+    await loadSeatsForFestival(currentFestivalId);
+    await loadSvgMapForFestival(currentFestivalId);
+    
+    // Clear seat map until a zone is clicked
+    const container = document.getElementById("ticketing-seat-map-container");
+    container.innerHTML = '<div style="text-align:center; padding: 50px; color: var(--text-muted);">위의 지도에서 구역을 클릭하세요.</div>'; 
+    updateSelectedSeatsUI();
+  });
 
   // Pay trigger
   document.getElementById("btn-request-ticket-pay").onclick = () => {
@@ -1230,7 +1371,7 @@ async function renderTicketingScreen() {
     // Calculate total price
     let totalPrice = 0;
     selectedSeats.forEach(item => {
-      totalPrice += calculateTicketPrice(item.seasonId, item.rateId);
+      totalPrice += calculateTicketPrice(item.seatId, item.seasonId, item.rateId);
     });
 
     const seatIdsText = selectedSeats.map(item => item.seatId).join(", ");
@@ -1250,7 +1391,8 @@ async function renderTicketingScreen() {
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
               totalPrice: totalPrice,
-              seats: seatIds
+              seats: seatIds,
+              eventNo: currentFestivalId
             })
           });
 
@@ -1314,8 +1456,9 @@ async function renderTicketingScreen() {
 
           selectedSeats = [];
           
-          // Re-render to fetch newly reserved seats from backend
-          renderTicketingScreen();
+          // Re-render to fetch newly reserved seats from backend without resetting the entire screen
+          await loadSeatsForFestival(currentFestivalId);
+          updateSelectedSeatsUI();
           renderDashboard(); // Update dashboard counts
           
         } catch (e) {
@@ -1328,6 +1471,15 @@ async function renderTicketingScreen() {
       }
     });
   };
+
+  // 모달 닫기 이벤트 연결
+  const closeModal = () => {
+    document.getElementById('seat-map-modal').style.display = 'none';
+  };
+  const closeBtn = document.getElementById('btn-close-seat-modal');
+  const confirmBtn = document.getElementById('btn-confirm-seat-modal');
+  if (closeBtn) closeBtn.addEventListener('click', closeModal);
+  if (confirmBtn) confirmBtn.addEventListener('click', closeModal);
 }
 
 function renderRecentTicketsTable() {

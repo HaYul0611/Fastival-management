@@ -281,24 +281,45 @@ public class OrderController {
     }
 
     @GetMapping("/seats")
-    public List<Map<String, Object>> getAllSeats(@RequestParam(value = "zones", required = false) String zonesParam) {
-        String sql = "SELECT SUBSTRING(seat_row, 1, 1) as zone, seat_number " +
-                "FROM seat_map ";
-
+    public List<Map<String, Object>> getAllSeats(
+            @RequestParam(value = "zones", required = false) String zonesParam,
+            @RequestParam(value = "festivalId", required = false) Long festivalId) {
+            
+        String sql;
         List<Map<String, Object>> rows;
-        if (zonesParam != null && !zonesParam.isEmpty()) {
-            List<String> zonesList = Arrays.asList(zonesParam.split(","));
-            String inSql = String.join(",", Collections.nCopies(zonesList.size(), "?"));
-            sql += "WHERE SUBSTRING(seat_row, 1, 1) IN (" + inSql + ") ";
-            sql += "ORDER BY zone, seat_number";
-            rows = jdbcTemplate.queryForList(sql, zonesList.toArray());
+
+        if (festivalId != null) {
+            // festivalId가 있을 때는 zone_name을 zone 식별자로 사용
+            sql = "SELECT fz.zone_name as zone, s.seat_number, s.seat_row, s.is_reserved, s.price " +
+                  "FROM seat_map s " +
+                  "JOIN festival_zone fz ON s.zone_id = fz.id " +
+                  "WHERE fz.festival_id = ? " +
+                  "ORDER BY fz.zone_name, s.seat_row, s.seat_number";
+            rows = jdbcTemplate.queryForList(sql, festivalId);
         } else {
-            sql += "ORDER BY zone, seat_number";
-            rows = jdbcTemplate.queryForList(sql);
+            sql = "SELECT SUBSTRING(s.seat_row, 1, 1) as zone, s.seat_number, s.seat_row, s.is_reserved, s.price " +
+                  "FROM seat_map s ";
+                  
+            if (zonesParam != null && !zonesParam.isEmpty()) {
+                List<String> zonesList = Arrays.asList(zonesParam.split(","));
+                String inSql = String.join(",", Collections.nCopies(zonesList.size(), "?"));
+                sql += "WHERE SUBSTRING(s.seat_row, 1, 1) IN (" + inSql + ") ";
+                sql += "ORDER BY zone, s.seat_number";
+                rows = jdbcTemplate.queryForList(sql, zonesList.toArray());
+            } else {
+                sql += "ORDER BY zone, s.seat_number";
+                rows = jdbcTemplate.queryForList(sql);
+            }
         }
 
-        List<Map<String, Object>> activeOrders = jdbcTemplate.queryForList(
-                "SELECT seat_ids, is_entered FROM orders WHERE payment_status = 'PAID' AND seat_ids IS NOT NULL");
+        String orderSql = "SELECT seat_ids, is_entered FROM orders WHERE payment_status = 'PAID' AND seat_ids IS NOT NULL";
+        List<Map<String, Object>> activeOrders;
+        if (festivalId != null) {
+            orderSql += " AND festival_id = ?";
+            activeOrders = jdbcTemplate.queryForList(orderSql, festivalId);
+        } else {
+            activeOrders = jdbcTemplate.queryForList(orderSql);
+        }
 
         Set<String> reservedSeats = new HashSet<>();
         Set<String> enteredSeats = new HashSet<>();
@@ -324,13 +345,39 @@ public class OrderController {
             Map<String, Object> seat = new HashMap<>();
             String zone = (String) row.get("zone");
             Number number = (Number) row.get("seat_number");
-            String seatId = zone + "-" + number;
+            String seatRow = (String) row.get("seat_row");
+            
+            // seatRow가 1열, 2열과 같을 수 있으므로 포함해서 유니크 ID 구성
+            String seatId = zone + "-" + seatRow + "_" + number;
+            
+            // 예전 결제 내역(orders 테이블)에 저장된 형태 (예: A-1) 추적용 로직
+            String legacySeatId = "";
+            if (seatRow != null && seatRow.length() > 0) {
+                String rowLetter = seatRow.replaceAll("[^a-zA-Z]", "");
+                if (rowLetter.isEmpty()) {
+                    rowLetter = String.valueOf(seatRow.charAt(0));
+                }
+                legacySeatId = rowLetter + "-" + number;
+            }
+
+            // ui.js의 기존 로직 파손 방지 (기존 A-1 형태도 허용되게끔)
+            if (festivalId == null) {
+                seatId = legacySeatId;
+            }
+
+            Boolean dbIsReserved = (Boolean) row.get("is_reserved");
+            if (dbIsReserved == null) dbIsReserved = false;
+
+            boolean isReservedByOrder = reservedSeats.contains(seatId) || reservedSeats.contains(legacySeatId);
+            boolean isEnteredByOrder = enteredSeats.contains(seatId) || enteredSeats.contains(legacySeatId);
 
             seat.put("id", seatId);
             seat.put("zone", zone);
+            seat.put("seatRow", seatRow);
             seat.put("number", number);
-            seat.put("isReserved", reservedSeats.contains(seatId));
-            seat.put("isEntered", enteredSeats.contains(seatId));
+            seat.put("price", row.get("price"));
+            seat.put("isReserved", dbIsReserved || isReservedByOrder);
+            seat.put("isEntered", isEnteredByOrder);
             allSeats.add(seat);
         }
 
@@ -441,11 +488,10 @@ public class OrderController {
                 ? (seats != null ? String.join(", ", seats) : "")
                 : seatIds.stream().map(String::valueOf).collect(java.util.stream.Collectors.joining(", "));
 
-        // eventNo를 festival_id로 사용 (없으면 1 기본값)
         int festivalId = 1;
         if (payload.get("eventNo") != null) {
             try {
-                festivalId = ((Number) payload.get("eventNo")).intValue();
+                festivalId = Integer.parseInt(payload.get("eventNo").toString());
             } catch (Exception e) {
                 /* 무시 */ }
         }
@@ -511,17 +557,33 @@ public class OrderController {
                 }
             }
         } else if (seats != null) {
-            // 하위 호환: seatIds 없을 때 기존 방식 (row+number 패턴)
+            // 하위 호환: seatIds 없을 때 기존 방식 (row+number 패턴) 및 새 방식 (zone-row_number 패턴)
             for (String seat : seats) {
                 seat = seat.trim();
-                if (!seat.contains("-"))
-                    continue;
-                String[] parts = seat.split("-", 2);
                 try {
-                    int number = Integer.parseInt(parts[1]);
-                    jdbcTemplate.update(
-                            "UPDATE seat_map SET is_reserved = true WHERE seat_row LIKE ? AND seat_number = ?",
-                            parts[0] + "%", number);
+                    if (seat.contains("_")) {
+                        // 새 포맷: zone-F1-A_3
+                        int lastUnderscore = seat.lastIndexOf('_');
+                        int number = Integer.parseInt(seat.substring(lastUnderscore + 1));
+                        
+                        String beforeUnderscore = seat.substring(0, lastUnderscore); // zone-F1-A
+                        int lastDash = beforeUnderscore.lastIndexOf('-');
+                        String rowPart = beforeUnderscore.substring(lastDash + 1); // A
+                        String zonePart = beforeUnderscore.substring(0, lastDash); // zone-F1
+                        
+                        jdbcTemplate.update(
+                                "UPDATE seat_map SET is_reserved = true " +
+                                "WHERE seat_row = ? AND seat_number = ? AND zone_id IN " +
+                                "(SELECT id FROM festival_zone WHERE zone_name = ? AND festival_id = ?)",
+                                rowPart, number, zonePart, festivalId);
+                    } else if (seat.contains("-")) {
+                        // 예전 포맷: A-1
+                        String[] parts = seat.split("-", 2);
+                        int number = Integer.parseInt(parts[1]);
+                        jdbcTemplate.update(
+                                "UPDATE seat_map SET is_reserved = true WHERE seat_row LIKE ? AND seat_number = ?",
+                                parts[0] + "%", number);
+                    }
                 } catch (Exception e) {
                     System.err.println("좌석 예약 처리 실패: " + seat + " - " + e.getMessage());
                 }
@@ -544,7 +606,7 @@ public class OrderController {
         // festivalId 기본값 설정
         int festivalId = 1;
         if (payload.get("festivalId") != null) {
-            try { festivalId = ((Number) payload.get("festivalId")).intValue(); } catch (Exception e) {}
+            try { festivalId = Integer.parseInt(payload.get("festivalId").toString()); } catch (Exception e) {}
         }
 
         // 유저 파싱

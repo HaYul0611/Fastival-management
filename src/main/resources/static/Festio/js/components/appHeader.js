@@ -59,7 +59,7 @@
       });
       if (!path.endsWith('login.html')) {
         alert('일정 시간이 지나 로그아웃 되었습니다. 다시 로그인 해주세요.');
-        window.location.href = '/login.html';
+        window.location.href = '/Festio/login.html';
         return;
       }
     }
