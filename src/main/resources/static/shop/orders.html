@@ -4,7 +4,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1.0" />
-  <title>주문/배송조회 — FESTIO SHOP</title>
+  <title>주문/배송조회 | FESTIO SHOP</title>
   <link rel="stylesheet" href="css/common.css" />
   <link rel="stylesheet" href="css/mypage.css" />
   <link rel="stylesheet" href="css/orders.css" />
@@ -114,12 +114,44 @@
     <div class="qr-content">
       <button class="qr-close" id="qrClose">&times;</button>
       <h3 style="font-size:18px; font-weight:800; margin-bottom:8px;">현장 수령 픽업증</h3>
-      <p style="font-size:13px; color:var(--g500); margin-bottom:20px;">푸드트럭 또는 부스 직원에게 아래 QR코드를 보여주세요.</p>
+      <p style="font-size:13px; color:var(--g500); margin-bottom:20px; line-height:1.4;">
+        푸드트럭 또는 부스 직원에게<br>아래 QR코드를 보여주세요.
+      </p>
       <div class="qr-img">
         <img src="img/sample_qr.png" id="qrImage" style="width:100%; height:100%;" alt="QR"
           onerror="this.src='https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=FESTIO_PICKUP_SAMPLE'">
       </div>
-      <p style="font-size:14px; font-weight:700; color:var(--blue);" id="qrOrderNo">주문번호: -</p>
+      <p style="font-size:16px; font-weight:800; color:var(--blue);" id="qrOrderNo">주문번호: -</p>
+      <div id="totpWrap" style="margin-top: 24px; padding-top: 16px; border-top: 1px dashed var(--g200);">
+        <div
+          style="font-size:24px; letter-spacing:8px; font-family:monospace; font-weight:900; color:#0284c7; margin-bottom:12px;"
+          id="totpCode">------</div>
+        <div style="width:100%; height:6px; background:var(--g200); border-radius:4px; overflow:hidden;">
+          <div id="totpTimerBar" style="height:100%; background:#0ea5e9; width:100%; transition:width 1s linear;">
+          </div>
+        </div>
+        <div
+          style="display:flex; justify-content:center; align-items:center; gap:6px; font-size:12px; color:var(--g600); margin-top:8px;">
+          <svg id="btnResetTotp" style="cursor:pointer;" width="14" height="14" viewBox="0 0 24 24" fill="none"
+            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="1 4 1 10 7 10"></polyline>
+            <path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"></path>
+          </svg>
+          <span>남은 시간 <span id="totpTimeTxt" style="font-weight:800; color:#0ea5e9;">03:00</span></span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 주문 상세 모달 -->
+  <div class="qr-modal" id="orderDetailModal">
+    <div class="qr-content"
+      style="width: 440px; text-align: left; max-height: 80vh; display:flex; flex-direction:column;">
+      <button class="qr-close" id="odClose">&times;</button>
+      <h3 style="font-size:20px; font-weight:900; margin-bottom:16px;">주문 상세 내역</h3>
+      <div id="odContent" style="overflow-y: auto; flex:1; padding-right:8px;">
+        <!-- 상세 내용 렌더링 영역 -->
+      </div>
     </div>
   </div>
 

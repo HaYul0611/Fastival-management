@@ -11,7 +11,7 @@ CREATE TABLE IF NOT EXISTS member (
     password               VARCHAR(255) NOT NULL,
     name                   VARCHAR(50) NOT NULL,
     phone                  VARCHAR(20) NOT NULL,
-    grade                  VARCHAR(20) NOT NULL DEFAULT 'Bronze' CHECK (grade IN ('Bronze','Silver','Gold','VIP','VVIP')),
+    grade                  VARCHAR(20) NOT NULL DEFAULT 'BRONZE' CHECK (grade IN ('BRONZE','SILVER','GOLD','EMERALD','DIAMOND','VIP','SVIP','VVIP')),
     total_purchase_amount  BIGINT NOT NULL DEFAULT 0,
     join_date              TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
     last_login             TIMESTAMP WITH TIME ZONE,
@@ -27,16 +27,21 @@ CREATE TABLE IF NOT EXISTS member (
 CREATE OR REPLACE FUNCTION update_member_grade()
 RETURNS TRIGGER AS $$
 BEGIN
-    IF NEW.total_purchase_amount >= 1500000 THEN
-        NEW.grade = 'VVIP';
-    ELSIF NEW.total_purchase_amount >= 700000 THEN
-        NEW.grade = 'VIP';
-    ELSIF NEW.total_purchase_amount >= 300000 THEN
-        NEW.grade = 'Gold';
-    ELSIF NEW.total_purchase_amount >= 100000 THEN
-        NEW.grade = 'Silver';
+    -- 특수 계정은 결제 금액에 따른 자동 등급 변경에서 제외
+    IF NEW.grade IN ('VIP', 'SVIP', 'VVIP') THEN
+        RETURN NEW;
+    END IF;
+
+    IF NEW.total_purchase_amount >= 10000000 THEN
+        NEW.grade = 'DIAMOND';
+    ELSIF NEW.total_purchase_amount >= 1000000 THEN
+        NEW.grade = 'EMERALD';
+    ELSIF NEW.total_purchase_amount >= 500000 THEN
+        NEW.grade = 'GOLD';
+    ELSIF NEW.total_purchase_amount >= 150000 THEN
+        NEW.grade = 'SILVER';
     ELSE
-        NEW.grade = 'Bronze';
+        NEW.grade = 'BRONZE';
     END IF;
     RETURN NEW;
 END;
@@ -202,9 +207,9 @@ CREATE INDEX idx_inquiry_status ON inquiry(status);
 -- 테스트용 초기 데이터 셋팅
 -- ============================================================
 INSERT INTO member (member_id, password, name, phone, grade, total_purchase_amount, is_face_registered) VALUES
-('Ohayul',  '$2a$10$SAMPLE_HASH_REPLACE_IN_PROD_001', '오하율', '010-1234-5678', 'Gold',   450000, true),
-('Imsohee',  '$2a$10$SAMPLE_HASH_REPLACE_IN_PROD_002', '임소희', '010-9876-5432', 'Silver', 180000, false),
-('Gangjinwon','$2a$10$SAMPLE_HASH_REPLACE_IN_PROD_003', '강진원', '010-5555-1234', 'VVIP',  2100000, true);
+('Ohayul',  '$2a$10$SAMPLE_HASH_REPLACE_IN_PROD_001', '오하율', '010-1234-5678', 'emerald',   650000, true),
+('Imsohee',  '$2a$10$SAMPLE_HASH_REPLACE_IN_PROD_002', '임소희', '010-9876-5432', 'SVIP', 200000, false),
+('Gangjinwon','$2a$10$SAMPLE_HASH_REPLACE_IN_PROD_003', '강진원', '010-5555-1234', 'VIP',  2100000, true);
 
 INSERT INTO event (event_name, category, venue, event_date, start_time, end_time, description, badge_label, is_hot) VALUES
 ('2025 서울 뮤직 페스티벌',   '콘서트',   'DCC 대전컨벤션센터',  '2025-08-15', '18:00:00', '23:00:00', '국내 최대 규모의 여름 음악 축제. 국내외 아티스트 30팀 출연.',         'HOT',    true),

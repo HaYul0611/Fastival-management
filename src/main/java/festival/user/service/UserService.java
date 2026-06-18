@@ -78,6 +78,16 @@ public class UserService {
         UserVo user = userRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("사용자를 찾을 수 없습니다."));
         user.setRole(role);
+        
+        // 역할에 따라 특수 등급 자동 할당
+        if ("ROLE_ADMIN".equals(role)) {
+            user.setMembershipGrade("VIP");
+        } else if ("ROLE_STAFF".equals(role) || "ROLE_GATE_STAFF".equals(role)) {
+            user.setMembershipGrade("SVIP");
+        } else if ("ROLE_FOOD_STAFF".equals(role) || "ROLE_GOODS_STAFF".equals(role)) {
+            user.setMembershipGrade("VVIP");
+        }
+        
         return userRepository.save(user);
     }
 

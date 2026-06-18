@@ -27,13 +27,20 @@ function renderHeader() {
   const logged = Session.isLoggedIn();
   const user = Session.get();
   el.innerHTML = `
-  <div class="container hdr-inner">
-    <a href="shop.html" class="hdr-logo" aria-label="FESTIO SHOP 홈">
-      <div class="hdr-logo-text">
-        <span class="hdr-logo-name festio-gradient">FESTIO</span>
-        <span class="hdr-logo-sub">SHOP</span>
-      </div>
-    </a>
+  <div class="container hdr-inner" style="display:flex; align-items:center;">
+    <div style="display:flex; align-items:center; gap:2px;">
+      <a href="javascript:history.back()" class="hdr-back-btn" aria-label="뒤로가기" style="display:flex; align-items:center; justify-content:center; width:32px; height:32px;">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="15 18 9 12 15 6"></polyline>
+        </svg>
+      </a>
+      <a href="shop.html" class="hdr-logo" aria-label="FESTIO SHOP 홈">
+        <div class="hdr-logo-text">
+          <span class="hdr-logo-name festio-gradient">FESTIO</span>
+          <span class="hdr-logo-sub">SHOP</span>
+        </div>
+      </a>
+    </div>
 
     <div class="hdr-search">
       <span class="hdr-search-icon" aria-hidden="true">
@@ -42,7 +49,7 @@ function renderHeader() {
           <path d="M11 11l3.5 3.5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
         </svg>
       </span>
-      <input type="search" id="hdrSearch" placeholder="굿즈, 푸드트럭, 브랜드 검색…" autocomplete="off" aria-label="상품 검색"/>
+      <input type="search" id="festioGlobalSearch" name="festio_q" placeholder="굿즈, 푸드트럭, 브랜드 검색…" autocomplete="new-password" aria-label="상품 검색"/>
     </div>
 
     <div class="hdr-actions">
@@ -89,7 +96,7 @@ function renderHeader() {
       ${logged
       ? `<div class="hdr-user-menu" style="position:relative;">
            <button class="hdr-login-btn" id="btnUserDrop" style="display:flex;align-items:center;gap:6px;">
-             <img src="https://via.placeholder.com/24" id="hdrAvatar" style="width:24px;height:24px;border-radius:50%;object-fit:cover;" alt="Avatar" onerror="this.src='data:image/svg+xml;utf8,<svg xmlns=\\'http://www.w3.org/2000/svg\\' viewBox=\\'0 0 24 24\\'><path fill=\\'%23ccc\\' d=\\'M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z\\'/></svg>'">
+             <img src="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><path fill='%23ccc' d='M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z'/></svg>" id="hdrAvatar" style="width:24px;height:24px;border-radius:50%;object-fit:cover;" alt="Avatar" onerror="this.src='data:image/svg+xml;utf8,<svg xmlns=\\'http://www.w3.org/2000/svg\\' viewBox=\\'0 0 24 24\\'><path fill=\\'%23ccc\\' d=\\'M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z\\'/></svg>'">
              <span>${user?.name || '회원'}님 ▾</span>
            </button>
            <div class="user-dropdown" id="userDropdown">

@@ -121,7 +121,7 @@ async function loadUserInfo() {
         email: user.email,
         role: user.role,
         phone: user.phone || '',
-        grade: user.membershipGrade || 'Bronze',
+        grade: user.membershipGrade || 'BRONZE',
         totalPurchaseAmount: user.balance || 0,
         isFaceRegistered: user.faceVector !== null && user.faceVector !== undefined,
         balance: user.balance || 0
@@ -152,7 +152,7 @@ function fallbackLocalUserInfo() {
     email: userEmail,
     role: userRole,
     phone: userPhone,
-    grade: userRole === 'ADMIN' ? 'VIP' : 'Bronze',
+    grade: userRole === 'ADMIN' ? 'VIP' : 'BRONZE',
     totalPurchaseAmount: userRole === 'ADMIN' ? 750000 : 50000,
     isFaceRegistered: localStorage.getItem('isFaceRegistered') === 'true',
     balance: parseInt(localStorage.getItem('balance') || '35000')
@@ -185,10 +185,27 @@ function renderProfile() {
   }
 
   // 등급 배지 설정
+  // 등급 배지 및 프로그레스 바 로직 (SHOP 기준 통합)
   const gradeBadge = document.getElementById('profileGrade');
+  const nextText = document.getElementById('gradeNextText');
+  const gradeBar = document.getElementById('gradeBar');
+
+  const totalSpent = _member.totalPurchaseAmount || 0;
+  let nextTier = 'SILVER', nextGoal = 150000;
+
+  if (['VIP', 'SVIP', 'VVIP'].includes(_member.grade)) {
+    nextTier = 'SPECIAL';
+  } else {
+    if (totalSpent >= 10000000) { nextTier = 'MAX'; nextGoal = totalSpent; }
+    else if (totalSpent >= 1000000) { nextTier = 'DIAMOND'; nextGoal = 10000000; }
+    else if (totalSpent >= 500000) { nextTier = 'EMERALD'; nextGoal = 1000000; }
+    else if (totalSpent >= 150000) { nextTier = 'GOLD'; nextGoal = 500000; }
+    else { nextTier = 'SILVER'; nextGoal = 150000; }
+  }
+
   if (gradeBadge) {
-    const isVip = _member.grade === 'VIP';
-    gradeBadge.className = `grade-badge ${isVip ? 'grade-vip' : 'grade-bronze'}`;
+    // 뱃지 클래스를 소문자 통일 (CSS에서 대응 필요)
+    gradeBadge.className = `grade-badge badge-${_member.grade.toLowerCase()}`;
     gradeBadge.innerHTML = `
       <svg class="icon mp-icon-sm" viewBox="0 0 24 24" fill="currentColor" stroke="none">
         <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
@@ -197,15 +214,19 @@ function renderProfile() {
     `;
   }
 
-  // 등급 진행률 프로그레스 바
-  const nextText = document.getElementById('gradeNextText');
-  const gradeBar = document.getElementById('gradeBar');
-  if (_member.grade === 'VIP') {
-    if (nextText) nextText.textContent = '최고 등급인 VIP 회원입니다.';
-    if (gradeBar) gradeBar.style.width = '100%';
+  if (nextTier === 'SPECIAL') {
+    if (nextText) nextText.textContent = '특수 등급 계정입니다.';
+    if (gradeBar) { gradeBar.style.width = '100%'; gradeBar.style.background = '#8930F8'; }
+  } else if (nextTier === 'MAX') {
+    if (nextText) nextText.textContent = '최고 등급인 DIAMOND 회원입니다.';
+    if (gradeBar) { gradeBar.style.width = '100%'; gradeBar.style.background = '#B9F2FF'; }
   } else {
-    if (nextText) nextText.textContent = 'Silver 등급까지 ₩50,000 남음';
-    if (gradeBar) gradeBar.style.width = '50%';
+    let remain = nextGoal - totalSpent;
+    if (nextText) nextText.textContent = `${nextTier} 등급까지 ₩${remain.toLocaleString()} 남음`;
+    if (gradeBar) {
+      let percent = Math.min((totalSpent / nextGoal) * 100, 100);
+      gradeBar.style.width = percent + '%';
+    }
   }
 
   // 프로필 편집 폼 채우기
@@ -629,12 +650,7 @@ function generateModalQR(token) {
 let _currentQrToken = '';
 
 function showTicketQr(token) {
-  const dbTicket = _dbTickets.find(t => t.secret === token);
-  if (dbTicket) {
-      window.location.href = `/features/user/ticket/view.html?orderId=${dbTicket.orderId}&secret=${token}`;
-  } else {
-      openQrModalView(token, 'TICKET');
-  }
+  openQrModalView(token, 'TICKET');
 }
 
 function showFoodQr(token) {
@@ -728,6 +744,24 @@ function openQrModalView(token, type = 'TICKET') {
 
   // QR 이미지 생성
   generateModalQR(qrToken);
+
+  // 티켓 전용 페이지 이동
+  const canvasContainer = document.getElementById('qrModalCanvas');
+  if (canvasContainer) {
+    if (type === 'TICKET') {
+      canvasContainer.style.cursor = 'pointer';
+      canvasContainer.onclick = () => {
+        const tkt = _dbTickets.find(t => t.secret === qrToken);
+        const orderId = tkt ? tkt.orderId : 1;
+        const userEl = document.getElementById('qrModalUser');
+        const userNameParam = userEl ? userEl.textContent : '';
+        window.location.href = `/features/user/ticket/view.html?orderId=${orderId}&secret=${qrToken}&displayCode=${displayCode}&userName=${encodeURIComponent(userNameParam)}`;
+      };
+    } else {
+      canvasContainer.style.cursor = 'default';
+      canvasContainer.onclick = null;
+    }
+  }
 
   // 타이머 동기화
   syncModalTimer();
@@ -2410,6 +2444,21 @@ function openQrModalView(token, type = 'TICKET') {
   document.getElementById('dynamicQrCode').textContent = formatBarcode(displayCode, type === 'FOOD' ? 'F' : type === 'GOODS' ? 'G' : 'T');
 
   const qrCanvas = document.getElementById('dynamicQrCanvas');
+  if (qrCanvas) {
+    if (type === 'TICKET') {
+      qrCanvas.style.cursor = 'pointer';
+      qrCanvas.onclick = () => {
+        const tkt = typeof _dbTickets !== 'undefined' ? _dbTickets.find(t => t.secret === token) : null;
+        const orderId = tkt ? tkt.orderId : 1;
+        const userNameEl = document.getElementById('dynamicQrUserName');
+        const userNameParam = userNameEl ? userNameEl.textContent : '';
+        window.location.href = `/features/user/ticket/view.html?orderId=${orderId}&secret=${token}&displayCode=${displayCode}&userName=${encodeURIComponent(userNameParam)}&grade=${encodeURIComponent(_member ? _member.grade : 'BRONZE')}`;
+      };
+    } else {
+      qrCanvas.style.cursor = 'default';
+      qrCanvas.onclick = null;
+    }
+  }
 
   const qrTitle = document.getElementById('dynamicQrTitle');
   if (qrTitle) {

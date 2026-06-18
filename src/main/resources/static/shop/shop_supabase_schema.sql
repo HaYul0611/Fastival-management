@@ -11,7 +11,7 @@ CREATE TABLE public.shop_profiles (
   avatar_url text,
   festio_pay_points integer DEFAULT 0,
   total_spent integer DEFAULT 0,
-  tier text DEFAULT 'BRONZE', -- BRONZE, SILVER, GOLD, EMERALD, DIAMOND
+  tier text DEFAULT 'BRONZE', -- BRONZE, SILVER, GOLD, EMERALD, DIAMOND, VIP, SVIP, VVIP
   noti_food_truck boolean DEFAULT true,
   noti_shipping boolean DEFAULT true,
   noti_marketing boolean DEFAULT false,

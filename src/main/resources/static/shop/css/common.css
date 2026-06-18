@@ -189,14 +189,16 @@ textarea {
 .hdr-logo-text {
   display: flex;
   flex-direction: column;
-  line-height: 1.1
+  justify-content: center;
+  align-items: flex-start;
+  line-height: 1;
 }
 
 .hdr-logo-name {
   font-size: 17px;
   font-weight: 900;
   letter-spacing: -.5px;
-  color: var(--black)
+  color: var(--black);
 }
 
 .hdr-logo-sub {
@@ -204,7 +206,8 @@ textarea {
   font-weight: 800;
   letter-spacing: 2.5px;
   color: var(--red);
-  text-transform: uppercase
+  text-transform: uppercase;
+  margin-top: -1px;
 }
 
 /* 검색 */
@@ -223,17 +226,35 @@ textarea {
   background: var(--g50);
   font-size: 13.5px;
   color: var(--g900);
+  outline: none;
   transition: border-color var(--trans), background var(--trans), box-shadow var(--trans);
 }
 
 .hdr-search input:focus {
-  border-color: var(--black);
+  outline: none !important;
+  border-color: var(--blue);
   background: var(--white);
-  box-shadow: 0 0 0 3px rgba(10, 10, 10, .07);
+  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
 }
 
 .hdr-search input::placeholder {
   color: var(--g400)
+}
+
+/* 검색창 X 버튼 회색으로 커스텀 */
+.hdr-search input::-webkit-search-cancel-button {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 16px;
+  height: 16px;
+  background: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="%2394a3b8" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10" fill="%23f1f5f9" stroke="none"/><line x1="15" y1="9" x2="9" y2="15"></line><line x1="9" y1="9" x2="15" y2="15"></line></svg>') no-repeat center;
+  background-size: contain;
+  cursor: pointer;
+  opacity: 1;
+}
+
+.hdr-search input::-webkit-search-cancel-button:hover {
+  opacity: 1;
 }
 
 .hdr-search-icon {
@@ -854,6 +875,86 @@ textarea {
 .badge-collab {
   background: var(--red-light);
   color: var(--red)
+}
+
+.badge-bronze {
+  background: linear-gradient(135deg, #cd7f32 0%, #a0522d 100%);
+  color: #fff;
+  padding: 4px 10px;
+  border-radius: var(--rpill);
+  font-size: 13px;
+  font-weight: 800;
+  box-shadow: 0 3px 8px rgba(139, 69, 19, 0.2);
+}
+
+.badge-silver {
+  background: linear-gradient(135deg, #e2e8f0 0%, #cbd5e1 100%);
+  color: #334155;
+  padding: 4px 10px;
+  border-radius: var(--rpill);
+  font-size: 13px;
+  font-weight: 800;
+  box-shadow: 0 3px 8px rgba(148, 163, 184, 0.2);
+}
+
+.badge-gold {
+  background: linear-gradient(135deg, #fbbf24 0%, #d97706 100%);
+  color: #fff;
+  padding: 4px 10px;
+  border-radius: var(--rpill);
+  font-size: 13px;
+  font-weight: 800;
+  box-shadow: 0 3px 8px rgba(217, 119, 6, 0.2);
+}
+
+.badge-emerald {
+  background: linear-gradient(135deg, #34d399 0%, #059669 100%);
+  color: #fff;
+  padding: 4px 10px;
+  border-radius: var(--rpill);
+  font-size: 13px;
+  font-weight: 800;
+  box-shadow: 0 3px 8px rgba(5, 150, 105, 0.2);
+}
+
+.badge-diamond {
+  background: linear-gradient(135deg, #38bdf8 0%, #0284c7 100%);
+  color: #fff;
+  padding: 4px 10px;
+  border-radius: var(--rpill);
+  font-size: 13px;
+  font-weight: 800;
+  box-shadow: 0 3px 8px rgba(2, 132, 199, 0.2);
+}
+
+.badge-vip {
+  background: linear-gradient(135deg, #a78bfa 0%, #7c3aed 100%);
+  color: #fff;
+  padding: 4px 10px;
+  border-radius: var(--rpill);
+  font-size: 13px;
+  font-weight: 800;
+  box-shadow: 0 3px 8px rgba(124, 58, 237, 0.2);
+}
+
+.badge-svip {
+  background: linear-gradient(135deg, #f472b6 0%, #db2777 100%);
+  color: #fff;
+  padding: 4px 10px;
+  border-radius: var(--rpill);
+  font-size: 13px;
+  font-weight: 800;
+  box-shadow: 0 3px 8px rgba(219, 39, 119, 0.2);
+}
+
+.badge-vvip {
+  background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+  color: #fbbf24;
+  padding: 4px 10px;
+  border-radius: var(--rpill);
+  font-size: 13px;
+  font-weight: 800;
+  box-shadow: 0 3px 8px rgba(15, 23, 42, 0.3);
 }
 
 /* ================================================================
