@@ -155,32 +155,13 @@
             <!-- 구역 다각형을 그리고 감지할 SVG 레이어 -->
             <svg class="venue-svg" id="venueSvgLayer" viewBox="0 0 800 660" xmlns="http://www.w3.org/2000/svg"
               role="img" aria-label="공연장 좌석 배치도"
-              style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 2; pointer-events: auto;">
+              style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 2; pointer-events: auto; transform: scale(1.15); transform-origin: center;">
               <!-- JS dynamic SVG polygons -->
             </svg>
           </div>
           <div class="zone-legend" id="zoneLegendContainer"
             style="margin-top: 1rem; display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 12px; padding: 12px; background: var(--bg-surface1); border-radius: 8px;">
             <!-- JS dynamic legend items -->
-          </div>
-          <div class="zone-info-panel" id="zone-info-panel">
-            <div class="zone-info-hdr">
-              <p class="zone-info-name">-</p>
-              <span class="badge badge-new">-</span>
-            </div>
-            <div class="zone-info-stats">
-              <div>
-                <p class="zone-stat-label">잔여 좌석</p>
-                <p class="zone-stat-val remaining">-</p>
-              </div>
-              <div>
-                <p class="zone-stat-label">가격</p>
-                <p class="zone-stat-val price">-</p>
-              </div>
-            </div>
-            <div class="cap-bar">
-              <div class="cap-bar-fill standing progress-0"></div>
-            </div>
           </div>
         </div>
 
@@ -615,8 +596,9 @@
       <div class="modal-header" style="padding: 1.2rem 1.5rem; border-bottom: 1px solid var(--border-default);">
         <h2 class="modal-title" id="seat-modal-title"
           style="font-size: 1.25rem; font-weight: 700; color: var(--text-main);">좌석 선택</h2>
-        <button class="modal-close-btn" data-close-modal="modal-select-seats" aria-label="닫기">
-          <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+        <button class="modal-close-btn" data-close-modal="modal-select-seats" aria-label="닫기"
+          style="background: #f8f9fa; color: #333; padding: 6px; border-radius: 8px; border: 1px solid var(--border-default);">
+          <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"
             stroke-linecap="round" stroke-linejoin="round">
             <line x1="18" y1="6" x2="6" y2="18"></line>
             <line x1="6" y1="6" x2="18" y2="18"></line>
@@ -624,77 +606,199 @@
         </button>
       </div>
       <div class="modal-body"
-        style="flex: 1; overflow: hidden; display: flex; flex-direction: column; padding: 1.5rem; background: var(--bg-surface2);">
-        <!-- 범례 및 안내 -->
-        <div class="seat-legend"
-          style="display: flex; gap: 15px; justify-content: center; margin-bottom: 15px; font-size: 13px; flex-wrap: wrap;">
-          <div style="display: flex; align-items: center; gap: 5px; color: var(--text-secondary);"><span
-              style="width: 12px; height: 12px; border-radius: 3px; background: rgba(255, 171, 0, 0.2); border: 1px solid rgba(255, 171, 0, 0.6);"></span>
-            VIP석</div>
-          <div style="display: flex; align-items: center; gap: 5px; color: var(--text-secondary);"><span
-              style="width: 12px; height: 12px; border-radius: 3px; background: rgba(105, 108, 255, 0.2); border: 1px solid rgba(105, 108, 255, 0.6);"></span>
-            R석</div>
-          <div style="display: flex; align-items: center; gap: 5px; color: var(--text-secondary);"><span
-              style="width: 12px; height: 12px; border-radius: 3px; background: rgba(3, 195, 236, 0.2); border: 1px solid rgba(3, 195, 236, 0.6);"></span>
-            S석</div>
-          <div style="display: flex; align-items: center; gap: 5px; color: var(--text-secondary);"><span
-              style="width: 12px; height: 12px; border-radius: 3px; background: rgba(133, 146, 163, 0.08); border: 1px solid rgba(133, 146, 163, 0.4);"></span>
-            일반석</div>
-          <div style="display: flex; align-items: center; gap: 5px; color: var(--text-secondary);"><span
-              style="width: 12px; height: 12px; border-radius: 3px; background: #FF9F43; border: 1px solid #FF8F13;"></span>
-            선택됨</div>
-          <div style="display: flex; align-items: center; gap: 5px; color: var(--text-secondary);"><span
-              style="width: 12px; height: 12px; border-radius: 3px; background: rgba(75, 75, 90, 0.3); border: 1px solid rgba(75, 75, 90, 0.6);"></span>
-            예매완료</div>
-        </div>
+        style="flex: 1; overflow: hidden; padding: 0; background: var(--bg-surface2); position: relative;">
+        <div class="slider-wrapper" id="seatSliderWrapper"
+          style="display: flex; width: 200%; height: 100%; transition: transform 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);">
 
-        <!-- 좌석 격자판 컨테이너 -->
-        <div id="user-seat-container"
-          style="flex: 1; overflow: auto; position: relative; border: 1px solid var(--border-default); border-radius: 12px; background: var(--bg-surface1); display: flex; align-items: flex-start; justify-content: center; padding: 20px;">
-          <div id="userGridWrapper"
-            style="position: relative; width: 100%; height: 100%; display: none; min-width: 600px; min-height: 400px; margin: auto;">
-            <!-- 배경 도면 이미지 레이어 -->
-            <div id="userGridBgOverlay"
-              style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; background-size: contain; background-repeat: no-repeat; background-position: center; opacity: 0.7; z-index: 1;">
+          <!-- Step 1: 구역 확인 및 인원 선택 -->
+          <div class="slider-step" id="seatStep1"
+            style="width: 50%; height: 100%; display: flex; flex-direction: column; padding: 1.5rem; box-sizing: border-box;">
+            <!-- 미니맵 컨테이너 -->
+            <div
+              style="border: 1px solid var(--border-default); border-radius: 12px; position: relative; overflow: hidden; background: #FAF9F6; margin-bottom: 1rem; display:flex; align-items:center; justify-content:center; flex: 1; min-height: 350px;">
+              <svg id="modalMiniMap" viewBox="0 0 800 660"
+                style="width: 100%; height: 100%; max-height: 100%; object-fit: contain;"></svg>
             </div>
-            <!-- 좌석 격자판 -->
-            <div id="userGridSeatArea"
-              style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: grid; padding: 20px; box-sizing: border-box; z-index: 2; align-content: center; justify-content: center;">
-            </div>
-          </div>
-          <!-- 로딩 스피너 및 알림 -->
-          <div id="user-seat-loading"
-            style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); text-align: center; color: var(--text-muted);">
-            <div class="pulse-dot"
-              style="margin: 0 auto 10px; width: 12px; height: 12px; background: var(--color-primary); border-radius: 50%;">
-            </div>
-            좌석 정보를 불러오는 중입니다...
-          </div>
-        </div>
 
-        <!-- 선택된 좌석 정보 요약 -->
-        <div
-          style="margin-top: 15px; padding: 15px; background: var(--bg-elevated); border-radius: 10px; display: flex; justify-content: space-between; align-items: center; border: 1px solid var(--border-default);">
-          <div>
-            <p style="font-size: 13px; color: var(--text-muted); margin: 0 0 5px 0;">선택한 좌석</p>
-            <strong id="selected-seats-display" style="font-size: 16px; color: var(--text-main);">-</strong>
+            <!-- 메가박스 스타일 인원 선택 패널 -->
+            <div style="flex: 1; display:flex; flex-direction:column;">
+              <p style="margin: 0 0 10px 0; font-weight: 700; color: var(--text-main); font-size: 1.1rem;">인원 선택 <span
+                  style="font-size: 0.9rem; color:var(--text-muted); font-weight:500;">(<span id="modalSelectedZoneName"
+                    style="color:var(--color-primary);">선택 안됨</span>)</span></p>
+
+              <div style="display:flex; flex-direction:column; gap:8px;" id="modalTicketListContainer">
+                <!-- 성인 -->
+                <div class="ticket-type-row"
+                  style="display:flex; justify-content:space-between; align-items:center; background: var(--bg-surface1); border: 1px solid var(--border-default); border-radius: 8px; padding: 8px 12px;">
+                  <span style="font-weight:600; color:var(--text-main);">성인</span>
+                  <div class="qty-selector"
+                    style="display: flex; align-items: center; gap: 15px; border: 1px solid var(--border-default); border-radius: 6px; padding: 5px 12px; background:#fff;">
+                    <button class="btn-ticket-minus" data-type="adult"
+                      style="border: none; background: none; font-size: 1.3rem; cursor: pointer; color:var(--text-main); line-height: 1;">-</button>
+                    <span class="ticket-qty-value" data-type="adult"
+                      style="width: 20px; text-align: center; font-weight:700; font-size: 1.1rem;">1</span>
+                    <button class="btn-ticket-plus" data-type="adult"
+                      style="border: none; background: none; font-size: 1.3rem; cursor: pointer; color:var(--text-main); line-height: 1;">+</button>
+                  </div>
+                </div>
+                <!-- 청소년 -->
+                <div class="ticket-type-row"
+                  style="display:flex; justify-content:space-between; align-items:center; background: var(--bg-surface1); border: 1px solid var(--border-default); border-radius: 8px; padding: 8px 12px;">
+                  <span style="font-weight:600; color:var(--text-main);">청소년</span>
+                  <div class="qty-selector"
+                    style="display: flex; align-items: center; gap: 15px; border: 1px solid var(--border-default); border-radius: 6px; padding: 5px 12px; background:#fff;">
+                    <button class="btn-ticket-minus" data-type="teen"
+                      style="border: none; background: none; font-size: 1.3rem; cursor: pointer; color:var(--text-main); line-height: 1;">-</button>
+                    <span class="ticket-qty-value" data-type="teen"
+                      style="width: 20px; text-align: center; font-weight:700; font-size: 1.1rem;">0</span>
+                    <button class="btn-ticket-plus" data-type="teen"
+                      style="border: none; background: none; font-size: 1.3rem; cursor: pointer; color:var(--text-main); line-height: 1;">+</button>
+                  </div>
+                </div>
+                <!-- 어린이/아동 -->
+                <div class="ticket-type-row"
+                  style="display:flex; justify-content:space-between; align-items:center; background: var(--bg-surface1); border: 1px solid var(--border-default); border-radius: 8px; padding: 8px 12px;">
+                  <span style="font-weight:600; color:var(--text-main);">어린이/아동</span>
+                  <div class="qty-selector"
+                    style="display: flex; align-items: center; gap: 15px; border: 1px solid var(--border-default); border-radius: 6px; padding: 5px 12px; background:#fff;">
+                    <button class="btn-ticket-minus" data-type="child"
+                      style="border: none; background: none; font-size: 1.3rem; cursor: pointer; color:var(--text-main); line-height: 1;">-</button>
+                    <span class="ticket-qty-value" data-type="child"
+                      style="width: 20px; text-align: center; font-weight:700; font-size: 1.1rem;">0</span>
+                    <button class="btn-ticket-plus" data-type="child"
+                      style="border: none; background: none; font-size: 1.3rem; cursor: pointer; color:var(--text-main); line-height: 1;">+</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div
+              style="margin-top: 15px; position: relative; height: 48px; display: flex; align-items: center; justify-content: center;">
+              <div style="display: flex; align-items: center; gap: 24px;">
+                <button class="btn btn-icon" data-close-modal="modal-select-seats" aria-label="이전/취소"
+                  style="width:48px; height:48px; border-radius:50%; border:1px solid var(--border-default); background:#fff; display:flex; align-items:center; justify-content:center; padding: 0; box-shadow: 0 2px 6px rgba(0,0,0,0.05); cursor: pointer;">
+                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#333333" stroke-width="2.5"
+                    stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="15 18 9 12 15 6"></polyline>
+                  </svg>
+                </button>
+
+                <div class="carousel-dots" style="display:flex; gap:8px;">
+                  <span style="width:8px; height:8px; border-radius:50%; background:var(--color-primary);"></span>
+                  <span style="width:8px; height:8px; border-radius:50%; background:var(--border-default);"></span>
+                </div>
+
+                <button class="btn btn-primary btn-icon" id="btnNextToSeatGrid" aria-label="다음"
+                  style="width:48px; height:48px; border-radius:50%; display:flex; align-items:center; justify-content:center; padding: 0; background: var(--color-primary); border: none; box-shadow: 0 4px 10px rgba(106,77,255,0.3); cursor: pointer;">
+                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2.5"
+                    stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="9 18 15 12 9 6"></polyline>
+                  </svg>
+                </button>
+              </div>
+            </div>
           </div>
-          <div style="text-align: right;">
-            <p style="font-size: 13px; color: var(--text-muted); margin: 0 0 5px 0;">결제 금액</p>
-            <strong id="selected-seats-price" style="font-size: 18px; color: var(--color-primary-light);">-</strong>
+
+          <!-- Step 2: 좌석 격자판 -->
+          <div class="slider-step" id="seatStep2"
+            style="width: 50%; height: 100%; display: flex; flex-direction: column; padding: 1.5rem; box-sizing: border-box;">
+            <!-- 범례 및 안내 -->
+            <div class="seat-legend"
+              style="display: flex; gap: 15px; justify-content: center; margin-bottom: 15px; font-size: 13px; flex-wrap: wrap;">
+              <div style="display: flex; align-items: center; gap: 5px; color: var(--text-secondary);"><span
+                  style="width: 12px; height: 12px; border-radius: 3px; background: rgba(255, 171, 0, 0.2); border: 1px solid rgba(255, 171, 0, 0.6);"></span>
+                VIP석</div>
+              <div style="display: flex; align-items: center; gap: 5px; color: var(--text-secondary);"><span
+                  style="width: 12px; height: 12px; border-radius: 3px; background: rgba(105, 108, 255, 0.2); border: 1px solid rgba(105, 108, 255, 0.6);"></span>
+                R석</div>
+              <div style="display: flex; align-items: center; gap: 5px; color: var(--text-secondary);"><span
+                  style="width: 12px; height: 12px; border-radius: 3px; background: rgba(3, 195, 236, 0.2); border: 1px solid rgba(3, 195, 236, 0.6);"></span>
+                S석</div>
+              <div style="display: flex; align-items: center; gap: 5px; color: var(--text-secondary);"><span
+                  style="width: 12px; height: 12px; border-radius: 3px; background: rgba(133, 146, 163, 0.08); border: 1px solid rgba(133, 146, 163, 0.4);"></span>
+                일반석</div>
+              <div style="display: flex; align-items: center; gap: 5px; color: var(--text-secondary);"><span
+                  style="width: 12px; height: 12px; border-radius: 3px; background: #FF9F43; border: 1px solid #FF8F13;"></span>
+                선택됨</div>
+              <div style="display: flex; align-items: center; gap: 5px; color: var(--text-secondary);"><span
+                  style="width: 12px; height: 12px; border-radius: 3px; background: rgba(75, 75, 90, 0.3); border: 1px solid rgba(75, 75, 90, 0.6);"></span>
+                예매완료</div>
+            </div>
+
+            <!-- 좌석 격자판 컨테이너 -->
+            <div id="user-seat-container"
+              style="flex: 1; overflow: auto; position: relative; border: 1px solid var(--border-default); border-radius: 12px; background: var(--bg-surface1); display: flex; align-items: flex-start; justify-content: center; padding: 20px;">
+              <div id="userGridWrapper"
+                style="position: relative; width: 100%; height: 100%; display: none; min-width: 600px; min-height: 400px; margin: auto;">
+                <!-- 배경 도면 이미지 레이어 -->
+                <div id="userGridBgOverlay"
+                  style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; background-size: contain; background-repeat: no-repeat; background-position: center; opacity: 0.7; z-index: 1;">
+                </div>
+                <!-- 좌석 격자판 -->
+                <div id="userGridSeatArea"
+                  style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: grid; padding: 20px; box-sizing: border-box; z-index: 2; align-content: center; justify-content: center;">
+                </div>
+              </div>
+              <!-- 로딩 스피너 및 알림 -->
+              <div id="user-seat-loading"
+                style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); text-align: center; color: var(--text-muted);">
+                <div class="pulse-dot"
+                  style="margin: 0 auto 10px; width: 12px; height: 12px; background: var(--color-primary); border-radius: 50%;">
+                </div>
+                좌석 정보를 불러오는 중입니다...
+              </div>
+            </div>
+
+            <!-- 선택된 좌석 정보 요약 -->
+            <div
+              style="margin-top: 15px; padding: 15px; background: var(--bg-elevated); border-radius: 10px; display: flex; justify-content: space-between; align-items: center; border: 1px solid var(--border-default);">
+              <div>
+                <p style="font-size: 13px; color: var(--text-muted); margin: 0 0 5px 0;">선택한 좌석</p>
+                <strong id="selected-seats-display" style="font-size: 16px; color: var(--text-main);">-</strong>
+              </div>
+              <div style="text-align: right;">
+                <p style="font-size: 13px; color: var(--text-muted); margin: 0 0 5px 0;">결제 금액</p>
+                <strong id="selected-seats-price" style="font-size: 18px; color: var(--color-primary-light);">-</strong>
+              </div>
+            </div>
+
+            <div
+              style="margin-top: 15px; position: relative; height: 48px; display: flex; align-items: center; justify-content: center;">
+              <div style="display: flex; align-items: center; gap: 24px;">
+                <button class="btn btn-icon" id="btnPrevToStep1" aria-label="이전"
+                  style="width:48px; height:48px; border-radius:50%; border:1px solid var(--border-default); background:#fff; display:flex; align-items:center; justify-content:center; padding: 0; box-shadow: 0 2px 6px rgba(0,0,0,0.05); cursor: pointer;">
+                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#333333" stroke-width="2.5"
+                    stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="15 18 9 12 15 6"></polyline>
+                  </svg>
+                </button>
+
+                <div class="carousel-dots" style="display:flex; gap:8px;">
+                  <span style="width:8px; height:8px; border-radius:50%; background:var(--border-default);"></span>
+                  <span style="width:8px; height:8px; border-radius:50%; background:var(--color-primary);"></span>
+                </div>
+
+                <!-- Balance spacer to keep the carousel strictly centered -->
+                <div style="width: 48px; height: 48px;"></div>
+              </div>
+
+              <button class="btn btn-primary" id="btn-confirm-seats" disabled
+                style="position: absolute; right: 0; height:48px; border-radius:24px; padding:0 24px; font-weight:700; box-shadow: 0 4px 10px rgba(106,77,255,0.3);">선택
+                완료</button>
+            </div>
           </div>
         </div>
-      </div>
-      <div class="modal-footer"
-        style="padding: 1rem 1.5rem; border-top: 1px solid var(--border-default); display: flex; gap: 10px;">
-        <button class="btn btn-ghost" data-close-modal="modal-select-seats" style="flex: 1;">취소</button>
-        <button class="btn btn-primary" id="btn-confirm-seats" style="flex: 2;" disabled>선택 완료</button>
       </div>
     </div>
   </div>
 
   <!-- 토스트 알림 컨테이너 -->
   <div id="toast-container" class="toast-container"></div>
+
+  <!-- 커스텀 도면 툴팁 -->
+  <div id="custom-svg-tooltip"
+    style="position: absolute; display: none; background: #fff; color: #333; padding: 10px 14px; border: 1px solid rgba(0,0,0,0.1); border-radius: 8px; font-size: 14px; font-weight: 600; pointer-events: none; z-index: 10000; box-shadow: 0 8px 24px rgba(0,0,0,0.15); white-space: nowrap; transition: opacity 0.2s;">
+  </div>
 
   <script src="js/components/appFooter.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>

@@ -107,6 +107,62 @@ function updateSummary() {
   if (finalEl) finalEl.textContent = formatKRW(net);
 }
 
+/* ─ 포트원 V1 결제 후 서버 검증 및 충전 (cart.js 전용 복사본) ─────────────────── */
+async function requestWalletCharge(amount) {
+  return new Promise((resolve, reject) => {
+    if (!window.IMP) {
+      reject(new Error('결제 모듈이 로드되지 않았습니다. 페이지를 새로고침 해주세요.'));
+      return;
+    }
+
+    IMP.init('imp81384776');
+
+    const orderUid = 'festio-wallet-' + Date.now();
+    const member = (typeof _member !== 'undefined') ? _member : null;
+
+    IMP.request_pay({
+      pg: 'html5_inicis.INIpayTest',
+      pay_method: 'card',
+      merchant_uid: orderUid,
+      name: `FESTIO Pay 충전 ${amount.toLocaleString()}원`,
+      amount: amount,
+      buyer_email: (member && member.email) || '',
+      buyer_name: (member && member.name) || '이용자',
+      buyer_tel: (member && member.phone) || '010-0000-0000',
+    }, async (rsp) => {
+      if (rsp.success) {
+        try {
+          const token = localStorage.getItem('userToken');
+          const res = await fetch('/api/wallet/charge', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ impUid: rsp.imp_uid, amount, userToken: token })
+          });
+
+          let data;
+          const contentType = res.headers.get('content-type');
+          if (contentType && contentType.includes('application/json')) {
+            data = await res.json();
+          } else {
+            const text = await res.text();
+            data = { success: false, message: text };
+          }
+
+          if (res.ok && data.success) {
+            resolve(data);
+          } else {
+            reject(new Error(data.message || '서버 충전 처리 실패'));
+          }
+        } catch (err) {
+          reject(err);
+        }
+      } else {
+        reject(new Error(rsp.error_msg || '결제가 취소되었습니다.'));
+      }
+    });
+  });
+}
+
 function initCartPayment() {
   on(document, 'click', (e) => {
     const option = e.target.closest('.pay-method-btn');
@@ -125,10 +181,81 @@ function initCartPayment() {
     }
   });
 
+  // 충전하기 모달 오픈
   on($('#btn-cart-charge-festiopay'), 'click', () => {
-    Toast.success('50,000 포인트가 충전되었습니다.');
-    const balEl = $('#cart-festiopay-balance');
-    if (balEl) balEl.textContent = formatKRW(100000);
+    const modal = $('#modal-charge');
+    if (modal) {
+      modal.style.display = 'flex';
+      const input = $('#cartChargeInput');
+      if (input) {
+        input.value = '';
+        input.focus();
+      }
+      $$('.quick-charge-btn').forEach(b => b.classList.remove('selected'));
+    }
+  });
+
+  // 빠른 충전 버튼
+  const quickGrid = $('#cartQuickChargeGrid');
+  if (quickGrid) {
+    quickGrid.addEventListener('click', (e) => {
+      const btn = e.target.closest('.quick-charge-btn');
+      if (!btn) return;
+      quickGrid.querySelectorAll('.quick-charge-btn').forEach(b => b.classList.remove('selected'));
+      btn.classList.add('selected');
+      const input = $('#cartChargeInput');
+      if (input) input.value = parseInt(btn.dataset.amount).toLocaleString();
+    });
+  }
+
+  // 충전 입력 포맷
+  const chargeInputObj = $('#cartChargeInput');
+  if (chargeInputObj) {
+    chargeInputObj.addEventListener('input', (e) => {
+      let val = e.target.value.replace(/[^0-9]/g, '');
+      if (val) {
+        e.target.value = parseInt(val).toLocaleString();
+      } else {
+        e.target.value = '';
+      }
+    });
+  }
+
+  // 실제 충전 진행
+  on($('#btnCartChargeConfirm'), 'click', async () => {
+    const input = $('#cartChargeInput');
+    const amountStr = input ? input.value : '0';
+    const amount = parseInt(amountStr.replace(/,/g, '') || 0);
+
+    if (!amount || amount < 1000) {
+      if (window.Toast) Toast.warn('최소 1,000원 이상 입력해주세요.');
+      return;
+    }
+    if (amount > 5000000) {
+      if (window.Toast) Toast.warn('1회 최대 충전 금액은 500만원입니다.');
+      return;
+    }
+
+    const confirmBtn = $('#btnCartChargeConfirm');
+    if (confirmBtn) { confirmBtn.disabled = true; confirmBtn.textContent = '결제 중...'; }
+
+    try {
+      const result = await requestWalletCharge(amount);
+
+      // 성공 시 잔액 업데이트
+      const balEl = $('#cart-festiopay-balance');
+      if (balEl) balEl.textContent = formatKRW(result.newBalance);
+
+      if (window.Toast) Toast.success(`✅ ${amount.toLocaleString()}원 충전 완료!\\n현재 잔액: ${result.newBalance.toLocaleString()}원`);
+
+      const modal = $('#modal-charge');
+      if (modal) modal.style.display = 'none';
+
+    } catch (err) {
+      if (window.Toast) Toast.error('❌ ' + (err.message || '충전에 실패했습니다.'));
+    } finally {
+      if (confirmBtn) { confirmBtn.disabled = false; confirmBtn.textContent = '충전하기'; }
+    }
   });
 
   on($('#btn-cart-checkout'), 'click', async () => {
