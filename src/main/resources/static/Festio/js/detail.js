@@ -670,9 +670,9 @@ function openSeatSelectionModal(zoneNo, zone) {
 
       console.log('[SeatModal] Calculated layout - rows:', rows, 'maxCol:', maxCol);
 
-      // 모달 그리드 레이아웃 동적 셋팅 (행 개수에 무대 가이드 행 +1 추가 - 32px 사각형 포맷)
-      seatArea.style.gridTemplateRows = `repeat(${rows.length + 1}, 32px)`;
-      seatArea.style.gridTemplateColumns = `repeat(${maxCol}, 32px)`;
+      // 모달 그리드 레이아웃 동적 셋팅 (행 개수에 무대 가이드 행 +1 추가 - 50px 사각형 포맷)
+      seatArea.style.gridTemplateRows = `repeat(${rows.length + 1}, 50px)`;
+      seatArea.style.gridTemplateColumns = `repeat(${maxCol}, 50px)`;
 
       // [무대 (STAGE)] 가이드를 맨 위에 배치 (1번 행 전체 열 스팬)
       const stageGuide = document.createElement('div');
