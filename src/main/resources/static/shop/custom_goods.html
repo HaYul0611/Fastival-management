@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1.0" />
+  <title>나만의 굿즈 | FESTIO SHOP</title>
+  <link rel="stylesheet" href="css/common.css" />
+  <link rel="stylesheet" href="css/mypage.css" />
+  <link rel="stylesheet" href="css/custom_goods.css" />
+  <script src="https://cdn.iamport.kr/v1/iamport.js"></script>
+</head>
+
+<body>
+  <header class="site-header"></header>
+
+  <main class="mypage-layout">
+    <!-- 사이드바 -->
+    <aside class="mp-sidebar">
+      <a href="mypage.html">내 정보 / 설정</a>
+      <a href="orders.html">주문/배송조회</a>
+      <a href="custom_goods.html" class="active">나만의 굿즈</a>
+    </aside>
+
+    <!-- 콘텐츠 -->
+    <section class="mp-content">
+      <h1 class="mp-title">나만의 굿즈 (AI 아바타)</h1>
+      <p class="cg-subtitle">업로드하신 사진을 기반으로 나만의 귀여운 메이플스토리 아바타를 생성해 드립니다!<br>생성된 캐릭터는 티셔츠나 머그컵 등 커스텀 굿즈 제작에 사용할 수 있습니다.
+      </p>
+
+      <div class="cg-container">
+        <!-- Step 1: 업로드 영역 -->
+        <div class="cg-step-card" id="cgUploadStep">
+          <div class="cg-step-header">
+            <span class="step-badge">Step 1</span>
+            <h2>본인 사진을 업로드해 주세요</h2>
+          </div>
+
+          <div class="cg-upload-area" id="cgUploadArea">
+            <input type="file" id="cgFileInput" accept="image/*" hidden />
+            <div class="cg-upload-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                stroke-linejoin="round">
+                <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+                <circle cx="8.5" cy="8.5" r="1.5"></circle>
+                <polyline points="21 15 16 10 5 21"></polyline>
+              </svg>
+            </div>
+            <p class="cg-upload-text">여기를 클릭하거나 사진을 드래그 앤 드롭 하세요.</p>
+            <p class="cg-upload-desc">전신이 잘 보이는 사진이 가장 결과가 좋습니다.</p>
+            <img id="cgPreviewImage" src="" alt="미리보기" style="display:none;" />
+            <button id="cgResetImageBtn" class="cg-reset-btn" style="display:none;">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <line x1="18" y1="6" x2="6" y2="18"></line>
+                <line x1="6" y1="6" x2="18" y2="18"></line>
+              </svg>
+            </button>
+          </div>
+
+          <div class="cg-action-wrap">
+            <button id="btnGenerateAi" class="btn-primary cg-btn-generate" disabled>
+              <span style="display:inline-flex; align-items:center; justify-content:center;">
+                <span style="position:relative; display:inline-block; font-weight:900;">
+                  메이플스토리
+                  <img src="/Festio/images/festivals/메이플_단풍잎.png" alt="단풍잎"
+                    style="position:absolute; top:-12px; right:-22px; width:22px; height:auto; transform:rotate(15deg); filter:drop-shadow(0 2px 4px rgba(0,0,0,0.2));">
+                </span>
+                <span style="margin-left:24px;">캐릭터 만들기</span>
+              </span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Step 2: 결과 영역 (기본 숨김) -->
+        <div class="cg-step-card" id="cgResultStep" style="display:none;">
+          <div class="cg-step-header">
+            <span class="step-badge">Step 2</span>
+            <h2>변환 완료! 나만의 캐릭터입니다.</h2>
+          </div>
+
+          <div class="cg-result-display">
+            <!-- 가상의 메이플스토리 아바타 이미지 출력 -->
+            <div class="cg-avatar-frame">
+              <img id="cgResultImage" src="" alt="AI 메이플 캐릭터" />
+            </div>
+
+            <div class="cg-goods-mockup">
+              <p>이 캐릭터로 굿즈를 만들어보세요!</p>
+              <div class="mockup-items">
+                <div class="mockup-item">
+                  <div class="mockup-icon">👕</div>
+                  <span>커스텀 반팔 티셔츠</span>
+                </div>
+                <div class="mockup-item">
+                  <div class="mockup-icon">☕</div>
+                  <span>머그컵</span>
+                </div>
+                <div class="mockup-item">
+                  <div class="mockup-icon">📱</div>
+                  <span>스마트톡</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="cg-action-wrap">
+            <button id="btnRetryAi" class="btn-outline-sm cg-btn-retry">다시 만들기</button>
+            <button id="btnMakeGoods" class="btn-primary cg-btn-make-goods">🛍️ 이 아바타로 굿즈 제작하기</button>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- 로딩 오버레이 모달 -->
+  <div id="cgLoadingOverlay" class="cg-loading-overlay" style="display:none;">
+    <div class="cg-loading-box">
+      <div class="cg-spinner"></div>
+      <h3 class="cg-loading-title">AI가 분석 중입니다...</h3>
+      <p class="cg-loading-desc" id="cgLoadingText">넥슨 공식 클라이언트 스타일 적용 중...</p>
+
+      <!-- 프로그레스 바 -->
+      <div class="cg-progress-container">
+        <div class="cg-progress-bar" id="cgProgressBar"></div>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="js/supabase_client.js"></script>
+  <script src="js/common.js"></script>
+  <script src="js/custom_goods.js"></script>
+</body>
+
+</html>

@@ -1324,11 +1324,17 @@
   box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.01) !important;
 }
 
-.form-input:focus {
+.form-input:focus,
+.form-input:focus-within {
   background-color: #ffffff !important;
   border-color: var(--color-primary) !important;
-  box-shadow: 0 0 0 4px rgba(106, 77, 255, 0.15) !important;
+  box-shadow: none !important;
   outline: none !important;
+}
+
+.textarea-container:focus-within {
+  background-color: #ffffff !important;
+  border-color: var(--color-primary) !important;
 }
 
 /* UI Design Elements */
@@ -1346,8 +1352,7 @@
 
 /* UI Design Elements */
 .btn-primary,
-#btn-submit-review,
-#btn-register-coupon {
+#btn-submit-review {
   border-radius: 14px !important;
   padding: 16px 24px !important;
   font-weight: 700 !important;
@@ -1360,8 +1365,7 @@
 }
 
 .btn-primary:hover,
-#btn-submit-review:hover,
-#btn-register-coupon:hover {
+#btn-submit-review:hover {
   transform: translateY(-3px) !important;
   box-shadow: 0 8px 24px rgba(106, 77, 255, 0.4) !important;
 }
@@ -2814,25 +2818,147 @@
   cursor: pointer;
   text-align: center;
   color: #1e293b;
-  transition: text-shadow 0.3s ease, transform 0.2s ease;
+  transition: transform 0.2s ease;
   flex: 1;
   padding: 18px 10px;
   border-right: 1px solid rgba(0, 0, 0, 0.08);
+  position: relative;
+  overflow: hidden;
 }
 
 .hero-stat-item:last-child {
   border-right: none;
 }
 
+.hero-stat-item::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -150%;
+  width: 50%;
+  height: 100%;
+  background: linear-gradient(to right, rgba(255, 255, 255, 0) 0%, rgba(255, 255, 255, 0.8) 50%, rgba(255, 255, 255, 0) 100%);
+  transform: skewX(-25deg);
+  z-index: 1;
+  pointer-events: none;
+  opacity: 0;
+}
+
 .hero-stat-item:hover {
-  text-shadow: 0 0 12px rgba(137, 48, 248, 0.5);
-  transform: translateY(-2px);
+  transform: translateY(-4px);
+  background-color: transparent;
+  /* No background color */
+}
+
+.hero-stat-item:hover::before {
+  opacity: 1;
+  animation: glassSweep 1.5s ease-in-out infinite;
+}
+
+.hero-stat-item:hover .stat-num {
+  color: #8930F8;
+  animation: glassTextGlow 1.5s ease-in-out infinite;
+}
+
+.hero-stat-item:hover .stat-label {
+  color: #8930F8;
+}
+
+@keyframes glassSweep {
+  0% {
+    left: -150%;
+  }
+
+  50% {
+    left: 200%;
+  }
+
+  100% {
+    left: 200%;
+  }
+}
+
+@keyframes glassTextGlow {
+  0% {
+    text-shadow: 0 0 2px rgba(137, 48, 248, 0.1);
+  }
+
+  25% {
+    text-shadow: 0 0 12px rgba(137, 48, 248, 0.8);
+  }
+
+  50% {
+    text-shadow: 0 0 2px rgba(137, 48, 248, 0.1);
+  }
+
+  100% {
+    text-shadow: 0 0 2px rgba(137, 48, 248, 0.1);
+  }
+}
+
+/* Scrollbar styles */
+.scrollbar-rounded::-webkit-scrollbar {
+  width: 8px;
+}
+
+.scrollbar-rounded::-webkit-scrollbar-track {
+  background: transparent;
+  border-radius: 8px;
+}
+
+.scrollbar-rounded::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 8px;
+}
+
+.scrollbar-rounded::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
+.scrollbar-thin::-webkit-scrollbar {
+  width: 4px;
+}
+
+.scrollbar-thin::-webkit-scrollbar-track {
+  background: transparent;
+  border-radius: 4px;
+}
+
+.scrollbar-thin::-webkit-scrollbar-thumb {
+  background: var(--border-default);
+  border-radius: 4px;
+}
+
+.scrollbar-thin::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
+/* Modal overall scrollbar bleeding fix */
+.modal-sheet::-webkit-scrollbar {
+  width: 4px;
+}
+
+.modal-sheet::-webkit-scrollbar-track {
+  background: transparent;
+  border-top-right-radius: var(--radius-xl);
+  border-bottom-right-radius: var(--radius-xl);
+}
+
+.modal-sheet::-webkit-scrollbar-thumb {
+  background: var(--border-default);
+  border-radius: 4px;
+}
+
+.modal-sheet::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
 }
 
 .stat-num {
   font-size: 1.5rem;
   font-weight: 800;
   margin-bottom: 2px;
+  display: inline-block;
+  transition: color 0.3s ease;
 }
 
 .stat-label {
@@ -3145,6 +3271,10 @@
   display: grid;
   grid-template-columns: repeat(2, 1fr);
   gap: 14px;
+}
+
+.mp-grid-col-all {
+  grid-column: 1 / -1;
 }
 
 @media (min-width:640px) {

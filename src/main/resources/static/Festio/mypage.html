@@ -5,8 +5,8 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width,initial-scale=1.0,viewport-fit=cover">
   <title>FESTIO | 마이페이지</title>
-  <link rel="stylesheet" href="css/common.css">
-  <link rel="stylesheet" href="css/mypage.css">
+  <link rel="stylesheet" href="css/common.css?v=2">
+  <link rel="stylesheet" href="css/mypage.css?v=2">
 </head>
 
 <body>
@@ -14,7 +14,7 @@
     <defs>
       <linearGradient id="half-star-grad" x1="0" y1="0" x2="100%" y2="0">
         <stop offset="50%" stop-color="#ffb400" />
-        <stop offset="50%" stop-color="#e0e0e0" />
+        <stop offset="50%" stop-color="transparent" />
       </linearGradient>
     </defs>
   </svg>
@@ -308,7 +308,7 @@
 
             <div class="coupon-input-section">
               <input type="text" class="form-input" id="couponInput" placeholder="쿠폰 번호를 입력하세요 (예: FESTIO2026)">
-              <button class="btn btn-primary" id="btn-register-coupon">등록</button>
+              <button class="btn btn-gray" id="btn-register-coupon">등록</button>
             </div>
 
             <div class="coupon-list" id="couponList">
@@ -463,7 +463,7 @@
           <div class="tab-pane" id="tab-inquiries">
             <div class="content-section-header">
               <h2 class="content-section-title">1:1 문의</h2>
-              <button class="btn btn-primary btn-sm" id="btn-new-inquiry">
+              <button class="btn btn-dark btn-sm" id="btn-new-inquiry">
                 <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
                   stroke-linecap="round" stroke-linejoin="round">
                   <line x1="12" y1="5" x2="12" y2="19" />
@@ -670,7 +670,7 @@
   </main>
 
   <!-- 리뷰 작성 모달 -->
-  <div class="modal-overlay" id="modal-review" role="dialog" aria-modal="true">
+  <div class="modal-overlay" id="modal-review" role="dialog" aria-modal="true" style="z-index:10000;">
     <div class="modal-sheet">
       <div class="modal-handle"></div>
       <div class="modal-header">
@@ -730,22 +730,34 @@
         <div class="form-group" style="margin: 0;">
           <label class="form-label" style="font-size: 0.9rem; margin-bottom: 4px;">사진 첨부 (최대 10장)</label>
           <input type="file" id="reviewImages" accept="image/*" multiple style="display: none;">
-          <div class="review-photo-wrapper-container" style="position: relative; display: flex; align-items: center;">
-            <button id="btn-photo-scroll-left" class="photo-scroll-btn left">&lt;</button>
-            <div class="review-photo-wrapper" id="reviewPhotoWrapper">
-              <div class="review-photo-add" onclick="document.getElementById('reviewImages').click()">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
-                  stroke-linejoin="round">
-                  <line x1="12" y1="5" x2="12" y2="19"></line>
-                  <line x1="5" y1="12" x2="19" y2="12"></line>
-                </svg>
-                <span style="font-size: 0.75rem; color: #94a3b8;" id="reviewImageCount">0/10</span>
-              </div>
-              <div id="reviewImagePreviewContainer" style="display: flex; gap: 12px;">
-                <!-- 썸네일 동적 추가 -->
-              </div>
+
+          <!-- 이미지 첨부 대형 버튼 -->
+          <button onclick="document.getElementById('reviewImages').click()"
+            style="width:100%; height:120px; border:1px dashed #cbd5e1; border-radius:12px; background:#f8fafc; cursor:pointer; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:8px;">
+            <div
+              style="width:40px; height:40px; border-radius:50%; background:#fff; border:1px solid #e2e8f0; display:flex; align-items:center; justify-content:center; color:#64748b; box-shadow:0 2px 4px rgba(0,0,0,0.05);">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                stroke-linecap="round" stroke-linejoin="round">
+                <line x1="12" y1="5" x2="12" y2="19"></line>
+                <line x1="5" y1="12" x2="19" y2="12"></line>
+              </svg>
             </div>
-            <button id="btn-photo-scroll-right" class="photo-scroll-btn right">&gt;</button>
+            <span style="font-size:14px; color:#64748b; font-weight:700;">이미지 선택</span>
+            <span style="font-size: 0.7rem; color: #94a3b8;" id="reviewImageCount">0/10</span>
+          </button>
+
+          <!-- 첨부된 썸네일 영역 (가로 스크롤) -->
+          <div style="display:flex; align-items:center; gap:8px; margin-top:12px;">
+            <button
+              onclick="document.getElementById('reviewImagePreviewContainer').scrollBy({left:-100, behavior:'smooth'})"
+              style="width:24px; height:60px; border:none; background:transparent; cursor:pointer; flex-shrink:0;">&lt;</button>
+            <div id="reviewImagePreviewContainer"
+              style="flex:1; height:60px; display:flex; gap:8px; overflow-x:auto; scroll-behavior:smooth; -ms-overflow-style:none; scrollbar-width:none; border-radius:8px; overflow:hidden;">
+              <!-- 썸네일 동적 추가 -->
+            </div>
+            <button
+              onclick="document.getElementById('reviewImagePreviewContainer').scrollBy({left:100, behavior:'smooth'})"
+              style="width:24px; height:60px; border:none; background:transparent; cursor:pointer; flex-shrink:0;">&gt;</button>
           </div>
           <div class="review-ai-warning">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
@@ -778,7 +790,7 @@
   </div>
 
   <!-- 문의 작성 모달 -->
-  <div class="modal-overlay" id="modal-inquiry" role="dialog" aria-modal="true">
+  <div class="modal-overlay" id="modal-inquiry" role="dialog" aria-modal="true" style="z-index:10000;">
     <div class="modal-sheet">
       <div class="modal-handle"></div>
       <div class="modal-header">
@@ -790,161 +802,178 @@
             <line x1="6" y1="6" x2="18" y2="18" />
           </svg>
         </button>
-        <div class="modal-body modal-body-col" style="padding: 16px 24px; gap: 12px;">
-          <div class="form-group" style="margin-bottom: 8px;">
-            <label class="form-label" for="inqTarget" style="margin-bottom: 4px; font-size: 0.9rem;">문의 대상</label>
-            <select class="form-input" id="inqTarget" style="padding: 8px 12px; height: 38px;">
-              <option value="vendor">행사/가맹점 문의</option>
-              <option value="admin">사이트/앱 문의</option>
-            </select>
-          </div>
-          <div class="form-group" style="margin-bottom: 8px;">
-            <label class="form-label" for="inqTitle" style="margin-bottom: 4px; font-size: 0.9rem;">문의 제목</label>
-            <input type="text" class="form-input" id="inqTitle" placeholder="문의 제목을 입력하세요"
-              style="padding: 8px 12px; height: 38px;">
-          </div>
-          <div class="form-group" style="margin-bottom: 8px;">
-            <label class="form-label" for="inqContent" style="margin-bottom: 4px; font-size: 0.9rem;">문의 내용</label>
-            <textarea class="form-input textarea-resize-y" id="inqContent" rows="4" placeholder="문의 내용을 상세히 작성해 주세요."
-              style="padding: 8px 12px;"></textarea>
-          </div>
-          <div class="form-group" style="margin-bottom: 0;">
-            <label class="form-label" style="margin-bottom: 4px; font-size: 0.9rem;">첨부 이미지 (최대 10개)</label>
-            <input type="file" id="inqImages" accept="image/*" multiple style="display: none;">
-
-            <div class="inquiry-img-carousel-wrapper"
-              style="position: relative; display: flex; align-items: center; width: 100%; gap: 8px;">
-              <button class="btn-img-scroll" id="btn-scroll-left"
-                style="display:none; width: 28px; height: 28px; border-radius: 50%; border:1px solid #e2e8f0; background:white; cursor:pointer; align-items:center; justify-content:center; box-shadow:0 2px 4px rgba(0,0,0,0.05);">&lt;</button>
-              <div id="inqImagePreviewContainer"
-                style="display: flex; gap: 8px; overflow-x: auto; scroll-behavior: smooth; padding: 4px 0; width: 100%; scrollbar-width: none;">
-                <!-- 썸네일 동적 추가 -->
-                <div class="add-img-btn" onclick="document.getElementById('inqImages').click()"
-                  style="min-width: 60px; height: 60px; border: 1px dashed #cbd5e1; border-radius: 8px; display: flex; flex-direction: column; align-items: center; justify-content: center; cursor: pointer; background: #f8fafc; transition: all 0.2s;">
-                  <span style="font-size: 20px; color: #94a3b8; line-height: 1;">+</span>
-                  <span style="font-size: 0.7rem; color: #94a3b8; margin-top: 2px;" id="inqImageCount">0/10</span>
-                </div>
-              </div>
-              <button class="btn-img-scroll" id="btn-scroll-right"
-                style="display:none; width: 28px; height: 28px; border-radius: 50%; border:1px solid #e2e8f0; background:white; cursor:pointer; align-items:center; justify-content:center; box-shadow:0 2px 4px rgba(0,0,0,0.05);">&gt;</button>
-            </div>
-          </div>
-        </div>
-        <div class="modal-footer" style="padding: 16px 24px;">
-          <button class="btn btn-ghost flex-1" data-close-modal="modal-inquiry">취소</button>
-          <button class="btn btn-primary flex-2" id="btn-submit-inquiry">문의 등록</button>
-        </div>
       </div>
-    </div>
-
-    <!-- QR 크게보기 모달 -->
-    <div class="qr-modal-overlay" id="qrModalOverlay" role="dialog" aria-modal="true" aria-label="QR 코드 크게보기">
-      <div class="qr-modal-card">
-        <div class="qr-modal-header">
-          <div class="qr-modal-title" id="qrModalTitleFull">나의 티켓 QR - <span id="qrModalEventName">2026 워터밤 서울</span>
-          </div>
-          <button class="qr-modal-close" id="qrModalCloseBtn" aria-label="닫기">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"
-              stroke-linejoin="round">
-              <line x1="18" y1="6" x2="6" y2="18" />
-              <line x1="6" y1="6" x2="18" y2="18" />
-            </svg>
-          </button>
+      <div class="modal-body modal-body-col" style="padding: 16px 24px; gap: 12px;">
+        <div class="form-group" style="margin-bottom: 8px;">
+          <label class="form-label" for="inqTarget" style="margin-bottom: 4px; font-size: 0.9rem;">문의 대상</label>
+          <select class="form-input" id="inqTarget"
+            style="-webkit-appearance:none; appearance:none; padding: 12px 40px 12px 16px; min-height: 52px; background: #fff url(&quot;data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2364748b' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E&quot;) no-repeat right 16px center; background-size: 20px;">
+            <option value="vendor">행사/가맹점 문의</option>
+            <option value="admin">사이트/앱 문의</option>
+          </select>
         </div>
-        <div class="qr-modal-body">
-          <div class="qr-modal-canvas-wrap">
-            <div id="qrModalCanvas" class="qr-modal-canvas"></div>
+        <div class="form-group" style="margin-bottom: 8px;">
+          <label class="form-label" for="inqTitle" style="margin-bottom: 4px; font-size: 0.9rem;">문의 제목</label>
+          <input type="text" class="form-input" id="inqTitle" placeholder="문의 제목을 입력하세요"
+            style="padding: 12px 16px; height: 48px; border-radius: 8px;">
+        </div>
+        <div class="form-group" style="margin-bottom: 8px;">
+          <label class="form-label" for="inqContent" style="margin-bottom: 4px; font-size: 0.9rem;">문의 내용</label>
+          <div class="textarea-container"
+            style="border-radius: 8px; overflow: hidden; background: #f9f9fc; height: 120px; border: 1px solid rgba(0,0,0,0.08); transition: all 0.3s ease;">
+            <textarea class="scrollbar-thin" id="inqContent" placeholder="문의 내용을 상세히 작성해 주세요."
+              style="padding: 12px 4px 12px 16px; border: none; outline: none; background: transparent; width: 100%; height: 100%; overflow-y: auto; resize: none; box-sizing: border-box;"></textarea>
           </div>
-          <div class="qr-modal-scan-text">클릭하여 스캔하기</div>
-          <div class="qr-modal-code" id="qrModalCode">TA1B2C3D4E56</div>
-          <div class="qr-modal-user" id="qrModalUser">김*율</div>
-          <div style="display:flex; align-items:center; width:100%; gap:8px; margin-top:12px;">
-            <div class="qr-modal-timer-bar-wrap" style="flex:1; margin-top:0;">
-              <div class="qr-modal-timer-bar" id="qrModalTimerBar"></div>
-            </div>
-            <svg id="modalQrRefreshBtn" viewBox="0 0 24 24" width="16" height="16" stroke="#8930F8" stroke-width="2"
-              fill="none" stroke-linecap="round" stroke-linejoin="round" style="cursor:pointer; flex-shrink:0;"
-              onclick="event.stopPropagation(); if(typeof triggerQrRefresh === 'function') triggerQrRefresh();">
-              <polyline points="23 4 23 10 17 10"></polyline>
-              <polyline points="1 20 1 14 7 14"></polyline>
-              <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path>
-            </svg>
-          </div>
-          <div class="qr-modal-timer-text-wrap" style="margin-top:8px;">
-            <span class="qr-modal-timer-text" id="qrModalTimer"
-              style="font-weight: 800; color: #2D1A54; font-size: 1rem; letter-spacing: 1px;">03:00</span>
-          </div>
-          <p class="qr-modal-refresh-note">3분마다 자동 갱신됩니다</p>
+        </div>
+        <div class="form-group" style="margin-bottom: 0;">
+          <label class="form-label" style="margin-bottom: 4px; font-size: 0.9rem;">사진 첨부 (최대 10장)</label>
+          <input type="file" id="inqImages" accept="image/*" multiple style="display: none;">
 
-          <!-- 사용 이력 아코디언 -->
-          <div style="margin-top:20px; border:1px solid #e2e8f0; border-radius:12px; overflow:hidden;">
-            <div onclick="toggleQrAccordion()"
-              style="display:flex; justify-content:space-between; align-items:center; padding:14px 16px; background:#f8fafc; cursor:pointer;">
-              <span style="font-weight:600; color:#334155; font-size:0.95rem;">사용 이력 조회</span>
-              <svg id="qrModalHistoryIcon" viewBox="0 0 24 24" width="20" height="20" stroke="#64748b" stroke-width="2"
-                fill="none" style="transition:transform 0.2s;">
-                <polyline points="6 9 12 15 18 9"></polyline>
+          <!-- 이미지 첨부 대형 버튼 -->
+          <button onclick="document.getElementById('inqImages').click()"
+            style="width:100%; height:120px; border:1px dashed #cbd5e1; border-radius:12px; background:#f8fafc; cursor:pointer; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:8px;">
+            <div
+              style="width:40px; height:40px; border-radius:50%; background:#fff; border:1px solid #e2e8f0; display:flex; align-items:center; justify-content:center; color:#64748b; box-shadow:0 2px 4px rgba(0,0,0,0.05);">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                stroke-linecap="round" stroke-linejoin="round">
+                <line x1="12" y1="5" x2="12" y2="19"></line>
+                <line x1="5" y1="12" x2="19" y2="12"></line>
               </svg>
             </div>
-            <div id="qrModalHistoryBody" style="display:none;">
-              <div id="qrModalHistoryList">
-                <!-- JS에서 채워짐 -->
-              </div>
+            <span style="font-size:14px; color:#64748b; font-weight:700;">이미지 선택</span>
+            <span style="font-size: 0.7rem; color: #94a3b8;" id="inqImageCount">0/10</span>
+          </button>
+
+          <!-- 첨부된 썸네일 영역 (가로 스크롤) -->
+          <div id="inqImageCarousel" style="display:none; align-items:center; gap:8px; margin-top:12px;">
+            <button
+              onclick="document.getElementById('inqImagePreviewContainer').scrollBy({left:-100, behavior:'smooth'})"
+              style="width:24px; height:60px; border:none; background:transparent; cursor:pointer; flex-shrink:0;">&lt;</button>
+            <div id="inqImagePreviewContainer"
+              style="flex:1; height:60px; display:flex; gap:8px; overflow-x:auto; scroll-behavior:smooth; -ms-overflow-style:none; scrollbar-width:none; border-radius:8px; overflow:hidden;">
+              <!-- 썸네일 동적 추가 -->
+            </div>
+            <button
+              onclick="document.getElementById('inqImagePreviewContainer').scrollBy({left:100, behavior:'smooth'})"
+              style="width:24px; height:60px; border:none; background:transparent; cursor:pointer; flex-shrink:0;">&gt;</button>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer" style="padding: 16px 24px;">
+        <button class="btn btn-ghost flex-1" data-close-modal="modal-inquiry">취소</button>
+        <button class="btn btn-dark flex-2" id="btn-submit-inquiry">문의 등록</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- QR 크게보기 모달 -->
+  <div class="qr-modal-overlay" id="qrModalOverlay" role="dialog" aria-modal="true" aria-label="QR 코드 크게보기">
+    <div class="qr-modal-card">
+      <div class="qr-modal-header">
+        <div class="qr-modal-title" id="qrModalTitleFull">나의 티켓 QR - <span id="qrModalEventName">2026 워터밤 서울</span>
+        </div>
+        <button class="qr-modal-close" id="qrModalCloseBtn" aria-label="닫기">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"
+            stroke-linejoin="round">
+            <line x1="18" y1="6" x2="6" y2="18" />
+            <line x1="6" y1="6" x2="18" y2="18" />
+          </svg>
+        </button>
+      </div>
+      <div class="qr-modal-body">
+        <div class="qr-modal-canvas-wrap">
+          <div id="qrModalCanvas" class="qr-modal-canvas"></div>
+        </div>
+        <div class="qr-modal-scan-text">클릭하여 스캔하기</div>
+        <div class="qr-modal-code" id="qrModalCode">TA1B2C3D4E56</div>
+        <div class="qr-modal-user" id="qrModalUser">김*율</div>
+        <div style="display:flex; align-items:center; width:100%; gap:8px; margin-top:12px;">
+          <div class="qr-modal-timer-bar-wrap" style="flex:1; margin-top:0;">
+            <div class="qr-modal-timer-bar" id="qrModalTimerBar"></div>
+          </div>
+          <svg id="modalQrRefreshBtn" viewBox="0 0 24 24" width="16" height="16" stroke="#8930F8" stroke-width="2"
+            fill="none" stroke-linecap="round" stroke-linejoin="round" style="cursor:pointer; flex-shrink:0;"
+            onclick="event.stopPropagation(); if(typeof triggerQrRefresh === 'function') triggerQrRefresh();">
+            <polyline points="23 4 23 10 17 10"></polyline>
+            <polyline points="1 20 1 14 7 14"></polyline>
+            <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path>
+          </svg>
+        </div>
+        <div class="qr-modal-timer-text-wrap" style="margin-top:8px;">
+          <span class="qr-modal-timer-text" id="qrModalTimer"
+            style="font-weight: 800; color: #2D1A54; font-size: 1rem; letter-spacing: 1px;">03:00</span>
+        </div>
+        <p class="qr-modal-refresh-note">3분마다 자동 갱신됩니다</p>
+
+        <!-- 사용 이력 아코디언 -->
+        <div style="margin-top:20px; border:1px solid #e2e8f0; border-radius:12px; overflow:hidden;">
+          <div onclick="toggleQrAccordion()"
+            style="display:flex; justify-content:space-between; align-items:center; padding:14px 16px; background:#f8fafc; cursor:pointer;">
+            <span style="font-weight:600; color:#334155; font-size:0.95rem;">사용 이력 조회</span>
+            <svg id="qrModalHistoryIcon" viewBox="0 0 24 24" width="20" height="20" stroke="#64748b" stroke-width="2"
+              fill="none" style="transition:transform 0.2s;">
+              <polyline points="6 9 12 15 18 9"></polyline>
+            </svg>
+          </div>
+          <div id="qrModalHistoryBody" style="display:none;">
+            <div id="qrModalHistoryList">
+              <!-- JS에서 채워짐 -->
             </div>
           </div>
         </div>
       </div>
     </div>
+  </div>
 
-    <!-- 간이 영수증 모달 -->
-    <div class="qr-modal-overlay" id="receiptModalOverlay" role="dialog" aria-modal="true" style="z-index:10005;">
-      <div class="qr-modal-card" style="padding:0; overflow:hidden;">
-        <div style="background:#f8fafc; padding:20px; text-align:center; border-bottom:1px dashed #cbd5e1;">
-          <h3 id="receiptStoreName" style="margin:0; font-size:1.2rem; font-weight:700; color:#1e293b;">-</h3>
-          <p style="margin:4px 0 0; font-size:0.85rem; color:#64748b;">모바일 영수증</p>
+  <!-- 간이 영수증 모달 -->
+  <div class="qr-modal-overlay" id="receiptModalOverlay" role="dialog" aria-modal="true" style="z-index:10005;">
+    <div class="qr-modal-card" style="padding:0; overflow:hidden;">
+      <div style="background:#f8fafc; padding:20px; text-align:center; border-bottom:1px dashed #cbd5e1;">
+        <h3 id="receiptStoreName" style="margin:0; font-size:1.2rem; font-weight:700; color:#1e293b;">-</h3>
+        <p style="margin:4px 0 0; font-size:0.85rem; color:#64748b;">모바일 영수증</p>
+      </div>
+      <div style="padding:24px 20px;">
+        <div id="receiptItems" style="margin-bottom:16px; border-bottom:1px solid #f1f5f9; padding-bottom:16px;">
+          <!-- 주문 항목들 -->
         </div>
-        <div style="padding:24px 20px;">
-          <div id="receiptItems" style="margin-bottom:16px; border-bottom:1px solid #f1f5f9; padding-bottom:16px;">
-            <!-- 주문 항목들 -->
-          </div>
-          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:24px;">
-            <span style="font-weight:600; color:#334155;">총 결제 금액</span>
-            <span id="receiptTotal" style="font-weight:700; font-size:1.1rem; color:#8930F8;">₩0</span>
-          </div>
-          <div style="background:#f8fafc; padding:16px; border-radius:8px;">
-            <div style="display:flex; justify-content:space-between; margin-bottom:8px; font-size:0.85rem;">
-              <span style="color:#64748b;">결제 일시</span>
-              <span id="receiptDate" style="color:#334155; font-weight:500;">-</span>
-            </div>
-            <div style="display:flex; justify-content:space-between; margin-bottom:8px; font-size:0.85rem;">
-              <span style="color:#64748b;">결제 수단</span>
-              <span style="color:#334155; font-weight:500;">FESTIO Pay</span>
-            </div>
-            <div style="display:flex; justify-content:space-between; font-size:0.85rem;">
-              <span style="color:#64748b;">승인 번호</span>
-              <span style="color:#334155; font-weight:500;">93847120</span>
-            </div>
-          </div>
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:24px;">
+          <span style="font-weight:600; color:#334155;">총 결제 금액</span>
+          <span id="receiptTotal" style="font-weight:700; font-size:1.1rem; color:#8930F8;">₩0</span>
         </div>
-        <div style="padding:16px 20px; text-align:center; background:#f8fafc; border-top:1px solid #f1f5f9;">
-          <button onclick="closeReceiptModal()" class="btn btn-outline"
-            style="width:100%; border-radius:8px; font-weight:600;">닫기</button>
+        <div style="background:#f8fafc; padding:16px; border-radius:8px;">
+          <div style="display:flex; justify-content:space-between; margin-bottom:8px; font-size:0.85rem;">
+            <span style="color:#64748b;">결제 일시</span>
+            <span id="receiptDate" style="color:#334155; font-weight:500;">-</span>
+          </div>
+          <div style="display:flex; justify-content:space-between; margin-bottom:8px; font-size:0.85rem;">
+            <span style="color:#64748b;">결제 수단</span>
+            <span style="color:#334155; font-weight:500;">FESTIO Pay</span>
+          </div>
+          <div style="display:flex; justify-content:space-between; font-size:0.85rem;">
+            <span style="color:#64748b;">승인 번호</span>
+            <span style="color:#334155; font-weight:500;">93847120</span>
+          </div>
         </div>
       </div>
+      <div style="padding:16px 20px; text-align:center; background:#f8fafc; border-top:1px solid #f1f5f9;">
+        <button onclick="closeReceiptModal()" class="btn btn-outline"
+          style="width:100%; border-radius:8px; font-weight:600;">닫기</button>
+      </div>
     </div>
+  </div>
 
-    <script src="js/components/bottomNav.js"></script>
+  <script src="js/components/bottomNav.js"></script>
 
-    <script src="js/components/appFooter.js?v=1780060003367"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="https://cdn.jsdelivr.net/gh/davidshimjs/qrcodejs/qrcode.min.js"></script>
-    <script src="/assets/js/mock-realtime.js"></script>
-    <script src="js/api.js"></script>
-    <script src="js/common.js"></script>
-    <script src="https://cdn.iamport.kr/v1/iamport.js"></script>
-    <script src="js/wallet.js"></script>
-    <script src="js/mypage.js"></script>
-    <script src="js/recent_carousel.js"></script>
+  <script src="js/components/appFooter.js?v=1780060003367"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="https://cdn.jsdelivr.net/gh/davidshimjs/qrcodejs/qrcode.min.js"></script>
+  <script src="/assets/js/mock-realtime.js"></script>
+  <script src="js/api.js"></script>
+  <script src="js/common.js"></script>
+  <script src="https://cdn.iamport.kr/v1/iamport.js"></script>
+  <script src="js/wallet.js"></script>
+  <script src="js/mypage.js"></script>
+  <script src="js/recent_carousel.js"></script>
 </body>
 
 </html>
