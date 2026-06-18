@@ -13,6 +13,12 @@ function getAuthHeader() {
       const storeOperatingHours   = document.getElementById('storeOperatingHours');
       const saveInfoBtn           = document.getElementById('saveInfoBtn');
       const storeDescription      = document.getElementById('storeDescription');
+      const storeImageInput       = document.getElementById('storeImageInput');
+      const storeImagePreview     = document.getElementById('storeImagePreview');
+      const storeImageUrl         = document.getElementById('storeImageUrl');
+      const storeImagePlaceholderIcon = document.getElementById('storeImagePlaceholderIcon');
+      const storeImageText        = document.getElementById('storeImageText');
+      const storeImageSubText     = document.getElementById('storeImageSubText');
 
       const navUserName           = document.getElementById('navUserName');
       const navUserRole           = document.getElementById('navUserRole');
@@ -46,6 +52,14 @@ function getAuthHeader() {
           if (store.notice) ownerNoticeInput.value = store.notice;
           if (store.operating_hours) storeOperatingHours.value = store.operating_hours;
           if (store.description) storeDescription.value = store.description;
+          if (store.image_url) {
+            storeImageUrl.value = store.image_url;
+            storeImagePreview.src = store.image_url;
+            storeImagePreview.style.display = 'block';
+            storeImagePlaceholderIcon.style.display = 'none';
+            storeImageText.style.display = 'none';
+            storeImageSubText.style.display = 'none';
+          }
         })
         .catch(err => {
           console.error(err);
@@ -112,11 +126,12 @@ function getAuthHeader() {
         const category = 'GOODS';
         const operatingHours = storeOperatingHours.value.trim();
         const description = storeDescription.value.trim();
+        const imageUrl = storeImageUrl.value;
 
         fetch('/api/payment/staff/store/info', {
           method: 'PUT',
           headers: { 'Content-Type': 'application/json', 'Authorization': getAuthHeader() },
-          body: JSON.stringify({ name, category, operatingHours, description })
+          body: JSON.stringify({ name, category, operatingHours, description, imageUrl })
         })
         .then(res => { if (!res.ok) throw new Error('정보 저장 실패'); return res.json(); })
         .then(data => {
@@ -125,6 +140,31 @@ function getAuthHeader() {
         })
         .catch(err => { console.error(err); alert('정보 저장 중 오류가 발생했습니다.'); });
       });
+
+      if (storeImageInput) {
+        storeImageInput.addEventListener('change', function(e) {
+          const file = e.target.files[0];
+          if (!file) return;
+
+          if (file.size > 5 * 1024 * 1024) {
+            alert('⚠️ 이미지 용량은 최대 5MB를 넘을 수 없습니다!');
+            storeImageInput.value = '';
+            return;
+          }
+
+          const reader = new FileReader();
+          reader.onload = function(evt) {
+            const base64Url = evt.target.result;
+            storeImageUrl.value = base64Url;
+            storeImagePreview.src = base64Url;
+            storeImagePreview.style.display = 'block';
+            storeImagePlaceholderIcon.style.display = 'none';
+            storeImageText.style.display = 'none';
+            storeImageSubText.style.display = 'none';
+          };
+          reader.readAsDataURL(file);
+        });
+      }
 
       o2oToggle.addEventListener('change', function(e) {
         if (e.target.checked) {

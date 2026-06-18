@@ -92,6 +92,37 @@
                   FESTIO Pay
                 </span>
               </label>
+              <!-- FESTIO Pay 잔액 표시 영역 (숨김) -->
+              <div id="festioPayBalanceArea" style="display:none; padding:12px; background:var(--g50); border-radius:8px; margin-top:8px; border:1px solid var(--g200);">
+                <div style="display:flex; justify-content:space-between; align-items:center; font-size:14px;">
+                  <span style="color:var(--g700); font-weight:600;">내 FESTIO Pay 잔액</span>
+                  <span id="festioPayBalanceText" style="color:var(--black); font-weight:800; font-size:15px;">조회 중...</span>
+                </div>
+                <div id="festioPayShortageMsg" style="display:none; font-size:12px; color:var(--red); margin-top:8px; text-align:right;">
+                  <span id="shortageAmountText"></span> 부족합니다.
+                </div>
+                
+                <div id="rechargePanel" style="margin-top:12px; padding-top:12px; border-top:1px dashed var(--g300);">
+                  <div style="font-size:13px; font-weight:700; color:var(--g800); margin-bottom:8px;">충전하기</div>
+                  <!-- 빠른 선택 버튼 -->
+                  <div style="display:grid; grid-template-columns:repeat(4, 1fr); gap:6px; margin-bottom:8px;">
+                    <button type="button" class="qp-btn" data-amt="10000" style="padding:8px 0; font-size:12px; font-weight:600; color:var(--g700); background:var(--white); border:1px solid var(--g200); border-radius:4px; cursor:pointer;">1만원</button>
+                    <button type="button" class="qp-btn" data-amt="30000" style="padding:8px 0; font-size:12px; font-weight:600; color:var(--g700); background:var(--white); border:1px solid var(--g200); border-radius:4px; cursor:pointer;">3만원</button>
+                    <button type="button" class="qp-btn" data-amt="50000" style="padding:8px 0; font-size:12px; font-weight:600; color:var(--g700); background:var(--white); border:1px solid var(--g200); border-radius:4px; cursor:pointer;">5만원</button>
+                    <button type="button" class="qp-btn" data-amt="100000" style="padding:8px 0; font-size:12px; font-weight:600; color:var(--g700); background:var(--white); border:1px solid var(--g200); border-radius:4px; cursor:pointer;">10만원</button>
+                  </div>
+                  <!-- 직접 입력 & 버튼 -->
+                  <div style="display:flex; gap:8px;">
+                    <div style="flex:1; position:relative;">
+                      <input type="text" id="chargeInput" class="finput" placeholder="금액 입력" style="height:40px; padding-right:24px; text-align:right; font-weight:600;" />
+                      <span style="position:absolute; right:12px; top:50%; transform:translateY(-50%); font-size:13px; color:var(--g500);">원</span>
+                    </div>
+                    <button type="button" id="btnQuickCharge" style="width:80px; height:40px; border:none; border-radius:4px; background:var(--red); color:var(--white); cursor:pointer; font-size:13px; font-weight:bold;">
+                      충전 결제
+                    </button>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
 

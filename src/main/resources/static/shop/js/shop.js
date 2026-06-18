@@ -5,24 +5,37 @@
    ================================================================ */
 
 /* ── 데이터 상태 ────────────────────────────────────────────── */
-let PRODUCTS = [];
+let STORES = [];
+let ALL_PRODUCTS = [];
 
-window.FS_PRODUCTS = PRODUCTS;
+window.FS_PRODUCTS = ALL_PRODUCTS;
 
 /* ── 상태 ───────────────────────────────────────────────────── */
 const S = {
   cat: 'all', sort: 'popular', q: '',
-  wish: JSON.parse(localStorage.getItem('fs_wish') || '[]')
+  wish: JSON.parse(localStorage.getItem('fs_wish') || '[]'),
+  selectedStoreId: null
 };
 
 /* ── 필터 ───────────────────────────────────────────────────── */
 function filtered() {
-  let list = [...PRODUCTS];
+  let list = [];
+  if (!S.selectedStoreId) {
+    list = [...STORES];
+  } else {
+    list = ALL_PRODUCTS.filter(p => p.storeId === S.selectedStoreId);
+  }
+
   if (S.cat !== 'all') list = list.filter(p => p.cat === S.cat);
   if (S.q) { const q = S.q.toLowerCase(); list = list.filter(p => p.name.toLowerCase().includes(q) || p.brand.toLowerCase().includes(q)) }
-  if (S.sort === 'newest') list.sort((a, b) => b.id - a.id);
-  else if (S.sort === 'price_asc') list.sort((a, b) => a.price - b.price);
-  else if (S.sort === 'price_desc') list.sort((a, b) => b.price - a.price);
+  
+  if (S.selectedStoreId) {
+    if (S.sort === 'newest') list.sort((a, b) => b.id - a.id);
+    else if (S.sort === 'price_asc') list.sort((a, b) => a.price - b.price);
+    else if (S.sort === 'price_desc') list.sort((a, b) => b.price - a.price);
+  } else {
+    if (S.sort === 'newest') list.sort((a, b) => b.storeId - a.storeId);
+  }
   return list;
 }
 
@@ -76,6 +89,7 @@ function cardHTML(p) {
   <div class="pcard-img-area ${bgCls}">
     ${badges.length ? `<div class="pcard-badges">${badges.join('')}</div>` : ''}
 
+    ${!p.isStoreCard ? `
     <button class="pcard-wish${wished ? ' on' : ''}" data-id="${p.id}"
       aria-label="${wished ? '찜 해제' : '찜하기'}" aria-pressed="${wished}">
       <svg width="15" height="15" viewBox="0 0 16 16" fill="none">
@@ -84,6 +98,7 @@ function cardHTML(p) {
           stroke-width="1.5" stroke-linejoin="round"/>
       </svg>
     </button>
+    ` : ''}
 
     ${p.imageUrl
       ? `<img src="${p.imageUrl}" alt="${p.name}" class="pcard-img">`
@@ -99,9 +114,11 @@ function cardHTML(p) {
     <h3 class="pcard-name">${p.name}</h3>
     <div class="pcard-foot">
       <div class="pcard-price">
-        ${p.isStorePlaceholder
-          ? `<span class="pcard-price-num" style="font-size:13px;color:var(--g400);">상품 준비 중</span>`
-          : `<span class="pcard-price-num">${p.price.toLocaleString()}</span><span class="pcard-price-unit">원</span>`
+        ${p.isStoreCard
+          ? `<span class="pcard-price-num" style="font-size:14px;color:var(--g500);">상점 보기</span>`
+          : (p.isStorePlaceholder
+              ? `<span class="pcard-price-num" style="font-size:13px;color:var(--g400);">상품 준비 중</span>`
+              : `<span class="pcard-price-num">${p.price.toLocaleString()}</span><span class="pcard-price-unit">원</span>`)
         }
       </div>
       <div class="pcard-meta">${stock}</div>
@@ -118,18 +135,58 @@ function render() {
   const cnt = document.getElementById('gridCount');
   const sr = document.getElementById('srMsg');
   const list = filtered();
-  cnt.textContent = `총 ${list.length}개 상품`;
+  if (cnt) cnt.textContent = !S.selectedStoreId ? `총 ${list.length}개 상점` : `총 ${list.length}개 상품`;
+  if (!grid || !empty) return;
   if (!list.length) { grid.innerHTML = ''; empty.style.display = 'flex'; return }
   empty.style.display = 'none';
-  grid.innerHTML = list.map(cardHTML).join('');
-  if (sr) sr.textContent = `${list.length}개 상품 표시됨`;
+
+  let html = '';
+  if (S.selectedStoreId) {
+    const store = STORES.find(s => s.storeId === S.selectedStoreId);
+    html += `
+      <div style="grid-column: 1/-1; margin-bottom: 15px; display: flex; flex-direction: column; align-items: flex-start; gap: 10px;">
+        <button class="btn btn-outline-primary" style="border-radius: 20px; padding: 6px 16px; font-weight: 600;" onclick="window.FS_goBackToStores()">← 상점 목록으로 돌아가기</button>
+        <h4 style="margin-top: 5px; font-weight: 800;">${store ? store.name : ''}의 상품</h4>
+      </div>
+    `;
+  }
+
+  grid.innerHTML = html + list.map(cardHTML).join('');
+  if (sr) sr.textContent = `${list.length}개 항목 표시됨`;
   bindCards();
 }
 
+window.FS_goBackToStores = function() {
+  S.selectedStoreId = null;
+  render();
+};
+
 function bindCards() {
   document.querySelectorAll('.pcard:not(.sold)').forEach(c => {
-    c.addEventListener('click', e => { if (e.target.closest('.pcard-wish')) return; goto(c.dataset.id) });
-    c.addEventListener('keydown', e => { if ((e.key === 'Enter' || e.key === ' ') && !e.target.closest('.pcard-wish')) { e.preventDefault(); goto(c.dataset.id) } });
+    c.addEventListener('click', e => { 
+      if (e.target.closest('.pcard-wish')) return; 
+      const id = c.dataset.id;
+      if (id && id.toString().startsWith('store_')) {
+        const sId = parseInt(id.replace('store_', ''), 10);
+        S.selectedStoreId = sId;
+        render();
+      } else {
+        goto(id);
+      }
+    });
+    c.addEventListener('keydown', e => { 
+      if ((e.key === 'Enter' || e.key === ' ') && !e.target.closest('.pcard-wish')) { 
+        e.preventDefault(); 
+        const id = c.dataset.id;
+        if (id && id.toString().startsWith('store_')) {
+          const sId = parseInt(id.replace('store_', ''), 10);
+          S.selectedStoreId = sId;
+          render();
+        } else {
+          goto(id);
+        }
+      } 
+    });
   });
   document.querySelectorAll('.pcard-wish').forEach(b => {
     b.addEventListener('click', e => { e.stopPropagation(); toggleWish(parseInt(b.dataset.id)) });
@@ -163,7 +220,10 @@ document.addEventListener('DOMContentLoaded', () => {
   /* URL 파라미터로 카테고리 초기화 */
   const params = new URLSearchParams(window.location.search);
   const catParam = params.get('category');
-  const festivalId = params.get('festivalId') || params.get('eventNo') || sessionStorage.getItem('currentFestivalId') || '11';
+  let festivalId = params.get('festivalId') || params.get('eventNo') || sessionStorage.getItem('currentFestivalId');
+  if (festivalId) {
+    sessionStorage.setItem('currentFestivalId', festivalId);
+  }
 
   // festivalId가 있는 경우 — 해당 축제의 모든 입점 업체를 보여주기 위해 'all' 필터로 설정
   // festivalId 없이 category만 있는 경우 — category 필터 적용
@@ -191,8 +251,13 @@ document.addEventListener('DOMContentLoaded', () => {
     grid.innerHTML = '<div style="grid-column: 1/-1; text-align: center; color: var(--g500); padding: 60px 0; font-size: 15px; font-weight: 600;">입점 상점 및 상품 목록을 불러오는 중...</div>';
   }
 
-  // 1. 해당 페스티벌에 입점 승인 완료된 상점 목록 Fetch
-  fetch(`/api/stores?festivalId=${festivalId}`)
+  // 1. 입점 승인 완료된 상점 목록 Fetch
+  let fetchUrl = '/api/stores';
+  if (festivalId) {
+    fetchUrl += `?festivalId=${festivalId}`;
+  }
+  
+  fetch(fetchUrl)
     .then(res => {
       if (!res.ok) throw new Error('입점 상점 정보를 불러올 수 없습니다.');
       return res.json();
@@ -207,6 +272,9 @@ document.addEventListener('DOMContentLoaded', () => {
         return;
       }
 
+      STORES = [];
+      ALL_PRODUCTS = [];
+
       // 2. 각 상점별 상품 목록 병렬 Fetch 수행
       const productPromises = stores.map(store => {
         // 카테고리 매핑 규칙
@@ -218,19 +286,33 @@ document.addEventListener('DOMContentLoaded', () => {
           storeCatMapped = 'collab';
         }
 
+        let wait = null;
+        if (storeCatMapped === 'food') {
+          const waitMatch = (store.notice || '').match(/(\d+)분/);
+          wait = waitMatch ? parseInt(waitMatch[1], 10) : 10;
+        }
+
+        // 상점 자체를 STORES에 추가
+        STORES.push({
+          id: `store_${store.id}`,
+          storeId: store.id,
+          cat: storeCatMapped,
+          brand: storeCatMapped === 'food' ? '푸드트럭' : 'MD 스토어',
+          name: store.name,
+          price: 0,
+          stock: 999,
+          wait: wait,
+          opts: [],
+          imageUrl: store.imageUrl || store.image_url || null,
+          isStoreCard: true
+        });
+
         return fetch(`/api/stores/${store.id}/products`)
           .then(res => res.ok ? res.json() : [])
           .then(products => {
-            // 상품이 있으면 상품 카드 목록 반환
+            // 상품이 있으면 상품 목록 반환
             if (products.length > 0) {
               return products.map(p => {
-                // 푸드트럭 대기 시간 분석
-                let wait = null;
-                if (storeCatMapped === 'food') {
-                  const waitMatch = (store.notice || '').match(/(\d+)분/);
-                  wait = waitMatch ? parseInt(waitMatch[1], 10) : 10;
-                }
-
                 // 상품 옵션그룹 파싱
                 let opts = [];
                 if (p.optionGroupsJson) {
@@ -239,37 +321,19 @@ document.addEventListener('DOMContentLoaded', () => {
 
                 return {
                   id: p.id,
+                  storeId: store.id,
                   cat: storeCatMapped,
                   brand: store.name,
-                  name: p.productName,
+                  name: p.productName || p.name,
                   price: p.price || 0,
                   stock: p.availableStock !== undefined ? p.availableStock : (p.currentStock || 0),
                   wait: wait,
                   opts: opts,
-                  imageUrl: p.imageUrl
+                  imageUrl: p.imageUrl || p.image_url || null
                 };
               });
             }
-
-            // 상품이 없으면 상점 자체를 대표 카드로 표시 (상품 준비 중)
-            console.log(`[Shop] Store ${store.name}(id:${store.id}) has no products - showing store placeholder card`);
-            let wait = null;
-            if (storeCatMapped === 'food') {
-              const waitMatch = (store.notice || '').match(/(\d+)분/);
-              wait = waitMatch ? parseInt(waitMatch[1], 10) : null;
-            }
-            return [{
-              id: `store_${store.id}`,  // 상점 식별자 (상품 ID와 구분)
-              cat: storeCatMapped,
-              brand: store.name,
-              name: `${store.name} — 상품 준비 중`,
-              price: 0,
-              stock: 0,
-              wait: wait,
-              opts: [],
-              imageUrl: null,
-              isStorePlaceholder: true  // 상점 대표 카드 플래그
-            }];
+            return [];
           })
           .catch(err => {
             console.error(`[Shop] Failed to load products for store ${store.id}:`, err);
@@ -279,9 +343,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
       // 모든 상점의 상품 조회가 끝날 때까지 병렬 대기
       const nestedLists = await Promise.all(productPromises);
-      PRODUCTS = nestedLists.flat();
-      window.FS_PRODUCTS = PRODUCTS;
-      console.log('[Shop] Loaded & formatted products list:', PRODUCTS);
+      ALL_PRODUCTS = nestedLists.flat();
+      window.FS_PRODUCTS = ALL_PRODUCTS;
+      console.log('[Shop] Loaded & formatted products list:', ALL_PRODUCTS);
 
       // 화면 렌더링
       render();
@@ -299,6 +363,7 @@ document.addEventListener('DOMContentLoaded', () => {
       document.querySelectorAll('.cat-btn').forEach(x => x.classList.remove('on'));
       b.classList.add('on');
       S.cat = b.dataset.cat;
+      S.selectedStoreId = null; // 카테고리 탭을 누르면 상점 목록으로 이동
       /* 필터 태그도 동기화 */
       document.querySelectorAll('.ftag').forEach(x => {
         x.classList.toggle('on', x.dataset.cat === S.cat);
@@ -313,6 +378,7 @@ document.addEventListener('DOMContentLoaded', () => {
       document.querySelectorAll('.ftag').forEach(x => x.classList.remove('on'));
       b.classList.add('on');
       S.cat = b.dataset.cat;
+      S.selectedStoreId = null; // 필터 탭을 누르면 상점 목록으로 이동
       document.querySelectorAll('.cat-btn').forEach(x => {
         x.classList.toggle('on', x.dataset.cat === S.cat);
       });
@@ -321,7 +387,8 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   /* 정렬 */
-  document.getElementById('sortSel').addEventListener('change', e => { S.sort = e.target.value; render() });
+  const sortSel = document.getElementById('sortSel');
+  if (sortSel) sortSel.addEventListener('change', e => { S.sort = e.target.value; render() });
 
   /* 검색 */
   document.addEventListener('shop:search', e => { S.q = e.detail.q; render() });

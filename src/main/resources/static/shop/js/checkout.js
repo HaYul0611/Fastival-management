@@ -36,6 +36,129 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 
+  /* 결제 수단 선택 시 FESTIO Pay 잔액 조회 */
+  const payRadios = document.querySelectorAll('input[name="pay"]');
+  const fpArea = document.getElementById('festioPayBalanceArea');
+  const fpText = document.getElementById('festioPayBalanceText');
+  const fpShortMsg = document.getElementById('festioPayShortageMsg');
+  const fpShortAmountText = document.getElementById('shortageAmountText');
+  let currentFestioBalance = 0;
+  
+  async function fetchFestioBalance() {
+    const token = localStorage.getItem('userToken');
+    if (!token) {
+      fpText.textContent = '로그인이 필요합니다';
+      return;
+    }
+    try {
+      const res = await fetch('/api/wallet/balance', { headers: { 'Authorization': token } });
+      const data = await res.json();
+          if (res.ok) {
+        currentFestioBalance = data.balance || 0;
+        fpText.textContent = currentFestioBalance.toLocaleString() + '원';
+        
+        // 부족 금액 계산
+        const shortage = total - currentFestioBalance;
+        if (shortage > 0) {
+          fpShortAmountText.textContent = shortage.toLocaleString() + '원이';
+          fpShortMsg.style.display = 'block';
+          
+          // 초기 충전 권장 금액을 부족한 금액을 올림한 단위로 설정 (선택사항)
+          const recAmt = Math.ceil(shortage / 10000) * 10000;
+          document.getElementById('chargeInput').value = recAmt.toLocaleString();
+        } else {
+          fpShortMsg.style.display = 'none';
+          document.getElementById('chargeInput').value = '';
+        }
+      } else {
+        fpText.textContent = '조회 실패';
+      }
+    } catch (err) {
+      fpText.textContent = '오류 발생';
+    }
+  }
+
+  payRadios.forEach(radio => {
+    radio.addEventListener('change', async (e) => {
+      if (e.target.value === 'festiopay') {
+        fpArea.style.display = 'block';
+        await fetchFestioBalance();
+      } else {
+        fpArea.style.display = 'none';
+      }
+    });
+  });
+
+  /* 금액 입력 필드 콤마 포맷팅 */
+  const chargeInput = document.getElementById('chargeInput');
+  if (chargeInput) {
+    chargeInput.addEventListener('input', (e) => {
+      let val = e.target.value.replace(/[^0-9]/g, '');
+      e.target.value = val ? parseInt(val).toLocaleString() : '';
+    });
+  }
+
+  /* 빠른 충전 버튼 (1만, 3만, 5만, 10만) 클릭 이벤트 */
+  document.querySelectorAll('.qp-btn').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      const amt = parseInt(e.target.dataset.amt);
+      chargeInput.value = amt.toLocaleString();
+    });
+  });
+
+  /* FESTIO Pay 충전 결제 로직 */
+  document.getElementById('btnQuickCharge')?.addEventListener('click', () => {
+    const amountStr = chargeInput ? chargeInput.value.replace(/,/g, '') : '0';
+    const chargeAmount = parseInt(amountStr || '0', 10);
+    
+    if (chargeAmount < 1000) {
+      Toast.show({ title: '금액 오류', msg: '최소 1,000원 이상 입력해주세요.', type: 'warning' });
+      return;
+    }
+    
+    if (!window.IMP) {
+      Toast.show({ title: '오류', msg: '결제 모듈을 불러올 수 없습니다.', type: 'error' });
+      return;
+    }
+    
+    const IMP = window.IMP;
+    IMP.init('imp81384776'); 
+    const orderUid = 'festio-wallet-' + Date.now();
+
+    IMP.request_pay({
+      pg: 'html5_inicis.INIpayTest',
+      pay_method: 'card',
+      merchant_uid: orderUid,
+      name: `FESTIO Pay 충전 ${chargeAmount.toLocaleString()}원`,
+      amount: chargeAmount,
+      buyer_email: (u && u.email) || '',
+      buyer_name: (u && u.name) || '이용자',
+      buyer_tel: (u && u.phone) || '010-0000-0000',
+    }, async (rsp) => {
+      if (rsp.success) {
+        try {
+          const token = localStorage.getItem('userToken');
+          const res = await fetch('/api/wallet/charge', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ impUid: rsp.imp_uid, amount: chargeAmount, userToken: token })
+          });
+          const data = await res.json();
+          if (res.ok && data.success) {
+            Toast.show({ title: '충전 완료', msg: `${chargeAmount.toLocaleString()}원이 충전되었습니다.`, type: 'success' });
+            await fetchFestioBalance(); // 충전 완료 후 잔액 다시 렌더링
+          } else {
+            Toast.show({ title: '충전 실패', msg: data.message || '서버 오류', type: 'error' });
+          }
+        } catch (err) {
+          Toast.show({ title: '충전 오류', msg: '충전 처리 중 문제가 발생했습니다.', type: 'error' });
+        }
+      } else {
+        Toast.show({ title: '충전 취소', msg: rsp.error_msg || '결제가 취소되었습니다.', type: 'info' });
+      }
+    });
+  });
+
   /* 결제 */
   document.getElementById('btnPay').addEventListener('click', async () => {
     // 임의의 재고 확인 모달 연동 (품절 방어 로직)
@@ -49,7 +172,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const method = document.querySelector('input[name="pay"]:checked')?.value;
     if (!name || !phone) { Toast.show({ title: '수령 정보를 입력해주세요', type: 'warning' }); return }
     // FESTIO 12자리 규격 주문번호 생성 (푸드 F, 굿즈 G)
-    const prefix = order.some(i => (i.type || '').toUpperCase() === 'GOODS') ? 'G' : 'F';
+    const prefix = order.some(i => (i.type || i.cat || '').toUpperCase() === 'GOODS') ? 'G' : 'F';
     const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
     let rand = '';
     for (let i = 0; i < 11; i++) rand += chars.charAt(Math.floor(Math.random() * chars.length));
@@ -84,22 +207,29 @@ document.addEventListener('DOMContentLoaded', () => {
           return;
         }
 
-        const email = Session.get()?.email;
-        if (email && window.ShopDB) {
-          const profile = await window.ShopDB.getProfile(email);
-          if (profile) {
-            const sb = window.ShopDB.getClient();
-            await sb.from('shop_orders').insert([{
-              profile_id: profile.id,
-              order_number: orderNumber,
-              total_amount: total,
-              payment_method: 'FESTIO_PAY',
-              delivery_type: 'PICKUP',
-              status: 'PAYMENT_COMPLETED',
-              totp_secret: secret
-            }]);
-          }
+        // 2. MySQL 백엔드 DB에 주문 데이터 전송 (업주가 볼 수 있도록 처리)
+        const shopOrderPayload = {
+          totalPrice: total,
+          userToken: token,
+          festivalId: sessionStorage.getItem('currentFestivalId') || 1, // 필요 시 페스티벌 ID 추가
+          items: order.map(item => ({
+            id: item.productId || item.id,
+            qty: item.qty,
+            type: item.type || ((item.category || item.cat) === 'fnb' || (item.category || item.cat) === 'food' ? 'FOOD' : 'GOODS'),
+            options: item.opts ? JSON.stringify(item.opts) : (item.options || '')
+          }))
+        };
+
+        const orderRes = await fetch('/api/order/shop', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(shopOrderPayload)
+        });
+        const orderData = await orderRes.json();
+        if (!orderRes.ok || orderData.status !== 'success') {
+           throw new Error('주문 등록 실패');
         }
+
       } catch (e) {
         console.error('Order save error:', e);
         Toast.show({ title: '오류', msg: '주문 처리 중 문제가 발생했습니다.', type: 'error' });

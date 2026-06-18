@@ -143,6 +143,129 @@ public class OrderController {
         return result;
     }
 
+    @GetMapping("/notifications")
+    public List<Map<String, Object>> getMyNotifications(
+            @RequestHeader(value = "Authorization", required = false) String authHeader) {
+        String userId = null;
+        if (authHeader != null && authHeader.startsWith("Bearer ")) {
+            String token = authHeader.substring(7);
+            if (token.startsWith("festio-jwt-token-")) {
+                userId = token.substring("festio-jwt-token-".length());
+            } else if (token.equals("festio-admin-jwt-token-7777")) {
+                try {
+                    userId = jdbcTemplate.queryForObject(
+                            "SELECT id FROM app_user WHERE email = 'admin@gmail.com'", String.class);
+                } catch (Exception e) {}
+            }
+        }
+
+        if (userId == null) {
+            return new ArrayList<>();
+        }
+
+        String sql = "SELECT oi.id, p.name, oi.item_status, oi.updated_at " +
+                     "FROM order_item oi " +
+                     "JOIN product p ON oi.product_id = p.id " +
+                     "JOIN orders o ON oi.order_id = o.id " +
+                     "WHERE o.user_id = ? AND oi.item_status IN ('COOKING', 'READY', 'SERVED', 'SHIPPED') " +
+                     "ORDER BY oi.updated_at DESC LIMIT 10";
+
+        List<Map<String, Object>> rows = jdbcTemplate.queryForList(sql, userId);
+        List<Map<String, Object>> result = new ArrayList<>();
+        for (Map<String, Object> row : rows) {
+            Map<String, Object> notif = new HashMap<>();
+            notif.put("id", row.get("id"));
+            notif.put("name", row.get("name"));
+            notif.put("status", row.get("item_status"));
+            notif.put("timestamp", row.get("updated_at") != null ? row.get("updated_at").toString() : "");
+            result.add(notif);
+        }
+        return result;
+    }
+
+    @GetMapping("/shop/my")
+    public List<Map<String, Object>> getMyShopOrders(
+            @RequestHeader(value = "Authorization", required = false) String authHeader) {
+        String userId = null;
+        if (authHeader != null && authHeader.startsWith("Bearer ")) {
+            String token = authHeader.substring(7);
+            if (token.startsWith("festio-jwt-token-")) {
+                userId = token.substring("festio-jwt-token-".length());
+            } else if (token.equals("festio-admin-jwt-token-7777")) {
+                try {
+                    userId = jdbcTemplate.queryForObject(
+                            "SELECT id FROM app_user WHERE email = 'admin@gmail.com'", String.class);
+                } catch (Exception e) {}
+            }
+        }
+
+        if (userId == null) {
+            return new ArrayList<>();
+        }
+
+        String sql = "SELECT o.id as order_id, o.created_at, o.total_price, o.payment_status, " +
+                     "oi.id as item_id, oi.product_type, oi.quantity, oi.item_status, " +
+                     "p.id as product_id, p.name as product_name, p.price as item_price " +
+                     "FROM orders o " +
+                     "LEFT JOIN order_item oi ON o.id = oi.order_id " +
+                     "LEFT JOIN product p ON oi.product_id = p.id " +
+                     "WHERE o.user_id = ? " +
+                     "ORDER BY o.created_at DESC";
+
+        List<Map<String, Object>> rows = jdbcTemplate.queryForList(sql, userId);
+        Map<Long, Map<String, Object>> orderMap = new LinkedHashMap<>();
+
+        for (Map<String, Object> row : rows) {
+            Long orderId = ((Number) row.get("order_id")).longValue();
+            if (!orderMap.containsKey(orderId)) {
+                Map<String, Object> order = new HashMap<>();
+                order.put("order_number", "O" + String.format("%011d", orderId));
+                order.put("created_at", row.get("created_at") != null ? row.get("created_at").toString() : "");
+                order.put("delivery_type", "PICKUP"); 
+                order.put("payment_method", "FESTIO_PAY");
+                order.put("total_amount", row.get("total_price"));
+                order.put("totp_secret", "dummysecret12345");
+
+                String oStatus = (String) row.get("payment_status");
+                order.put("status", oStatus);
+
+                order.put("shop_order_items", new ArrayList<Map<String, Object>>());
+                orderMap.put(orderId, order);
+            }
+
+            Map<String, Object> order = orderMap.get(orderId);
+            List<Map<String, Object>> items = (List<Map<String, Object>>) order.get("shop_order_items");
+
+            if (row.get("item_id") != null) {
+                Map<String, Object> item = new HashMap<>();
+                item.put("product_id", row.get("product_id"));
+                item.put("product_name", row.get("product_name"));
+                item.put("quantity", row.get("quantity"));
+                item.put("price_at_purchase", row.get("item_price"));
+                
+                String pType = (String) row.get("product_type");
+                Map<String, Object> sp = new HashMap<>();
+                sp.put("type", pType);
+                item.put("shop_products", sp);
+
+                items.add(item);
+                
+                String iStatus = (String) row.get("item_status");
+                if ("READY".equals(iStatus) || "COMPLETED".equals(iStatus) || "SERVED".equals(iStatus)) {
+                    order.put("status", "READY_FOR_PICKUP");
+                }
+                
+                if ("GOODS".equals(pType)) {
+                    order.put("order_number", "G" + String.format("%011d", orderId));
+                } else if ("FOOD".equals(pType) && !order.get("order_number").toString().startsWith("G")) {
+                    order.put("order_number", "F" + String.format("%011d", orderId));
+                }
+            }
+        }
+
+        return new ArrayList<>(orderMap.values());
+    }
+
     @PutMapping("/goods/{id}/status")
     public Map<String, String> updateGoodsStatus(@PathVariable("id") String idStr,
             @RequestBody Map<String, String> payload) {
@@ -347,13 +470,26 @@ public class OrderController {
         }
 
 
-        // INSERT 후 생성된 orderId 반환
+        // INSERT 후 생성된 orderId 반환 (KeyHolder 사용으로 호환성 확보)
         String insertSql = "INSERT INTO orders (user_id, festival_id, total_price, payment_status, created_at, seat_ids, is_entered, ticket_type, ticket_number) "
                 +
-                "VALUES (?, ?, ?, 'PAID', NOW(), ?, false, 'ONSITE', ?) RETURNING id";
+                "VALUES (?, ?, ?, 'PAID', NOW(), ?, false, 'ONSITE', ?)";
 
-        Long orderId = jdbcTemplate.queryForObject(insertSql, Long.class, userId, festivalId, totalPrice, seatIdsStr,
-                ticketNum);
+        final String finalUserId = userId;
+        final int finalFestivalId = festivalId;
+        
+        org.springframework.jdbc.support.KeyHolder keyHolder = new org.springframework.jdbc.support.GeneratedKeyHolder();
+        jdbcTemplate.update(connection -> {
+            java.sql.PreparedStatement ps = connection.prepareStatement(insertSql, new String[] { "id" });
+            ps.setString(1, finalUserId);
+            ps.setInt(2, finalFestivalId);
+            ps.setInt(3, totalPrice);
+            ps.setString(4, seatIdsStr);
+            ps.setString(5, ticketNum);
+            return ps;
+        }, keyHolder);
+        
+        Long orderId = keyHolder.getKey() != null ? keyHolder.getKey().longValue() : 0L;
 
         // 보안: TOTP 전용 비밀키 생성 후 저장
         String secret = generateHexSecret();
@@ -397,6 +533,65 @@ public class OrderController {
         res.put("orderId", orderId);
         res.put("ticketNumber", ticketNum);
         res.put("qrPayload", qrPayload);
+        return res;
+    }
+
+    @PostMapping("/shop")
+    public Map<String, Object> createShopOrder(@RequestBody Map<String, Object> payload) {
+        int totalPrice = ((Number) payload.get("totalPrice")).intValue();
+        List<Map<String, Object>> items = (List<Map<String, Object>>) payload.get("items");
+
+        // festivalId 기본값 설정
+        int festivalId = 1;
+        if (payload.get("festivalId") != null) {
+            try { festivalId = ((Number) payload.get("festivalId")).intValue(); } catch (Exception e) {}
+        }
+
+        // 유저 파싱
+        String userToken = (String) payload.get("userToken");
+        String userId = null;
+        if (userToken != null && userToken.startsWith("festio-jwt-token-")) {
+            userId = userToken.substring("festio-jwt-token-".length());
+        }
+
+        // orders 테이블 인서트 (샵 주문은 티켓 번호나 구역이 필요하지 않으므로 임의의 값 삽입)
+        String ticketNum = "S" + System.currentTimeMillis();
+        String orderSql = "INSERT INTO orders (user_id, festival_id, total_price, payment_status, created_at, is_entered, ticket_type, ticket_number) VALUES (?, ?, ?, 'PAID', NOW(), false, 'SHOP', ?)";
+        
+        final String finalUserId = userId;
+        final int finalFestivalId = festivalId;
+
+        org.springframework.jdbc.support.KeyHolder keyHolder = new org.springframework.jdbc.support.GeneratedKeyHolder();
+        jdbcTemplate.update(connection -> {
+            java.sql.PreparedStatement ps = connection.prepareStatement(orderSql, new String[] { "id" });
+            ps.setString(1, finalUserId);
+            ps.setInt(2, finalFestivalId);
+            ps.setInt(3, totalPrice);
+            ps.setString(4, ticketNum);
+            return ps;
+        }, keyHolder);
+        
+        Long orderId = keyHolder.getKey() != null ? keyHolder.getKey().longValue() : 0L;
+
+        // order_item 테이블 인서트
+        if (items != null) {
+            for (Map<String, Object> item : items) {
+                Long productId = ((Number) item.get("id")).longValue();
+                int qty = ((Number) item.get("qty")).intValue();
+                String type = (String) item.get("type"); // 'FOOD', 'GOODS'
+                if (type == null) type = "GOODS";
+                
+                String options = (String) item.get("options");
+
+                String itemSql = "INSERT INTO order_item (order_id, product_id, product_type, quantity, item_status, selected_options, updated_at) " +
+                                 "VALUES (?, ?, ?, ?, 'ORDERED', ?, NOW())";
+                jdbcTemplate.update(itemSql, orderId, productId, type, qty, options);
+            }
+        }
+
+        Map<String, Object> res = new HashMap<>();
+        res.put("status", "success");
+        res.put("orderId", orderId);
         return res;
     }
 

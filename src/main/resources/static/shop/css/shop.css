@@ -443,7 +443,8 @@
 .pcard-img {
   width: 100%;
   height: 100%;
-  object-fit: cover;
+  object-fit: contain;
+  background-color: var(--white); /* 이미지가 딱 맞지 않을 때를 대비해 흰색 배경 추가 */
   transition: transform .35s ease;
 }
 

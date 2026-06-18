@@ -399,7 +399,7 @@ function renderReservationList() {
 
   // 2. 푸드트럭 주문 내역 섹션
   htmlContent += `
-    <div>
+    <div style="margin-top: 40px;">
       <h3 class="mp-section-title">
         <span class="mp-margin-r-8"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mp-icon-md"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path></svg></span> 푸드트럭 실시간 주문 내역 (${MOCK_FOOD_ORDERS.length}건)
       </h3>
@@ -1163,12 +1163,14 @@ function renderInquiryList() {
 
     return `
     <div class="mp-card" style="margin-bottom:16px;">
-      <div class="mp-card-header" style="cursor:pointer; display:flex; justify-content:space-between; align-items:center;" onclick="toggleAccordion(${q.id})">
-        <h4 class="mp-inquiry-title" style="font-size:1.1rem; margin:0; font-weight:600; flex:1;">${q.title}</h4>
-        <div style="display:flex; align-items:center; gap:12px;">
-          <span class="mp-inquiry-date" style="font-size:0.85rem; color:var(--text-muted);">${new Date(q.createdAt).toLocaleString()}</span>
+      <div class="mp-card-header" style="cursor:pointer; display:flex; flex-direction:column; gap:8px;" onclick="toggleAccordion(${q.id})">
+        <div style="display:flex; justify-content:flex-start; align-items:center; gap:8px; margin-bottom: 4px;">
           <span class="mp-badge ${q.status === '답변완료' ? 'status-완료' : 'status-대기'}">${q.status}</span>
-          <svg id="arrow-${q.id}" class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:20px; height:20px; transition:transform 0.3s;"><path d="M6 9l6 6 6-6"/></svg>
+          <span class="mp-inquiry-date" style="font-size:0.85rem; color:var(--text-muted);">${new Date(q.createdAt).toLocaleString()}</span>
+        </div>
+        <div style="display:flex; justify-content:space-between; align-items:center;">
+          <h4 class="mp-inquiry-title" style="font-size:1.1rem; margin:0; font-weight:600; flex:1; word-break:keep-all;">${q.title}</h4>
+          <svg id="arrow-${q.id}" class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:20px; height:20px; transition:transform 0.3s; flex-shrink:0; margin-left:12px;"><path d="M6 9l6 6 6-6"/></svg>
         </div>
       </div>
       <div id="acc-${q.id}" style="display:none; margin-top:16px; padding-top:16px; border-top:1px solid var(--border-subtle);">
@@ -1213,8 +1215,18 @@ window.setInquiryStar = function (e, svg, baseVal, qId) {
   const rect = svg.getBoundingClientRect();
   const clickX = e.clientX - rect.left;
   const isHalf = clickX < rect.width / 2;
-  const selectedRating = isHalf ? baseVal - 0.5 : baseVal;
+  const rating = isHalf ? baseVal - 0.5 : baseVal;
   const container = document.querySelector(`.inquiry-stars[data-id="${qId}"]`);
+
+  let currentRating = 0;
+  if (container) {
+    currentRating = parseFloat(container.dataset.rating || 0);
+  }
+
+  let selectedRating = rating;
+  if (currentRating === rating) {
+    selectedRating = 0;
+  }
 
   if (container) {
     container.dataset.rating = selectedRating;
@@ -1331,29 +1343,30 @@ function renderCouponList() {
     return;
   }
   couponList.innerHTML = activeCoupons.map(c => `
-    <div class="mp-card coupon-card" style="display:flex; justify-content:space-between; align-items:center; position:relative; padding:16px 20px; margin-bottom:12px;">
+    <div class="mp-card coupon-card" style="display:flex; justify-content:space-between; align-items:center; position:relative; padding:16px 20px; margin-bottom:12px; border:1px solid #e2e8f0; border-radius:12px; box-shadow:0 2px 8px rgba(0,0,0,0.04); background:#fff;">
+      <img src="/Festio/images/festivals/메이플_단풍잎.png" style="position:absolute; top:50%; left:50%; transform:translate(-50%, -50%); width:100px; height:100px; opacity:0.12; pointer-events:none; object-fit:contain;" alt="단풍잎 워터마크" />
       <button class="coupon-delete-btn" onclick="deleteCoupon(${c.id})" style="position:absolute; top:-10px; right:-10px; width:26px; height:26px; background:#ff4757; color:white; border:none; border-radius:50%; font-size:12px; font-weight:bold; cursor:pointer; display:flex; align-items:center; justify-content:center; box-shadow:0 2px 6px rgba(255, 71, 87, 0.4); opacity:0; transition:opacity 0.2s, transform 0.2s; z-index:2;">
         <svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
       </button>
       
       <div>
-        <p class="mp-coupon-desc" style="font-size:0.8rem; color:var(--text-muted); margin-bottom:4px;">${c.desc}</p>
-        <h3 class="mp-coupon-title" style="margin:0 0 6px 0; font-size:1.15rem;">${c.title}</h3>
-        <p class="mp-coupon-meta" style="font-size:0.85rem; color:var(--text-secondary); margin:0;">${c.limit}</p>
+        <p class="mp-coupon-desc" style="font-size:0.8rem; color:#64748b; margin-bottom:4px; font-weight:600;">${c.desc}</p>
+        <h3 class="mp-coupon-title" style="margin:0 0 6px 0; font-size:1.15rem; color:#1e293b; font-weight:800;">${c.title}</h3>
+        <p class="mp-coupon-meta" style="font-size:0.85rem; color:#64748b; margin:0;">${c.limit}</p>
       </div>
       
       <div style="display:flex; flex-direction:column; align-items:flex-end;">
         <div style="text-align:center; margin-bottom:10px;">
           <svg viewBox="0 0 100 24" style="width:100px; height:24px; margin:0 auto; display:block;">
-            <rect x="0" y="0" width="4" height="24" fill="#333"/><rect x="6" y="0" width="2" height="24" fill="#333"/><rect x="12" y="0" width="6" height="24" fill="#333"/><rect x="22" y="0" width="4" height="24" fill="#333"/><rect x="30" y="0" width="2" height="24" fill="#333"/><rect x="36" y="0" width="8" height="24" fill="#333"/><rect x="48" y="0" width="4" height="24" fill="#333"/><rect x="56" y="0" width="2" height="24" fill="#333"/><rect x="62" y="0" width="10" height="24" fill="#333"/><rect x="76" y="0" width="4" height="24" fill="#333"/><rect x="84" y="0" width="2" height="24" fill="#333"/><rect x="90" y="0" width="6" height="24" fill="#333"/><rect x="100" y="0" width="4" height="24" fill="#333"/>
+            <rect x="0" y="0" width="4" height="24" fill="#111"/><rect x="6" y="0" width="2" height="24" fill="#111"/><rect x="12" y="0" width="6" height="24" fill="#111"/><rect x="22" y="0" width="4" height="24" fill="#111"/><rect x="30" y="0" width="2" height="24" fill="#111"/><rect x="36" y="0" width="8" height="24" fill="#111"/><rect x="48" y="0" width="4" height="24" fill="#111"/><rect x="56" y="0" width="2" height="24" fill="#111"/><rect x="62" y="0" width="10" height="24" fill="#111"/><rect x="76" y="0" width="4" height="24" fill="#111"/><rect x="84" y="0" width="2" height="24" fill="#111"/><rect x="90" y="0" width="6" height="24" fill="#111"/><rect x="100" y="0" width="4" height="24" fill="#111"/>
           </svg>
-          <p style="font-size:0.75rem; letter-spacing:1px; margin-top:6px; font-family:monospace; color:#333; margin-bottom:0;">${c.code}</p>
+          <p style="font-size:0.75rem; letter-spacing:1px; margin-top:6px; font-family:monospace; color:#475569; margin-bottom:0; font-weight:700;">${c.code}</p>
         </div>
         <div style="display:flex; flex-direction:row; align-items:center; justify-content:flex-end; gap:8px;">
-          <p class="mp-coupon-date" style="font-size:0.8rem; color:var(--text-muted); margin:0;">~${c.date}</p>
+          <p class="mp-coupon-date" style="font-size:0.8rem; color:#94a3b8; margin:0; font-weight:600;">~${c.date}</p>
         </div>
       </div>
-      <span class="mp-coupon-badge" style="position:absolute; top:-10px; left:-10px; padding:6px 10px; background:linear-gradient(135deg, #8930F8 0%, #6b21c5 100%); color:white; border-radius:6px; font-weight:bold; font-size:0.8rem; box-shadow:0 3px 6px rgba(0,0,0,0.2); z-index:2;">보유중</span>
+      <span class="mp-coupon-badge" style="position:absolute; top:-10px; left:-10px; padding:6px 12px; background:#1e293b; color:white; border-radius:8px; font-weight:bold; font-size:0.75rem; box-shadow:0 3px 6px rgba(0,0,0,0.1); z-index:2;">보유중</span>
     </div>
   `).join('');
 }
@@ -1545,7 +1558,13 @@ window.enableInlineEdit = function (id) {
           const clickX = e.clientX - rect.left;
           const isHalf = clickX < rect.width / 2;
           const baseVal = parseInt(star.dataset.star);
-          updateReviewStars(isHalf ? baseVal - 0.5 : baseVal, true);
+          const val = isHalf ? baseVal - 0.5 : baseVal;
+          let currentVal = parseFloat(ratingWrapper.dataset.selectedRating || 0);
+          if (currentVal === val) {
+            updateReviewStars(0, true);
+          } else {
+            updateReviewStars(val, true);
+          }
         });
       });
 
@@ -1719,7 +1738,12 @@ function initReviewForm() {
         const clickX = e.clientX - rect.left;
         const isHalf = clickX < rect.width / 2;
         const baseVal = parseInt(btn.dataset.index);
-        currentRating = isHalf ? baseVal - 0.5 : baseVal;
+        const val = isHalf ? baseVal - 0.5 : baseVal;
+        if (currentRating === val) {
+          currentRating = 0;
+        } else {
+          currentRating = val;
+        }
         updateStarUI(currentRating);
       });
     });
@@ -2163,6 +2187,8 @@ function initInquiryForm() {
 
   const updateScrollButtons = () => {
     if (!imgPreviewContainer) return;
+    if (!btnScrollLeft || !btnScrollRight) return;
+
     if (imgPreviewContainer.scrollWidth > imgPreviewContainer.clientWidth) {
       btnScrollLeft.style.display = 'flex';
       btnScrollRight.style.display = 'flex';
@@ -2188,27 +2214,31 @@ function initInquiryForm() {
   const renderThumbnails = () => {
     if (!imgPreviewContainer) return;
 
-    // + 버튼 유지 (최대 10개 미만일 때만)
-    const addBtnHtml = selectedFiles.length < 10 ? `
-      <div class="add-img-btn" onclick="document.getElementById('inqImages').click()" style="flex-shrink: 0; width: 60px; height: 60px; border: 1px dashed #cbd5e1; border-radius: 8px; display: flex; flex-direction: column; align-items: center; justify-content: center; cursor: pointer; background: #f8fafc; transition: all 0.2s;">
-        <span style="font-size: 20px; color: #94a3b8; line-height: 1;">+</span>
-        <span style="font-size: 0.7rem; color: #94a3b8; margin-top: 2px;" id="inqImageCount">${selectedFiles.length}/10</span>
-      </div>
-    ` : '';
+    // 대형 버튼 카운트 업데이트
+    const mainCountEl = document.getElementById('inqImageCount');
+    if (mainCountEl) {
+      mainCountEl.innerText = `${selectedFiles.length}/10`;
+    }
+
+    const carouselEl = document.getElementById('inqImageCarousel');
+    if (carouselEl) {
+      carouselEl.style.display = selectedFiles.length > 0 ? 'flex' : 'none';
+    }
 
     const thumbnailsHtml = selectedFiles.map((file, idx) => {
       const url = URL.createObjectURL(file);
       return `
-        <div style="flex-shrink: 0; position: relative; width: 60px; height: 60px; border-radius: 8px; overflow: hidden; border: 1px solid #e2e8f0;">
+        <div class="thumb-item" onmouseenter="this.querySelector('.remove-thumbnail-btn').style.opacity='1'" onmouseleave="this.querySelector('.remove-thumbnail-btn').style.opacity='0'" style="flex-shrink: 0; position: relative; width: 60px; height: 60px; border-radius: 8px; overflow: hidden; border: 1px solid #e2e8f0;">
           <img src="${url}" style="width: 100%; height: 100%; object-fit: cover;" />
-          <button type="button" onclick="window.removeInquiryImage(${idx})" style="position: absolute; top: 2px; right: 2px; background: rgba(0,0,0,0.5); color: white; border: none; border-radius: 50%; width: 18px; height: 18px; font-size: 10px; display: flex; align-items: center; justify-content: center; cursor: pointer;">✕</button>
+          <button class="remove-thumbnail-btn" type="button" onclick="window.removeInquiryImage(${idx})" style="position: absolute; top: 2px; right: 2px; background: transparent; color: white; border: none; border-radius: 50%; width: 20px; height: 20px; display: flex; align-items: center; justify-content: center; cursor: pointer; opacity: 0; transition: opacity 0.2s;">
+            <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="3" fill="none" stroke-linecap="round" stroke-linejoin="round" style="filter: drop-shadow(0px 1px 2px rgba(0,0,0,0.8));"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+          </button>
         </div>
       `;
     }).join('');
 
-    imgPreviewContainer.innerHTML = addBtnHtml + thumbnailsHtml;
+    imgPreviewContainer.innerHTML = thumbnailsHtml;
 
-    // 10개가 꽉 차면 카운트 표시를 업데이트 할 수 없으므로 숨김 버튼을 만들진 않고 렌더링 안 함
     updateScrollButtons();
   };
 

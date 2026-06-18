@@ -128,9 +128,21 @@ public class StaffApiController {
             @RequestBody Map<String, String> payload) {
 
         Long storeId = getLoggedInStoreId(token);
+        
+        try {
+            jdbcTemplate.execute("ALTER TABLE store ADD COLUMN image_url TEXT");
+        } catch (Exception e) {
+            try {
+                jdbcTemplate.execute("ALTER TABLE store ALTER COLUMN image_url TYPE TEXT");
+            } catch (Exception e2) {
+                // 권한 문제 등 예외 무시
+            }
+        }
+
         String name = payload.get("name");
         String category = payload.get("category");
         String operatingHours = payload.get("operatingHours");
+        String imageUrl = payload.get("imageUrl");
 
         StringBuilder sql = new StringBuilder("UPDATE store SET ");
         List<Object> params = new ArrayList<>();
@@ -146,6 +158,10 @@ public class StaffApiController {
         if (operatingHours != null) {
             sql.append("operating_hours = ?, ");
             params.add(operatingHours);
+        }
+        if (imageUrl != null) {
+            sql.append("image_url = ?, ");
+            params.add(imageUrl);
         }
 
         if (params.isEmpty()) {

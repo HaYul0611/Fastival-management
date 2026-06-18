@@ -164,7 +164,10 @@ document.addEventListener('DOMContentLoaded', async () => {
           <div style="font-weight:700; color:var(--g900);">${item.product_name || '상품명'}</div>
           <div style="font-size:13px; color:var(--g500); margin-top:4px;">수량: ${item.quantity || 1}개</div>
         </div>
-        <div style="font-weight:700;">${((item.price_at_purchase || 0) * (item.quantity || 1)).toLocaleString()}원</div>
+        <div style="text-align:right">
+          <div style="font-weight:700;">${((item.price_at_purchase || 0) * (item.quantity || 1)).toLocaleString()}원</div>
+          ${order.status === 'READY_FOR_PICKUP' || order.status === 'COMPLETED' ? `<button onclick="openReviewModal('${item.product_id}')" style="margin-top:8px; padding:4px 8px; font-size:12px; font-weight:700; border:1px solid var(--black); background:var(--white); color:var(--black); border-radius:4px; cursor:pointer;">리뷰 작성</button>` : ''}
+        </div>
       </div>
     `).join('');
 
@@ -208,14 +211,15 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   // 주문 내역 가져오기
   const fetchOrders = async () => {
-    const sb = window.ShopDB.getClient();
-    let { data: orders, error } = await sb.from('shop_orders').select('*, shop_order_items(*)').eq('profile_id', profile.id).order('created_at', { ascending: false });
-
-    if (error) {
-      console.error(error);
-      listEl.innerHTML = '<p>주문 내역을 불러오지 못했습니다.</p>';
-      return;
-    }
+    try {
+      const token = localStorage.getItem('userToken') || sessionStorage.getItem('userToken');
+      const headers = token ? { 'Authorization': 'Bearer ' + token } : {};
+      const res = await fetch('/api/order/shop/my', { headers });
+      
+      let orders = [];
+      if (res.ok) {
+        orders = await res.json();
+      }
 
     if (!orders || orders.length === 0) {
       // 미리보기용 더미 데이터
@@ -228,7 +232,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         total_amount: 12500,
         totp_secret: 'dummysecret12345',
         shop_order_items: [
-          { product_name: '스모크 바베큐 버거 + 콜라 세트', quantity: 1, price_at_purchase: 12500 }
+          { product_name: '스모크 바베큐 버거 + 콜라 세트', quantity: 1, price_at_purchase: 12500, shop_products: { type: 'FOOD' } }
         ]
       };
       window.currentOrders = [dummyOrder];
@@ -238,6 +242,10 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     window.currentOrders = orders;
     listEl.innerHTML = orders.map(renderOrderCard).join('');
+    } catch (e) {
+      console.error(e);
+      listEl.innerHTML = '<p>주문 내역을 불러오지 못했습니다.</p>';
+    }
   };
 
   // 즉시 실행 (스켈레톤 지연 제거)
@@ -247,23 +255,38 @@ document.addEventListener('DOMContentLoaded', async () => {
 function renderOrderCard(order) {
   const isPickup = order.delivery_type === 'PICKUP';
   let steps = '';
+  
+  let isFood = true;
+  if (order.shop_order_items && order.shop_order_items.length > 0) {
+    const sp = order.shop_order_items[0].shop_products;
+    const pName = order.shop_order_items[0].product_name || '';
+    if (sp && sp.type === 'GOODS') {
+      isFood = false;
+    } else if (order.order_number && order.order_number.startsWith('G')) {
+      isFood = false;
+    } else if (pName.includes('굿즈') || pName.includes('티셔츠') || pName.includes('후드') || pName.includes('OFFICIAL') || pName.includes('슬로건') || pName.includes('응원봉')) {
+      isFood = false;
+    }
+  }
 
   if (isPickup) {
     const isDone1 = true;
     const isDone2 = order.status === 'READY_FOR_PICKUP' || order.status === 'COMPLETED';
     const isDone3 = order.status === 'COMPLETED';
 
-    let movingEmoji = '👨‍🍳';
+    let movingEmoji = isFood ? '👨‍🍳' : '📦';
     let flipClass = '';
     if (isDone3) { movingEmoji = '🛍️'; }
     else if (isDone2) { movingEmoji = '🏃'; flipClass = 'flip'; }
-    else if (isDone1) { movingEmoji = '🍳'; }
+    else if (isDone1) { movingEmoji = isFood ? '🍳' : '🎁'; }
+    
+    const prepLabel = isFood ? '조리 준비' : '상품 준비';
 
     steps = `
       <div class="st-line-bg"></div>
       <div class="st-progress-bar"><div class="st-progress" style="width:${isDone3 ? 100 : (isDone2 ? 66 : 33)}%;"><span class="st-truck ${flipClass}">${movingEmoji}</span></div></div>
       <div class="st-step done"><div class="st-dot"></div><div class="st-label">결제완료</div></div>
-      <div class="st-step ${isDone2 ? 'done' : 'active'}"><div class="st-dot"></div><div class="st-label">조리 준비</div></div>
+      <div class="st-step ${isDone2 ? 'done' : 'active'}"><div class="st-dot"></div><div class="st-label">${prepLabel}</div></div>
       <div class="st-step ${isDone3 ? 'done' : (isDone2 ? 'active' : '')}"><div class="st-dot"></div><div class="st-label">수령전</div></div>
       <div class="st-step ${isDone3 ? 'active' : ''}"><div class="st-dot"></div><div class="st-label">수령완료</div></div>
     `;
@@ -291,7 +314,7 @@ function renderOrderCard(order) {
     <div class="order-item">
       <div class="oi-img" style="background:#f0f0f0"></div>
       <div class="oi-info">
-        <span class="oi-status ${isPickup ? 'pickup' : 'shipping'}">${isPickup ? '푸드트럭 현장수령' : '일반 배송'}</span>
+        <span class="oi-status ${isPickup ? 'pickup' : 'shipping'}">${isPickup ? (isFood ? '푸드트럭 현장수령' : '현장 픽업') : '일반 배송'}</span>
         <div class="oi-name">${item.product_name || '상품'}</div>
         <div class="oi-opt">수량: ${item.quantity || 1}개</div>
         <div class="oi-price">${(item.price_at_purchase || 0).toLocaleString()}원</div>
@@ -336,7 +359,12 @@ window.cancelOrder = function (orderNo) {
 let reviewImages = [];
 let currentRating = 0;
 
-window.openReviewModal = function (orderNo) {
+window.openReviewModal = function (productId) {
+  if (!productId || productId === 'undefined') {
+    alert('상품 정보가 부족하여 리뷰를 작성할 수 없습니다.');
+    return;
+  }
+  window.currentReviewProductId = productId;
   reviewImages = [];
   currentRating = 0;
   updateReviewStars();
@@ -429,6 +457,32 @@ window.submitReview = function () {
     alert('별점을 입력해주세요.');
     return;
   }
+  const text = document.getElementById('rvText').value.trim();
+  if (!text) {
+    alert('리뷰 내용을 입력해주세요.');
+    return;
+  }
+  
+  const reviews = JSON.parse(localStorage.getItem('shopReviews') || '[]');
+  
+  // 현재 로그인 사용자 정보 조회
+  const email = localStorage.getItem('email');
+  const sessionUser = window.FS && window.FS.Session ? window.FS.Session.get() : null;
+  const authorName = (sessionUser && sessionUser.name) ? sessionUser.name : (email ? email.split('@')[0] : '익명');
+
+  const newReview = {
+    id: 'rv_' + Date.now(),
+    productId: window.currentReviewProductId,
+    rating: currentRating,
+    text: text,
+    images: [...reviewImages],
+    author: authorName,
+    date: new Date().toLocaleDateString('ko-KR')
+  };
+  
+  reviews.unshift(newReview);
+  localStorage.setItem('shopReviews', JSON.stringify(reviews));
+  
   alert('리뷰가 등록되었습니다!');
   closeReviewModal();
 };

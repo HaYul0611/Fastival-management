@@ -51,6 +51,9 @@ public class StoreEntity {
     @Column(name = "notice", length = 255)
     private String notice;
 
+    @Column(name = "image_url", length = 1000)
+    private String imageUrl;
+
     @Column(name = "created_at")
     @Builder.Default
     private LocalDateTime createdAt = LocalDateTime.now();

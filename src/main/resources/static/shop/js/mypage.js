@@ -108,23 +108,13 @@ document.addEventListener('DOMContentLoaded', async () => {
     }, 100);
   }
 
-  // 3. FESTIO Pay 잔여 포인트 (실제 백엔드 연동)
+  // 3. FESTIO Pay 잔여 포인트 (Supabase 연동)
   const pointsEl = document.getElementById('mpPoints');
-  const token = localStorage.getItem('userToken');
-  let currentBalance = 0;
-  if (token) {
-    try {
-      const res = await fetch('/api/wallet/balance', { headers: { 'Authorization': token } });
-      if (res.ok) {
-        const data = await res.json();
-        currentBalance = data.balance || 0;
-      }
-    } catch (e) { console.error('잔액 조회 오류:', e); }
-  }
+  let currentBalance = profile.festio_pay_points || 0;
   pointsEl.textContent = currentBalance.toLocaleString();
 
   // 거래 내역 상태 관리 (임시/로컬)
-  let _shopWalletHistory = [];
+  let _shopWalletHistory = JSON.parse(localStorage.getItem('shopWalletHistory_' + email) || '[]');
   let _shopWalletFilter = 'all';
 
   const renderShopWalletHistory = () => {
@@ -317,30 +307,26 @@ document.addEventListener('DOMContentLoaded', async () => {
       }, async (rsp) => {
         if (rsp.success) {
           try {
-            const token = localStorage.getItem('userToken');
-            const res = await fetch('/api/wallet/charge', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ impUid: rsp.imp_uid, amount: chargeAmt, userToken: token })
-            });
-            let data = await res.json();
-            if (res.ok && data.success) {
-              Toast.show({ title: '충전 완료', msg: data.message, type: 'success' });
-              document.getElementById('mpPoints').textContent = (data.newBalance || 0).toLocaleString();
+            const newBalance = (profile.festio_pay_points || 0) + chargeAmt;
+            await window.ShopDB.updateProfile(profile.id, { festio_pay_points: newBalance });
+            profile.festio_pay_points = newBalance;
+            currentBalance = newBalance;
+            
+            Toast.show({ title: '충전 완료', msg: `FESTIO Pay ${chargeAmt.toLocaleString()}원이 충전되었습니다.`, type: 'success' });
+            document.getElementById('mpPoints').textContent = newBalance.toLocaleString();
 
-              // 거래 내역 배열에 추가
-              const now = new Date();
-              const pad = n => String(n).padStart(2, '0');
-              const dateStr = `${now.getFullYear()}.${pad(now.getMonth() + 1)}.${pad(now.getDate())} ${pad(now.getHours())}:${pad(now.getMinutes())}`;
-              _shopWalletHistory.unshift({ type: 'charge', desc: '카드 충전', amount: chargeAmt, date: dateStr });
-              renderShopWalletHistory();
+            // 거래 내역 배열에 추가
+            const now = new Date();
+            const pad = n => String(n).padStart(2, '0');
+            const dateStr = `${now.getFullYear()}.${pad(now.getMonth() + 1)}.${pad(now.getDate())} ${pad(now.getHours())}:${pad(now.getMinutes())}`;
+            _shopWalletHistory.unshift({ type: 'charge', desc: '카드 충전', amount: chargeAmt, date: dateStr });
+            localStorage.setItem('shopWalletHistory_' + email, JSON.stringify(_shopWalletHistory));
+            renderShopWalletHistory();
 
-              closeModal();
-            } else {
-              Toast.show({ title: '오류', msg: data.message || '충전 실패', type: 'error' });
-            }
+            closeModal();
           } catch (err) {
-            Toast.show({ title: '오류', msg: '서버 충전 처리 중 오류가 발생했습니다.', type: 'error' });
+            console.error(err);
+            Toast.show({ title: '오류', msg: 'DB 충전 처리 중 오류가 발생했습니다.', type: 'error' });
           }
         } else {
           Toast.show({ title: '결제 취소', msg: rsp.error_msg || '결제가 취소되었습니다.', type: 'warning' });
