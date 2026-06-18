@@ -8,17 +8,53 @@ import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.stereotype.Service;
 
+import org.springframework.mail.javamail.JavaMailSenderImpl;
+import festival.user.config.CustomMailProperties;
+import jakarta.annotation.PostConstruct;
+
 import java.time.LocalDateTime;
 import java.util.Map;
 import java.util.Random;
+import java.util.List;
+import java.util.ArrayList;
+import java.util.Properties;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicInteger;
 
 @Slf4j
 @Service
 @RequiredArgsConstructor
 public class MailService {
 
-    private final JavaMailSender mailSender;
+    private final CustomMailProperties customMailProperties;
+    private final List<JavaMailSender> mailSenders = new ArrayList<>();
+    private final AtomicInteger currentIndex = new AtomicInteger(0);
+    
+    @PostConstruct
+    public void init() {
+        if (customMailProperties.getAccounts() == null || customMailProperties.getAccounts().isEmpty()) {
+            log.warn("No mail accounts configured in custom.mail.accounts!");
+            return;
+        }
+
+        for (CustomMailProperties.Account account : customMailProperties.getAccounts()) {
+            JavaMailSenderImpl sender = new JavaMailSenderImpl();
+            sender.setHost("smtp.gmail.com");
+            sender.setPort(587);
+            sender.setUsername(account.getUsername());
+            sender.setPassword(account.getPassword());
+            
+            Properties props = sender.getJavaMailProperties();
+            props.put("mail.transport.protocol", "smtp");
+            props.put("mail.smtp.auth", "true");
+            props.put("mail.smtp.starttls.enable", "true");
+            props.put("mail.smtp.starttls.required", "true");
+            props.put("mail.debug", "false");
+            
+            mailSenders.add(sender);
+            log.info("Initialized MailSender for: {}", account.getUsername());
+        }
+    }
     
     // 이메일 -> { 인증번호, 생성시간 }
     private final Map<String, AuthCodeEntry> authCodeMap = new ConcurrentHashMap<>();
@@ -80,15 +116,23 @@ public class MailService {
                 "</html>";
 
         try {
-            MimeMessage message = mailSender.createMimeMessage();
+            if (mailSenders.isEmpty()) {
+                throw new RuntimeException("등록된 메일 발송 계정이 없습니다.");
+            }
+
+            // 라운드 로빈 방식으로 메일 발송기 선택
+            int index = Math.abs(currentIndex.getAndIncrement() % mailSenders.size());
+            JavaMailSender sender = mailSenders.get(index);
+            
+            MimeMessage message = sender.createMimeMessage();
             MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
             
             helper.setTo(email);
             helper.setSubject("[Festio] 이메일 인증번호를 확인해 주세요.");
             helper.setText(htmlContent, true);
             
-            mailSender.send(message);
-            log.info("Auth email sent to {}", email);
+            sender.send(message);
+            log.info("Auth email sent to {} using account index {}", email, index);
         } catch (MessagingException e) {
             log.error("Failed to send email to {}", email, e);
             throw new RuntimeException("이메일 발송에 실패했습니다.");
