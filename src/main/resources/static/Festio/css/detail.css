@@ -2997,15 +2997,20 @@ body.edit-mode .detail-tabs-section .detail-tab-content.active {
   transform-box: fill-box;
 }
 
-/* 텍스트 요소에 글로우 및 스케일업 효과 적용 */
+/* 텍스트 요소 및 패스 텍스트(첫 번째 배경 도형 제외)에 글로우 효과 적용 */
+.zone-polygon:hover> :not(:first-child),
+.zone-polygon.selected> :not(:first-child) {
+  fill: #ffffff !important;
+  filter: drop-shadow(0 0 6px rgba(106, 77, 255, 1)) drop-shadow(0 0 12px rgba(106, 77, 255, 0.8)) !important;
+  transition: all 0.2s ease-in-out;
+}
+
+/* 실제 text/tspan 요소인 경우 폰트 사이즈 스케일업 추가 */
 .zone-polygon:hover text,
 .zone-polygon:hover tspan,
 .zone-polygon.selected text,
 .zone-polygon.selected tspan {
-  fill: #ffffff !important;
   font-size: 1.1em !important;
-  filter: drop-shadow(0 0 6px rgba(106, 77, 255, 1)) drop-shadow(0 0 12px rgba(106, 77, 255, 0.8)) !important;
-  transition: all 0.2s ease-in-out;
 }
 
 .zone-polygon.sold-out {
