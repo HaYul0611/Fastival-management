@@ -35,6 +35,129 @@
     const chart = new ApexCharts(document.querySelector("#analyticsChart"), options);
     chart.render();
 
+    // ==========================================
+    // [실시간 DB 통계 연동 함수 3종]
+    // ==========================================
+
+    /** 금액 포맷 헬퍼 (₩ 1,234,000 형식) */
+    function fmtMoney(n) {
+      return '₩ ' + Number(n).toLocaleString('ko-KR');
+    }
+
+    /** 관리자 인증 헤더를 포함한 fetch 래퍼 */
+    function adminFetch(url) {
+      const token = localStorage.getItem('userToken') || localStorage.getItem('token') || 'festio-admin-jwt-token-7777';
+      return fetch(url, {
+        headers: { 'Authorization': 'Bearer ' + token }
+      });
+    }
+
+
+    /**
+     * 1. 금일 누적 매출 총액 (O2O + 예매) 로드
+     */
+    async function loadTodayRevenue() {
+      try {
+        const res = await adminFetch('/api/admin/dashboard/today-revenue');
+        if (!res.ok) throw new Error('API 응답 에러');
+        const data = await res.json();
+
+        const totalEl = document.getElementById('todayRevenueStat');
+        const ticketEl = document.getElementById('ticketRevenueStat');
+        const o2oEl = document.getElementById('o2oRevenueStat');
+        const updatedEl = document.getElementById('todayRevenueUpdatedAt');
+
+        if (totalEl) totalEl.textContent = fmtMoney(data.totalRevenue || 0);
+        if (ticketEl) ticketEl.textContent = fmtMoney(data.ticketRevenue || 0);
+        if (o2oEl) o2oEl.textContent = fmtMoney(data.o2oRevenue || 0);
+        if (updatedEl) {
+          const now = new Date();
+          updatedEl.textContent = `${now.getHours()}:${String(now.getMinutes()).padStart(2,'0')} 기준 집계 완료`;
+        }
+      } catch (e) {
+        console.warn('[대시보드] 금일 매출 로드 실패:', e);
+        const totalEl = document.getElementById('todayRevenueStat');
+        if (totalEl) totalEl.textContent = '₩ 0';
+      }
+    }
+
+
+    /**
+     * 2. 진행중 페스티벌별 입장 인원 로드
+     */
+    async function loadAttendance() {
+      try {
+        const res = await adminFetch('/api/admin/dashboard/attendance');
+        if (!res.ok) throw new Error('API 응답 에러');
+        const data = await res.json();
+
+        const totalEl = document.getElementById('totalEnteredStat');
+        const listEl = document.getElementById('attendanceFestivalList');
+        const progressEl = document.getElementById('attendanceProgressBar');
+
+        const total = data.totalEntered || 0;
+        if (totalEl) totalEl.textContent = total.toLocaleString('ko-KR') + ' 명';
+
+        const festivals = data.festivals || [];
+        if (listEl) {
+          if (festivals.length === 0) {
+            listEl.innerHTML = '<p class="text-muted fs-7">현재 진행 중인 페스티벌이 없습니다.</p>';
+          } else {
+            listEl.innerHTML = festivals.map(f => `
+              <div class="d-flex justify-content-between align-items-center mb-1">
+                <span class="fs-7 fw-semibold text-dark text-truncate" style="max-width:160px" title="${f.festivalName}">${f.festivalName}</span>
+                <span class="badge bg-label-primary ms-2">${Number(f.enteredCount).toLocaleString('ko-KR')} 명</span>
+              </div>
+            `).join('');
+          }
+        }
+
+        // 프로그레스바: 전체 예매(총 티켓) 대비 입장 비율 (간단히 entered / (entered+100) 로 시각화)
+        // 실제 좌석 수가 있으면 더 정확하게 계산 가능
+        if (progressEl) {
+          const pct = total > 0 ? Math.min(100, (total / Math.max(total + 100, 1000)) * 100) : 0;
+          progressEl.style.width = pct.toFixed(1) + '%';
+        }
+      } catch (e) {
+        console.warn('[대시보드] 입장 인원 로드 실패:', e);
+        const totalEl = document.getElementById('totalEnteredStat');
+        if (totalEl) totalEl.textContent = '0 명';
+        const listEl = document.getElementById('attendanceFestivalList');
+        if (listEl) listEl.innerHTML = '<p class="text-muted fs-7">데이터를 불러올 수 없습니다.</p>';
+      }
+    }
+
+    /**
+     * 3. 입점사 누적 정산액 로드
+     */
+    async function loadStoreRevenue() {
+      try {
+        const res = await adminFetch('/api/admin/dashboard/store-revenue');
+        if (!res.ok) throw new Error('API 응답 에러');
+        const data = await res.json();
+
+        const revenueEl = document.getElementById('storeRevenueStat');
+        const descEl = document.getElementById('storeCountDesc');
+
+        if (revenueEl) revenueEl.textContent = fmtMoney(data.totalRevenue || 0);
+        if (descEl) {
+          const cnt = data.storeCount || 0;
+          descEl.textContent = `총 ${cnt}개 입점 가맹점 진행중 행사 매출 합산`;
+        }
+      } catch (e) {
+        console.warn('[대시보드] 입점사 매출 로드 실패:', e);
+        const revenueEl = document.getElementById('storeRevenueStat');
+        if (revenueEl) revenueEl.textContent = '₩ 0';
+      }
+    }
+
+    /** 모든 통계 카드 일괄 갱신 */
+    function refreshDashboardStats() {
+      loadTodayRevenue();
+      loadAttendance();
+      loadStoreRevenue();
+    }
+
     // 2. [실제 데이터베이스 연동 및 라이프사이클 관리 로직]
     // reviewStatus: 'PENDING' | 'APPROVED' | 'REJECTED'
     // operationalStatus: 'UPCOMING' | 'ONGOING' | 'COMPLETED'
@@ -737,7 +860,11 @@
     window.addEventListener("load", () => {
       loadFestivalsFromDB(); // 실시간 데이터 로드
       checkTabRouting();
+      refreshDashboardStats(); // DB 통계 카드 최초 로드
     });
+
+    // 60초마다 통계 카드 자동 갱신
+    setInterval(refreshDashboardStats, 60000);
 
     // 쿼리 파라미터 링크 런타임 클릭 시 스위칭을 위한 인터벌 훅 (Perfect for SPA)
     let lastQuery = window.location.search;

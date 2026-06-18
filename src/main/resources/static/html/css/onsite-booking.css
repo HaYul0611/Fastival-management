@@ -1,0 +1,4 @@
+/* 모달 기본 숨김 */
+        #obSuccessModal, #obBalanceModal {
+            display: none !important;
+        }

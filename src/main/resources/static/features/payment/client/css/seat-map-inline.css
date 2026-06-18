@@ -1,0 +1,497 @@
+/* SweetAlert2 Modal Overlap Fix */
+    .swal2-container {
+      z-index: 99999999 !important;
+    }
+
+    /* Custom Range Slider Styling (Blue Theme) */
+    .custom-blue-range {
+      -webkit-appearance: none;
+      width: 100%;
+      height: 6px;
+      background: #e1e7f0;
+      border-radius: 4px;
+      outline: none;
+      margin: 10px 0;
+    }
+    .custom-blue-range::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 16px;
+      height: 16px;
+      border-radius: 50%;
+      background: #3f5efb;
+      cursor: pointer;
+      box-shadow: 0 0 4px rgba(63, 94, 251, 0.4);
+      transition: background 0.15s ease, transform 0.1s ease;
+    }
+    .custom-blue-range::-webkit-slider-thumb:hover {
+      background: #1a2e68;
+      transform: scale(1.15);
+    }
+    .custom-blue-range::-moz-range-thumb {
+      width: 16px;
+      height: 16px;
+      border-radius: 50%;
+      background: #3f5efb;
+      cursor: pointer;
+      box-shadow: 0 0 4px rgba(63, 94, 251, 0.4);
+      transition: background 0.15s ease, transform 0.1s ease;
+    }
+    .custom-blue-range::-moz-range-thumb:hover {
+      background: #1a2e68;
+      transform: scale(1.15);
+    }
+
+    /* ── 구역 삭제 모드 스타일 ── */
+    .delete-mode-hover {
+      cursor: crosshair !important;
+      outline: none;
+    }
+    .delete-mode-hover:hover {
+      fill: rgba(255, 62, 29, 0.22) !important;
+      stroke: #ff3e1d !important;
+      stroke-width: 2.5px !important;
+      filter: drop-shadow(0 0 6px rgba(255, 62, 29, 0.5));
+      transition: fill 0.15s ease, stroke 0.15s ease;
+    }
+
+    /* ── 구역 좌석 생성 상태 표시용 스타일 ── */
+    .zone-polygon.zone-has-seats {
+      stroke: #71dd37 !important; /* 녹색 실선 */
+      stroke-width: 3.5px !important;
+      stroke-dasharray: none !important;
+      filter: drop-shadow(0 0 4px rgba(113, 221, 55, 0.4));
+    }
+    .zone-polygon.zone-no-seats {
+      stroke: #8592a3 !important; /* 회색 점선 */
+      stroke-width: 1.5px !important;
+      stroke-dasharray: 4 4 !important;
+      opacity: 0.8;
+    }
+
+    /* Premium Light Theme Styling matching Sneat Admin Template */
+    body {
+      font-family: 'Public Sans', 'Noto Sans KR', sans-serif;
+      background-color: #f5f5f9 !important;
+      color: #566a7f;
+    }
+
+    .content-wrapper {
+      background-color: #f5f5f9;
+    }
+
+    .card {
+      background: #ffffff;
+      border: 0 solid rgba(0, 0, 0, 0.125);
+      border-radius: 8px;
+      box-shadow: 0 2px 6px 0 rgba(67, 89, 113, 0.12);
+      color: #566a7f;
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+
+    .card-header {
+      border-bottom: 1px solid #d9dee3;
+      background: transparent;
+    }
+
+    .form-label {
+      color: #566a7f;
+      font-weight: 500;
+      font-size: 0.85rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    /* Segmented Control for Editor Mode */
+    .segmented-control {
+      display: flex;
+      background: #eceef1;
+      border: 1px solid #d9dee3;
+      border-radius: 12px;
+      padding: 4px;
+      gap: 4px;
+    }
+
+    .segmented-control input[type="radio"] {
+      display: none;
+    }
+
+    .segmented-control label {
+      flex: 1;
+      text-align: center;
+      padding: 10px 20px;
+      cursor: pointer;
+      border-radius: 8px;
+      font-weight: 600;
+      font-size: 0.9rem;
+      transition: all 0.2s ease;
+      margin: 0;
+      color: #697a8d;
+    }
+
+    .segmented-control input[type="radio"]:checked+label {
+      background: #696cff;
+      color: white;
+      box-shadow: 0 4px 12px rgba(105, 108, 255, 0.3);
+    }
+
+    /* Seat Matrix Grid Container */
+    .grid-editor-container {
+      position: relative;
+      background: #f5f5f9;
+      border: 1px solid #d9dee3;
+      border-radius: 12px;
+      padding: 24px;
+      overflow: auto;
+      min-height: 400px;
+      max-height: 600px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      user-select: none;
+      z-index: 1;
+    }
+
+    .grid-bg-overlay {
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background-size: contain;
+      background-position: center;
+      background-repeat: no-repeat;
+      opacity: 0.5;
+      z-index: -1;
+      pointer-events: none;
+      transition: opacity 0.2s ease;
+    }
+
+    .grid-wrapper {
+      display: grid;
+      gap: 6px;
+      margin: auto;
+    }
+
+    /* Seat Cells */
+    .seat-cell {
+      aspect-ratio: 1;
+      width: 44px;
+      height: 44px;
+      border-radius: 8px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      font-size: 10px;
+      font-weight: 700;
+      cursor: pointer;
+      line-height: 1.1;
+      transition: all 0.15s ease;
+      box-sizing: border-box;
+    }
+
+    .seat-cell:hover {
+      transform: scale(1.15);
+      z-index: 10;
+      box-shadow: 0 0 10px rgba(105, 108, 255, 0.3);
+    }
+
+    /* Seat States Styles matching light theme colors */
+    .seat-available {
+      background: rgba(133, 146, 163, 0.08);
+      border: 1px solid rgba(133, 146, 163, 0.4);
+      color: #8592a3;
+    }
+
+    .seat-available:hover {
+      background: rgba(133, 146, 163, 0.18);
+    }
+
+    /* Seat Grade Styles */
+    .seat-vip {
+      background: rgba(255, 171, 0, 0.08) !important;
+      border: 1px solid rgba(255, 171, 0, 0.6) !important;
+      color: #ffab00 !important;
+    }
+
+    .seat-vip:hover {
+      background: rgba(255, 171, 0, 0.18) !important;
+    }
+
+    .seat-r {
+      background: rgba(105, 108, 255, 0.08) !important;
+      border: 1px solid rgba(105, 108, 255, 0.6) !important;
+      color: #696cff !important;
+    }
+
+    .seat-r:hover {
+      background: rgba(105, 108, 255, 0.18) !important;
+    }
+
+    .seat-s {
+      background: rgba(3, 195, 236, 0.08) !important;
+      border: 1px solid rgba(3, 195, 236, 0.6) !important;
+      color: #03c3ec !important;
+    }
+
+    .seat-s:hover {
+      background: rgba(3, 195, 236, 0.18) !important;
+    }
+
+    .seat-price-tag {
+      font-size: 8px;
+      opacity: 0.85;
+      font-weight: 500;
+      margin-top: 1px;
+    }
+
+    .seat-stage {
+      background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+      border: 1px solid #2563eb;
+      color: #ffffff;
+      box-shadow: 0 0 12px rgba(59, 130, 246, 0.3);
+    }
+
+    .seat-corridor {
+      background: transparent;
+      border: 1px dashed #d9dee3;
+      color: #b4bdc6;
+    }
+
+    .seat-reserved {
+      background: rgba(255, 62, 29, 0.08);
+      border: 1px solid rgba(255, 62, 29, 0.3);
+      color: #ff3e1d;
+      cursor: not-allowed;
+    }
+
+    .seat-hold {
+      background: rgba(255, 62, 29, 0.05) !important;
+      border: 2px dashed #ff3e1d !important;
+      color: #ff3e1d !important;
+    }
+
+    .seat-hold:hover {
+      background: rgba(255, 62, 29, 0.12) !important;
+    }
+
+    .seat-stage {
+      background: #003366 !important;
+      /* 다크블루 */
+      border: 1px solid #002244 !important;
+      color: #ffffff !important;
+      cursor: default;
+    }
+
+    .seat-corridor {
+      background: transparent !important;
+      border: 1px dashed rgba(217, 222, 227, 0.4) !important;
+      color: #b4bdc6 !important;
+      opacity: 0.15;
+      /* 통로 공백 연출 */
+    }
+
+    /* Legend UI */
+    .legend-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 0.85rem;
+      color: #697a8d;
+    }
+
+    .legend-box {
+      width: 16px;
+      height: 16px;
+      border-radius: 4px;
+    }
+
+    .empty-state {
+      text-align: center;
+      color: #8592a3;
+      font-size: 0.95rem;
+    }
+
+    .empty-state i {
+      font-size: 3rem;
+      display: block;
+      margin-bottom: 12px;
+      color: #a1acb8;
+    }
+
+    /* 3중 레이어 및 줌 효과 스타일 추가 */
+    .grid-editor-container {
+      position: relative;
+      overflow: hidden;
+      transition: transform 0.5s ease-in-out;
+      transform-origin: center center;
+      width: 100%;
+      max-width: 650px;
+      aspect-ratio: 1 / 1;
+      margin: 0 auto;
+      background: #f5f5f9;
+      border-radius: 8px;
+      border: 1px solid #d9dee3;
+    }
+
+    .grid-bg-overlay {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-size: 100% 100% !important;
+      background-repeat: no-repeat;
+      background-position: center center;
+      z-index: 1;
+      opacity: 0.8;
+      pointer-events: none;
+    }
+
+    #zoneSvgLayer {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 2;
+      pointer-events: auto;
+    }
+
+    .zone-polygon {
+      fill: rgba(105, 108, 255, 0.15);
+      stroke: #696cff;
+      stroke-width: 2;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      pointer-events: auto;
+    }
+
+    .zone-polygon:hover {
+      fill: rgba(105, 108, 255, 0.35);
+      stroke-width: 3;
+    }
+
+    .zone-polygon.active {
+      fill: rgba(113, 221, 55, 0.15);
+      stroke: #71dd37;
+    }
+
+    .zone-polygon.zone-disabled {
+      fill: rgba(133, 146, 163, 0.25);
+      stroke: #8592a3;
+      stroke-dasharray: 4;
+    }
+
+    .zone-polygon.zone-disabled:hover {
+      fill: rgba(133, 146, 163, 0.45);
+    }
+
+    /* 드로잉 활성화 시 임시 폴리곤 및 점 스타일 */
+    .draw-point {
+      fill: #ff3e1d;
+      stroke: #ffffff;
+      stroke-width: 1.5;
+      cursor: pointer;
+    }
+
+    .draw-line {
+      stroke: #ff3e1d;
+      stroke-width: 2;
+      stroke-dasharray: 4;
+    }
+
+    .draw-polygon {
+      fill: rgba(255, 62, 29, 0.15);
+      stroke: #ff3e1d;
+      stroke-width: 2;
+    }
+
+    /* 리사이즈용 컨트롤 앵커 스타일 */
+    .resize-anchor {
+      fill: #ff3e1d;
+      stroke: #ffffff;
+      stroke-width: 2px;
+      cursor: pointer;
+      transition: fill 0.2s ease;
+    }
+
+    .resize-anchor:hover {
+      fill: #71dd37;
+      /* 호버 시 녹색으로 하이라이트 */
+    }
+
+    .grid-wrapper {
+      position: absolute;
+      z-index: 3;
+      display: none;
+      opacity: 0;
+      transition: opacity 0.3s ease;
+      pointer-events: none;
+      background: rgba(255, 255, 255, 0.9);
+      padding: 10px;
+      border-radius: 6px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    }
+
+    .grid-wrapper.active {
+      display: grid !important;
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    /* 줌 아웃 버튼 스타일 */
+    .btn-zoom-out {
+      position: absolute;
+      top: 15px;
+      right: 15px;
+      z-index: 10;
+      display: none;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+    }
+    
+    /* 동적 추가 등급용 스타일 정의 */
+    .seat-custom-1 {
+      background: rgba(113, 221, 55, 0.08) !important;
+      border: 1px solid rgba(113, 221, 55, 0.6) !important;
+      color: #71dd37 !important;
+    }
+    .seat-custom-1:hover { background: rgba(113, 221, 55, 0.18) !important; }
+    
+    .seat-custom-2 {
+      background: rgba(255, 62, 29, 0.08) !important;
+      border: 1px solid rgba(255, 62, 29, 0.6) !important;
+      color: #ff3e1d !important;
+    }
+    .seat-custom-2:hover { background: rgba(255, 62, 29, 0.18) !important; }
+    
+    .seat-custom-3 {
+      background: rgba(130, 94, 251, 0.08) !important;
+      border: 1px solid rgba(130, 94, 251, 0.6) !important;
+      color: #825efb !important;
+    }
+    .seat-custom-3:hover { background: rgba(130, 94, 251, 0.18) !important; }
+    
+    .seat-custom-4 {
+      background: rgba(233, 30, 99, 0.08) !important;
+      border: 1px solid rgba(233, 30, 99, 0.6) !important;
+      color: #e91e63 !important;
+    }
+    .seat-custom-4:hover { background: rgba(233, 30, 99, 0.18) !important; }
+    
+    .seat-custom-5 {
+      background: rgba(0, 150, 136, 0.08) !important;
+      border: 1px solid rgba(0, 150, 136, 0.6) !important;
+      color: #009688 !important;
+    }
+    .seat-custom-5:hover { background: rgba(0, 150, 136, 0.18) !important; }
+
+    /* SVG 텍스트 가독성 최적화 및 외곽선 뭉개짐 방지 */
+    svg text {
+      stroke: none !important;
+      stroke-width: 0 !important;
+      paint-order: fill !important;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+    }

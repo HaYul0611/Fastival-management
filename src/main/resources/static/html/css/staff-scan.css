@@ -1,0 +1,4 @@
+/* 모달 기본 숨김 */
+        .festio-modal {
+            display: none !important;
+        }

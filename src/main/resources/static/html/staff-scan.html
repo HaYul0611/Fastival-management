@@ -10,12 +10,7 @@
     <!-- custom.css 복구 -->
     <link rel="stylesheet" href="/assets/css/custom.css?v=3">
     <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
-    <style>
-        /* 모달 기본 숨김 */
-        .festio-modal {
-            display: none !important;
-        }
-    </style>
+    <link rel="stylesheet" href="css/staff-scan.css" />
 </head>
 
 <body>
@@ -65,10 +60,7 @@
 
   </div>
 
-  <script type="module">
-    import { initPage } from '/assets/js/ui.js?v=totp-fix';
-    document.addEventListener("DOMContentLoaded", () => { initPage('scanner'); });
-  </script>
+  <script src="js/staff-scan.js"></script>
 
 </body>
 
