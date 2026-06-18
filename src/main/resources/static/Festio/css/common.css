@@ -571,14 +571,11 @@ svg {
     cursor: text;
   }
 
-  .header-search-bar.active:focus-within {
-    border-color: var(--color-primary);
-  }
-
   .header-search-bar .icon {
     width: 16px;
     height: 16px;
-    color: var(--text-muted);
+    color: #4f46e5;
+    /* 돋보기 아이콘 블루톤 */
     flex-shrink: 0;
     transition: margin-right 0.3s ease;
   }
@@ -590,8 +587,9 @@ svg {
   .header-search-input {
     flex: 1;
     background: transparent;
-    border: none;
-    outline: none;
+    border: none !important;
+    outline: none !important;
+    box-shadow: none !important;
     font-size: 0.8125rem;
     color: var(--text-primary);
     font-family: inherit;
@@ -599,6 +597,12 @@ svg {
     opacity: 0;
     pointer-events: none;
     transition: opacity 0.3s ease;
+  }
+
+  .header-search-input:focus {
+    outline: none !important;
+    border: none !important;
+    box-shadow: none !important;
   }
 
   .header-search-bar.active .header-search-input {
@@ -609,6 +613,22 @@ svg {
   .header-search-input::placeholder {
     color: var(--text-muted);
   }
+}
+
+/* 검색창 X 버튼 라운드 형태 및 투명 배경으로 통일 */
+input[type="search"]::-webkit-search-cancel-button {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 16px;
+  height: 16px;
+  background: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="%239ca3af" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>') no-repeat center;
+  background-size: contain;
+  cursor: pointer;
+  opacity: 1;
+}
+
+input[type="search"]::-webkit-search-cancel-button:hover {
+  opacity: 0.8;
 }
 
 /* 헤더 백 버튼 */
