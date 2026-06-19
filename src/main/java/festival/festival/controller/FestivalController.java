@@ -119,4 +119,18 @@ public class FestivalController {
         Festival updatedFestival = festivalService.updateDescriptionHtml(id, descriptionHtml);
         return ResponseEntity.ok(updatedFestival);
     }
+
+    /**
+     * 예매 방식(ticket_mode)을 변경합니다.
+     * SEAT: 좌석 선택형 (콘서트 등) / FREE: 입장권형 (워터밤 등)
+     * PATCH /api/festival/{id}/ticket-mode
+     */
+    @PatchMapping("/{id}/ticket-mode")
+    public ResponseEntity<Festival> updateTicketMode(
+            @PathVariable("id") Long id,
+            @RequestBody java.util.Map<String, String> body) {
+        String ticketMode = body.get("ticketMode");
+        Festival updatedFestival = festivalService.updateTicketMode(id, ticketMode);
+        return ResponseEntity.ok(updatedFestival);
+    }
 }

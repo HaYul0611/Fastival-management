@@ -47,6 +47,16 @@
           <div class="navbar-nav-right d-flex align-items-center" id="navbar-collapse">
             <h5 class="mb-0 fw-bold" id="navbar-title-text"><i class="bx bx-home-smile me-2 text-primary"></i>통합 관제 대시보드</h5>
             <ul class="navbar-nav flex-row align-items-center ms-auto">
+              <!-- FESTIO 메인 바로가기 버튼 -->
+              <li class="nav-item me-2">
+                <a href="/Festio/index.html" target="_blank"
+                  class="btn btn-sm btn-outline-primary d-flex align-items-center gap-1"
+                  style="font-size:0.82rem; font-weight:600; border-radius:20px; padding:5px 14px;"
+                  title="FESTIO 사용자 메인 페이지로 이동">
+                  <i class="bx bx-home-smile" style="font-size:1rem;"></i>
+                  FESTIO 메인
+                </a>
+              </li>
               <li class="nav-item dropdown-user dropdown">
                 <a class="nav-link dropdown-toggle hide-arrow" href="javascript:void(0);" data-bs-toggle="dropdown">
                   <div class="avatar avatar-online">
@@ -424,14 +434,63 @@
               <input type="text" id="publishFestName" class="form-control bg-light border-0 fw-semibold text-dark" readonly />
             </div>
 
-            <!-- 공식 티켓 가격 (price - 숫자 입력 필드) -->
+            <!-- 예매 방식 선택 (ticket_mode) -->
             <div class="mb-4">
+              <label class="form-label fw-bold text-secondary fs-7">예매 방식 *</label>
+              <div class="d-flex gap-4 align-items-center mt-1 p-3 rounded" style="background: #f8f9fa; border: 1px solid #dee2e6;">
+                <div class="form-check mb-0">
+                  <input class="form-check-input" type="radio" name="publishTicketMode" id="publishTicketModeSeat" value="SEAT" checked>
+                  <label class="form-check-label fw-semibold" for="publishTicketModeSeat">
+                    <i class="bx bx-chair me-1 text-primary"></i> SEAT <span class="text-muted fw-normal fs-8">(좌석선택형)</span>
+                  </label>
+                </div>
+                <div class="form-check mb-0">
+                  <input class="form-check-input" type="radio" name="publishTicketMode" id="publishTicketModeFree" value="FREE">
+                  <label class="form-check-label fw-semibold" for="publishTicketModeFree">
+                    <i class="bx bx-ticket-alt me-1 text-success"></i> FREE <span class="text-muted fw-normal fs-8">(입장권형)</span>
+                  </label>
+                </div>
+              </div>
+              <div class="form-text fs-8 text-muted mt-1">
+                <b>SEAT</b>: 콘서트·공연처럼 좌석 배치도에서 직접 좌석 선택 &nbsp;|&nbsp;
+                <b>FREE</b>: 워터밤처럼 입장권 등급과 수량만 선택
+              </div>
+            </div>
+
+            <!-- 공식 티켓 가격 (price - 숫자 입력 필드) -->
+            <div class="mb-4" id="publishFestPriceWrapper">
               <label for="publishFestPrice" class="form-label fw-bold text-secondary fs-7">공식 티켓 가격 (원) *</label>
               <div class="input-group input-group-merge">
                 <span class="input-group-text bg-white border-primary"><i class="bx bx-won text-primary"></i></span>
                 <input type="number" id="publishFestPrice" class="form-control border-primary fw-semibold" placeholder="ex: 88000" required min="0" />
               </div>
               <div class="form-text fs-8 text-muted">소비자 예매 페이지에 노출될 실제 공식 티켓 기본 가격입니다.</div>
+            </div>
+
+            <!-- [FREE 모드 전용 티켓 설정 영역] -->
+            <div id="freeTicketConfigSection" class="mb-4 d-none" style="background: #f8f9fa; border: 1px solid #dee2e6; border-radius: 8px; padding: 1.2rem;">
+              <div class="d-flex justify-content-between align-items-center mb-3">
+                <label class="form-label fw-bold text-secondary mb-0"><i class="bx bx-cog me-1 text-success"></i> 티켓 종류 설정 *</label>
+                <button type="button" class="btn btn-xs btn-outline-success fw-bold" onclick="addFreeTicketRow()">
+                  <i class="bx bx-plus me-1"></i> 추가
+                </button>
+              </div>
+              <div class="table-responsive">
+                <table class="table table-sm table-borderless align-middle mb-0" style="font-size: 0.85rem;">
+                  <thead>
+                    <tr class="text-secondary" style="border-bottom: 2px solid #dee2e6;">
+                      <th style="width: 45%;">티켓 등급명</th>
+                      <th style="width: 25%;">가격(원)</th>
+                      <th style="width: 20%;">수량(매)</th>
+                      <th style="width: 10%;" class="text-center">삭제</th>
+                    </tr>
+                  </thead>
+                  <tbody id="freeTicketConfigBody">
+                    <!-- Dynamic rows will be inserted here -->
+                  </tbody>
+                </table>
+              </div>
+              <div class="form-text fs-8 text-muted mt-2">입장권의 명칭, 가격, 총 발매 수량을 입력해 주세요. (최소 1개 필요)</div>
             </div>
 
             <!-- 공식 포스터 이미지 경로 또는 파일 첨부 (poster_url) -->
@@ -606,6 +665,28 @@
                   <option value="신규">신규</option>
                   <option value="타임세일">타임세일</option>
                 </select>
+              </div>
+
+              <!-- 예매 방식 선택 (ticket_mode) -->
+              <div class="col-md-6 col-12 mb-3">
+                <label class="form-label fw-bold text-secondary">예매 방식 *</label>
+                <div class="d-flex gap-4 align-items-center mt-1">
+                  <div class="form-check">
+                    <input class="form-check-input" type="radio" name="festTicketMode" id="ticketModeSeat" value="SEAT" checked>
+                    <label class="form-check-label fw-semibold" for="ticketModeSeat">
+                      <i class="bx bx-chair me-1 text-primary"></i> SEAT (좌석선택형)
+                    </label>
+                  </div>
+                  <div class="form-check">
+                    <input class="form-check-input" type="radio" name="festTicketMode" id="ticketModeFree" value="FREE">
+                    <label class="form-check-label fw-semibold" for="ticketModeFree">
+                      <i class="bx bx-ticket-alt me-1 text-success"></i> FREE (입장권형)
+                    </label>
+                  </div>
+                </div>
+                <div class="form-text fs-8 text-muted">
+                  SEAT: 콘서트처럼 좌석 선택이 필요한 행사 / FREE: 워터밤처럼 좌석 없이 입장권만 필요한 행사
+                </div>
               </div>
 
               <!-- 인기/활성화 체크박스 라인 -->

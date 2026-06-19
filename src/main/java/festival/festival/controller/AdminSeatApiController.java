@@ -43,6 +43,41 @@ public class AdminSeatApiController {
     }
 
     /**
+     * 1-2. 축제 정보 최종 발행 (status 및 상세 정보 일괄 업데이트)
+     * PATCH /api/admin/festivals/{id}/publish
+     */
+    @PatchMapping("/festivals/{id}/publish")
+    public ResponseEntity<?> publishFestival(
+            @PathVariable("id") Long id,
+            @RequestBody Map<String, Object> payload) {
+        
+        Festival festival = festivalRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 페스티벌 ID입니다: " + id));
+
+        if (payload.containsKey("price")) {
+            festival.setMinPrice(Long.parseLong(payload.get("price").toString()));
+        }
+        if (payload.containsKey("posterUrl")) {
+            festival.setThumbnailUrl(payload.get("posterUrl").toString());
+        }
+        if (payload.containsKey("description")) {
+            festival.setDescriptionHtml(payload.get("description").toString());
+        }
+        if (payload.containsKey("operationalStatus")) {
+            festival.setOperationalStatus(payload.get("operationalStatus").toString());
+        }
+        if (payload.containsKey("isActive")) {
+            festival.setIsActive(Boolean.parseBoolean(payload.get("isActive").toString()));
+        }
+        if (payload.containsKey("ticketMode")) {
+            festival.setTicketMode(payload.get("ticketMode").toString());
+        }
+
+        Festival saved = festivalRepository.save(festival);
+        return ResponseEntity.ok(saved);
+    }
+
+    /**
      * 2. 특정 축제에 종속된 구역 목록 조회
      * GET /api/admin/festivals/{festivalId}/zones
      */

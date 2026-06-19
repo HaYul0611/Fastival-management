@@ -255,8 +255,14 @@ window.initCommentUI = function () {
     try {
       const sb = window.getSupabase();
       if (sb) {
-        const { data: { user } } = await sb.auth.getUser();
-        currentUser = user;
+        try {
+          const authRes = await sb.auth.getUser();
+          if (authRes && authRes.data && authRes.data.user) {
+            currentUser = authRes.data.user;
+          }
+        } catch (authErr) {
+          console.warn('Failed to fetch auth user in loadAllCommentsAndReviews:', authErr);
+        }
       }
       // API 병렬 호출 (리뷰는 MOCK 데이터가 올 수 있음)
       const [comments, reviews] = await Promise.all([

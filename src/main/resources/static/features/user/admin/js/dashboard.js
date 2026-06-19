@@ -513,6 +513,8 @@
       const startTimeVal = document.getElementById("festStartTime").value;
       const endTimeVal = document.getElementById("festEndTime").value;
       const badgeLabel = document.getElementById("festBadgeLabel").value;
+      const ticketModeEl = document.querySelector('input[name="festTicketMode"]:checked');
+      const ticketMode = ticketModeEl ? ticketModeEl.value : "SEAT";
 
       if (!name || !startDate || !endDate || !category || !venue || !thumbnailUrl || !agency) {
         alert("모든 필수 값을 입력해 주세요.");
@@ -534,6 +536,7 @@
         endTime: endTime,
         badgeLabel: badgeLabel || null,
         agency: agency,
+        ticketMode: ticketMode,
         reviewStatus: "PENDING",
         operationalStatus: "UPCOMING",
         isActive: false,
@@ -716,6 +719,109 @@
       }
     }
 
+    // 예매 방식 변경에 따른 UI 동적 전환 및 검증
+    function updatePublishModeUI() {
+      const freeRadio = document.getElementById("publishTicketModeFree");
+      const priceWrapper = document.getElementById("publishFestPriceWrapper");
+      const ticketSection = document.getElementById("freeTicketConfigSection");
+      const priceInput = document.getElementById("publishFestPrice");
+
+      if (freeRadio && freeRadio.checked) {
+        if (priceWrapper) priceWrapper.classList.add("d-none");
+        if (ticketSection) ticketSection.classList.remove("d-none");
+        if (priceInput) priceInput.removeAttribute("required");
+      } else {
+        if (priceWrapper) priceWrapper.classList.remove("d-none");
+        if (ticketSection) ticketSection.classList.add("d-none");
+        if (priceInput) priceInput.setAttribute("required", "required");
+      }
+    }
+
+    // 티켓 행 동적 추가
+    function addFreeTicketRow(name = "", price = "", quantity = "") {
+      const tbody = document.getElementById("freeTicketConfigBody");
+      if (!tbody) return;
+
+      const tr = document.createElement("tr");
+      tr.innerHTML = `
+        <td>
+          <input type="text" class="form-control form-control-sm ticket-name-input" placeholder="예: 일반 입장권" value="${name}" required />
+        </td>
+        <td>
+          <input type="number" class="form-control form-control-sm ticket-price-input" placeholder="원" value="${price}" required min="0" />
+        </td>
+        <td>
+          <input type="number" class="form-control form-control-sm ticket-qty-input" placeholder="매" value="${quantity}" required min="1" />
+        </td>
+        <td class="text-center">
+          <button type="button" class="btn btn-sm btn-icon btn-outline-danger" onclick="removeFreeTicketRow(this)">
+            <i class="bx bx-trash"></i>
+          </button>
+        </td>
+      `;
+      tbody.appendChild(tr);
+    }
+
+    // 티켓 행 삭제
+    function removeFreeTicketRow(btn) {
+      const row = btn.closest("tr");
+      if (row) row.remove();
+    }
+
+    // 기존 FREE 티켓 정보 로드
+    async function populateFreeTickets(festivalId, ticketMode) {
+      const configBody = document.getElementById("freeTicketConfigBody");
+      if (!configBody) return;
+      configBody.innerHTML = "";
+
+      if (ticketMode === "FREE") {
+        try {
+          const res = await fetch(`/api/festival/${festivalId}/zones`);
+          if (res.ok) {
+            const zones = await res.json();
+            if (zones && zones.length > 0) {
+              for (let z of zones) {
+                let price = 50000;
+                let capacity = z.safetyLimit || 500;
+                try {
+                  const seatRes = await fetch(`/api/festival/seats?zoneId=${z.id}`);
+                  if (seatRes.ok) {
+                    const seats = await seatRes.json();
+                    if (seats && seats.length > 0) {
+                      price = seats[0].price || price;
+                      capacity = seats.length;
+                    }
+                  }
+                } catch (seatErr) {
+                  console.warn("구역 좌석 로드 실패:", seatErr);
+                }
+                addFreeTicketRow(z.zoneName, price, capacity);
+              }
+            } else {
+              addFreeTicketRow("일반 입장권", 30000, 1000);
+            }
+          } else {
+            addFreeTicketRow("일반 입장권", 30000, 1000);
+          }
+        } catch (err) {
+          console.warn("구역 정보 로드 실패:", err);
+          addFreeTicketRow("일반 입장권", 30000, 1000);
+        }
+      } else {
+        addFreeTicketRow("일반 입장권", 30000, 1000);
+      }
+    }
+
+    // 이벤트 리스너 등록
+    setTimeout(() => {
+      const seatRadio = document.getElementById("publishTicketModeSeat");
+      const freeRadio = document.getElementById("publishTicketModeFree");
+      if (seatRadio && freeRadio) {
+        seatRadio.addEventListener("change", updatePublishModeUI);
+        freeRadio.addEventListener("change", updatePublishModeUI);
+      }
+    }, 500);
+
     // 상세 정보 기입 모달 활성화 및 바인딩
     function openPublishModal(id) {
       const fest = mockFestivals.find(f => f.id === id);
@@ -723,6 +829,15 @@
         document.getElementById("publishFestId").value = fest.id;
         document.getElementById("publishFestName").value = fest.name;
         document.getElementById("publishFestPrice").value = fest.minPrice || "";
+        
+        // 기존 ticketMode 값을 라디오 버튼에 사전 선택
+        const currentTicketMode = fest.ticketMode || "SEAT";
+        const seatRadio = document.getElementById("publishTicketModeSeat");
+        const freeRadio = document.getElementById("publishTicketModeFree");
+        if (seatRadio && freeRadio) {
+          seatRadio.checked = (currentTicketMode === "SEAT");
+          freeRadio.checked = (currentTicketMode === "FREE");
+        }
         
         // 외부 업체 제휴 신청으로 자동 등록되어 임시 기본 이미지(Unsplash 플레이스홀더)가 들어가 있는 경우
         // 관리자가 직접 포스터를 등록할 수 있도록 입력창을 비워줍니다.
@@ -735,6 +850,9 @@
         
         document.getElementById("publishFestDescription").value = fest.description || "";
         
+        updatePublishModeUI();
+        populateFreeTickets(fest.id, currentTicketMode);
+
         const modalEl = document.getElementById("publishFestivalModal");
         const modal = bootstrap.Modal.getOrCreateInstance(modalEl);
         modal.show();
@@ -744,9 +862,45 @@
     // 최종 발행 폼 제출 처리
     function submitPublishFestival() {
       const id = parseInt(document.getElementById("publishFestId").value);
-      const price = parseInt(document.getElementById("publishFestPrice").value || "0");
       const posterUrl = document.getElementById("publishFestPosterUrl").value;
       const description = document.getElementById("publishFestDescription").value;
+      const ticketModeEl = document.querySelector('input[name="publishTicketMode"]:checked');
+      const ticketMode = ticketModeEl ? ticketModeEl.value : "SEAT";
+
+      let price = 0;
+      let freeTickets = [];
+
+      if (ticketMode === 'FREE') {
+        const tbody = document.getElementById("freeTicketConfigBody");
+        const rows = tbody.querySelectorAll("tr");
+        if (rows.length === 0) {
+          alert("FREE 모드에서는 최소 1개 이상의 티켓 등급을 추가하셔야 합니다.");
+          return;
+        }
+
+        for (let row of rows) {
+          const nameInput = row.querySelector(".ticket-name-input");
+          const priceInput = row.querySelector(".ticket-price-input");
+          const qtyInput = row.querySelector(".ticket-qty-input");
+
+          const name = nameInput.value.trim();
+          const tPrice = parseInt(priceInput.value);
+          const qty = parseInt(qtyInput.value);
+
+          if (!name || isNaN(tPrice) || isNaN(qty)) {
+            alert("티켓 정보를 모두 올바르게 입력해 주세요.");
+            return;
+          }
+
+          freeTickets.push({ name, price: tPrice, quantity: qty });
+        }
+
+        // 공식 티켓 가격은 최저 가격으로 자동 책정
+        price = Math.min(...freeTickets.map(t => t.price));
+        document.getElementById("publishFestPrice").value = price;
+      } else {
+        price = parseInt(document.getElementById("publishFestPrice").value || "0");
+      }
 
       const fest = mockFestivals.find(f => f.id === id);
       if (fest) {
@@ -755,17 +909,19 @@
         fest.minPrice = price;
         fest.thumbnailUrl = posterUrl;
         fest.description = description;
-        fest.isActive = true; // 최종 발행 시 기본적으로 노출 상태 설정 가능
+        fest.ticketMode = ticketMode;
+        fest.isActive = true;
 
         // 모달 비활성화
         const modalEl = document.getElementById("publishFestivalModal");
         const modal = bootstrap.Modal.getInstance(modalEl);
         if (modal) modal.hide();
 
-        alert(`🚀 [${fest.name}] 축제의 상세 정보 기입 및 최종 발행이 완료되었습니다!\n운영 상태가 '정보 입력 대기(SETTING)'에서 '진행 전(UPCOMING)' 단계로 성공적으로 이동했습니다.`);
+        const modeLabel = ticketMode === 'FREE' ? '입장권형 (FREE)' : '좌석선택형 (SEAT)';
+        alert(`🚀 [${fest.name}] 축제의 상세 정보 기입 및 최종 발행이 완료되었습니다!\n예매 방식: ${modeLabel}\n운영 상태가 '정보 입력 대기(SETTING)'에서 '진행 전(UPCOMING)' 단계로 이동했습니다.`);
 
-        // 백엔드 API 확장 구조 호출
-        publishFestivalOnBackend(id, price, posterUrl, description);
+        // 백엔드 API 확장 구조 호출 (ticketMode 및 freeTickets 데이터 포함)
+        publishFestivalOnBackend(id, price, posterUrl, description, ticketMode, freeTickets);
 
         refreshLifecycleViews();
         switchOperationSubTab('UPCOMING');
@@ -773,25 +929,103 @@
     }
 
     /**
-     * [백엔드 API 확장 구조 주석 가이드]
-     * 모달에서 기입된 상세 데이터를 백엔드로 전송하고 축제를 최종 발행 상태로 업데이트하는 API인 PATCH 요청을 호출합니다.
+     * 모달에서 기입된 상세 데이터를 백엔드로 전송하고 축제를 최종 발행 상태로 업데이트
      */
-    async function publishFestivalOnBackend(id, price, posterUrl, description) {
-      console.log(`[REST API Call Log] PATCH /api/admin/festivals/${id}/publish`, { price, posterUrl, description });
+    async function publishFestivalOnBackend(id, price, posterUrl, description, ticketMode, freeTickets) {
+      console.log(`[REST API Call Log] PATCH /api/admin/festivals/${id}/publish`, { price, posterUrl, description, ticketMode, freeTickets });
       
+      const token = localStorage.getItem('userToken') || localStorage.getItem('token') || 'festio-admin-jwt-token-7777';
+      const authHeader = 'Bearer ' + token;
+
       try {
-        // 백엔드 엔드포인트 `/api/admin/festivals/{id}/publish` 에 비동기 PATCH 요청 전송
+        // 1. ticketMode 업데이트 (PATCH /api/festival/{id}/ticket-mode)
+        const modeRes = await fetch(`/api/festival/${id}/ticket-mode`, {
+          method: 'PATCH',
+          headers: { 
+            'Content-Type': 'application/json',
+            'Authorization': authHeader 
+          },
+          body: JSON.stringify({ ticketMode: ticketMode || 'SEAT' })
+        });
+        if (!modeRes.ok) {
+          console.warn(`[ticketMode] 업데이트 실패 (status: ${modeRes.status})`);
+        }
+
+        // 2. FREE 모드인 경우 구역(Zone) 및 좌석(Seat) 정보 재생성
+        if (ticketMode === 'FREE' && freeTickets && freeTickets.length > 0) {
+          // 기존 구역 정보 조회
+          const zonesRes = await fetch(`/api/festival/${id}/zones`);
+          if (zonesRes.ok) {
+            const existingZones = await zonesRes.json();
+            for (let ez of existingZones) {
+              // 기존 구역 및 좌석 삭제
+              const delRes = await fetch(`/api/admin/zones/${ez.id}`, { 
+                method: 'DELETE',
+                headers: { 'Authorization': authHeader }
+              });
+              if (!delRes.ok) {
+                console.warn(`기존 구역 삭제 실패: ${ez.id} (status: ${delRes.status})`);
+              }
+            }
+          }
+
+          // 신규 구역 및 가상 좌석 생성
+          for (let ticket of freeTickets) {
+            const zoneRes = await fetch(`/api/admin/festivals/${id}/zones`, {
+              method: 'POST',
+              headers: { 
+                'Content-Type': 'application/json',
+                'Authorization': authHeader
+              },
+              body: JSON.stringify({
+                zoneName: ticket.name,
+                safetyLimit: ticket.quantity,
+                svgPoints: '0,0'
+              })
+            });
+
+            if (!zoneRes.ok) {
+              throw new Error(`구역 생성 실패: ${ticket.name} (status: ${zoneRes.status})`);
+            }
+
+            const createdZone = await zoneRes.json();
+            const zoneId = createdZone.id;
+
+            // 가상 좌석 생성 (rowCount=1, colCount=quantity, price=ticket.price)
+            const seatRes = await fetch(`/api/admin/seats/generate`, {
+              method: 'POST',
+              headers: { 
+                'Content-Type': 'application/json',
+                'Authorization': authHeader
+              },
+              body: JSON.stringify({
+                zoneId: zoneId,
+                rowCount: 1,
+                colCount: ticket.quantity,
+                price: ticket.price
+              })
+            });
+
+            if (!seatRes.ok) {
+              throw new Error(`좌석 생성 실패: ${ticket.name} (status: ${seatRes.status})`);
+            }
+          }
+        }
+
+        // 3. 기존 발행 정보 업데이트
         const response = await fetch(`/api/admin/festivals/${id}/publish`, {
           method: 'PATCH',
           headers: {
-            'Content-Type': 'application/json'
+            'Content-Type': 'application/json',
+            'Authorization': authHeader
           },
           body: JSON.stringify({
             price: price,
             posterUrl: posterUrl,
             description: description,
             operationalStatus: 'UPCOMING',
-            isActive: true
+            isActive: true,
+            ticketMode: ticketMode || 'SEAT'
           })
         });
 
@@ -802,25 +1036,10 @@
         const result = await response.json();
         console.log("백엔드 최종 발행 완료 데이터 동기화 완료:", result);
         
-        // 성공 시 실제 DB를 기반으로 대시보드 리스트 리로드
         loadFestivalsFromDB();
       } catch (error) {
-        console.warn("⚠️ 백엔드 API가 아직 설계되지 않았거나 로컬 모의 환경입니다. 로컬 프론트엔드 상태 변경이 우선 유지됩니다.", error);
-        
-        // [백업용]: 만약 특정 백엔드 엔드포인트가 없을 경우, 기존의 status 패치 API를 통해 상태 정보만이라도 반영을 시도하는 fallback 로직을 구현할 수 있습니다.
-        try {
-          await fetch(`/api/festival/${id}/status`, {
-            method: 'PATCH',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              reviewStatus: 'APPROVED',
-              operationalStatus: 'UPCOMING'
-            })
-          });
-          console.log("백업 Status PATCH 동기화 성공 (operationalStatus: UPCOMING)");
-        } catch (fbError) {
-          console.error("백업 동기화 실패:", fbError);
-        }
+        console.error("⚠️ 최종 발행 처리 중 에러 발생:", error);
+        alert(`발행 중 오류가 발생했습니다: ${error.message}`);
       }
     }
 
@@ -835,6 +1054,9 @@
     window.openPublishModal = openPublishModal;
     window.submitPublishFestival = submitPublishFestival;
     window.filterByCategory = filterByCategory;
+    window.addFestival = addFestival;
+    window.addFreeTicketRow = addFreeTicketRow;
+    window.removeFreeTicketRow = removeFreeTicketRow;
 
     // 3. [동적 탭 스위칭 감지 및 라우팅 로직]
     function checkTabRouting() {

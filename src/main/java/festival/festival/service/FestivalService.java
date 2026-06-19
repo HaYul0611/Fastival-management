@@ -104,4 +104,18 @@ public class FestivalService {
         festival.setDescriptionHtml(descriptionHtml);
         return festival;
     }
+
+    /**
+     * 예매 방식(ticket_mode)을 변경합니다.
+     * 'SEAT': 콘서트처럼 좌석 배치도에서 선택 / 'FREE': 워터밤처럼 입장권 등급만 선택
+     */
+    @Transactional
+    public Festival updateTicketMode(Long id, String ticketMode) {
+        Festival festival = festivalRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 페스티벌 ID입니다: " + id));
+        if (ticketMode != null && (ticketMode.equals("SEAT") || ticketMode.equals("FREE"))) {
+            festival.setTicketMode(ticketMode);
+        }
+        return festival;
+    }
 }

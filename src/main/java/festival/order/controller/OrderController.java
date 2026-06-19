@@ -583,6 +583,21 @@ public class OrderController {
                         jdbcTemplate.update(
                                 "UPDATE seat_map SET is_reserved = true WHERE seat_row LIKE ? AND seat_number = ?",
                                 parts[0] + "%", number);
+                    } else {
+                        // FREE 모드 또는 좌석명이 단순 zoneName인 경우 (예: "일반 입장권")
+                        // 해당 zone의 빈 좌석 중 하나를 임의로 예약 처리하여 실제 수량을 차감시킵니다.
+                        try {
+                            List<Long> availableSeatIds = jdbcTemplate.queryForList(
+                                "SELECT id FROM seat_map WHERE zone_id IN " +
+                                "(SELECT id FROM festival_zone WHERE zone_name = ? AND festival_id = ?) " +
+                                "AND is_reserved = false LIMIT 1",
+                                Long.class, seat, festivalId);
+                            if (!availableSeatIds.isEmpty()) {
+                                jdbcTemplate.update("UPDATE seat_map SET is_reserved = true WHERE id = ?", availableSeatIds.get(0));
+                            }
+                        } catch (Exception e) {
+                            System.err.println("FREE 모드 좌석 차감 실패: " + seat + " - " + e.getMessage());
+                        }
                     }
                 } catch (Exception e) {
                     System.err.println("좌석 예약 처리 실패: " + seat + " - " + e.getMessage());

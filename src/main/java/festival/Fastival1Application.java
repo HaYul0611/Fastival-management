@@ -111,6 +111,22 @@ public class Fastival1Application {
 							return null;
 						});
 				System.out.println("=========================================");
+				// ticket_mode 컬럼 IF NOT EXISTS 마이그레이션
+				try {
+					Integer colExists = jdbcTemplate.queryForObject(
+						"SELECT COUNT(*) FROM information_schema.columns WHERE table_schema = 'public' AND table_name = 'festival' AND column_name = 'ticket_mode'",
+						Integer.class
+					);
+					if (colExists == null || colExists == 0) {
+						jdbcTemplate.execute("ALTER TABLE festival ADD COLUMN ticket_mode VARCHAR(20) NOT NULL DEFAULT 'SEAT'");
+						System.out.println("[Migration] festival.ticket_mode 컬럼이 성공적으로 추가되었습니다.");
+					} else {
+						System.out.println("[Migration] festival.ticket_mode 컬럼이 이미 존재합니다. 생략.");
+					}
+				} catch (Exception e) {
+					System.err.println("[Migration] ticket_mode 컬럼 마이그레이션 실패: " + e.getMessage());
+				}
+
 			} catch (Exception e) {
 				System.err.println("[Migration] Error during ROLE_STAFF migration or init: " + e.getMessage());
 			}

@@ -3201,3 +3201,54 @@ body.edit-mode .detail-tabs-section .detail-tab-content.active {
   border: 2px solid transparent;
   background-clip: padding-box;
 }
+
+/* ============================================================
+   입장권형 (FREE) 모드 전용 레이아웃 스타일
+   ============================================================ */
+.detail-layout.free-mode .venue-section {
+  display: none !important;
+}
+
+.detail-layout.free-mode .booking-cta-top {
+  display: none !important;
+}
+
+.detail-layout.free-mode .selected-seats-panel {
+  display: none !important;
+}
+
+.detail-layout.free-mode .booking-cta {
+  padding: var(--sp-5);
+  background: var(--bg-card);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-xl);
+}
+
+.detail-layout.free-mode .detail-right-sidebar {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-4);
+}
+
+.detail-layout.free-mode #ctaTotal {
+  font-size: 1.4rem;
+  font-weight: 700;
+  color: var(--color-primary-light);
+  margin-bottom: 0.5rem;
+}
+
+/* FREE 모드 안내 카드 추가 스타일 */
+.free-mode-notice-card {
+  padding: 1rem;
+  background: var(--bg-surface1);
+  border: 1px dashed var(--border-default);
+  border-radius: var(--radius-md);
+  margin-bottom: 1rem;
+  font-size: 0.85rem;
+  line-height: 1.5;
+  color: var(--text-secondary);
+}
+
+.free-mode-notice-card strong {
+  color: var(--text-primary);
+}

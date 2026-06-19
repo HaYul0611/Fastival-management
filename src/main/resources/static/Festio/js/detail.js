@@ -26,6 +26,7 @@ let _queueCount = 0;
 let _selectedPayMethod = 'card';
 let _selectedSeats = [];
 let _selectedZone = null;
+let _freeTicketQty = {};
 
 /* ── Toss Payments 설정 ─────────────────────────────────────── */
 const TOSS_CLIENT_KEY = 'test_ck_D5GePWvyJnrK0W0k6q8gLzN97Emo';
@@ -202,6 +203,63 @@ function renderEventDetail(detail) {
           </div>
         </div>
       `;
+    }
+  }
+
+  // ticketMode에 따른 레이아웃 분기 및 우측 예매 바 최적화
+  const layoutEl = document.querySelector('.detail-layout');
+  const ctaZoneName = document.getElementById('ctaZoneName');
+  const ctaTotal = document.getElementById('ctaTotal');
+  const btnBook = document.getElementById('btn-book');
+  
+  if (layoutEl) {
+    if (detail.ticketMode === 'FREE') {
+      layoutEl.classList.add('free-mode');
+      
+      // 우측 CTA 바 텍스트 최적화
+      if (ctaZoneName) ctaZoneName.textContent = '일반 입장권 (자유석)';
+      
+      // 가격 범위 계산
+      if (ctaTotal && detail.zones && detail.zones.length > 0) {
+        const prices = detail.zones.map(z => z.price);
+        const minPrice = Math.min(...prices);
+        const maxPrice = Math.max(...prices);
+        if (minPrice === maxPrice) {
+          ctaTotal.textContent = `￦ ${minPrice.toLocaleString()}원`;
+        } else {
+          ctaTotal.textContent = `￦ ${minPrice.toLocaleString()}원 ~`;
+        }
+      } else if (ctaTotal) {
+        ctaTotal.textContent = '￦ -원';
+      }
+      
+      if (btnBook) {
+        btnBook.innerHTML = `
+          <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M20 12v6a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h6" />
+            <path d="M14 4h6v6" />
+            <path d="M10 14L20 4" />
+          </svg>
+          입장권 예매하기
+        `;
+      }
+      
+      // 안내 카드 삽입 (이미 없으면 추가)
+      const bookingCta = document.getElementById('bookingCta');
+      if (bookingCta && !document.getElementById('freeModeNoticeCard')) {
+        const noticeCard = document.createElement('div');
+        noticeCard.id = 'freeModeNoticeCard';
+        noticeCard.className = 'free-mode-notice-card';
+        noticeCard.innerHTML = `
+          <strong>📢 안내사항</strong>
+          <p style="margin: 4px 0 0 0;">본 행사는 별도의 지정석이 없으며, 입장권을 구매하여 선착순으로 입장하는 자유석 행사입니다.</p>
+        `;
+        bookingCta.insertBefore(noticeCard, bookingCta.firstChild);
+      }
+    } else {
+      layoutEl.classList.remove('free-mode');
+      const noticeCard = document.getElementById('freeModeNoticeCard');
+      if (noticeCard) noticeCard.remove();
     }
   }
 }
@@ -452,12 +510,19 @@ function selectZone(zoneNo, zone, svgEl) {
   // 구역 정보 패널 업데이트
   updateZoneInfoPanel(zone);
 
-  // 수량 초기화 & 좌석 선택 모달 오픈
+  // 수량 초기화 & 좌석 선택 모달 오픈 (ticket_mode에 따라 분기)
   _quantity = 1;
   _selectedSeats = [];
   updateQtyDisplay();
   updateCtaBar(zone);
-  openSeatSelectionModal(zoneNo, zone);
+
+  // ticket_mode 분기: SEAT → 기존 좌석 선택 모달, FREE → 입장권 선택 모달
+  const ticketMode = _eventDetail?.ticketMode || 'SEAT';
+  if (ticketMode === 'FREE') {
+    openFreeTicketModal(zoneNo, zone);
+  } else {
+    openSeatSelectionModal(zoneNo, zone);
+  }
 }
 
 function updateQtyDisplay() {
@@ -531,6 +596,213 @@ function updateCtaBar(zone) {
 
   const totalEl = document.getElementById('ctaTotal');
   if (totalEl) totalEl.textContent = formatKRW(net);
+}
+
+/* ═══════════════════════════════════════════════════════════
+   FREE 입장권 선택 모달 (ticket_mode === 'FREE')
+   - 워터밤 등 좌석 없는 행사용 입장권 선택 UI
+   ═══════════════════════════════════════════════════════════ */
+function openFreeTicketModal(zoneNo, selectedZone) {
+  // 기존 모달이 있으면 제거
+  const existingModal = document.getElementById('modal-free-ticket');
+  if (existingModal) existingModal.remove();
+
+  // 해당 페스티벌의 모든 구역(zone)을 등급 목록으로 사용
+  const zones = _eventDetail?.zones || [];
+  const eventName = _eventDetail?.eventName || '페스티벌';
+  const eventNo = getEventNo();
+
+  // 선택된 수량 상태
+  const ticketQty = {};
+  zones.forEach(z => { ticketQty[z.zoneNo] = 0; });
+
+  // 모달 HTML 생성
+  const modal = document.createElement('div');
+  modal.id = 'modal-free-ticket';
+  modal.style.cssText = `
+    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+    background: rgba(17, 24, 39, 0.6); z-index: 9999;
+    display: flex; align-items: center; justify-content: center;
+    backdrop-filter: blur(8px); opacity: 0; transition: opacity 0.3s ease;
+  `;
+
+  const zonesHtml = zones.map(z => {
+    const isSoldOut = (z.remainingCapacity || 0) === 0;
+    const priceText = typeof formatKRW === 'function' ? formatKRW(z.price) : `${(z.price || 0).toLocaleString()}원`;
+    const gradeLabel = z.zoneType === 'VIP' ? '🌟 VIP 입장권' : `🎟️ ${z.zoneName}`;
+    return `
+      <div class="free-ticket-grade-row" data-zone-no="${z.zoneNo}" style="
+        display: flex; align-items: center; justify-content: space-between;
+        padding: 1rem 1.2rem; background: var(--bg-surface1, #f8f9fa);
+        border-radius: 10px; border: 1px solid var(--border-default, #dee2e6);
+        margin-bottom: 0.75rem; ${isSoldOut ? 'opacity:0.5;' : ''}
+      ">
+        <div>
+          <p style="margin:0; font-weight:700; color:var(--text-main,#1f2937); font-size:1rem;">${gradeLabel}</p>
+          <p style="margin:4px 0 0; font-size:0.85rem; color:var(--text-muted,#6b7280);">
+            ${isSoldOut ? '매진' : `잔여 ${z.remainingCapacity}매`} | 1인당 ${priceText}
+          </p>
+        </div>
+        <div style="display:flex; align-items:center; gap:0.6rem;">
+          <button class="free-qty-btn free-qty-minus" data-zone="${z.zoneNo}" ${isSoldOut ? 'disabled' : ''}
+            style="width:32px; height:32px; border-radius:50%; border:2px solid var(--color-primary,#696cff);
+            background:transparent; color:var(--color-primary,#696cff); font-size:1.2rem; font-weight:700;
+            cursor:pointer; display:flex; align-items:center; justify-content:center; transition:all 0.2s;">−</button>
+          <span class="free-qty-value" data-zone="${z.zoneNo}"
+            style="min-width:24px; text-align:center; font-weight:700; font-size:1.1rem; color:var(--text-main,#1f2937);">0</span>
+          <button class="free-qty-btn free-qty-plus" data-zone="${z.zoneNo}" ${isSoldOut ? 'disabled' : ''}
+            style="width:32px; height:32px; border-radius:50%; border:2px solid var(--color-primary,#696cff);
+            background:var(--color-primary,#696cff); color:#fff; font-size:1.2rem; font-weight:700;
+            cursor:pointer; display:flex; align-items:center; justify-content:center; transition:all 0.2s;">+</button>
+        </div>
+      </div>
+    `;
+  }).join('');
+
+  modal.innerHTML = `
+    <div style="
+      background: var(--bg-surface0, #ffffff); border-radius: 20px; padding: 0;
+      width: 90%; max-width: 520px; max-height: 85vh; overflow: hidden;
+      box-shadow: 0 24px 48px rgba(0,0,0,0.2); display: flex; flex-direction: column;
+      transform: scale(0.95); transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    ">
+      <!-- 모달 헤더 -->
+      <div style="background: linear-gradient(135deg, #696cff 0%, #03c3ec 100%); padding: 1.5rem 1.8rem; position: relative;">
+        <h3 style="margin:0; color:#fff; font-size:1.2rem; font-weight:700;">🎟️ 입장권 선택</h3>
+        <p style="margin:4px 0 0; color:rgba(255,255,255,0.8); font-size:0.9rem;">${eventName}</p>
+        <button id="btn-close-free-modal" style="
+          position:absolute; top:1.2rem; right:1.2rem;
+          background:rgba(255,255,255,0.2); border:none; color:#fff;
+          width:32px; height:32px; border-radius:50%; cursor:pointer;
+          font-size:1.1rem; display:flex; align-items:center; justify-content:center;
+        ">✕</button>
+      </div>
+
+      <!-- 등급 목록 -->
+      <div style="flex:1; overflow-y:auto; padding: 1.5rem 1.8rem;">
+        <p style="margin:0 0 1rem; font-size:0.9rem; color:var(--text-muted,#6b7280);">
+          원하는 등급과 수량을 선택하세요. (최대 4매)
+        </p>
+        <div id="free-ticket-grades">${zonesHtml}</div>
+      </div>
+
+      <!-- 합계 및 결제 버튼 -->
+      <div style="padding: 1.2rem 1.8rem; border-top: 1px solid var(--border-default,#dee2e6); background:var(--bg-surface1,#f8f9fa);">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem;">
+          <span style="font-size:1rem; font-weight:700; color:var(--text-main,#1f2937);">총 결제 금액</span>
+          <span id="free-ticket-total" style="font-size:1.3rem; font-weight:800; color:var(--color-primary,#696cff);">₩ 0</span>
+        </div>
+        <button id="btn-free-ticket-pay" style="
+          width:100%; padding:1rem; background: linear-gradient(135deg, #696cff 0%, #03c3ec 100%);
+          color:#fff; border:none; border-radius:12px; font-size:1.1rem; font-weight:700;
+          cursor:pointer; transition:all 0.3s; opacity:0.5; pointer-events:none;
+          box-shadow: 0 4px 16px rgba(105,108,255,0.4);
+        " disabled>
+          결제하기
+        </button>
+      </div>
+    </div>
+  `;
+
+  document.body.appendChild(modal);
+
+  // 애니메이션 트리거
+  requestAnimationFrame(() => {
+    modal.style.opacity = '1';
+    modal.querySelector('div').style.transform = 'scale(1)';
+  });
+
+  // 닫기 버튼
+  modal.querySelector('#btn-close-free-modal').addEventListener('click', () => {
+    modal.style.opacity = '0';
+    setTimeout(() => modal.remove(), 300);
+  });
+  modal.addEventListener('click', (e) => {
+    if (e.target === modal) {
+      modal.style.opacity = '0';
+      setTimeout(() => modal.remove(), 300);
+    }
+  });
+
+  // 합계 업데이트 함수
+  function updateFreeTotal() {
+    let totalQty = 0;
+    let totalPrice = 0;
+    zones.forEach(z => {
+      const qty = ticketQty[z.zoneNo] || 0;
+      totalQty += qty;
+      totalPrice += qty * (z.price || 0);
+    });
+
+    const totalEl = modal.querySelector('#free-ticket-total');
+    if (totalEl) totalEl.textContent = `₩ ${totalPrice.toLocaleString()}`;
+
+    const payBtn = modal.querySelector('#btn-free-ticket-pay');
+    if (payBtn) {
+      if (totalQty > 0) {
+        payBtn.disabled = false;
+        payBtn.style.opacity = '1';
+        payBtn.style.pointerEvents = 'auto';
+        payBtn.textContent = `결제하기 (${totalQty}매 · ₩ ${totalPrice.toLocaleString()})`;
+      } else {
+        payBtn.disabled = true;
+        payBtn.style.opacity = '0.5';
+        payBtn.style.pointerEvents = 'none';
+        payBtn.textContent = '결제하기';
+      }
+    }
+  }
+
+  // 수량 버튼 이벤트
+  modal.querySelectorAll('.free-qty-minus').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const zNo = parseInt(btn.dataset.zone);
+      if (ticketQty[zNo] > 0) {
+        ticketQty[zNo]--;
+        const valEl = modal.querySelector(`.free-qty-value[data-zone="${zNo}"]`);
+        if (valEl) valEl.textContent = ticketQty[zNo];
+        updateFreeTotal();
+      }
+    });
+  });
+
+  modal.querySelectorAll('.free-qty-plus').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const zNo = parseInt(btn.dataset.zone);
+      const totalQty = Object.values(ticketQty).reduce((a, b) => a + b, 0);
+      if (totalQty >= 4) {
+        if (window.Toast) Toast.warning('최대 4매까지만 선택 가능합니다.');
+        return;
+      }
+      const z = zones.find(z => z.zoneNo === zNo);
+      if (z && ticketQty[zNo] < (z.remainingCapacity || 0)) {
+        ticketQty[zNo]++;
+        const valEl = modal.querySelector(`.free-qty-value[data-zone="${zNo}"]`);
+        if (valEl) valEl.textContent = ticketQty[zNo];
+        updateFreeTotal();
+      }
+    });
+  });
+
+  // 결제하기 버튼 클릭 → 결제 수단 선택 모달로 진입
+  modal.querySelector('#btn-free-ticket-pay').addEventListener('click', () => {
+    const token = localStorage.getItem('userToken') || localStorage.getItem('token');
+    if (!token) {
+      if (window.Toast) Toast.warning('로그인이 필요합니다.');
+      return;
+    }
+
+    // 전역 수량 객체 및 총 수량 동기화
+    _freeTicketQty = { ...ticketQty };
+    _quantity = Object.values(ticketQty).reduce((a, b) => a + b, 0);
+
+    // 모달 닫기
+    modal.style.opacity = '0';
+    setTimeout(() => modal.remove(), 300);
+
+    // 결제 수단 모달 오픈
+    enterPaymentModal();
+  });
 }
 
 /* ═══════════════════════════════════════════════════════════
@@ -1069,10 +1341,18 @@ async function initiateTossPayment() {
     return;
   }
 
-  const zone = _eventDetail?.zones.find(z => z.zoneNo === _selectedZoneNo);
+  let zone = null;
+  if (_eventDetail?.ticketMode === 'FREE') {
+    const firstSelectedZoneNo = Object.keys(_freeTicketQty).find(k => _freeTicketQty[k] > 0);
+    const targetNo = firstSelectedZoneNo ? parseInt(firstSelectedZoneNo) : (_eventDetail?.zones[0]?.zoneNo);
+    zone = _eventDetail?.zones.find(z => z.zoneNo === targetNo);
+  } else {
+    zone = _eventDetail?.zones.find(z => z.zoneNo === _selectedZoneNo);
+  }
+
   if (!zone) { Toast.warning('구역을 선택해 주세요.'); return; }
 
-  if (_selectedSeats.length === 0) {
+  if (_eventDetail?.ticketMode !== 'FREE' && _selectedSeats.length === 0) {
     Toast.warning('선택한 좌석이 없습니다.');
     return;
   }
@@ -1081,14 +1361,34 @@ async function initiateTossPayment() {
   const customerName = user?.nickname || user?.name || 'FESTIO 게스트';
 
   // 1. 서버에 주문 생성 → orderNo & orderUid 발급
-  // seatIds: DB PK 배열 (정확한 구역별 좌석 특정용)
-  const seatIds = _selectedSeats.map(s => s.id);
-  // seatLabels: 주문 설명용 레이블 (orders.seat_ids 저장)
-  const seatLabels = _selectedSeats.map(s => {
-    const rowClean = (s.seatRow || '').replace(/열$/, '');
-    return `${rowClean}열${s.seatNumber}번`;
-  });
-  const gross = _selectedSeats.reduce((sum, s) => sum + s.price, 0);
+  let seatIds = [];
+  let seatLabels = [];
+  let gross = 0;
+  let zoneName = '';
+
+  if (_eventDetail?.ticketMode === 'FREE') {
+    const zones = _eventDetail?.zones || [];
+    zones.forEach(z => {
+      const qty = _freeTicketQty[z.zoneNo] || 0;
+      if (qty > 0) {
+        for (let i = 0; i < qty; i++) {
+          seatLabels.push(z.zoneName);
+          gross += z.price;
+        }
+      }
+    });
+    const selectedZones = zones.filter(z => (_freeTicketQty[z.zoneNo] || 0) > 0);
+    zoneName = selectedZones.map(z => z.zoneName).join(', ');
+  } else {
+    seatIds = _selectedSeats.map(s => s.id);
+    seatLabels = _selectedSeats.map(s => {
+      const rowClean = (s.seatRow || '').replace(/열$/, '');
+      return `${rowClean}열${s.seatNumber}번`;
+    });
+    gross = _selectedSeats.reduce((sum, s) => sum + s.price, 0);
+    zoneName = zone?.zoneName || '';
+  }
+
   const discount = _appliedCoupon?.discountAmount || 0;
   const netAmount = gross - discount;
 
@@ -1098,7 +1398,7 @@ async function initiateTossPayment() {
     seatIds: seatIds,       // DB PK 배열 - 구역별 정확한 좌석 예약용
     eventNo: getEventNo(),
     eventName: _eventDetail?.eventName || '',
-    zoneName: zone?.zoneName || '',
+    zoneName: zoneName,
     userToken: localStorage.getItem('userToken') || sessionStorage.getItem('userToken') || ''
   };
 
@@ -1107,10 +1407,13 @@ async function initiateTossPayment() {
 
   let orderRes;
   try {
+    const rawToken = localStorage.getItem('userToken') || localStorage.getItem('token') || '';
+    const safeToken = /^[\x00-\x7F]*$/.test(rawToken) ? rawToken : encodeURIComponent(rawToken);
     const res = await fetch('/api/order/ticket', {
       method: 'POST',
       headers: {
-        'Content-Type': 'application/json'
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${safeToken}`
       },
       body: JSON.stringify(orderPayload)
     });
@@ -1158,10 +1461,12 @@ async function initiateTossPayment() {
     const { IMP } = window;
     IMP.init("imp81384776"); // 사용자의 가맹점 식별코드
 
-    const seatDisplay = _selectedSeats.map(s => {
-      const rowClean = (s.seatRow || '').replace(/열$/, '');
-      return `${rowClean}열 ${s.seatNumber}번`;
-    }).join(', ');
+    const seatDisplay = _eventDetail?.ticketMode === 'FREE'
+      ? seatLabels.join(', ')
+      : _selectedSeats.map(s => {
+          const rowClean = (s.seatRow || '').replace(/열$/, '');
+          return `${rowClean}열 ${s.seatNumber}번`;
+        }).join(', ');
 
     IMP.request_pay({
       pg: "html5_inicis.INIpayTest", // 이니시스 테스트 상점 ID (INIpayTest)
@@ -1208,10 +1513,12 @@ async function initiateTossPayment() {
   try {
     const tossPayments = TossPayments(TOSS_CLIENT_KEY);
 
-    const seatDisplay = _selectedSeats.map(s => {
-      const rowClean = (s.seatRow || '').replace(/열$/, '');
-      return `${rowClean}열 ${s.seatNumber}번`;
-    }).join(', ');
+    const seatDisplay = _eventDetail?.ticketMode === 'FREE'
+      ? seatLabels.join(', ')
+      : _selectedSeats.map(s => {
+          const rowClean = (s.seatRow || '').replace(/열$/, '');
+          return `${rowClean}열 ${s.seatNumber}번`;
+        }).join(', ');
 
     await tossPayments.requestPayment('가상계좌', {
       amount: netAmount,
@@ -1278,7 +1585,16 @@ function showBookingSuccess() {
 ═══════════════════════════════════════════════════════════ */
 function enterPaymentModal() {
   Modal.close('modal-queue');
-  const zone = _eventDetail?.zones.find(z => z.zoneNo === _selectedZoneNo);
+  
+  let zone = null;
+  if (_eventDetail?.ticketMode === 'FREE') {
+    const firstSelectedZoneNo = Object.keys(_freeTicketQty).find(k => _freeTicketQty[k] > 0);
+    const targetNo = firstSelectedZoneNo ? parseInt(firstSelectedZoneNo) : (_eventDetail?.zones[0]?.zoneNo);
+    zone = _eventDetail?.zones.find(z => z.zoneNo === targetNo);
+  } else {
+    zone = _eventDetail?.zones.find(z => z.zoneNo === _selectedZoneNo);
+  }
+  
   if (!zone) return;
 
   // 기본 결제 수단으로 카드(Portone) 선택 및 버튼 텍스트 설정
@@ -1298,16 +1614,36 @@ function enterPaymentModal() {
 }
 
 function updatePaymentSummary(zone) {
-  const gross = _selectedSeats.length > 0
-    ? _selectedSeats.reduce((sum, s) => sum + s.price, 0)
-    : zone.price * _quantity;
+  let gross = 0;
+  let zoneText = '';
+
+  if (_eventDetail?.ticketMode === 'FREE') {
+    const zones = _eventDetail?.zones || [];
+    const textParts = [];
+    zones.forEach(z => {
+      const qty = _freeTicketQty[z.zoneNo] || 0;
+      if (qty > 0) {
+        gross += z.price * qty;
+        textParts.push(`${z.zoneName} × ${qty}매`);
+      }
+    });
+    zoneText = textParts.join(', ');
+  } else {
+    gross = _selectedSeats.length > 0
+      ? _selectedSeats.reduce((sum, s) => sum + s.price, 0)
+      : zone.price * _quantity;
+    const seatLabels = _selectedSeats.map(s => `${s.seatRow}-${s.seatNumber}`).join(', ');
+    zoneText = _selectedSeats.length > 0 
+      ? `${zone.zoneName} (${seatLabels}) × ${_quantity}매` 
+      : `${zone.zoneName} × ${_quantity}매`;
+  }
+
   const discount = _appliedCoupon?.discountAmount || 0;
   const net = gross - discount;
-  const seatLabels = _selectedSeats.map(s => `${s.seatRow}-${s.seatNumber}`).join(', ');
 
   const rows = {
     '[data-payment="event-name"]': _eventDetail?.eventName || '',
-    '[data-payment="zone"]': _selectedSeats.length > 0 ? `${zone.zoneName} (${seatLabels}) × ${_quantity}매` : `${zone.zoneName} × ${_quantity}매`,
+    '[data-payment="zone"]': zoneText,
     '[data-payment="subtotal"]': formatKRW(gross),
     '[data-payment="discount"]': discount > 0 ? `-${formatKRW(discount)}` : '-',
     '[data-payment="total"]': formatKRW(net),
@@ -1329,6 +1665,10 @@ function initBookingBtn() {
       setTimeout(() => {
         window.location.href = 'login.html';
       }, 1500);
+      return;
+    }
+    if (_eventDetail?.ticketMode === 'FREE') {
+      openFreeTicketModal(null, null);
       return;
     }
     if (!_selectedZoneNo) {

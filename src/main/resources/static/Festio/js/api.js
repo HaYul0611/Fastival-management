@@ -52,8 +52,8 @@ window.getSupabase = getSupabase;
 
 function markSupabaseUnreachable(err) {
   if (err && (
-    err.message?.includes('Failed to fetch') || 
-    err.toString().includes('Failed to fetch') || 
+    err.message?.includes('Failed to fetch') ||
+    err.toString().includes('Failed to fetch') ||
     err.message?.includes('net::ERR_NAME_NOT_RESOLVED') ||
     err.toString().includes('ERR_NAME_NOT_RESOLVED') ||
     err.message?.includes('Failed to execute \'fetch\'')
@@ -372,6 +372,7 @@ function normalizeFestival(row) {
     viewCount: row.viewCount || row.view_count || 0,
     isNew: !!isNew,
     dday: dday || '-',
+    ticketMode: row.ticketMode || row.ticket_mode || 'SEAT',
   };
 }
 
@@ -760,7 +761,7 @@ const eventApi = {
             } catch (seatErr) {
               console.warn('Failed to fetch seats for zone ' + zone.id, seatErr);
             }
-            
+
             const remaining = Math.max(0, total - reserved);
             populatedZones.push(normalizeZone({
               ...zone,
@@ -1209,7 +1210,7 @@ const commentApi = {
       try {
         const localData = localStorage.getItem(`festio_mock_comments_${fid}`);
         if (localData) return JSON.parse(localData);
-      } catch {}
+      } catch { }
       return [
         {
           id: 101,
@@ -1245,7 +1246,7 @@ const commentApi = {
       try {
         const authRes = await sb.auth.getUser();
         user = authRes.data?.user;
-      } catch {}
+      } catch { }
 
       // 가져올 때 좋아요 개수, 내가 좋아요 했는지 여부, 작성자 정보(app_user) 조인
       // Supabase 릴레이션에 따라 쿼리가 달라질 수 있음. (간단하게 구현)
@@ -1285,7 +1286,7 @@ const commentApi = {
       try {
         const localData = localStorage.getItem(`festio_mock_comments_${fid}`);
         if (localData) return JSON.parse(localData);
-      } catch {}
+      } catch { }
       return [
         {
           id: 101,

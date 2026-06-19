@@ -90,6 +90,16 @@ public class Festival {
     @Builder.Default
     private Long viewCount = 0L;
 
+    /**
+     * 예매 방식 구분:
+     * 'SEAT' = 콘서트처럼 좌석 선택이 필요한 행사 (기본값)
+     * 'FREE' = 워터밤처럼 좌석 없이 입장권만 필요한 행사
+     */
+    @Column(name = "ticket_mode", length = 20)
+    @Builder.Default
+    private String ticketMode = "SEAT";
+
+
     @PrePersist
     protected void onCreate() {
         this.createdAt = LocalDateTime.now();
