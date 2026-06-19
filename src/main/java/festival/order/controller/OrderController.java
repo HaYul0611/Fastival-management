@@ -389,6 +389,8 @@ public class OrderController {
         return jdbcTemplate.queryForList("SELECT * FROM seat_map");
     }
 
+
+
     // -------------------------------------------------------------
     // [Supabase DB 기반 QR 데이터 연동 및 TOTP]
     // -------------------------------------------------------------
@@ -671,6 +673,7 @@ public class OrderController {
         res.put("orderId", orderId);
         return res;
     }
+
 
     @GetMapping("/tickets/qr")
     public List<Map<String, Object>> getQrTickets(
