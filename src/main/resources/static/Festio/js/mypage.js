@@ -18,7 +18,7 @@
 let _member = null;
 let _dbTickets = [];       // 실제 DB 결제 완료 티켓 목록
 let _qrTimer = null;       // setInterval ID (3분 갱신)
-let _qrCountdown = 180;
+let _qrCountdown = 30;
 let _qrCountTimer = null;   // 1초 카운트다운
 let _currentOrderNo = 1;
 let _isFaceDetected = false;
@@ -657,7 +657,10 @@ function showFoodQr(token) {
   openQrModalView(token, 'FOOD');
 }
 
-function openQrModalView(token, type = 'TICKET') {
+async function openQrModalView(token, type = 'TICKET') {
+  _currentActiveSecret = token;
+  const dbTkt = typeof _dbTickets !== 'undefined' ? _dbTickets.find(t => t.secret === token) : null;
+  _currentActiveOrderId = dbTkt ? dbTkt.orderId : '999';
   console.log('openQrModalView 호출됨, 토큰:', token, '타입:', type);
   const overlay = document.getElementById('qrModalOverlay');
   if (!overlay) {
@@ -1058,7 +1061,7 @@ function initQrModal() {
 
 /* 3분 QR 자동 갱신 사이클 */
 function startQRRefreshCycle() {
-  _qrCountdown = 180;
+  _qrCountdown = 30;
   updateQRTimerDisplay(180);
 
   clearInterval(_qrTimer);
@@ -1079,9 +1082,9 @@ function startQRRefreshCycle() {
       if (codeEl) codeEl.textContent = newToken;
     }
 
-    _qrCountdown = 180;
+    _qrCountdown = 30;
     if (window.Toast) window.Toast.info('보안을 위해 QR이 자동 갱신되었습니다.');
-  }, 180000);
+  }, 30000);
 
   _qrCountTimer = setInterval(() => {
     _qrCountdown = Math.max(0, _qrCountdown - 1);
@@ -2364,9 +2367,42 @@ function generateQrToken() {
   return token;
 }
 
-let _currentQrType = 'TICKET';
+async function generateTotpCode(hexSecret) {
+  if (!hexSecret || hexSecret.length % 2 !== 0) return '000000';
+  const keyBytes = new Uint8Array(hexSecret.length / 2);
+  for (let i = 0; i < hexSecret.length; i += 2) {
+    keyBytes[i / 2] = parseInt(hexSecret.substring(i, i + 2), 16);
+  }
+  try {
+    const cryptoKey = await crypto.subtle.importKey(
+      'raw', keyBytes, { name: 'HMAC', hash: 'SHA-1' }, false, ['sign']
+    );
+    let timeWindow = Math.floor(Date.now() / 30000);
+    const data = new Uint8Array(8);
+    for (let i = 7; i >= 0; i--) {
+      data[i] = timeWindow & 0xff;
+      timeWindow = Math.floor(timeWindow / 256);
+    }
+    const signature = await crypto.subtle.sign('HMAC', cryptoKey, data);
+    const hash = new Uint8Array(signature);
+    const offset = hash[hash.length - 1] & 0x0f;
+    const binary = ((hash[offset] & 0x7f) << 24) | ((hash[offset + 1] & 0xff) << 16) | ((hash[offset + 2] & 0xff) << 8) | (hash[offset + 3] & 0xff);
+    const otp = binary % 1000000;
+    return otp.toString().padStart(6, '0');
+  } catch(e) {
+    console.error(e);
+    return '000000';
+  }
+}
 
-function openQrModalView(token, type = 'TICKET') {
+let _currentQrType = 'TICKET';
+let _currentActiveSecret = '';
+let _currentActiveOrderId = '';
+
+async function openQrModalView(token, type = 'TICKET') {
+  _currentActiveSecret = token;
+  const dbTkt = typeof _dbTickets !== 'undefined' ? _dbTickets.find(t => t.secret === token) : null;
+  _currentActiveOrderId = dbTkt ? dbTkt.orderId : '999';
   _currentQrType = type;
   let modal = document.getElementById('dynamicQrModal');
   if (!modal) {
@@ -2453,9 +2489,15 @@ function openQrModalView(token, type = 'TICKET') {
   }
 
   modal.style.display = 'flex';
-  generateDynamicQR('dynamicQrCanvas', token, 140, type); // FIXED: pass 'type' to trigger 45deg tilt!
+  let initialTokenForQR = token;
+  let pureTotpCode = token;
+  if (type === 'TICKET' && _currentActiveSecret) {
+      pureTotpCode = await generateTotpCode(_currentActiveSecret);
+      initialTokenForQR = 'TOTP:' + _currentActiveOrderId + ':' + pureTotpCode;
+  }
+  generateDynamicQR('dynamicQrCanvas', initialTokenForQR, 140, type); // FIXED: pass 'type' to trigger 45deg tilt!
 
-  let displayCode = token;
+  let displayCode = initialTokenForQR;
   if (type === 'FOOD') {
     const foodOrder = typeof MOCK_FOOD_ORDERS !== 'undefined' ? MOCK_FOOD_ORDERS.find(f => f.qrToken === token) : null;
     if (foodOrder) displayCode = foodOrder.orderItemId;
@@ -2465,13 +2507,13 @@ function openQrModalView(token, type = 'TICKET') {
   } else {
     const dbTicket = typeof _dbTickets !== 'undefined' ? _dbTickets.find(t => t.secret === token) : null;
     if (dbTicket) {
-      displayCode = dbTicket.ticketNumber || ('T' + String(dbTicket.orderId).padStart(11, '0'));
+      displayCode = pureTotpCode;
     } else {
       const mockTicket = typeof MOCK_TICKETS !== 'undefined' ? MOCK_TICKETS.find(t => t.qrToken === token) : null;
       if (mockTicket) displayCode = mockTicket.reservationId;
     }
   }
-  document.getElementById('dynamicQrCode').textContent = formatBarcode(displayCode, type === 'FOOD' ? 'F' : type === 'GOODS' ? 'G' : 'T');
+  document.getElementById('dynamicQrCode').textContent = displayCode;
 
   const qrCanvas = document.getElementById('dynamicQrCanvas');
   if (qrCanvas) {
@@ -2629,9 +2671,15 @@ function generateHeroQR(token) {
   generateDynamicQR('qr-code-container', token, 100);
 }
 
-function triggerQrRefresh() {
+async function triggerQrRefresh() {
   const prefix = _currentQrType === 'FOOD' ? 'F' : (_currentQrType === 'GOODS' ? 'G' : 'T');
-  const newToken = generateQrToken(prefix);
+  let newToken = '';
+  if (_currentQrType === 'TICKET' && _currentActiveSecret) {
+      const totpCode = await generateTotpCode(_currentActiveSecret);
+      newToken = 'TOTP:' + _currentActiveOrderId + ':' + totpCode;
+  } else {
+      newToken = generateQrToken(prefix);
+  }
   _currentQrToken = newToken;
 
   generateHeroQR(newToken);
@@ -2640,10 +2688,8 @@ function triggerQrRefresh() {
   if (modal && modal.style.display !== 'none') {
     generateDynamicQR('dynamicQrCanvas', newToken, 140, _currentQrType);
     const codeEl = document.getElementById('dynamicQrCode');
-    if (codeEl) codeEl.textContent = newToken;
+    if (codeEl) codeEl.textContent = _currentQrType === 'TICKET' ? newToken.split(':').pop() : newToken;
   }
-
-  // 완전한 타이머 주기 리셋을 위해 startQRRefreshCycle 호출
   startQRRefreshCycle();
 }
 
@@ -2651,7 +2697,7 @@ let _qrStartTime = 0;
 let _qrRafId = null;
 
 function startQRRefreshCycle() {
-  _qrCountdown = 180;
+  _qrCountdown = 30;
   clearInterval(_qrTimer);
   clearInterval(_qrCountTimer);
   if (_qrRafId) cancelAnimationFrame(_qrRafId);
@@ -2661,20 +2707,20 @@ function startQRRefreshCycle() {
   _qrTimer = setInterval(() => {
     triggerQrRefresh();
     if (window.Toast) window.Toast.info('보안을 위해 QR이 자동 갱신되었습니다');
-  }, 180000);
+  }, 30000);
 
   _qrCountTimer = setInterval(() => {
-    _qrCountdown = Math.max(0, Math.ceil((180000 - (Date.now() - _qrStartTime)) / 1000));
+    _qrCountdown = Math.max(0, Math.ceil((30000 - (Date.now() - _qrStartTime)) / 1000));
     updateModalTimerText(_qrCountdown);
-    const bg = _qrCountdown < 60 ? 'linear-gradient(135deg, #ff4d4f, #ff7875)' : 'linear-gradient(135deg, #00d2ff, #8930F8)';
+    const bg = _qrCountdown < 10 ? 'linear-gradient(135deg, #ff4d4f, #ff7875)' : 'linear-gradient(135deg, #00d2ff, #8930F8)';
     const bars = [document.getElementById('dynamicQrTimerBar'), document.getElementById('heroQrTimerBar')];
     bars.forEach(bar => { if (bar) bar.style.background = bg; });
   }, 1000);
 
   function animateBar() {
     const elapsed = Date.now() - _qrStartTime;
-    const remaining = Math.max(0, 180000 - elapsed);
-    const pct = remaining / 180000;
+    const remaining = Math.max(0, 30000 - elapsed);
+    const pct = remaining / 30000;
 
     const bars = [document.getElementById('dynamicQrTimerBar'), document.getElementById('heroQrTimerBar')];
     bars.forEach(bar => {

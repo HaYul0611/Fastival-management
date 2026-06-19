@@ -6,6 +6,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>스태프 통합 관제 시스템 | FESTIO</title>
   <link rel="stylesheet" href="/assets/css/custom.css">
+  <link rel="stylesheet" href="/assets/react-seats/index-ME2dQpUF.css">
   <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
 </head>
 
@@ -47,16 +48,18 @@
         </div>
       </header>
 
-      <div id="main-content">
-        <section id="view-seats" class="content-view active">
+      <div id="main-content" style="display: flex; flex-direction: column; height: 100%;">
+        <section id="view-seats" class="content-view active" style="display: none !important;">
           <!-- Rendered by js/ui.js -->
         </section>
+        <div id="root" style="flex: 1; padding: 20px; box-sizing: border-box; overflow-y: auto;"></div>
       </div>
     </main>
 
   </div>
 
   <script type="module" src="js/seats.js"></script>
+  <script type="module" crossorigin src="/assets/react-seats/index-cjwIcOUG.js"></script>
 
 </body>
 
