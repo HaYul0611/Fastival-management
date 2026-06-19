@@ -7,6 +7,7 @@
   <title>로그인 | FESTIO SHOP</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css" />
   <link rel="stylesheet" href="css/common.css" />
   <link rel="stylesheet" href="css/login.css" />
 </head>
@@ -14,51 +15,132 @@
 <body class="login-pg">
   <div class="login-layout">
 
-    <!-- 브랜드 패널 -->
-    <aside class="login-brand" aria-hidden="true">
-      <div class="lb-inner">
-        <div class="lb-logo">
-          <div class="lb-logo-mark">
-            <svg width="28" height="28" viewBox="0 0 28 28" fill="none">
-              <path d="M5 7h18M5 14h13M5 21h15" stroke="#fff" stroke-width="2.5" stroke-linecap="round" />
-              <circle cx="23" cy="21" r="3.5" fill="#fff" />
-            </svg>
+    <!-- 브랜드 패널 (히어로 슬라이더) -->
+    <aside class="login-brand">
+      <div class="swiper login-swiper" style="width: 100%; height: 100%;">
+        <div class="swiper-wrapper">
+          <!-- Slide 1 -->
+          <div class="swiper-slide">
+            <img src="img/poster1.png" alt="K-POP Concert" style="width: 100%; height: 100%; object-fit: cover;">
+            <div
+              style="position: absolute; bottom: 80px; left: 40px; color: #fff; z-index: 10; text-shadow: 0 2px 4px rgba(0,0,0,0.5);">
+              <h2 style="font-size: 36px; font-weight: 800; margin-bottom: 12px; line-height: 1.2;">FESTIO K-POP</h2>
+              <p style="font-size: 20px; font-weight: 500;">역대급 라인업, 압도적인 무대</p>
+            </div>
           </div>
-          <div>
-            <div class="lb-name">FESTIO</div>
-            <div class="lb-sub">SHOP</div>
+          <!-- Slide 2 -->
+          <div class="swiper-slide">
+            <img src="img/poster2.png" alt="Waterbomb Festival" style="width: 100%; height: 100%; object-fit: cover;">
+            <div
+              style="position: absolute; bottom: 80px; left: 40px; color: #fff; z-index: 10; text-shadow: 0 2px 4px rgba(0,0,0,0.5);">
+              <h2 style="font-size: 36px; font-weight: 800; margin-bottom: 12px; line-height: 1.2;">SUMMER FESTIVAL</h2>
+              <p style="font-size: 20px; font-weight: 500;">올 여름을 시원하게 날려버릴 축제</p>
+            </div>
+          </div>
+          <!-- Slide 3 -->
+          <div class="swiper-slide">
+            <img src="img/poster3.png" alt="Festival Goods" style="width: 100%; height: 100%; object-fit: cover;">
+            <div
+              style="position: absolute; bottom: 80px; left: 40px; color: #fff; z-index: 10; text-shadow: 0 2px 4px rgba(0,0,0,0.5);">
+              <h2 style="font-size: 36px; font-weight: 800; margin-bottom: 12px; line-height: 1.2;">한정판 공식 굿즈</h2>
+              <p style="font-size: 20px; font-weight: 500;">스마트하게 앱으로 사전 예약</p>
+            </div>
+          </div>
+          <!-- Slide 4 -->
+          <div class="swiper-slide">
+            <img src="img/poster4.png" alt="Girl Group Concert" style="width: 100%; height: 100%; object-fit: cover;">
+            <div
+              style="position: absolute; bottom: 80px; left: 40px; color: #fff; z-index: 10; text-shadow: 0 2px 4px rgba(0,0,0,0.5);">
+              <h2 style="font-size: 36px; font-weight: 800; margin-bottom: 12px; line-height: 1.2;">GIRL CRUSH</h2>
+              <p style="font-size: 20px; font-weight: 500;">화려한 퍼포먼스의 끝판왕</p>
+            </div>
+          </div>
+          <!-- Slide 5 -->
+          <div class="swiper-slide">
+            <img src="img/poster1.png" alt="K-POP Concert"
+              style="width: 100%; height: 100%; object-fit: cover; filter: hue-rotate(45deg);">
+            <div
+              style="position: absolute; bottom: 80px; left: 40px; color: #fff; z-index: 10; text-shadow: 0 2px 4px rgba(0,0,0,0.5);">
+              <h2 style="font-size: 36px; font-weight: 800; margin-bottom: 12px; line-height: 1.2;">WORLD TOUR</h2>
+              <p style="font-size: 20px; font-weight: 500;">전 세계가 열광하는 그 무대</p>
+            </div>
+          </div>
+          <!-- Slide 6 -->
+          <div class="swiper-slide">
+            <img src="img/poster2.png" alt="Waterbomb Festival"
+              style="width: 100%; height: 100%; object-fit: cover; filter: saturate(1.5);">
+            <div
+              style="position: absolute; bottom: 80px; left: 40px; color: #fff; z-index: 10; text-shadow: 0 2px 4px rgba(0,0,0,0.5);">
+              <h2 style="font-size: 36px; font-weight: 800; margin-bottom: 12px; line-height: 1.2;">WATER BOMB</h2>
+              <p style="font-size: 20px; font-weight: 500;">도심 속 가장 짜릿한 물총 싸움</p>
+            </div>
+          </div>
+          <!-- Slide 7 -->
+          <div class="swiper-slide">
+            <img src="img/poster3.png" alt="Festival Goods"
+              style="width: 100%; height: 100%; object-fit: cover; filter: brightness(0.8);">
+            <div
+              style="position: absolute; bottom: 80px; left: 40px; color: #fff; z-index: 10; text-shadow: 0 2px 4px rgba(0,0,0,0.5);">
+              <h2 style="font-size: 36px; font-weight: 800; margin-bottom: 12px; line-height: 1.2;">MD STORE</h2>
+              <p style="font-size: 20px; font-weight: 500;">콘서트의 여운을 간직하세요</p>
+            </div>
+          </div>
+          <!-- Slide 8 -->
+          <div class="swiper-slide">
+            <img src="img/poster4.png" alt="Girl Group Concert"
+              style="width: 100%; height: 100%; object-fit: cover; filter: contrast(1.2);">
+            <div
+              style="position: absolute; bottom: 80px; left: 40px; color: #fff; z-index: 10; text-shadow: 0 2px 4px rgba(0,0,0,0.5);">
+              <h2 style="font-size: 36px; font-weight: 800; margin-bottom: 12px; line-height: 1.2;">IDOL STAGE</h2>
+              <p style="font-size: 20px; font-weight: 500;">가장 가까이서 만나는 최애</p>
+            </div>
+          </div>
+          <!-- Slide 9 -->
+          <div class="swiper-slide">
+            <img src="img/poster1.png" alt="K-POP Concert"
+              style="width: 100%; height: 100%; object-fit: cover; filter: hue-rotate(90deg);">
+            <div
+              style="position: absolute; bottom: 80px; left: 40px; color: #fff; z-index: 10; text-shadow: 0 2px 4px rgba(0,0,0,0.5);">
+              <h2 style="font-size: 36px; font-weight: 800; margin-bottom: 12px; line-height: 1.2;">ENCORE CONCERT</h2>
+              <p style="font-size: 20px; font-weight: 500;">팬들의 성원에 보답하는 무대</p>
+            </div>
+          </div>
+          <!-- Slide 10 -->
+          <div class="swiper-slide">
+            <img src="img/poster2.png" alt="Waterbomb Festival"
+              style="width: 100%; height: 100%; object-fit: cover; filter: hue-rotate(-30deg);">
+            <div
+              style="position: absolute; bottom: 80px; left: 40px; color: #fff; z-index: 10; text-shadow: 0 2px 4px rgba(0,0,0,0.5);">
+              <h2 style="font-size: 36px; font-weight: 800; margin-bottom: 12px; line-height: 1.2;">DJ PARTY</h2>
+              <p style="font-size: 20px; font-weight: 500;">밤새도록 끊이지 않는 비트</p>
+            </div>
+          </div>
+          <!-- Slide 11 -->
+          <div class="swiper-slide">
+            <img src="img/poster3.png" alt="Festival Goods"
+              style="width: 100%; height: 100%; object-fit: cover; filter: sepia(0.5);">
+            <div
+              style="position: absolute; bottom: 80px; left: 40px; color: #fff; z-index: 10; text-shadow: 0 2px 4px rgba(0,0,0,0.5);">
+              <h2 style="font-size: 36px; font-weight: 800; margin-bottom: 12px; line-height: 1.2;">POP-UP STORE</h2>
+              <p style="font-size: 20px; font-weight: 500;">이번 축제만의 스페셜 에디션</p>
+            </div>
+          </div>
+          <!-- Slide 12 -->
+          <div class="swiper-slide">
+            <img src="img/poster4.png" alt="Girl Group Concert"
+              style="width: 100%; height: 100%; object-fit: cover; filter: hue-rotate(180deg);">
+            <div
+              style="position: absolute; bottom: 80px; left: 40px; color: #fff; z-index: 10; text-shadow: 0 2px 4px rgba(0,0,0,0.5);">
+              <h2 style="font-size: 36px; font-weight: 800; margin-bottom: 12px; line-height: 1.2;">FINALE STAGE</h2>
+              <p style="font-size: 20px; font-weight: 500;">마지막을 장식할 화려한 불꽃놀이</p>
+            </div>
           </div>
         </div>
-        <h1 class="lb-h1">축제의 모든 것,<br /><em>한 곳에서</em></h1>
-        <p class="lb-p">한정판 굿즈부터 현장 푸드트럭까지<br />앱 하나로 주문하고 QR로 수령하세요</p>
-        <div class="lb-feats">
-          <div class="lb-feat">
-            <div class="lb-feat-ico">
-              <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
-                <path d="M9 2l2 4.5H16l-3.8 2.8 1.5 4.5L9 11.1 5.3 13.8l1.5-4.5L3 6.5h4.8L9 2z" stroke="#FF2D55"
-                  stroke-width="1.4" stroke-linejoin="round" />
-              </svg>
-            </div>
-            한정판 공식 굿즈 선판매
-          </div>
-          <div class="lb-feat">
-            <div class="lb-feat-ico">
-              <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
-                <circle cx="9" cy="9" r="7" stroke="#FF2D55" stroke-width="1.4" />
-                <path d="M9 5.5V9l2.5 2.5" stroke="#FF2D55" stroke-width="1.4" stroke-linecap="round" />
-              </svg>
-            </div>
-            실시간 대기 현황 확인
-          </div>
-          <div class="lb-feat">
-            <div class="lb-feat-ico">
-              <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
-                <rect x="3" y="3" width="12" height="12" rx="2" stroke="#FF2D55" stroke-width="1.4" />
-                <rect x="6" y="6" width="6" height="6" rx="1" fill="#FF2D55" />
-              </svg>
-            </div>
-            QR로 즉시 수령
-          </div>
+        <div class="swiper-pagination"></div>
+        <div class="swiper-button-prev" style="color: #fff; z-index: 20; pointer-events: auto;"></div>
+        <div class="swiper-button-next" style="color: #fff; z-index: 20; pointer-events: auto;"></div>
+        <div
+          style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: linear-gradient(to top, rgba(0,0,0,0.8) 0%, transparent 60%); z-index: 5; pointer-events: none;">
         </div>
       </div>
     </aside>
@@ -67,14 +149,15 @@
     <main class="login-form-panel">
       <div class="login-form-inner">
 
-        <div class="mob-logo">
-          <div class="mob-logo-mark">
-            <svg width="22" height="22" viewBox="0 0 22 22" fill="none">
-              <path d="M4 5h14M4 11h10M4 17h12" stroke="#fff" stroke-width="2.2" stroke-linecap="round" />
-              <circle cx="18" cy="17" r="3" fill="#FF2D55" />
+        <div class="mob-logo" style="display: flex; align-items: center; justify-content: center; position: relative;">
+          <button class="btn-back" onclick="history.back()"
+            style="position: absolute; left: 0; background: none; border: none; cursor: pointer; padding: 8px; margin-left: -8px; color: #111827;">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+              stroke-linecap="round" stroke-linejoin="round">
+              <path d="M15 18l-6-6 6-6" />
             </svg>
-          </div>
-          <span class="mob-logo-name">FESTIO SHOP</span>
+          </button>
+          <span class="mob-logo-name festio-gradient">FESTIO SHOP</span>
         </div>
 
         <div class="auth-tabs" role="tablist">
@@ -84,37 +167,93 @@
 
         <!-- 로그인 -->
         <section class="auth-pane on" id="paneL" role="tabpanel">
-          <div class="fgrp"><label class="flabel" for="lEmail">이메일</label>
-            <input class="finput" type="email" id="lEmail" placeholder="이메일" autocomplete="email" />
+          <div class="floating-group">
+            <input class="finput toss-input" type="email" id="lEmail" placeholder=" " autocomplete="email" />
+            <label class="toss-label" for="lEmail">이메일</label>
           </div>
-          <div class="fgrp"><label class="flabel" for="lPw">비밀번호</label>
-            <input class="finput" type="password" id="lPw" placeholder="비밀번호" autocomplete="current-password" />
+          <div class="floating-group">
+            <div class="pw-wrap">
+              <input class="finput toss-input" type="password" id="lPw" placeholder=" "
+                autocomplete="current-password" />
+              <label class="toss-label" for="lPw">비밀번호</label>
+              <button class="btn-pw-toggle" type="button" aria-label="비밀번호 표시 토글">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                  <circle cx="12" cy="12" r="3"></circle>
+                </svg>
+              </button>
+            </div>
           </div>
-          <div class="form-opts">
+          <div class="form-opts"
+            style="display: flex; gap: 16px; align-items: center; justify-content: flex-start; width: 100%; margin-top: 16px; position: relative;">
             <label class="chk-wrap"><input type="checkbox" id="remember" /><span class="chk-box"></span><span>로그인
                 유지</span></label>
-            <a href="#" class="link-sm">비밀번호 찾기</a>
+            <label class="chk-wrap"><input type="checkbox" id="saveEmail" /><span class="chk-box"></span><span>이메일
+                저장</span></label>
+            <button type="button" class="link-sm" id="btnFindIdPw"
+              style="margin-left: auto; border:none; background:none; cursor:pointer; font-size:13px; font-weight:600; color:#4B5563;">ID/PW
+              찾기</button>
+            <div id="findModal"
+              style="display: none; position: fixed; left: 50%; top: 50%; transform: translate(-50%, -50%); background: #fff; border: 1px solid #e5e7eb; border-radius: 12px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); padding: 32px 24px; z-index: 100; width: 360px; flex-direction: column;">
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
+                <h3 style="font-size: 20px; font-weight: 800; margin: 0; color: #111827;">ID/PW 찾기</h3>
+                <button type="button" id="btnCloseFindModal"
+                  style="background: none; border: none; cursor: pointer; color: #9ca3af;"><svg width="24" height="24"
+                    viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M18 6L6 18M6 6l12 12" />
+                  </svg></button>
+              </div>
+              <div class="login-tabs" style="display: flex; border-bottom: 1px solid #e5e7eb; margin-bottom: 24px;">
+                <button type="button" class="login-tab on" id="tabFindId"
+                  style="flex: 1; padding: 12px 0; background: none; border: none; border-bottom: 2px solid #111827; font-size: 15px; font-weight: 700; color: #111827; cursor: pointer;">Email
+                  찾기</button>
+                <button type="button" class="login-tab" id="tabFindPw"
+                  style="flex: 1; padding: 12px 0; background: none; border: none; border-bottom: 2px solid transparent; font-size: 15px; font-weight: 500; color: #9ca3af; cursor: pointer;">비밀번호
+                  찾기</button>
+              </div>
+              <div id="paneFindId" style="display: flex; flex-direction: column; gap: 12px;">
+                <input class="finput toss-input" type="text" placeholder="가입한 이름" id="findIdName"
+                  style="height: 48px; padding: 0 16px; width: 100%; box-sizing: border-box;" />
+                <input class="finput toss-input" type="tel" placeholder="휴대폰 번호 (하이픈 제외)" id="findIdPhone"
+                  style="height: 48px; padding: 0 16px; width: 100%; box-sizing: border-box;" />
+                <button type="button" class="btn-blk" id="btnFindId" style="margin-top: 12px; height: 52px;">이메일
+                  찾기</button>
+              </div>
+              <div id="paneFindPw" style="display: none; flex-direction: column; gap: 12px;">
+                <input class="finput toss-input" type="email" placeholder="가입한 이메일" id="findPwEmail"
+                  style="height: 48px; padding: 0 16px; width: 100%; box-sizing: border-box;" />
+                <button type="button" class="btn-blk" id="btnSendTempPwAuth"
+                  style="margin-top: 12px; height: 52px;">인증번호 발송</button>
+                <div id="tempPwAuthBlock" style="display: none; flex-direction: column; gap: 12px; margin-top: 4px;">
+                  <input class="finput toss-input" type="text" placeholder="인증번호 입력" id="findPwAuthCode"
+                    style="height: 48px; padding: 0 16px; width: 100%; box-sizing: border-box;" />
+                  <p style="font-size: 12px; color: #6b7280; margin: 0;">※ 인증번호 확인 시 임시 비밀번호가 발급됩니다.</p>
+                  <button type="button" class="btn-blk" id="btnVerifyTempPw"
+                    style="height: 52px; background: #10B981; border: none;">인증 확인 및 임시 비밀번호 발급</button>
+                </div>
+              </div>
+            </div>
           </div>
           <div class="ferr" id="lErr" role="alert"></div>
           <button class="btn-blk" id="btnLSubmit">로그인</button>
           <div class="divider-txt"><span>또는 간편 로그인</span></div>
           <div class="social-btns">
-            <button class="btn-social btn-kakao" id="btnKakao">
+            <button class="btn-social btn-naver" id="btnNaverL">
+              <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                <rect width="20" height="20" rx="4" fill="#03C75A" />
+                <path d="M6 5h3l2.5 4.5V5H15v10h-3L9.5 10.5V15H6V5z" fill="white" />
+              </svg>
+              네이버로 로그인
+            </button>
+            <button class="btn-social btn-kakao" id="btnKakaoL">
               <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
                 <path
                   d="M10 3C6.13 3 3 5.68 3 8.97c0 2.1 1.3 3.95 3.28 5.09L5.5 17l3.36-2.22c.37.06.75.09 1.14.09 3.87 0 7-2.68 7-5.97S13.87 3 10 3z"
                   fill="#3A1D1D" />
               </svg>
-              카카오로 계속하기
+              카카오로 로그인
             </button>
-            <button class="btn-social btn-naver" id="btnNaver">
-              <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
-                <rect width="20" height="20" rx="4" fill="#03C75A" />
-                <path d="M6 5h3l2.5 4.5V5H15v10h-3L9.5 10.5V15H6V5z" fill="white" />
-              </svg>
-              네이버로 계속하기
-            </button>
-            <button class="btn-social btn-google" id="btnGoogle"
+            <button class="btn-social btn-google" id="btnGoogleL"
               style="background:#fff; color:#333; border:1px solid #ddd;">
               <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
                 <path d="M19.6 10.2c0-.7-.1-1.4-.2-2H10v3.8h5.4c-.2 1.2-.9 2.3-1.9 3l3 2.3c1.8-1.7 2.8-4.2 2.8-7.1z"
@@ -128,49 +267,153 @@
                   d="M10 3.8c1.5 0 2.8.5 3.9 1.5l2.9-2.9C15 1 12.7 0 10 0 6 0 2.5 2.4.8 5.7l3.2 2.4c.8-2.6 3.2-4.3 6-4.3z"
                   fill="#EA4335" />
               </svg>
-              구글로 계속하기
+              구글로 로그인
             </button>
-            <button class="btn-social btn-toss" id="btnToss" style="background:#0064FF; color:#fff;">
-              <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
-                <path d="M6 10l3 3 5-6" stroke="#fff" stroke-width="1.8" stroke-linecap="round"
-                  stroke-linejoin="round" />
-              </svg>
-              토스로 계속하기
+            <button class="btn-social btn-toss" id="btnTossL"
+              style="background:#fff; color:#333; border:1px solid #ddd;">
+              <img src="img/toss_icon.png" alt="Toss" style="width: 20px; height: 20px; object-fit: contain;" />
+              토스로 로그인
             </button>
           </div>
         </section>
 
         <!-- 회원가입 -->
         <section class="auth-pane" id="paneR" role="tabpanel" hidden>
-          <div class="fgrp"><label class="flabel" for="rName">이름</label>
-            <input class="finput" type="text" id="rName" placeholder="이름" autocomplete="name" />
+          <div class="floating-group">
+            <input class="finput toss-input" type="text" id="rName" placeholder=" " autocomplete="name" />
+            <label class="toss-label" for="rName">이름</label>
           </div>
-          <div class="fgrp"><label class="flabel" for="rEmail">이메일</label>
-            <input class="finput" type="email" id="rEmail" placeholder="이메일" autocomplete="email" />
+          <div class="floating-group" style="display: flex; gap: 8px;">
+            <div style="flex: 1; position: relative;">
+              <input class="finput toss-input" type="email" id="rEmail" placeholder=" " autocomplete="email" />
+              <label class="toss-label" for="rEmail">이메일</label>
+            </div>
+            <button class="btn-blk" id="btnEmailCode"
+              style="width: auto; padding: 0 16px; border-radius: 8px; font-size: 14px;">인증번호</button>
           </div>
-          <div class="fgrp"><label class="flabel" for="rPhone">휴대폰</label>
-            <input class="finput" type="tel" id="rPhone" placeholder="010-0000-0000" autocomplete="tel" />
+          <div class="floating-group" id="emailVerifyBlock" style="display: none; gap: 8px;">
+            <div style="flex: 1; position: relative;">
+              <input class="finput toss-input" type="text" id="rEmailCode" placeholder=" " />
+              <label class="toss-label" for="rEmailCode">인증번호 입력</label>
+            </div>
+            <button class="btn-blk" id="btnEmailVerify"
+              style="width: auto; padding: 0 16px; border-radius: 8px; font-size: 14px;">확인</button>
           </div>
-          <div class="fgrp"><label class="flabel" for="rPw">비밀번호</label>
-            <input class="finput" type="password" id="rPw" placeholder="8자 이상" autocomplete="new-password" />
+          <div class="floating-group">
+            <input class="finput toss-input" type="tel" id="rPhone" placeholder=" " autocomplete="tel" />
+            <label class="toss-label" for="rPhone">휴대폰</label>
           </div>
-          <div class="fgrp"><label class="flabel" for="rPwC">비밀번호 확인</label>
-            <input class="finput" type="password" id="rPwC" placeholder="비밀번호 재입력" autocomplete="new-password" />
+          <div class="floating-group">
+            <div class="pw-wrap">
+              <input class="finput toss-input" type="password" id="rPw" placeholder=" " autocomplete="new-password" />
+              <label class="toss-label" for="rPw">비밀번호 (8자 이상)</label>
+              <button class="btn-pw-toggle" type="button" aria-label="비밀번호 표시 토글">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                  <circle cx="12" cy="12" r="3"></circle>
+                </svg>
+              </button>
+            </div>
           </div>
-          <div class="terms-box">
+          <div class="pw-strength-container" style="display: none; margin-top: 8px;">
+            <div style="display: flex; gap: 4px; height: 4px;">
+              <div class="pw-strength-fill" style="flex: 1; border-radius: 2px; transition: background 0.3s;"></div>
+              <div class="pw-strength-fill" style="flex: 1; border-radius: 2px; transition: background 0.3s;"></div>
+              <div class="pw-strength-fill" style="flex: 1; border-radius: 2px; transition: background 0.3s;"></div>
+            </div>
+          </div>
+          <ul class="pw-guide"
+            style="font-size: 12px; color: #9ca3af; margin: 8px 0 0 0; padding-left: 0; list-style: none; display: flex; flex-direction: column; gap: 4px;">
+            <li id="pwGuide1"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                stroke-width="3" style="vertical-align: -2px; margin-right: 4px;">
+                <path d="M20 6L9 17l-5-5"></path>
+              </svg>8자 이상</li>
+            <li id="pwGuide2"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                stroke-width="3" style="vertical-align: -2px; margin-right: 4px;">
+                <path d="M20 6L9 17l-5-5"></path>
+              </svg>영문(대문자 1자 이상 포함) + 숫자 + 특수문자 조합</li>
+            <li id="pwGuide3"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                stroke-width="3" style="vertical-align: -2px; margin-right: 4px;">
+                <path d="M20 6L9 17l-5-5"></path>
+              </svg>연속되는 숫자 사용 불가</li>
+          </ul>
+          <div class="floating-group">
+            <div class="pw-wrap">
+              <input class="finput toss-input" type="password" id="rPwC" placeholder=" " autocomplete="new-password" />
+              <label class="toss-label" for="rPwC">비밀번호 재입력</label>
+              <button class="btn-pw-toggle" type="button" aria-label="비밀번호 표시 토글">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                  <circle cx="12" cy="12" r="3"></circle>
+                </svg>
+              </button>
+            </div>
+          </div>
+          <div class="terms-box" style="margin-top: 24px;">
             <label class="chk-wrap"><input type="checkbox" id="agreeAll" /><span class="chk-box"></span><span
                 class="terms-all">전체 동의</span></label>
             <div class="terms-items">
-              <label class="chk-wrap"><input type="checkbox" class="tc" id="agSvc" /><span
-                  class="chk-box"></span><span>[필수] 서비스 이용약관</span></label>
-              <label class="chk-wrap"><input type="checkbox" class="tc" id="agPrv" /><span
-                  class="chk-box"></span><span>[필수] 개인정보 처리방침</span></label>
-              <label class="chk-wrap"><input type="checkbox" class="tc" id="agMkt" /><span
-                  class="chk-box"></span><span>[선택] 마케팅 정보 수신</span></label>
+              <div class="term-row">
+                <label class="chk-wrap"><input type="checkbox" class="tc" id="agSvc" /><span
+                    class="chk-box"></span><span><span class="req-mark"
+                      style="color:#FF2D55; font-weight:bold;">[필수]</span> 서비스 이용약관</span></label>
+                <a href="/Festio/terms.html" target="_blank" class="term-link"
+                  style="background:none; border:none; cursor:pointer; text-decoration:none; color:#9ca3af; font-size:12px;">[보기]</a>
+              </div>
+              <div class="term-row">
+                <label class="chk-wrap"><input type="checkbox" class="tc" id="agPrv" /><span
+                    class="chk-box"></span><span><span class="req-mark"
+                      style="color:#FF2D55; font-weight:bold;">[필수]</span> 개인정보 처리방침</span></label>
+                <a href="/Festio/privacy.html" target="_blank" class="term-link"
+                  style="background:none; border:none; cursor:pointer; text-decoration:none; color:#9ca3af; font-size:12px;">[보기]</a>
+              </div>
+              <div class="term-row">
+                <label class="chk-wrap"><input type="checkbox" class="tc" /><span class="chk-box"></span><span>[선택]
+                    마케팅 정보 수신</span></label>
+              </div>
             </div>
-          </div>
-          <div class="ferr" id="rErr" role="alert"></div>
-          <button class="btn-blk" id="btnRSubmit">회원가입</button>
+            <div class="ferr" id="rErr" role="alert"></div>
+            <button class="btn-blk" id="btnRSubmit">회원가입</button>
+
+            <div class="divider-txt" style="margin-top: 20px;"><span>또는 간편 가입</span></div>
+            <div class="social-btns">
+              <button class="btn-social btn-naver" id="btnNaverR">
+                <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                  <rect width="20" height="20" rx="4" fill="#03C75A" />
+                  <path d="M6 5h3l2.5 4.5V5H15v10h-3L9.5 10.5V15H6V5z" fill="white" />
+                </svg>
+                네이버로 가입
+              </button>
+              <button class="btn-social btn-kakao" id="btnKakaoR">
+                <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                  <path
+                    d="M10 3C6.13 3 3 5.68 3 8.97c0 2.1 1.3 3.95 3.28 5.09L5.5 17l3.36-2.22c.37.06.75.09 1.14.09 3.87 0 7-2.68 7-5.97S13.87 3 10 3z"
+                    fill="#3A1D1D" />
+                </svg>
+                카카오로 가입
+              </button>
+              <button class="btn-social btn-google" id="btnGoogleR"
+                style="background:#fff; color:#333; border:1px solid #ddd;">
+                <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                  <path d="M19.6 10.2c0-.7-.1-1.4-.2-2H10v3.8h5.4c-.2 1.2-.9 2.3-1.9 3l3 2.3c1.8-1.7 2.8-4.2 2.8-7.1z"
+                    fill="#4285F4" />
+                  <path
+                    d="M10 20c2.7 0 5-.9 6.7-2.4l-3-2.3c-.9.6-2 .9-3.7.9-2.8 0-5.2-1.9-6-4.5H.8v2.4C2.5 17.6 6 20 10 20z"
+                    fill="#34A853" />
+                  <path d="M4 11.7c-.2-.6-.3-1.2-.3-1.8s.1-1.2.3-1.8V5.7H.8C.3 6.9 0 8.4 0 9.9s.3 3 .8 4.2l3.2-2.4z"
+                    fill="#FBBC05" />
+                  <path
+                    d="M10 3.8c1.5 0 2.8.5 3.9 1.5l2.9-2.9C15 1 12.7 0 10 0 6 0 2.5 2.4.8 5.7l3.2 2.4c.8-2.6 3.2-4.3 6-4.3z"
+                    fill="#EA4335" />
+                </svg>
+                구글로 가입
+              </button>
+              <button class="btn-social btn-toss" id="btnTossR"
+                style="background:#fff; color:#333; border:1px solid #ddd;">
+                <img src="img/toss_icon.png" alt="Toss" style="width: 20px; height: 20px; object-fit: contain;" />
+                토스로 가입
+              </button>
+            </div>
         </section>
 
       </div>
@@ -179,8 +422,10 @@
   </div>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="js/supabase_client.js"></script>
+  <!-- Scripts -->
   <script src="js/common.js"></script>
-  <script src="js/login.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js"></script>
+  <script src="js/login.js?v=3"></script>
 </body>
 
 </html>

@@ -1,17 +1,47 @@
 .premium-gradient {
-      background: linear-gradient(135deg, #696cff 0%, #a2a4ff 100%);
-      color: white;
-    }
+  background: linear-gradient(135deg, #696cff 0%, #a2a4ff 100%);
+  color: white;
+  position: relative;
+  overflow: hidden;
+}
 
-    .stat-card {
-      transition: transform 0.2s;
-    }
+.premium-gradient::before {
+  content: "";
+  position: absolute;
+  width: 300px;
+  height: 300px;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 50%;
+  top: -100px;
+  right: -50px;
+  pointer-events: none;
+}
 
-    .stat-card:hover {
-      transform: translateY(-5px);
-    }
-    
-    /* 탭 변경 애니메이션 및 스타일 */
-    .fade-tab-content {
-      transition: opacity 0.15s linear;
-    }
+.premium-gradient::after {
+  content: "";
+  position: absolute;
+  width: 250px;
+  height: 250px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.08);
+  bottom: -120px;
+  right: 180px;
+  pointer-events: none;
+}
+
+.stat-card {
+  transition: transform 0.2s;
+}
+
+.stat-card:hover {
+  transform: translateY(-5px);
+}
+
+/* 탭 변경 애니메이션 및 스타일 */
+.fade-tab-content {
+  transition: opacity 0.15s linear;
+}
+
+.navbar-nav .dropdown-menu {
+  margin-top: -24px !important;
+}

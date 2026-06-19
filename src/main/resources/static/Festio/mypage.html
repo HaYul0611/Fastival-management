@@ -576,17 +576,71 @@
 
                   <div class="form-group full-width" style="border-top:1px solid #f0f0f5; padding-top:24px;">
                     <label class="form-label">현재 비밀번호</label>
-                    <input type="password" class="form-input profile-input" id="profileCurrentPw"
-                      placeholder="현재 비밀번호 입력">
+                    <div style="position: relative;">
+                      <input type="password" class="form-input profile-input" id="profileCurrentPw"
+                        placeholder="현재 비밀번호 입력" style="padding-right: 40px;">
+                      <button class="btn-pw-toggle" type="button" aria-label="비밀번호 표시 토글"
+                        style="position: absolute; right: 12px; top: 50%; transform: translateY(-50%); background: none; border: none; padding: 0; cursor: pointer; color: #9ca3af;">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                          stroke-width="2">
+                          <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                          <circle cx="12" cy="12" r="3"></circle>
+                        </svg>
+                      </button>
+                    </div>
                   </div>
                   <div class="form-group">
                     <label class="form-label">새 비밀번호</label>
-                    <input type="password" class="form-input profile-input" id="profileNewPw" placeholder="새 비밀번호 입력">
+                    <div style="position: relative;">
+                      <input type="password" class="form-input profile-input" id="profileNewPw" placeholder="새 비밀번호 입력"
+                        style="padding-right: 40px;">
+                      <button class="btn-pw-toggle" type="button" aria-label="비밀번호 표시 토글"
+                        style="position: absolute; right: 12px; top: 50%; transform: translateY(-50%); background: none; border: none; padding: 0; cursor: pointer; color: #9ca3af;">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                          stroke-width="2">
+                          <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                          <circle cx="12" cy="12" r="3"></circle>
+                        </svg>
+                      </button>
+                    </div>
+                    <!-- 비밀번호 강도 안내 UI 삽입 -->
+                    <div class="pw-strength-container" id="profilePwStrengthContainer"
+                      style="display: none; margin-top: 8px;">
+                      <div style="display: flex; gap: 4px; height: 4px;">
+                        <div class="pw-strength-fill"
+                          style="flex: 1; border-radius: 2px; transition: background 0.3s; background: #e5e7eb;"></div>
+                        <div class="pw-strength-fill"
+                          style="flex: 1; border-radius: 2px; transition: background 0.3s; background: #e5e7eb;"></div>
+                        <div class="pw-strength-fill"
+                          style="flex: 1; border-radius: 2px; transition: background 0.3s; background: #e5e7eb;"></div>
+                      </div>
+                    </div>
+                    <ul class="pw-guide" id="profilePwGuide"
+                      style="font-size: 12px; color: #9ca3af; margin: 8px 0 0 0; padding-left: 0; list-style: none; display: flex; flex-direction: column; gap: 4px;">
+                      <li id="profilePwGuide1"><svg width="12" height="12" viewBox="0 0 24 24" fill="none"
+                          stroke="currentColor" stroke-width="3" style="vertical-align: -2px; margin-right: 4px;">
+                          <path d="M20 6L9 17l-5-5"></path>
+                        </svg>8자 이상</li>
+                      <li id="profilePwGuide2"><svg width="12" height="12" viewBox="0 0 24 24" fill="none"
+                          stroke="currentColor" stroke-width="3" style="vertical-align: -2px; margin-right: 4px;">
+                          <path d="M20 6L9 17l-5-5"></path>
+                        </svg>영문/숫자/특수문자 중 2가지 이상 조합</li>
+                    </ul>
                   </div>
                   <div class="form-group">
                     <label class="form-label">새 비밀번호 확인</label>
-                    <input type="password" class="form-input profile-input" id="profileConfirmPw"
-                      placeholder="새 비밀번호 다시 입력">
+                    <div style="position: relative;">
+                      <input type="password" class="form-input profile-input" id="profileConfirmPw"
+                        placeholder="새 비밀번호 다시 입력" style="padding-right: 40px;">
+                      <button class="btn-pw-toggle" type="button" aria-label="비밀번호 표시 토글"
+                        style="position: absolute; right: 12px; top: 50%; transform: translateY(-50%); background: none; border: none; padding: 0; cursor: pointer; color: #9ca3af;">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                          stroke-width="2">
+                          <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                          <circle cx="12" cy="12" r="3"></circle>
+                        </svg>
+                      </button>
+                    </div>
                   </div>
                 </div>
 

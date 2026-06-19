@@ -209,15 +209,15 @@ function renderWhatsHot() {
     return score;
   };
 
-  let popularEvents = [..._events].sort((a, b) => getScore(b) - getScore(a)).slice(0, 9);
+  let popularEvents = [..._events].sort((a, b) => getScore(b) - getScore(a)).slice(0, 7);
 
-  if (popularEvents.length < 9) {
+  if (popularEvents.length < 7) {
     const fallback = _events.filter(e => !popularEvents.includes(e) && calcDday(e.eventDate || e.startDate, e.eventEndDate || e.endDate) !== '종료');
-    popularEvents = popularEvents.concat(fallback.slice(0, 9 - popularEvents.length));
+    popularEvents = popularEvents.concat(fallback.slice(0, 7 - popularEvents.length));
   }
-  if (popularEvents.length < 9 && _events.length > 0) {
-    while (popularEvents.length < 9) {
-      popularEvents = popularEvents.concat(_events.slice(0, 9 - popularEvents.length));
+  if (popularEvents.length < 7 && _events.length > 0) {
+    while (popularEvents.length < 7) {
+      popularEvents = popularEvents.concat(_events.slice(0, 7 - popularEvents.length));
     }
   }
 

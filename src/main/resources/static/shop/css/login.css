@@ -7,19 +7,21 @@
 }
 
 .login-layout {
-  display: flex;
-  min-height: 100vh
+  display: block;
+  min-height: 100vh;
 }
 
-/* 브랜드 패널 (밝은 테마 및 슬라이더) */
+/* 좌측 브랜드 패널 */
 .login-brand {
   flex: 0 0 460px;
-  background: var(--g50);
-  /* 밝은 테마 */
-  position: sticky;
+  background: linear-gradient(135deg, #0A0A18 0%, #1a1a2e 100%);
+  position: fixed;
   top: 0;
+  left: 0;
+  width: 460px;
   height: 100vh;
   overflow: hidden;
+  z-index: 10;
 }
 
 .login-swiper {
@@ -76,14 +78,14 @@
   margin-top: 2px;
 }
 
-/* 폼 패널 */
+/* 로그인 폼 우측 패널 */
 .login-form-panel {
   flex: 1;
   display: flex;
   align-items: center;
   justify-content: center;
   padding: 56px 24px;
-  overflow-y: auto
+  margin-left: 460px;
 }
 
 .login-form-inner {
@@ -262,28 +264,33 @@
 
 .floating-group {
   position: relative;
-  padding-top: 10px;
   margin-top: 8px;
 }
 
 .toss-label {
   position: absolute;
-  top: 26px;
-  left: 16px;
+  top: 50%;
+  transform: translateY(-50%);
+  left: 14px;
   color: #9ca3af;
   font-size: 15px;
   font-weight: 600;
   transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
   pointer-events: none;
-  background: #fff;
-  padding: 0 4px;
-  margin-left: -4px;
+  background: transparent;
+  padding: 0;
+  margin: 0;
+}
+
+.toss-input {
+  height: 56px;
+  padding: 22px 14px 6px 14px;
 }
 
 .toss-input:focus~.toss-label,
 .toss-input:not(:placeholder-shown)~.toss-label {
-  top: 2px;
-  font-size: 12px;
+  top: 16px;
+  font-size: 11px;
   color: #FF2D55;
   font-weight: 700;
 }
@@ -319,7 +326,8 @@
   }
 
   .login-form-panel {
-    padding: 36px 20px
+    padding: 36px 20px;
+    margin-left: 0;
   }
 
   .mob-logo {

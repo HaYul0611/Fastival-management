@@ -226,3 +226,33 @@ let wsClient = null;
         loadInquiries();
       }
     }
+  // Custom Category Dropdown Logic
+  const inqDropdown = document.getElementById('inqCategoryDropdown');
+  const inqSelected = document.getElementById('inqCategorySelected');
+  const inqOptions = document.getElementById('inqCategoryOptions');
+  const inqText = document.getElementById('inqCategoryText');
+  const nativeSelect = document.getElementById('inqCategory');
+
+  if (inqDropdown && inqSelected && inqOptions && nativeSelect) {
+    inqSelected.addEventListener('click', () => {
+      inqDropdown.classList.toggle('open');
+    });
+
+    const options = inqOptions.querySelectorAll('.custom-category-option');
+    options.forEach(opt => {
+      opt.addEventListener('click', () => {
+        inqText.textContent = opt.textContent;
+        options.forEach(o => o.classList.remove('active'));
+        opt.classList.add('active');
+        nativeSelect.value = opt.getAttribute('data-value');
+        inqDropdown.classList.remove('open');
+      });
+    });
+
+    document.addEventListener('click', (e) => {
+      if (!inqDropdown.contains(e.target)) {
+        inqDropdown.classList.remove('open');
+      }
+    });
+  }
+

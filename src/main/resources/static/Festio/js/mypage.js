@@ -85,6 +85,73 @@ async function fetchFoodOrders() {
     }
   } catch (error) {
     console.error('DB 푸드트럭 주문 로드 실패:', error);
+  } finally {
+    try {
+      const localFood = JSON.parse(localStorage.getItem('LOCAL_MOCK_FOOD')) || [];
+      MOCK_FOOD_ORDERS = MOCK_FOOD_ORDERS.concat(localFood);
+    } catch (e) { }
+  }
+}
+
+/* 실제 DB 굿즈 구매 내역 조회 API 연동 */
+let MOCK_GOODS_ORDERS = [];
+async function fetchGoodsOrders() {
+  try {
+    const token = localStorage.getItem('userToken') || sessionStorage.getItem('userToken') || '';
+    const response = await fetch('/api/order/shop/my', {
+      headers: {
+        'Authorization': 'Bearer ' + token
+      }
+    });
+    if (response.ok) {
+      const shopOrders = await response.json();
+
+      // 굿즈 주문만 필터링
+      const goodsOrdersRaw = shopOrders.filter(order => {
+        if (order.order_number && order.order_number.startsWith('G')) return true;
+        if (order.shop_order_items && order.shop_order_items.length > 0) {
+          const sp = order.shop_order_items[0].shop_products;
+          const pName = order.shop_order_items[0].product_name || '';
+          if (sp && sp.type === 'GOODS') return true;
+          if (pName.includes('굿즈') || pName.includes('티셔츠') || pName.includes('후드') || pName.includes('OFFICIAL') || pName.includes('슬로건') || pName.includes('응원봉')) return true;
+        }
+        return false;
+      });
+
+      MOCK_GOODS_ORDERS = goodsOrdersRaw.map(o => {
+        const item = o.shop_order_items && o.shop_order_items.length > 0 ? o.shop_order_items[0] : {};
+        const productName = item.product_name || '굿즈 상품';
+        const quantity = item.quantity || 1;
+
+        let statusText = '결제완료';
+        if (o.status === 'SHIPPING') statusText = '배송중';
+        else if (o.status === 'DELIVERED') statusText = '배송완료';
+        else if (o.status === 'READY_FOR_PICKUP') statusText = '수령 대기';
+        else if (o.status === 'COMPLETED') statusText = '수령 완료';
+
+        return {
+          orderItemId: o.order_number,
+          storeName: 'FESTIO SHOP',
+          productName: productName,
+          quantity: quantity,
+          selectedOptions: '단일 상품',
+          pickupTimeSlot: new Date(o.created_at).toLocaleString(),
+          totalPrice: o.total_amount,
+          itemStatus: o.status || 'PAID',
+          statusText: statusText,
+          qrToken: o.order_number,
+          deliveryType: o.delivery_type === 'PICKUP' ? '현장수령' : '일반배송'
+        };
+      });
+      console.log('실제 DB 굿즈 주문 조회 완료:', MOCK_GOODS_ORDERS);
+    }
+  } catch (error) {
+    console.error('DB 굿즈 주문 로드 실패:', error);
+  } finally {
+    try {
+      const localGoods = JSON.parse(localStorage.getItem('LOCAL_MOCK_GOODS')) || [];
+      MOCK_GOODS_ORDERS = MOCK_GOODS_ORDERS.concat(localGoods);
+    } catch (e) { }
   }
 }
 
@@ -283,10 +350,10 @@ function renderStats() {
   if (statReviews) statReviews.textContent = (typeof MOCK_REVIEWS !== 'undefined') ? MOCK_REVIEWS.length : 0;
 
   // 푸드/굿즈 - 주문 내역 개수 사용
-  if (statFoods) statFoods.textContent = (typeof MOCK_FOOD_ORDERS !== 'undefined') ? MOCK_FOOD_ORDERS.length : 0;
+  if (statFoods) statFoods.textContent = ((typeof MOCK_FOOD_ORDERS !== 'undefined' ? MOCK_FOOD_ORDERS.length : 0) + (typeof MOCK_GOODS_ORDERS !== 'undefined' ? MOCK_GOODS_ORDERS.length : 0));
 
   const ticketCount = document.getElementById('ticketCount');
-  if (ticketCount) ticketCount.textContent = `${MOCK_TICKETS.length + _dbTickets.length + MOCK_FOOD_ORDERS.length}건`;
+  if (ticketCount) ticketCount.textContent = `${MOCK_TICKETS.length + _dbTickets.length + MOCK_FOOD_ORDERS.length + MOCK_GOODS_ORDERS.length}건`;
 }
 
 // 예매 내역 & 푸드트럭 픽업 내역 통합 렌더링
@@ -399,19 +466,22 @@ function renderReservationList() {
 
   // 2. 푸드트럭 주문 내역 섹션
   htmlContent += `
-    <div style="margin-top: 40px;">
+    <div style="margin-top: 48px;">
       <h3 class="mp-section-title">
-        <span class="mp-margin-r-8"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mp-icon-md"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path></svg></span> 푸드트럭 실시간 주문 내역 (${MOCK_FOOD_ORDERS.length}건)
+        <span class="mp-margin-r-8"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mp-icon-md"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path></svg></span> F&B 이용 내역 (${MOCK_FOOD_ORDERS.length}건)
       </h3>
   `;
 
-  MOCK_FOOD_ORDERS.forEach(f => {
-    let statusLabelClass = 'status-대기';
-    if (f.itemStatus === 'PREPARING') statusLabelClass = 'status-대기';
-    else if (f.itemStatus === 'READY') statusLabelClass = 'status-완료';
-    else if (f.itemStatus === 'PICKED_UP') statusLabelClass = 'status-입장';
+  if (MOCK_FOOD_ORDERS.length === 0) {
+    htmlContent += `<div style="padding: 40px 20px; text-align: center; color: #a0a0b2; background-color: #f8f8fa; border-radius: 12px; font-size: 0.95rem;">이용 내역이 없습니다.</div>`;
+  } else {
+    MOCK_FOOD_ORDERS.forEach(f => {
+      let statusLabelClass = 'status-대기';
+      if (f.itemStatus === 'PREPARING') statusLabelClass = 'status-대기';
+      else if (f.itemStatus === 'READY') statusLabelClass = 'status-완료';
+      else if (f.itemStatus === 'PICKED_UP') statusLabelClass = 'status-입장';
 
-    htmlContent += `
+      htmlContent += `
       <div class="mp-card">
         <div class="mp-card-header">
           <p class="mp-card-title">${f.storeName}</p>
@@ -429,8 +499,49 @@ function renderReservationList() {
         </div>
       </div>
     `;
-  });
+    });
 
+  }
+
+  htmlContent += `</div>`;
+
+  // 3. 굿즈 구매 내역 섹션
+  htmlContent += `
+    <div style="margin-top: 48px;">
+      <h3 class="mp-section-title">
+        <span class="mp-margin-r-8"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mp-icon-md"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"></path><line x1="7" y1="7" x2="7.01" y2="7"></line></svg></span> 굿즈 구매 내역 (${MOCK_GOODS_ORDERS.length}건)
+      </h3>
+  `;
+
+  if (MOCK_GOODS_ORDERS.length === 0) {
+    htmlContent += `<div style="padding: 40px 20px; text-align: center; color: #a0a0b2; background-color: #f8f8fa; border-radius: 12px; font-size: 0.95rem;">구매 내역이 없습니다.</div>`;
+  } else {
+    MOCK_GOODS_ORDERS.forEach(g => {
+      let statusLabelClass = 'status-대기';
+      if (g.itemStatus === 'READY_FOR_PICKUP' || g.itemStatus === 'SHIPPING') statusLabelClass = 'status-완료';
+      else if (g.itemStatus === 'COMPLETED' || g.itemStatus === 'DELIVERED') statusLabelClass = 'status-입장';
+
+      htmlContent += `
+      <div class="mp-card" style="border-left:4px solid #F5A623;">
+        <div class="mp-card-header">
+          <p class="mp-card-title">${g.storeName}</p>
+          <span class="mp-badge ${statusLabelClass}">${g.statusText}</span>
+        </div>
+        <div class="mp-card-meta">
+          <div>주문 번호: <strong style="color:#F5A623;">${g.orderItemId}</strong></div>
+          <div>상품명: ${g.productName} · 수량: ${g.quantity}개</div>
+          <div>수령방법: ${g.deliveryType}</div>
+          <div style="color:#8888a8; display: flex; align-items: center; gap: 6px;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mp-icon-sm" style="flex-shrink: 0;"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg> <span>${g.pickupTimeSlot}</span></div>
+        </div>
+        <div class="mp-card-footer">
+          <span class="mp-card-price">₩${g.totalPrice.toLocaleString()}</span>
+          ${(g.deliveryType === '현장수령' && g.itemStatus !== 'COMPLETED') ? `<button class="btn btn-sm btn-outline mp-btn-sm" style="color:#F5A623; border-color:#F5A623;" onclick="window.location.href='/shop/orders.html'">상세/QR 보기</button>` : ''}
+        </div>
+      </div>
+    `;
+    });
+
+  } // else 닫기
   htmlContent += `</div>`;
 
   ticketListContainer.innerHTML = htmlContent;
@@ -1865,20 +1976,88 @@ function initReviewForm() {
    6. 프로필 정보 변경 저장 기능 구현
    ═══════════════════════════════════════════════════════════ */
 function initProfileEditSave() {
+  const profileNewPw = document.getElementById('profileNewPw');
+  const strengthContainer = document.getElementById('profilePwStrengthContainer');
+  const fills = strengthContainer ? strengthContainer.querySelectorAll('.pw-strength-fill') : [];
+  const pwGuideList = document.getElementById('profilePwGuide');
+  const guide1 = document.getElementById('profilePwGuide1');
+  const guide2 = document.getElementById('profilePwGuide2');
+
+  let isPasswordValid = false;
+
+  if (profileNewPw && strengthContainer) {
+    if (pwGuideList) pwGuideList.style.display = 'none';
+
+    profileNewPw.addEventListener('focus', function () {
+      if (!this.value && pwGuideList) pwGuideList.style.display = 'flex';
+    });
+
+    profileNewPw.addEventListener('input', function () {
+      const val = this.value;
+      if (!val) {
+        strengthContainer.style.display = 'none';
+        if (pwGuideList) pwGuideList.style.display = 'none';
+        if (guide1) guide1.style.color = '#9ca3af';
+        if (guide2) guide2.style.color = '#9ca3af';
+        isPasswordValid = false;
+        return;
+      }
+      strengthContainer.style.display = 'block';
+      let score = 0;
+
+      // 조건 1: 8자 이상
+      const c1 = val.length >= 8;
+      if (guide1) guide1.style.color = c1 ? '#10B981' : '#9ca3af';
+      if (c1) score++;
+
+      // 조건 2: 영문, 숫자, 특수문자 중 2가지 이상 (이 로직은 기본적으로 영문/숫자/특수문자 체크)
+      const hasLetter = /[a-zA-Z]/.test(val);
+      const hasNumber = /[0-9]/.test(val);
+      const hasSpecial = /[^a-zA-Z0-9]/.test(val);
+      const c2Count = (hasLetter ? 1 : 0) + (hasNumber ? 1 : 0) + (hasSpecial ? 1 : 0);
+      const c2 = c2Count >= 2;
+
+      if (guide2) guide2.style.color = c2 ? '#10B981' : '#9ca3af';
+      if (c2) score++;
+
+      fills.forEach(f => f.style.background = '#e5e7eb');
+      if (score === 0) {
+        fills[0].style.background = '#FF2D55';
+        if (pwGuideList) pwGuideList.style.display = 'flex';
+        isPasswordValid = false;
+      } else if (score === 1) {
+        fills[0].style.background = '#F59E0B';
+        fills[1].style.background = '#F59E0B';
+        if (pwGuideList) pwGuideList.style.display = 'flex';
+        isPasswordValid = false;
+      } else if (score >= 2) {
+        fills[0].style.background = '#10B981';
+        fills[1].style.background = '#10B981';
+        fills[2].style.background = '#10B981';
+        if (pwGuideList) pwGuideList.style.display = 'none';
+        isPasswordValid = true;
+      }
+    });
+  }
+
   const btnSave = document.getElementById('btn-save-profile');
   if (btnSave) {
     btnSave.addEventListener('click', async () => {
       const nicknameVal = document.getElementById('profileNickname').value.trim();
       const phoneVal = document.getElementById('profilePhone').value.trim();
+      const currentPwVal = document.getElementById('profileCurrentPw').value;
+      const newPwVal = document.getElementById('profileNewPw').value;
+      const confirmPwVal = document.getElementById('profileConfirmPw').value;
 
       if (!nicknameVal || !phoneVal) {
-        if (window.Toast) window.Toast.error('정보를 올바르게 입력해주세요.');
-        else alert('정보를 입력해주세요.');
+        if (window.Toast) window.Toast.error('닉네임과 연락처를 입력해주세요.');
+        else alert('닉네임과 연락처를 입력해주세요.');
         return;
       }
 
       const userToken = localStorage.getItem('userToken') || sessionStorage.getItem('userToken');
       try {
+        // 프로필 정보 업데이트 (닉네임, 연락처)
         const response = await fetch('/api/auth/update', {
           method: 'POST',
           headers: {
@@ -1890,6 +2069,54 @@ function initProfileEditSave() {
             phone: phoneVal
           })
         });
+
+        if (!response.ok) {
+          throw new Error('프로필 업데이트에 실패했습니다.');
+        }
+
+        // 비밀번호 변경 요청이 있는 경우
+        if (currentPwVal || newPwVal || confirmPwVal) {
+          if (!currentPwVal) {
+            if (window.Toast) window.Toast.error('현재 비밀번호를 입력해주세요.');
+            else alert('현재 비밀번호를 입력해주세요.');
+            return;
+          }
+          if (!isPasswordValid) {
+            if (window.Toast) window.Toast.error('새 비밀번호 규칙을 확인해주세요.');
+            else alert('새 비밀번호 규칙을 확인해주세요.');
+            return;
+          }
+          if (newPwVal !== confirmPwVal) {
+            if (window.Toast) window.Toast.error('새 비밀번호가 일치하지 않습니다.');
+            else alert('새 비밀번호가 일치하지 않습니다.');
+            return;
+          }
+
+          const pwResponse = await fetch('/api/auth/updatePassword', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': userToken
+            },
+            body: JSON.stringify({
+              currentPassword: currentPwVal,
+              newPassword: newPwVal
+            })
+          });
+
+          if (!pwResponse.ok) {
+            const errorData = await pwResponse.text();
+            throw new Error(errorData || '비밀번호 변경에 실패했습니다.');
+          }
+
+          document.getElementById('profileCurrentPw').value = '';
+          document.getElementById('profileNewPw').value = '';
+          document.getElementById('profileConfirmPw').value = '';
+          if (strengthContainer) strengthContainer.style.display = 'none';
+        }
+
+        if (window.Toast) window.Toast.success('성공적으로 저장되었습니다.');
+        else alert('성공적으로 저장되었습니다.');
 
         if (response.ok) {
           const updated = await response.json();
@@ -1987,6 +2214,23 @@ function applyAvatarImage(imgUrl) {
     heroImg.src = imgUrl;
   }
 
+  // 3. 네비게이션 헤더 아바타 동기화
+  const headerAvatarCircle = document.getElementById('header-avatar-circle');
+  if (headerAvatarCircle) {
+    const defaultSvg = headerAvatarCircle.querySelector('svg:not([fill="#3b82f6"])');
+    if (defaultSvg) defaultSvg.style.display = 'none';
+
+    let headerImg = headerAvatarCircle.querySelector('img');
+    if (!headerImg) {
+      headerImg = document.createElement('img');
+      headerImg.alt = '프로필 이미지';
+      headerImg.style.cssText = 'width:100%; height:100%; object-fit:cover; border-radius:50%;';
+      headerAvatarCircle.insertBefore(headerImg, headerAvatarCircle.firstChild);
+    }
+    headerImg.src = imgUrl;
+    headerImg.style.display = '';
+  }
+
   // 영속화 저장
   localStorage.setItem('festio_avatar', imgUrl);
 }
@@ -2009,6 +2253,15 @@ function resetAvatarToDefault() {
     if (img) img.remove();
     const heroSvg = heroAvatar.querySelector('#profileAvatarSvgHero');
     if (heroSvg) heroSvg.style.display = '';
+  }
+
+  // 네비게이션 헤더 복원
+  const headerAvatarCircle = document.getElementById('header-avatar-circle');
+  if (headerAvatarCircle) {
+    const img = headerAvatarCircle.querySelector('img');
+    if (img) img.remove();
+    const defaultSvg = headerAvatarCircle.querySelector('svg:not([fill="#3b82f6"])');
+    if (defaultSvg) defaultSvg.style.display = '';
   }
 
   // 파일 input 초기화
@@ -2090,6 +2343,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   await loadUserInfo();
   await fetchTickets(); // DB 실제 티켓 로드 추가!
   await fetchFoodOrders(); // DB 실제 푸드트럭 주문 로드 추가!
+  await fetchGoodsOrders(); // DB 실제 굿즈 주문 로드 추가!
   renderProfile();
 
   renderStats();
@@ -2870,5 +3124,16 @@ document.addEventListener('DOMContentLoaded', () => {
       if (typeof window.toggleActivityAccordion === 'function') window.toggleActivityAccordion();
     });
   }
+
+  // 비밀번호 표시 토글 로직 추가
+  document.querySelectorAll('.btn-pw-toggle').forEach(btn => {
+    btn.addEventListener('click', function () {
+      const input = this.parentElement.querySelector('input');
+      if (!input) return;
+      const type = input.getAttribute('type') === 'password' ? 'text' : 'password';
+      input.setAttribute('type', type);
+      this.style.color = type === 'text' ? '#FF2D55' : '#9ca3af';
+    });
+  });
 });
 

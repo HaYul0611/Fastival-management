@@ -70,6 +70,25 @@ document.addEventListener('DOMContentLoaded', () => {
   const resultIdSection = document.getElementById('resultIdSection');
   const notFoundModal = document.getElementById('notFoundModal');
   const btnCancelNotFound = document.getElementById('btnCancelNotFound');
+  const findIdPhoneInput = document.getElementById('findIdPhone');
+
+  // 휴대폰 번호 자동 하이픈 추가
+  if (findIdPhoneInput) {
+    findIdPhoneInput.addEventListener('input', function (e) {
+      let val = this.value.replace(/[^0-9]/g, '');
+      let res = '';
+      if (val.length < 4) {
+        res = val;
+      } else if (val.length < 7) {
+        res = val.substr(0, 3) + '-' + val.substr(3);
+      } else if (val.length < 11) {
+        res = val.substr(0, 3) + '-' + val.substr(3, 3) + '-' + val.substr(6);
+      } else {
+        res = val.substr(0, 3) + '-' + val.substr(3, 4) + '-' + val.substr(7);
+      }
+      this.value = res;
+    });
+  }
 
   if (btnCancelNotFound) {
     btnCancelNotFound.addEventListener('click', () => {

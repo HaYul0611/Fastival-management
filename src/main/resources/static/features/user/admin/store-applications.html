@@ -1,177 +1,203 @@
-﻿<!doctype html>
-<html lang="ko" class="layout-menu-fixed layout-compact" data-assets-path="/assets/" data-template="vertical-menu-template-free">
+<!doctype html>
+<html lang="ko" class="layout-menu-fixed layout-compact" data-assets-path="/assets/"
+  data-template="vertical-menu-template-free">
+
 <head>
-  <meta charset="utf-8"/>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0"/>
+  <meta charset="utf-8" />
+  <meta name="viewport"
+    content="width=device-width, initial-scale=1.0, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0" />
   <title>입점 신청 관리 | FESTIO</title>
-  <link rel="icon" type="image/x-icon" href="/assets/img/favicon/favicon.ico"/>
-  <link rel="preconnect" href="https://fonts.googleapis.com"/>
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
-  <link href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet"/>
-  <link rel="stylesheet" href="/assets/vendor/fonts/iconify-icons.css"/>
-  <link rel="stylesheet" href="/assets/vendor/css/core.css"/>
-  <link rel="stylesheet" href="/assets/css/demo.css"/>
-  <link rel="stylesheet" href="/assets/vendor/libs/perfect-scrollbar/perfect-scrollbar.css"/>
+  <link rel="icon" type="image/x-icon" href="/assets/img/favicon/favicon.ico" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@300;400;500;600;700&display=swap"
+    rel="stylesheet" />
+  <link rel="stylesheet" href="/assets/vendor/fonts/iconify-icons.css" />
+  <link rel="stylesheet" href="/assets/vendor/css/core.css" />
+  <link rel="stylesheet" href="/assets/css/demo.css" />
+  <link rel="stylesheet" href="/assets/vendor/libs/perfect-scrollbar/perfect-scrollbar.css" />
   <script src="/assets/vendor/js/helpers.js"></script>
   <script src="/assets/js/config.js"></script>
   <!-- SweetAlert2 프리미엄 비동기 알림창 모듈 -->
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
   <link rel="stylesheet" href="./css/store-applications.css" />
 </head>
+
 <body>
-<div class="layout-wrapper layout-content-navbar">
-  <div class="layout-container">
-    <aside id="layout-menu" class="layout-menu menu-vertical menu bg-menu-theme"></aside>
-    <div class="layout-page">
-      <!-- Navbar -->
-      <nav class="layout-navbar container-xxl navbar navbar-expand-xl navbar-detached align-items-center bg-navbar-theme" id="layout-navbar">
-        <div class="layout-menu-toggle navbar-nav align-items-xl-center me-4 me-xl-0 d-xl-none">
-          <a class="nav-item nav-link px-0 me-xl-6" href="javascript:void(0)"><i class="bx bx-menu bx-sm"></i></a>
-        </div>
-        <div class="navbar-nav-right d-flex align-items-center" id="navbar-collapse">
-          <h5 class="mb-0 fw-bold"><i class="bx bx-list-check me-2 text-primary"></i>입점 신청 관리</h5>
-          <ul class="navbar-nav flex-row align-items-center ms-auto">
-            <li class="nav-item dropdown-user dropdown">
-              <a class="nav-link dropdown-toggle hide-arrow" href="javascript:void(0);" data-bs-toggle="dropdown">
-                <div class="avatar avatar-online"><img src="/assets/img/avatars/1.png" class="w-px-40 h-auto rounded-circle"/></div>
-              </a>
-              <ul class="dropdown-menu dropdown-menu-end">
-                <li><a class="dropdown-item" href="#"><div class="d-flex"><div class="flex-shrink-0 me-3"><div class="avatar avatar-online"><img src="/assets/img/avatars/1.png" class="w-px-40 h-auto rounded-circle"/></div></div><div class="flex-grow-1"><span class="fw-medium d-block">최고 관리자</span><small class="text-muted">Master Admin</small></div></div></a></li>
-              </ul>
-            </li>
-          </ul>
-        </div>
-      </nav>
+  <div class="layout-wrapper layout-content-navbar">
+    <div class="layout-container">
+      <aside id="layout-menu" class="layout-menu menu-vertical menu bg-menu-theme"></aside>
+      <div class="layout-page">
+        <!-- Navbar -->
+        <nav
+          class="layout-navbar container-xxl navbar navbar-expand-xl navbar-detached align-items-center bg-navbar-theme"
+          id="layout-navbar">
+          <div class="layout-menu-toggle navbar-nav align-items-xl-center me-4 me-xl-0 d-xl-none">
+            <a class="nav-item nav-link px-0 me-xl-6" href="javascript:void(0)"><i class="bx bx-menu bx-sm"></i></a>
+          </div>
+          <div class="navbar-nav-right d-flex align-items-center" id="navbar-collapse">
+            <h5 class="mb-0 fw-bold"><i class="bx bx-list-check me-2 text-primary"></i>입점 신청 관리</h5>
+            <ul class="navbar-nav flex-row align-items-center ms-auto">
+              <li class="nav-item dropdown-user dropdown">
+                <a class="nav-link dropdown-toggle hide-arrow" href="javascript:void(0);" data-bs-toggle="dropdown">
+                  <div class="avatar avatar-online"><img src="/assets/img/avatars/chibi_admin.png"
+                      class="w-px-40 h-auto rounded-circle" /></div>
+                </a>
+                <ul class="dropdown-menu dropdown-menu-end">
+                  <li><a class="dropdown-item" href="#">
+                      <div class="d-flex">
+                        <div class="flex-shrink-0 me-3">
+                          <div class="avatar avatar-online"><img src="/assets/img/avatars/chibi_admin.png"
+                              class="w-px-40 h-auto rounded-circle" /></div>
+                        </div>
+                        <div class="flex-grow-1"><span class="fw-medium d-block">최고 관리자</span><small
+                            class="text-muted">Master Admin</small></div>
+                      </div>
+                    </a></li>
+                </ul>
+              </li>
+            </ul>
+          </div>
+        </nav>
 
-      <!-- Content wrapper -->
-      <div class="content-wrapper">
-        <div class="container-xxl flex-grow-1 container-p-y">
+        <!-- Content wrapper -->
+        <div class="content-wrapper">
+          <div class="container-xxl flex-grow-1 container-p-y">
 
-          <!-- 요약 카드 -->
-          <div class="row mb-4">
-            <div class="col-lg-4 mb-4">
-              <div class="card stat-card h-100">
-                <div class="card-body">
-                  <div class="d-flex justify-content-between align-items-center mb-3">
-                    <h5 class="card-title mb-0 fw-semibold">대기 중</h5>
-                    <i class="bx bx-file text-warning fs-3"></i>
+            <!-- 요약 카드 -->
+            <div class="row mb-4">
+              <div class="col-lg-4 mb-4">
+                <div class="card stat-card h-100">
+                  <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                      <h5 class="card-title mb-0 fw-semibold">대기 중</h5>
+                      <i class="bx bx-file text-warning fs-3"></i>
+                    </div>
+                    <h3 class="fw-bold text-warning mb-2" id="summaryPending">0 건</h3>
+                    <p class="mb-0 text-muted fs-7">심사 대기 중인 신청서</p>
                   </div>
-                  <h3 class="fw-bold text-warning mb-2" id="summaryPending">0 건</h3>
-                  <p class="mb-0 text-muted fs-7">심사 대기 중인 신청서</p>
+                </div>
+              </div>
+              <div class="col-lg-4 mb-4">
+                <div class="card stat-card h-100">
+                  <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                      <h5 class="card-title mb-0 fw-semibold">승인 완료</h5>
+                      <i class="bx bx-check-circle text-success fs-3"></i>
+                    </div>
+                    <h3 class="fw-bold text-success mb-2" id="summaryApproved">0 건</h3>
+                    <p class="mb-0 text-muted fs-7">입점 계약 완료된 업체</p>
+                  </div>
+                </div>
+              </div>
+              <div class="col-lg-4 mb-4">
+                <div class="card stat-card h-100">
+                  <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                      <h5 class="card-title mb-0 fw-semibold">반려 내역</h5>
+                      <i class="bx bx-x-circle text-danger fs-3"></i>
+                    </div>
+                    <h3 class="fw-bold text-danger mb-2" id="summaryRejected">0 건</h3>
+                    <p class="mb-0 text-muted fs-7">서류 미달 등 반려 처리</p>
+                  </div>
                 </div>
               </div>
             </div>
-            <div class="col-lg-4 mb-4">
-              <div class="card stat-card h-100">
-                <div class="card-body">
-                  <div class="d-flex justify-content-between align-items-center mb-3">
-                    <h5 class="card-title mb-0 fw-semibold">승인 완료</h5>
-                    <i class="bx bx-check-circle text-success fs-3"></i>
-                  </div>
-                  <h3 class="fw-bold text-success mb-2" id="summaryApproved">0 건</h3>
-                  <p class="mb-0 text-muted fs-7">입점 계약 완료된 업체</p>
+
+            <!-- 행사 선택 그리드 레이아웃 (기존 Select 제거 및 교체) -->
+            <div class="card mb-4 p-4">
+              <h6 class="pb-2 border-bottom text-muted fw-bold mb-3 d-flex align-items-center">
+                <i class="bx bx-calendar-event me-2 text-primary fs-4"></i>모집 대상 축제 선택 (UPCOMING)
+              </h6>
+              <!-- 가로 드래그/스크롤이 가능한 마스터 카드 그리드 구조 -->
+              <div id="festivalCardGrid"
+                class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-3 flex-nowrap overflow-auto pb-2"
+                style="scrollbar-width: thin; -ms-overflow-style: none;">
+                <!-- 동적으로 축제 리스트 카드가 바인딩됩니다. -->
+                <div class="text-center py-4 text-muted w-100">
+                  <i class="bx bx-loader-alt bx-spin me-2"></i>진행 예정 축제 목록을 불러오는 중...
                 </div>
               </div>
             </div>
-            <div class="col-lg-4 mb-4">
-              <div class="card stat-card h-100">
-                <div class="card-body">
-                  <div class="d-flex justify-content-between align-items-center mb-3">
-                    <h5 class="card-title mb-0 fw-semibold">반려 내역</h5>
-                    <i class="bx bx-x-circle text-danger fs-3"></i>
-                  </div>
-                  <h3 class="fw-bold text-danger mb-2" id="summaryRejected">0 건</h3>
-                  <p class="mb-0 text-muted fs-7">서류 미달 등 반려 처리</p>
-                </div>
+
+            <!-- 상태 탭 -->
+            <div class="status-tabs">
+              <button class="status-tab active" data-status="PENDING">대기중 <span class="tab-count"
+                  id="tabCountPending">0</span></button>
+              <button class="status-tab" data-status="APPROVED">승인됨 <span class="tab-count"
+                  id="tabCountApproved">0</span></button>
+              <button class="status-tab" data-status="REJECTED">반려됨 <span class="tab-count"
+                  id="tabCountRejected">0</span></button>
+            </div>
+
+            <!-- 테이블 -->
+            <div class="card">
+              <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="card-title m-0 fw-semibold" id="tableHeadTitle">대기중 신청서</h5>
+                <span class="badge bg-label-primary">실시간 심사</span>
+              </div>
+              <div class="table-responsive text-nowrap">
+                <table class="table table-hover">
+                  <thead>
+                    <tr>
+                      <th>유형</th>
+                      <th>업체명</th>
+                      <th>담당자</th>
+                      <th>연락처</th>
+                      <th>신청일</th>
+                      <th>상태</th>
+                      <th class="text-end pe-4">액션</th>
+                    </tr>
+                  </thead>
+                  <tbody id="appTableBody">
+                    <tr class="empty-row">
+                      <td colspan="7" class="text-center text-muted" style="padding: 60px 0;">
+                        <i class="bx bx-calendar-check text-primary mb-3" style="font-size: 3rem;"></i>
+                        <p class="mb-0 fs-6">상단의 축제 카드를 선택하시면 입점 신청 내역을 확인할 수 있습니다.</p>
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
               </div>
             </div>
+
           </div>
 
-          <!-- 행사 선택 그리드 레이아웃 (기존 Select 제거 및 교체) -->
-          <div class="card mb-4 p-4">
-            <h6 class="pb-2 border-bottom text-muted fw-bold mb-3 d-flex align-items-center">
-              <i class="bx bx-calendar-event me-2 text-primary fs-4"></i>모집 대상 축제 선택 (UPCOMING)
-            </h6>
-            <!-- 가로 드래그/스크롤이 가능한 마스터 카드 그리드 구조 -->
-            <div id="festivalCardGrid" class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-3 flex-nowrap overflow-auto pb-2" style="scrollbar-width: thin; -ms-overflow-style: none;">
-              <!-- 동적으로 축제 리스트 카드가 바인딩됩니다. -->
-              <div class="text-center py-4 text-muted w-100">
-                <i class="bx bx-loader-alt bx-spin me-2"></i>진행 예정 축제 목록을 불러오는 중...
+          <footer class="content-footer footer bg-footer-theme">
+            <div class="container-xxl d-flex flex-wrap justify-content-between py-2 flex-md-row flex-column">
+              <div class="mb-2 mb-md-0">©
+                <script>document.write(new Date().getFullYear());</script> FESTIO
               </div>
             </div>
-          </div>
-
-          <!-- 상태 탭 -->
-          <div class="status-tabs">
-            <button class="status-tab active" data-status="PENDING">대기중 <span class="tab-count" id="tabCountPending">0</span></button>
-            <button class="status-tab" data-status="APPROVED">승인됨 <span class="tab-count" id="tabCountApproved">0</span></button>
-            <button class="status-tab" data-status="REJECTED">반려됨 <span class="tab-count" id="tabCountRejected">0</span></button>
-          </div>
-
-          <!-- 테이블 -->
-          <div class="card">
-            <div class="card-header d-flex justify-content-between align-items-center">
-              <h5 class="card-title m-0 fw-semibold" id="tableHeadTitle">대기중 신청서</h5>
-              <span class="badge bg-label-primary">실시간 심사</span>
-            </div>
-            <div class="table-responsive text-nowrap">
-              <table class="table table-hover">
-                <thead>
-                  <tr>
-                    <th>유형</th>
-                    <th>업체명</th>
-                    <th>담당자</th>
-                    <th>연락처</th>
-                    <th>신청일</th>
-                    <th>상태</th>
-                    <th class="text-end pe-4">액션</th>
-                  </tr>
-                </thead>
-                <tbody id="appTableBody">
-                  <tr class="empty-row">
-                    <td colspan="7"><i class="bx bx-calendar-check fs-2 d-block mb-2 text-primary"></i>상단의 축제 카드를 선택하시면 입점 신청 내역을 확인할 수 있습니다.</td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
-          </div>
-
+          </footer>
+          <div class="content-backdrop fade"></div>
         </div>
-
-        <footer class="content-footer footer bg-footer-theme">
-          <div class="container-xxl d-flex flex-wrap justify-content-between py-2 flex-md-row flex-column">
-            <div class="mb-2 mb-md-0">© <script>document.write(new Date().getFullYear());</script> FESTIO</div>
-          </div>
-        </footer>
-        <div class="content-backdrop fade"></div>
       </div>
     </div>
+    <div class="layout-overlay layout-menu-toggle"></div>
   </div>
-  <div class="layout-overlay layout-menu-toggle"></div>
-</div>
 
-<!-- 상세 모달 -->
-<div class="detail-modal-backdrop" id="detailModalBackdrop">
-  <div class="detail-modal">
-    <div class="detail-modal-header">
-      <h5 id="modalTitle">신청서 상세</h5>
-      <button class="detail-modal-close" id="modalCloseBtn">×</button>
+  <!-- 상세 모달 -->
+  <div class="detail-modal-backdrop" id="detailModalBackdrop">
+    <div class="detail-modal">
+      <div class="detail-modal-header">
+        <h5 id="modalTitle">신청서 상세</h5>
+        <button class="detail-modal-close" id="modalCloseBtn">×</button>
+      </div>
+      <div class="detail-modal-body" id="modalBody"></div>
+      <div class="action-btn-wrap" id="modalActionWrap"></div>
     </div>
-    <div class="detail-modal-body" id="modalBody"></div>
-    <div class="action-btn-wrap" id="modalActionWrap"></div>
   </div>
-</div>
 
-<!-- Scripts -->
-<script src="/assets/vendor/libs/jquery/jquery.js"></script>
-<script src="/assets/vendor/libs/popper/popper.js"></script>
-<script src="/assets/vendor/js/bootstrap.js"></script>
-<script src="/assets/vendor/libs/perfect-scrollbar/perfect-scrollbar.js"></script>
-<script src="/assets/vendor/js/menu.js"></script>
-<script src="/assets/js/sidebar.js"></script>
+  <!-- Scripts -->
+  <script src="/assets/vendor/libs/jquery/jquery.js"></script>
+  <script src="/assets/vendor/libs/popper/popper.js"></script>
+  <script src="/assets/vendor/js/bootstrap.js"></script>
+  <script src="/assets/vendor/libs/perfect-scrollbar/perfect-scrollbar.js"></script>
+  <script src="/assets/vendor/js/menu.js"></script>
+  <script src="/assets/js/sidebar.js"></script>
 
-<script src="./js/store-applications.js"></script>
+  <script src="./js/store-applications.js"></script>
 </body>
+
 </html>
-
-

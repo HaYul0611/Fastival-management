@@ -25,6 +25,14 @@ const notifList = document.getElementById("notif-list");
 // Init App UI
 let selectedSeats = [];
 
+// Apply theme from localStorage or default to light-theme
+const savedTheme = localStorage.getItem("staff_theme") || "light";
+if (savedTheme === "light") {
+  document.body.classList.add("light-theme");
+} else {
+  document.body.classList.remove("light-theme");
+}
+
 export async function loadSidebarMenu(viewId) {
   const sidebarMenu = document.querySelector(".sidebar-menu");
   if (sidebarMenu) {
@@ -33,7 +41,7 @@ export async function loadSidebarMenu(viewId) {
       if (response.ok) {
         const menuHtml = await response.text();
         sidebarMenu.innerHTML = menuHtml;
-        
+
         // Highlight current page in sidebar
         const menuLinks = sidebarMenu.querySelectorAll(".menu-link");
         menuLinks.forEach(link => link.classList.remove("active"));
@@ -100,12 +108,12 @@ export async function initPage(viewId = 'dashboard') {
         const tNumElem = document.getElementById("scan-confirm-ticket");
         const btnOk = document.getElementById("btn-confirm-scan");
         const btnCancel = document.getElementById("btn-cancel-scan");
-        
+
         const tNum = decodedText.startsWith("FESTIO:TICKET:") ? decodedText.split(":")[2] : decodedText;
         tNumElem.innerText = `🎫 ${tNum}`;
-        
+
         confirmScreen.style.display = "block";
-        
+
         btnOk.onclick = () => { confirmScreen.style.display = "none"; resolve(true); };
         btnCancel.onclick = () => { confirmScreen.style.display = "none"; resolve(false); };
       });
@@ -145,15 +153,15 @@ export async function initPage(viewId = 'dashboard') {
 
     // 바로 카메라 시작
     setTimeout(() => {
-        initializeQRScanner("qr-camera-reader", async (decodedText) => {
-          const isConfirmed = await askConfirmScan(decodedText);
-          if (isConfirmed) {
-              return await triggerScanValidationUI(decodedText);
-          }
-          return null;
-        });
+      initializeQRScanner("qr-camera-reader", async (decodedText) => {
+        const isConfirmed = await askConfirmScan(decodedText);
+        if (isConfirmed) {
+          return await triggerScanValidationUI(decodedText);
+        }
+        return null;
+      });
     }, 500);
-    
+
     return; // Stop running normal dashboard init
   }
 
@@ -346,8 +354,19 @@ function renderLoginScreen() {
   if (!loginView) return;
 
   loginView.innerHTML = `
-    <div class="login-box-rigid">
-      <h2 class="login-title" style="background: linear-gradient(90deg, #38bdf8, #10b981); -webkit-background-clip: text; -webkit-text-fill-color: transparent; font-weight: 900; font-size: 28px; margin-bottom: 5px; letter-spacing: 1px;">FESTIO STAFF SYSTEM</h2>
+    <div class="login-box-rigid" style="position: relative;">
+      <!-- Theme Toggle Switch -->
+      <div class="theme-switch-wrapper">
+        <label class="theme-switch">
+          <input type="checkbox" id="theme-toggle-switch">
+          <span class="slider">
+            <svg class="moon-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
+            <svg class="sun-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg>
+          </span>
+        </label>
+      </div>
+
+      <h2 class="login-title">FESTIO STAFF SYSTEM</h2>
       <div class="login-subtitle">스태프 단말기 전용 관제 시스템</div>
       
       <div id="login-error-alert" class="alert-box alert-red" style="display:none;"></div>
@@ -360,9 +379,10 @@ function renderLoginScreen() {
         <div class="form-group-rigid">
           <label>SECURITY PASSWORD (비밀번호)</label>
           <div style="position: relative;">
-            <input type="password" id="login-pw" placeholder="PASSWORD 입력" required class="input-rigid" style="padding-right: 40px; width: 100%; box-sizing: border-box;">
-            <button type="button" id="toggle-pw-visibility" style="position: absolute; right: 10px; top: 50%; transform: translateY(-50%); background: none; border: none; cursor: pointer; color: #a0aec0; font-size: 16px; padding: 0;">
-              👁️
+            <input type="password" id="login-pw" placeholder="PASSWORD 입력" required class="input-rigid" style="padding-right: 45px; width: 100%; box-sizing: border-box;">
+            <button type="button" id="toggle-pw-visibility" style="position: absolute; right: 12px; top: 50%; transform: translateY(-50%); background: none; border: none; cursor: pointer; color: var(--text-muted); padding: 0; display: flex; align-items: center; justify-content: center;">
+              <svg id="eye-icon-on" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+              <svg id="eye-icon-off" style="display:none;" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path><line x1="1" y1="1" x2="23" y2="23"></line></svg>
             </button>
           </div>
         </div>
@@ -374,16 +394,16 @@ function renderLoginScreen() {
             로그인
           </button>
         </div>
-        <div style="color: #ef4444; font-size: 11px; margin-top: 15px; line-height: 1.5; text-align: left;">
-          * 시스템 액세스 인증은 임시 계정으로 로그인이 가능합니다.<br>
-          * 로그인은 supabase에서 app_user table 계정으로 로그인이 가능합니다.
+        <div class="login-helper-text">
+          <p>* 시스템 액세스 인증은 임시 계정으로 로그인이 가능합니다.</p>
+          <p>* 로그인은 supabase에서 app_user table 계정으로 로그인이 가능합니다.</p>
         </div>
       </form>
 
       <div class="temp-accounts-box">
         <h4>임시 생성된 계정 목록 (테스트용)</h4>
         <ul id="temp-accounts-list"></ul>
-        <button id="btn-gen-temp-acc" class="btn btn-rigid btn-small btn-blue" style="width:100%; margin-top:10px;">
+        <button id="btn-gen-temp-acc" class="btn btn-rigid btn-blue" style="width:100%; margin-top:10px; padding: 12px 15px; font-size: 14px;">
           + 테스트용 신규 임시 계정 즉시 발급
         </button>
       </div>
@@ -398,11 +418,37 @@ function renderLoginScreen() {
     renderTempAccountsInLogin();
   };
 
+  // Theme Toggle logic
+  const themeSwitch = document.getElementById("theme-toggle-switch");
+
+  function updateThemeSwitch() {
+    if (document.body.classList.contains("light-theme")) {
+      if (themeSwitch) themeSwitch.checked = true;
+    } else {
+      if (themeSwitch) themeSwitch.checked = false;
+    }
+  }
+
+  // Set initial switch state
+  updateThemeSwitch();
+
+  if (themeSwitch) {
+    themeSwitch.onchange = (e) => {
+      if (e.target.checked) {
+        document.body.classList.add("light-theme");
+        localStorage.setItem("staff_theme", "light");
+      } else {
+        document.body.classList.remove("light-theme");
+        localStorage.setItem("staff_theme", "dark");
+      }
+    };
+  }
+
   document.getElementById("login-form").onsubmit = (e) => {
     e.preventDefault();
     const id = document.getElementById("login-id").value.trim();
     const pw = document.getElementById("login-pw").value.trim();
-    
+
     const res = login(id, pw);
     if (res.success) {
       checkAuthSession();
@@ -415,14 +461,19 @@ function renderLoginScreen() {
 
   const togglePwBtn = document.getElementById("toggle-pw-visibility");
   const pwInput = document.getElementById("login-pw");
+  const eyeOn = document.getElementById("eye-icon-on");
+  const eyeOff = document.getElementById("eye-icon-off");
+
   if (togglePwBtn && pwInput) {
     togglePwBtn.onclick = () => {
       if (pwInput.type === "password") {
         pwInput.type = "text";
-        togglePwBtn.innerText = "👀";
+        eyeOn.style.display = "none";
+        eyeOff.style.display = "block";
       } else {
         pwInput.type = "password";
-        togglePwBtn.innerText = "👁️";
+        eyeOn.style.display = "block";
+        eyeOff.style.display = "none";
       }
     };
   }
@@ -447,13 +498,13 @@ function renderLoginScreen() {
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ email: id, password: pw })
         });
-        
+
         const res = await response.json();
         if (response.ok && res.success) {
           // sessionStorage 기반 기존 로직 호환 (auth.js의 구조)
           sessionStorage.setItem("STAFF_CURRENT_USER", JSON.stringify(res.user));
           sessionStorage.setItem("festio_staff_token", res.token);
-          
+
           import('./store.js').then(module => {
             module.addNotification("AUTH", `[실제 DB 로그인 성공] ${res.user.name} 계정`);
           });
@@ -508,7 +559,7 @@ async function renderDashboard() {
     if (fnbRes.ok) fnbOrders = await fnbRes.json();
     if (goodsRes.ok) goodsOrders = await goodsRes.json();
     if (scanLogsRes.ok) scanLogsFromDB = await scanLogsRes.json();
-    
+
     if (seatsRes.ok) {
       const allSeats = await seatsRes.json();
       DB.seats = {}; // Completely rebuild seats map from DB
@@ -524,7 +575,7 @@ async function renderDashboard() {
   }
 
   const stats = getSeatStats();
-  
+
   // Stats calculations
   const enteredPercent = stats.total > 0 ? Math.round((stats.entered / stats.total) * 100) : 0;
   const reservedTotal = stats.reserved + stats.entered;
@@ -623,7 +674,7 @@ async function renderDashboard() {
       recentLogs.forEach(log => {
         const ticketId = log.ticket_number || "-";
         const seatId = log.seat_ids || "-";
-        
+
         let badgeClass = "badge-red";
         let statusText = "검증오류";
         if (log.result === "SUCCESS") {
@@ -706,33 +757,33 @@ function renderScannerScreen() {
   const wrapper = document.getElementById("qr-camera-reader-wrapper");
   const startCamBtn = document.getElementById("btn-start-camera");
   const stopCamBtn = document.getElementById("btn-stop-camera");
-  
+
   // Confirmation Prompt Logic (Bypassed for speed)
   function askConfirmScan(decodedText) {
     return Promise.resolve(true); // 항상 즉시 승인 (팝업 안 띄움)
   }
 
   startCamBtn.onclick = () => {
-    initializeQRScanner("qr-camera-reader", 
+    initializeQRScanner("qr-camera-reader",
       async (decodedText) => {
         return await triggerScanValidationUI(decodedText);
       }
     );
-    
+
     // CSS Transform 버그 회피: wrapper를 body 최상단으로 강제 이동
     const wrapper = document.getElementById("qr-camera-reader-wrapper");
     if (!document.getElementById("qr-wrapper-placeholder")) {
-        const placeholder = document.createElement("div");
-        placeholder.id = "qr-wrapper-placeholder";
-        wrapper.parentNode.insertBefore(placeholder, wrapper);
+      const placeholder = document.createElement("div");
+      placeholder.id = "qr-wrapper-placeholder";
+      wrapper.parentNode.insertBefore(placeholder, wrapper);
     }
     document.body.appendChild(wrapper);
-    
+
     // 확실한 100% 꽉찬 화면을 위해 강제로 인라인 스타일 적용했던 부분은 CSS 클래스로 이관
     wrapper.classList.add("fullscreen-mode");
-    
+
     startCamBtn.style.display = "none";
-    
+
     // 버튼 스타일이 망가지지 않도록 기본 인라인 속성만 지정 (나머지는 CSS가 처리)
     stopCamBtn.style.display = "inline-block";
     stopCamBtn.style.zIndex = "1000000";
@@ -740,25 +791,25 @@ function renderScannerScreen() {
 
   stopCamBtn.onclick = () => {
     stopQRScanner();
-    
+
     // 원래 위치로 복귀
     const wrapper = document.getElementById("qr-camera-reader-wrapper");
     const placeholder = document.getElementById("qr-wrapper-placeholder");
     if (wrapper && placeholder) {
-        placeholder.parentNode.insertBefore(wrapper, placeholder);
+      placeholder.parentNode.insertBefore(wrapper, placeholder);
     }
-    
+
     wrapper.classList.remove("fullscreen-mode");
     wrapper.style = "position:relative;"; // 스타일 초기화
-    
+
     const reader = document.getElementById("qr-camera-reader");
-    if(reader) {
-        reader.style = "width: 100%; max-width: 450px; margin: 0 auto; border: 2px solid #2d3748; background:#1a202c;";
+    if (reader) {
+      reader.style = "width: 100%; max-width: 450px; margin: 0 auto; border: 2px solid #2d3748; background:#1a202c;";
     }
-    
+
     const styleElem = document.getElementById("fullscreen-video-style");
     if (styleElem) styleElem.remove();
-    
+
     startCamBtn.style.display = "inline-block";
     stopCamBtn.style.display = "none"; // 빨간 버튼 숨김 처리 추가
   };
@@ -774,11 +825,11 @@ async function triggerScanValidationUI(ticketId) {
 
   title.innerText = result.status;
   msg.innerText = result.message;
-  
+
   if (result.log && result.log.ticketId) {
-      tNum.innerText = `🎫 티켓 번호: ${result.log.ticketId}`;
+    tNum.innerText = `🎫 티켓 번호: ${result.log.ticketId}`;
   } else {
-      tNum.innerText = `🎫 ${ticketId}`;
+    tNum.innerText = `🎫 ${ticketId}`;
   }
 
   // Clear classes
@@ -810,7 +861,7 @@ async function triggerScanValidationUI(ticketId) {
   closeBtn.onclick = () => {
     overlay.style.display = "none";
     if (window.scanPopupTimeout) clearTimeout(window.scanPopupTimeout);
-    
+
     // Refresh currently active screen dynamically
     const activeView = document.querySelector(".content-view.active");
     if (activeView) {
@@ -818,7 +869,7 @@ async function triggerScanValidationUI(ticketId) {
       renderViewData(viewId);
     }
   };
-  
+
   return result;
 }
 
@@ -843,11 +894,11 @@ async function updateRecentScanLogsTable() {
       const seatId = log.seat_ids || "-";
       const ticketType = log.ticket_type === 'ONSITE' ? "현장발권" : "예매발권";
       const ticketTypeBadge = log.ticket_type === 'ONSITE' ? "badge-blue" : "badge-gray";
-      
+
       let colorClass = "badge-red";
       let statusText = "검증 실패 (오류 또는 중복)";
       let rightIndicator = "border-right-red";
-      
+
       if (log.result === "SUCCESS") {
         colorClass = "badge-green";
         statusText = "검증 완료 (입장 승인)";
@@ -870,7 +921,7 @@ async function updateRecentScanLogsTable() {
       `;
       tbody.appendChild(tr);
     });
-  } catch(e) {
+  } catch (e) {
     console.error("Failed to fetch scan logs", e);
     tbody.innerHTML = `<tr><td colspan="8" class="text-center" style="color:#ef4444;">데이터를 불러오는 중 오류가 발생했습니다.</td></tr>`;
   }
@@ -892,7 +943,7 @@ async function renderScanStatusScreen() {
         };
       });
     }
-  } catch(e) {
+  } catch (e) {
     console.error("Failed to fetch seats for stats", e);
   }
 
@@ -993,7 +1044,7 @@ async function renderSeatMapScreen() {
         };
       });
     }
-  } catch(e) {
+  } catch (e) {
     console.error("Failed to fetch reserved seats", e);
   }
 
@@ -1067,7 +1118,7 @@ async function renderTicketingScreen() {
           };
         });
       }
-    } catch(e) {
+    } catch (e) {
       console.error("Failed to fetch reserved seats", e);
     }
   };
@@ -1168,7 +1219,7 @@ async function renderTicketingScreen() {
   const updateSelectedSeatsUI = () => {
     const tbody = document.getElementById("selected-seats-tbody");
     if (!tbody) return;
-    
+
     tbody.innerHTML = "";
     let totalPrice = 0;
 
@@ -1195,12 +1246,12 @@ async function renderTicketingScreen() {
         <td style="padding: 6px 10px; font-weight: bold; color: #ffd65c; vertical-align: middle;">${item.seatId}</td>
         <td style="padding: 6px 10px; vertical-align: middle;">
           <select class="seat-season-select input-rigid input-small" style="padding: 2px 4px; font-size:11px; width: 100%; min-width: 80px;" data-index="${index}">
-            ${seasons.map(s => `<option value="${s.id}" ${s.id === item.seasonId ? 'selected':''}>${s.name}</option>`).join("")}
+            ${seasons.map(s => `<option value="${s.id}" ${s.id === item.seasonId ? 'selected' : ''}>${s.name}</option>`).join("")}
           </select>
         </td>
         <td style="padding: 6px 10px; vertical-align: middle;">
           <select class="seat-rate-select input-rigid input-small" style="padding: 2px 4px; font-size:11px; width: 100%; min-width: 80px;" data-index="${index}">
-            ${rates.map(r => `<option value="${r.id}" ${r.id === item.rateId ? 'selected':''}>${r.name}</option>`).join("")}
+            ${rates.map(r => `<option value="${r.id}" ${r.id === item.rateId ? 'selected' : ''}>${r.name}</option>`).join("")}
           </select>
         </td>
         <td style="padding: 6px 10px; text-align: right; font-weight: bold; font-family: var(--font-mono); vertical-align: middle;">${price.toLocaleString()}원</td>
@@ -1270,32 +1321,32 @@ async function renderTicketingScreen() {
   const loadSvgMapForFestival = async (festivalId) => {
     const svgContainer = document.getElementById("ticketing-svg-map-container");
     if (!svgContainer) return;
-    
+
     try {
       const res = await fetch(`/api/festival/${festivalId}/zones`);
       if (res.ok) {
         const zones = await res.json();
         const zoneWithBg = zones.find(z => z.mapBgUrl);
-        
+
         svgContainer.innerHTML = '';
         if (zoneWithBg && zoneWithBg.mapBgUrl && zoneWithBg.mapBgUrl.toLowerCase().includes('.svg')) {
           const bgRes = await fetch(zoneWithBg.mapBgUrl);
           const svgText = await bgRes.text();
-          
+
           const parser = new DOMParser();
           const doc = parser.parseFromString(svgText, 'image/svg+xml');
           const svgRoot = doc.documentElement;
-          
+
           // Remove inline onclick handlers from SVG to prevent ReferenceError: selectZone is not defined
           svgRoot.querySelectorAll('[onclick]').forEach(el => {
-             el.removeAttribute('onclick');
+            el.removeAttribute('onclick');
           });
-          
+
           svgRoot.setAttribute('width', '100%');
           svgRoot.setAttribute('height', '100%');
           svgRoot.style.pointerEvents = 'auto';
           svgContainer.appendChild(svgRoot);
-          
+
           zones.forEach(zone => {
             if (!zone.svgPoints) return;
             const elementId = zone.svgPoints.replace('#', '');
@@ -1306,7 +1357,7 @@ async function renderTicketingScreen() {
               targetEl.style.fill = 'rgba(105, 108, 255, 0.2)';
               targetEl.style.stroke = '#696cff';
               targetEl.style.strokeWidth = '2px';
-              
+
               targetEl.addEventListener('click', () => {
                 // Remove selected from others
                 svgRoot.querySelectorAll('.selected-zone-polygon').forEach(el => {
@@ -1315,13 +1366,13 @@ async function renderTicketingScreen() {
                 });
                 targetEl.classList.add('selected-zone-polygon');
                 targetEl.style.fill = 'rgba(255, 171, 0, 0.5)';
-                
+
                 // Clear and redraw seat map for this specific zone
                 const container = document.getElementById("ticketing-seat-map-container");
-                container.innerHTML = ""; 
+                container.innerHTML = "";
                 // Render seat map for this zone using the exact DB zone name
                 renderSeatMap("ticketing-seat-map-container", handleSeatToggle, zone.zoneName);
-                
+
                 // 모달 띄우기
                 document.getElementById('seat-map-modal').style.display = 'flex';
               });
@@ -1332,10 +1383,10 @@ async function renderTicketingScreen() {
           // 모달에는 모든 좌석을 띄울지, 아니면 버튼을 따로 만들지 결정해야 함
           // 우선 빈 화면으로 유지
           const container = document.getElementById("ticketing-seat-map-container");
-          container.innerHTML = '<div style="text-align:center; padding: 50px; color: var(--text-muted);">배치도가 없습니다.</div>'; 
+          container.innerHTML = '<div style="text-align:center; padding: 50px; color: var(--text-muted);">배치도가 없습니다.</div>';
         }
       }
-    } catch(e) {
+    } catch (e) {
       console.error("Failed to load SVG zones", e);
       svgContainer.innerHTML = '<div style="color:var(--text-muted); text-align:center; padding:50px;">SVG 배치도를 불러오는데 실패했습니다.</div>';
     }
@@ -1352,10 +1403,10 @@ async function renderTicketingScreen() {
     selectedSeats = []; // Reset selections
     await loadSeatsForFestival(currentFestivalId);
     await loadSvgMapForFestival(currentFestivalId);
-    
+
     // Clear seat map until a zone is clicked
     const container = document.getElementById("ticketing-seat-map-container");
-    container.innerHTML = '<div style="text-align:center; padding: 50px; color: var(--text-muted);">위의 지도에서 구역을 클릭하세요.</div>'; 
+    container.innerHTML = '<div style="text-align:center; padding: 50px; color: var(--text-muted);">위의 지도에서 구역을 클릭하세요.</div>';
     updateSelectedSeatsUI();
   });
 
@@ -1384,7 +1435,7 @@ async function renderTicketingScreen() {
       onSuccess: async (paymentData) => {
         // Success payment: Send to backend
         const seatIds = selectedSeats.map(s => s.seatId);
-        
+
         try {
           const res = await fetch('/api/order/ticket', {
             method: 'POST',
@@ -1407,7 +1458,7 @@ async function renderTicketingScreen() {
           const secretStr = result.qrPayload.replace('SECRET:', '');
           const ticketUrl = `${window.location.origin}/features/user/ticket/view.html?orderId=${result.orderId}&secret=${secretStr}`;
           const qrImgSrc = `https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(ticketUrl)}`;
-          
+
           const printWindow = window.open('', '_blank', 'width=400,height=700');
           const receiptHtml = `
             <html>
@@ -1455,12 +1506,12 @@ async function renderTicketingScreen() {
           // ==============================================================================
 
           selectedSeats = [];
-          
+
           // Re-render to fetch newly reserved seats from backend without resetting the entire screen
           await loadSeatsForFestival(currentFestivalId);
           updateSelectedSeatsUI();
           renderDashboard(); // Update dashboard counts
-          
+
         } catch (e) {
           alert("서버 오류: 예매를 저장하지 못했습니다.");
           console.error(e);
@@ -1548,9 +1599,9 @@ async function renderRefundScreen() {
     const res = await fetch('/api/order/tickets');
     const tbody = document.getElementById("refund-tbody");
     if (!res.ok) throw new Error("API 오류");
-    
+
     const orders = await res.json();
-    
+
     if (orders.length === 0) {
       tbody.innerHTML = `<tr><td colspan="7" class="text-center" style="color:#a0aec0;">조회되는 결제 완료 예매가 없습니다.</td></tr>`;
       return;
@@ -1558,32 +1609,32 @@ async function renderRefundScreen() {
 
     tbody.innerHTML = "";
     orders.forEach(o => {
-    let actionBtnHtml = "";
-    let statusLabel = "";
+      let actionBtnHtml = "";
+      let statusLabel = "";
 
-    if (o.is_entered) {
-      statusLabel = `<span class="badge badge-purple">입장완료</span>`;
-      actionBtnHtml = `<span style="font-size:12px; color:#a0aec0;">입장 완료됨</span>`;
-    } else if (o.payment_status === "PAID") {
-      statusLabel = `<span class="badge badge-green">결제완료</span>`;
-      actionBtnHtml = `<button class="btn btn-rigid btn-small btn-red btn-request-ref" data-id="${o.id}">환불 요청</button>`;
-    } else if (o.payment_status === "REFUND_REQUESTED") {
-      statusLabel = `<span class="badge badge-amber animate-pulse">환불 접수</span>`;
-      actionBtnHtml = `<button class="btn btn-rigid btn-small btn-purple btn-accept-ref" data-id="${o.id}">환불 수락 (Cancel API)</button>`;
-    } else if (o.payment_status === "REFUNDED") {
-      statusLabel = `<span class="badge badge-red">환불완료</span>`;
-      actionBtnHtml = `<span style="font-size:12px; color:#a0aec0;">환불 처리됨</span>`;
-    }
+      if (o.is_entered) {
+        statusLabel = `<span class="badge badge-purple">입장완료</span>`;
+        actionBtnHtml = `<span style="font-size:12px; color:#a0aec0;">입장 완료됨</span>`;
+      } else if (o.payment_status === "PAID") {
+        statusLabel = `<span class="badge badge-green">결제완료</span>`;
+        actionBtnHtml = `<button class="btn btn-rigid btn-small btn-red btn-request-ref" data-id="${o.id}">환불 요청</button>`;
+      } else if (o.payment_status === "REFUND_REQUESTED") {
+        statusLabel = `<span class="badge badge-amber animate-pulse">환불 접수</span>`;
+        actionBtnHtml = `<button class="btn btn-rigid btn-small btn-purple btn-accept-ref" data-id="${o.id}">환불 수락 (Cancel API)</button>`;
+      } else if (o.payment_status === "REFUNDED") {
+        statusLabel = `<span class="badge badge-red">환불완료</span>`;
+        actionBtnHtml = `<span style="font-size:12px; color:#a0aec0;">환불 처리됨</span>`;
+      }
 
-    let dateStr = "";
-    if (Array.isArray(o.created_at)) {
-      dateStr = o.created_at.slice(0, 3).join('-') + ' ' + o.created_at.slice(3, 5).join(':');
-    } else {
-      dateStr = new Date(o.created_at).toLocaleString();
-    }
+      let dateStr = "";
+      if (Array.isArray(o.created_at)) {
+        dateStr = o.created_at.slice(0, 3).join('-') + ' ' + o.created_at.slice(3, 5).join(':');
+      } else {
+        dateStr = new Date(o.created_at).toLocaleString();
+      }
 
-    const tr = document.createElement("tr");
-    tr.innerHTML = `
+      const tr = document.createElement("tr");
+      tr.innerHTML = `
       <td><strong>ORD-${o.id}</strong></td>
       <td><span class="badge badge-blue">현장예매</span></td>
       <td>현장 고객</td>
@@ -1592,9 +1643,9 @@ async function renderRefundScreen() {
       <td>${statusLabel}<br><span style="font-size:10px; color:var(--text-muted);">${dateStr}</span></td>
       <td class="text-right">${actionBtnHtml}</td>
     `;
-    tbody.appendChild(tr);
-  });
-  
+      tbody.appendChild(tr);
+    });
+
   } catch (e) {
     const tbody = document.getElementById("refund-tbody");
     if (tbody) tbody.innerHTML = `<tr><td colspan="7" class="text-center" style="color:#ef4444;">데이터를 불러오지 못했습니다.</td></tr>`;
@@ -1737,7 +1788,7 @@ async function renderFnbQueueTable() {
     el.onclick = async () => {
       const ordId = el.getAttribute("data-id");
       const nextStatus = el.getAttribute("data-next");
-      
+
       try {
         await fetch(`/api/order/fnb/${ordId}/status`, {
           method: 'PUT',
@@ -1826,7 +1877,7 @@ async function renderGoodsQueueTable() {
   if (!tbody) return;
 
   tbody.innerHTML = `<tr><td colspan="8" class="text-center" style="color:#a0aec0; padding:30px 0;">로딩 중...</td></tr>`;
-  
+
   let goodsOrders = [];
   try {
     const res = await fetch('/api/order/goods');
@@ -1870,10 +1921,10 @@ async function renderGoodsQueueTable() {
     }
 
     const itemName = o.items.map(i => i.name).join(", ");
-    const itemQty  = o.items.map(i => `${i.quantity}개`).join(", ");
+    const itemQty = o.items.map(i => `${i.quantity}개`).join(", ");
 
-    const ordNum   = parseInt(o.id.replace(/\D/g, "")) || 5678;
-    const phone    = `010-3849-${String((ordNum % 9000) + 1000)}`;
+    const ordNum = parseInt(o.id.replace(/\D/g, "")) || 5678;
+    const phone = `010-3849-${String((ordNum % 9000) + 1000)}`;
 
     const tr = document.createElement("tr");
     tr.innerHTML = `
@@ -1894,7 +1945,7 @@ async function renderGoodsQueueTable() {
     el.onclick = async () => {
       const ordId = el.dataset.id;
       const nextStatus = el.dataset.next;
-      
+
       try {
         await fetch(`/api/order/goods/${ordId}/status`, {
           method: 'PUT',
@@ -1920,7 +1971,7 @@ async function renderGoodsQueueTable() {
     btn.onclick = async () => {
       const ordId = btn.dataset.id;
       if (!confirm(`주문 ${ordId}을 전면 환불/취소하시겠습니까?\n(현재재고수량이 자동 복원됩니다)`)) return;
-      
+
       try {
         await fetch(`/api/order/goods/${ordId}/status`, {
           method: 'PUT',
@@ -1930,7 +1981,7 @@ async function renderGoodsQueueTable() {
       } catch (e) {
         console.error("Failed to refund goods order", e);
       }
-      
+
       const order = DB.orders.find(o => o.id === ordId);
       if (order) {
         order.items.forEach(item => {
@@ -2027,7 +2078,7 @@ function renderGoodsInventoryScreen() {
   renderAdminGoodsList();
 
   const modal = document.getElementById("goods-modal-overlay");
-  
+
   // Options logic
   const btnAddGOpt = document.querySelector(".btn-add-g-option");
   const gOptContainer = document.getElementById("goods-options-container");
@@ -2044,7 +2095,7 @@ function renderGoodsInventoryScreen() {
       `;
       gOptContainer.appendChild(row);
       row.querySelector(".btn-remove-option").onclick = () => row.remove();
-      row.querySelector(".btn-opt-soldout").onclick = function() {
+      row.querySelector(".btn-opt-soldout").onclick = function () {
         if (this.dataset.soldout === "false") {
           this.dataset.soldout = "true";
           this.className = "btn btn-small btn-red btn-opt-soldout";
@@ -2061,7 +2112,7 @@ function renderGoodsInventoryScreen() {
     btn.onclick = () => btn.parentElement.remove();
   });
   gOptContainer.querySelectorAll(".btn-opt-soldout").forEach(btn => {
-    btn.onclick = function() {
+    btn.onclick = function () {
       if (this.dataset.soldout === "false") {
         this.dataset.soldout = "true";
         this.className = "btn btn-small btn-red btn-opt-soldout";
@@ -2084,7 +2135,7 @@ function renderGoodsInventoryScreen() {
     document.querySelector("#new-goods-form button[type='submit']").innerText = "등록";
     modal.style.display = "flex";
   };
-  
+
   const closeModal = () => { modal.style.display = "none"; };
   document.getElementById("btn-close-goods-modal").onclick = closeModal;
   document.getElementById("btn-cancel-goods").onclick = closeModal;
@@ -2113,17 +2164,17 @@ function renderGoodsInventoryScreen() {
       method: method,
       body: formData
     })
-    .then(response => response.json())
-    .then(data => {
-      alert(data.message || (editId ? "굿즈가 수정되었습니다." : "신규 굿즈가 성공적으로 등록되었습니다."));
-      closeModal();
-      // 로컬 화면 갱신 (추후 서버 조회 로직으로 대체 권장)
-      renderGoodsInventoryScreen();
-    })
-    .catch(error => {
-      console.error('Error:', error);
-      alert("굿즈 등록에 실패했습니다.");
-    });
+      .then(response => response.json())
+      .then(data => {
+        alert(data.message || (editId ? "굿즈가 수정되었습니다." : "신규 굿즈가 성공적으로 등록되었습니다."));
+        closeModal();
+        // 로컬 화면 갱신 (추후 서버 조회 로직으로 대체 권장)
+        renderGoodsInventoryScreen();
+      })
+      .catch(error => {
+        console.error('Error:', error);
+        alert("굿즈 등록에 실패했습니다.");
+      });
   };
 }
 
@@ -2217,7 +2268,7 @@ function renderFnbInventoryScreen() {
       `;
       fOptContainer.appendChild(row);
       row.querySelector(".btn-remove-option").onclick = () => row.remove();
-      row.querySelector(".btn-opt-soldout").onclick = function() {
+      row.querySelector(".btn-opt-soldout").onclick = function () {
         if (this.dataset.soldout === "false") {
           this.dataset.soldout = "true";
           this.className = "btn btn-small btn-red btn-opt-soldout";
@@ -2244,7 +2295,7 @@ function renderFnbInventoryScreen() {
     document.querySelector("#new-food-form button[type='submit']").innerText = "등록";
     modal.style.display = "flex";
   };
-  
+
   const closeModal = () => { modal.style.display = "none"; };
   document.getElementById("btn-close-food-modal").onclick = closeModal;
   document.getElementById("btn-cancel-food").onclick = closeModal;
@@ -2271,17 +2322,17 @@ function renderFnbInventoryScreen() {
       method: method,
       body: formData
     })
-    .then(response => response.json())
-    .then(data => {
-      alert(data.message || (editId ? "F&B 메뉴가 수정되었습니다." : "신규 F&B 메뉴가 등록되었습니다."));
-      closeModal();
-      // 로컬 화면 갱신 (추후 서버 조회 로직으로 대체 권장)
-      renderFnbInventoryScreen();
-    })
-    .catch(error => {
-      console.error('Error:', error);
-      alert("F&B 메뉴 등록에 실패했습니다.");
-    });
+      .then(response => response.json())
+      .then(data => {
+        alert(data.message || (editId ? "F&B 메뉴가 수정되었습니다." : "신규 F&B 메뉴가 등록되었습니다."));
+        closeModal();
+        // 로컬 화면 갱신 (추후 서버 조회 로직으로 대체 권장)
+        renderFnbInventoryScreen();
+      })
+      .catch(error => {
+        console.error('Error:', error);
+        alert("F&B 메뉴 등록에 실패했습니다.");
+      });
   };
 }
 
@@ -2296,7 +2347,7 @@ function renderAdminGoodsList() {
       tbody.innerHTML = "";
       data.forEach(g => {
         const avail = g.availableStock || 0;
-        
+
         let statusText = `<span class="badge badge-green">판매중</span>`;
         if (avail <= 0) {
           statusText = `<span class="badge badge-red">품절(SOLD OUT)</span>`;
@@ -2325,7 +2376,7 @@ function renderAdminGoodsList() {
       // Force Sold Out binding
       document.querySelectorAll(".btn-force-soldout-g").forEach(btn => {
         btn.onclick = () => {
-          if(confirm("해당 굿즈의 재고를 0으로 만들어 품절 처리하시겠습니까?")) {
+          if (confirm("해당 굿즈의 재고를 0으로 만들어 품절 처리하시겠습니까?")) {
             const id = btn.getAttribute("data-id");
             const formData = new FormData();
             formData.append("initialStock", 0); // 수량을 0으로 덮어씀
@@ -2347,11 +2398,11 @@ function renderAdminGoodsList() {
           document.getElementById("new-g-name").value = btn.getAttribute("data-name");
           document.getElementById("new-g-price").value = btn.getAttribute("data-price");
           document.getElementById("new-g-stock").value = btn.getAttribute("data-stock");
-          
+
           document.getElementById("new-goods-form").setAttribute("data-edit-id", id);
           document.querySelector("#goods-modal-overlay .registration-modal-header span").innerText = "굿즈 수정";
           document.querySelector("#new-goods-form button[type='submit']").innerText = "수정하기";
-          
+
           document.getElementById("goods-modal-overlay").style.display = "flex";
         };
       });
@@ -2359,7 +2410,7 @@ function renderAdminGoodsList() {
       // Delete binding
       document.querySelectorAll(".btn-delete-g").forEach(btn => {
         btn.onclick = () => {
-          if(confirm("정말 삭제하시겠습니까?")) {
+          if (confirm("정말 삭제하시겠습니까?")) {
             const id = btn.getAttribute("data-id");
             fetch('/api/goods/' + id, { method: 'DELETE' })
               .then(res => res.json())
@@ -2388,8 +2439,8 @@ function renderAdminFoodList() {
       data.forEach(f => {
         // 백엔드 DB의 status 컬럼 값을 기준으로 품절 여부 판단
         const isOutOfStock = f.status === 'SOLD_OUT';
-        const statusText = isOutOfStock 
-          ? `<span class="badge badge-red animate-pulse">재료소진(SOLD OUT)</span>` 
+        const statusText = isOutOfStock
+          ? `<span class="badge badge-red animate-pulse">재료소진(SOLD OUT)</span>`
           : `<span class="badge badge-green">판매가능</span>`;
 
         const tr = document.createElement("tr");
@@ -2430,11 +2481,11 @@ function renderAdminFoodList() {
           const id = btn.getAttribute("data-id");
           document.getElementById("new-f-name").value = btn.getAttribute("data-name");
           document.getElementById("new-f-price").value = btn.getAttribute("data-price");
-          
+
           document.getElementById("new-food-form").setAttribute("data-edit-id", id);
           document.querySelector("#food-modal-overlay .registration-modal-header span").innerText = "F&B 수정";
           document.querySelector("#new-food-form button[type='submit']").innerText = "수정하기";
-          
+
           document.getElementById("food-modal-overlay").style.display = "flex";
         };
       });
@@ -2442,7 +2493,7 @@ function renderAdminFoodList() {
       // Delete binding
       document.querySelectorAll(".btn-delete-f").forEach(btn => {
         btn.onclick = () => {
-          if(confirm("정말 삭제하시겠습니까?")) {
+          if (confirm("정말 삭제하시겠습니까?")) {
             const id = btn.getAttribute("data-id");
             fetch('/api/fnb/' + id, { method: 'DELETE' })
               .then(res => res.json())
@@ -2475,7 +2526,7 @@ function setupGlobalSubscriptions() {
       notifBadge.style.display = "block";
       const current = parseInt(notifBadge.innerText) || 0;
       notifBadge.innerText = current + 1;
-      
+
       // Trigger micro shaking animation on bell
       notifBell.classList.add("animate-shake");
       setTimeout(() => {
@@ -2552,7 +2603,7 @@ function populatePopoverNotifications() {
     notifList.innerHTML = `<div class="notif-item text-center" style="color:#a0aec0; padding:15px;">신규 수신된 알림이 없습니다.</div>`;
     return;
   }
-  
+
   DB.notifications.slice(0, 10).forEach(n => {
     const div = document.createElement("div");
     div.className = `notif-item type-${n.type.toLowerCase()}`;
@@ -2596,27 +2647,27 @@ function renderManualEntryScreen() {
       alert("검색어를 입력해주세요.");
       return;
     }
-    
+
     resultDiv.innerHTML = "<div class='text-center'>검색 중...</div>";
-    
+
     try {
       const res = await fetch("/api/order/tickets");
       const data = await res.json();
-      
+
       const searchKey = input.toLowerCase();
-      const matched = data.find(o => 
-        ("ord-" + o.id) === searchKey || 
-        String(o.id) === searchKey || 
+      const matched = data.find(o =>
+        ("ord-" + o.id) === searchKey ||
+        String(o.id) === searchKey ||
         (o.ticket_number && String(o.ticket_number).toLowerCase().includes(searchKey))
       );
-      
+
       if (!matched) {
         resultDiv.innerHTML = "<div style='color: #ef4444; padding: 15px; border: 1px solid #ef4444; border-radius: 8px;'>해당하는 주문이나 티켓을 찾을 수 없습니다.</div>";
         return;
       }
-      
+
       const isEntered = matched.is_entered;
-      
+
       let html = `
         <div style="border: 1px solid #333; padding: 15px; border-radius: 8px; background: #1a202c;">
           <div style="font-weight: bold; font-size: 16px; margin-bottom: 10px; color: #fff;">검색 결과</div>
@@ -2625,32 +2676,32 @@ function renderManualEntryScreen() {
           <div style="font-size: 14px; margin-bottom: 5px;"><strong>좌석 정보:</strong> ${matched.seat_ids || '-'}</div>
           <div style="font-size: 14px; margin-bottom: 15px;"><strong>입장 상태:</strong> ${isEntered ? '<span style="color:#ef4444; font-weight:bold;">입장 완료</span>' : '<span style="color:#10b981; font-weight:bold;">입장 대기</span>'}</div>
       `;
-      
+
       if (!isEntered) {
         html += `<button id="btn-manual-enter-${matched.id}" class="btn btn-rigid btn-green" style="width: 100%;">이 티켓 강제 입장 처리</button>`;
       } else {
         html += `<button class="btn btn-rigid btn-red" style="width: 100%; opacity: 0.5; cursor: not-allowed;" disabled>이미 입장 처리됨</button>`;
       }
-      
+
       html += `</div>`;
       resultDiv.innerHTML = html;
-      
+
       if (!isEntered) {
         document.getElementById(`btn-manual-enter-${matched.id}`).onclick = async () => {
-           if (!confirm("정말 이 티켓을 입장 처리하시겠습니까?")) return;
-           try {
-             const enterRes = await fetch(`/api/order/tickets/${matched.id}/manual-enter`, { method: "POST" });
-             const enterData = await enterRes.json();
-             
-             if (enterData.status === "VALID") {
-                 alert("입장되셨습니다!");
-                 document.getElementById("btn-manual-search").click(); // Refresh result
-             } else {
-                 alert("처리 실패: " + enterData.message);
-             }
-           } catch (err) {
-             alert("서버 에러가 발생했습니다.");
-           }
+          if (!confirm("정말 이 티켓을 입장 처리하시겠습니까?")) return;
+          try {
+            const enterRes = await fetch(`/api/order/tickets/${matched.id}/manual-enter`, { method: "POST" });
+            const enterData = await enterRes.json();
+
+            if (enterData.status === "VALID") {
+              alert("입장되셨습니다!");
+              document.getElementById("btn-manual-search").click(); // Refresh result
+            } else {
+              alert("처리 실패: " + enterData.message);
+            }
+          } catch (err) {
+            alert("서버 에러가 발생했습니다.");
+          }
         };
       }
     } catch (e) {

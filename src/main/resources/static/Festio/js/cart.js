@@ -273,6 +273,45 @@ function initCartPayment() {
         return;
       }
       Toast.success('FESTIO Pay로 결제되었습니다.');
+
+      try {
+        let savedFood = JSON.parse(localStorage.getItem('LOCAL_MOCK_FOOD')) || [];
+        let savedGoods = JSON.parse(localStorage.getItem('LOCAL_MOCK_GOODS')) || [];
+
+        _cartItems.forEach(item => {
+          const isGoods = item.eventName.includes('굿즈') || item.eventName.includes('티셔츠') || item.eventName.includes('슬로건') || item.eventName.includes('응원봉');
+
+          if (isGoods) {
+            savedGoods.push({
+              orderItemId: 'G' + Date.now() + Math.floor(Math.random() * 1000),
+              storeName: 'FESTIO SHOP',
+              productName: item.eventName,
+              quantity: item.quantity,
+              totalPrice: item.price * item.quantity,
+              pickupTimeSlot: new Date().toLocaleString(),
+              itemStatus: 'READY_FOR_PICKUP',
+              statusText: '수령 대기',
+              deliveryType: '현장수령'
+            });
+          } else {
+            savedFood.push({
+              orderItemId: 'F' + Date.now() + Math.floor(Math.random() * 1000),
+              storeName: 'FESTIO 푸드트럭',
+              productName: item.eventName,
+              quantity: item.quantity,
+              selectedOptions: '기본 옵션',
+              pickupTimeSlot: new Date().toLocaleTimeString(),
+              totalPrice: item.price * item.quantity,
+              itemStatus: 'PREPARING',
+              statusText: '조리 중',
+              qrToken: 'F' + Date.now()
+            });
+          }
+        });
+        localStorage.setItem('LOCAL_MOCK_FOOD', JSON.stringify(savedFood));
+        localStorage.setItem('LOCAL_MOCK_GOODS', JSON.stringify(savedGoods));
+      } catch (e) { console.error('동기화 오류', e); }
+
       _cartItems = [];
       renderCart();
       return;
