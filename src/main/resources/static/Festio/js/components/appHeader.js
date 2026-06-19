@@ -160,9 +160,14 @@
   } else {
     const userName = localStorage.getItem('userName') || sessionStorage.getItem('userName') || '회원';
     const userBadgeSvg = `<svg viewBox="0 0 24 24" style="position:absolute; bottom:-2px; right:-2px; width:14px; height:14px; border-radius:50%; background:#fff; border: 2px solid #fff;" fill="#3b82f6"><circle cx="12" cy="12" r="12"/><path d="M9 16.2L4.8 12l-1.4 1.4L9 19 21 7l-1.4-1.4L9 16.2z" fill="#fff"/></svg>`;
+    const savedAvatar = localStorage.getItem('festio_avatar');
+    const avatarContent = savedAvatar
+      ? `<img src="${savedAvatar}" alt="프로필 이미지" style="width:100%; height:100%; object-fit:cover; border-radius:50%;">`
+      : `<svg viewBox="0 0 24 24" fill="none" stroke="#4f46e5" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:20px; height:20px;"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>`;
+
     const avatarCircleHtml = `
-      <div style="position:relative; width:38px; height:38px; border-radius:50%; background:linear-gradient(135deg, #e0e7ff 0%, #c7d2fe 100%); display:flex; align-items:center; justify-content:center; flex-shrink:0;">
-        <svg viewBox="0 0 24 24" fill="none" stroke="#4f46e5" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:20px; height:20px;"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+      <div id="header-avatar-circle" style="position:relative; width:38px; height:38px; border-radius:50%; background:linear-gradient(135deg, #e0e7ff 0%, #c7d2fe 100%); display:flex; align-items:center; justify-content:center; flex-shrink:0;">
+        ${avatarContent}
         ${userBadgeSvg}
       </div>
     `;

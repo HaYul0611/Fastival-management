@@ -41,6 +41,7 @@ let _supabase = null;
 let _isSupabaseUnreachable = false;
 
 function getSupabase() {
+  if (SUPABASE_URL.includes('cddfyvkilmfrbtcruklw')) return null;
   if (_isSupabaseUnreachable) return null;
   if (!_supabase && window.supabase) {
     _supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
@@ -518,7 +519,7 @@ window.fetchKopisEvents = async function () {
           is_active: true,
           category: cat,
           venue: item.querySelector('fcltynm')?.textContent,
-          thumbnail_url: item.querySelector('poster')?.textContent,
+          thumbnail_url: item.querySelector('poster')?.textContent?.replace(/https?:\/\/www\.kopis\.or\.kr/g, 'https://kopis.or.kr'),
           min_price: mockPrice,
           badge_label: null,
           is_hot: i % 7 === 0,
@@ -745,8 +746,7 @@ const eventApi = {
       if (response.ok) {
         const zones = await response.json();
         if (zones && zones.length > 0) {
-          const populatedZones = [];
-          for (const zone of zones) {
+          const populatedZones = await Promise.all(zones.map(async (zone) => {
             let total = 0;
             let reserved = 0;
             let zonePrice = 0;
@@ -763,13 +763,13 @@ const eventApi = {
             }
 
             const remaining = Math.max(0, total - reserved);
-            populatedZones.push(normalizeZone({
+            return normalizeZone({
               ...zone,
               total_capacity: total,
               remaining_capacity: remaining,
               price: zonePrice || 50000
-            }));
-          }
+            });
+          }));
           return populatedZones;
         }
       }

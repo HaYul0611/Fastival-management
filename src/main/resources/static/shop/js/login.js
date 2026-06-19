@@ -11,6 +11,7 @@ document.addEventListener('DOMContentLoaded', () => {
       effect: 'fade',
       fadeEffect: { crossFade: true },
       speed: 1000,
+      a11y: false,
       navigation: {
         nextEl: '.swiper-button-next',
         prevEl: '.swiper-button-prev',
@@ -35,8 +36,18 @@ document.addEventListener('DOMContentLoaded', () => {
   tabR.addEventListener('click', () => sw(false));
 
   /* 로그인 */
+  const lEmail = document.getElementById('lEmail');
+  const saveEmail = document.getElementById('saveEmail');
+  if (lEmail && saveEmail) {
+    const saved = localStorage.getItem('savedEmail');
+    if (saved) {
+      lEmail.value = saved;
+      saveEmail.checked = true;
+    }
+  }
+
   async function doLogin() {
-    const email = document.getElementById('lEmail').value.trim();
+    const email = lEmail.value.trim();
     const pw = document.getElementById('lPw').value;
     const err = document.getElementById('lErr'); err.textContent = '';
     if (!email || !pw) { err.textContent = '이메일과 비밀번호를 입력해주세요.'; return }
@@ -54,6 +65,12 @@ document.addEventListener('DOMContentLoaded', () => {
         localStorage.setItem('email', result.email);
         localStorage.setItem('isLoggedIn', 'true');
 
+        if (document.getElementById('saveEmail').checked) {
+          localStorage.setItem('savedEmail', email);
+        } else {
+          localStorage.removeItem('savedEmail');
+        }
+
         Toast.show({ title: '로그인 성공', msg: '쇼핑을 시작하세요!', type: 'success' });
         setTimeout(() => location.href = 'shop.html', 500);
       } else {
@@ -67,11 +84,128 @@ document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('btnLSubmit').addEventListener('click', doLogin);
   document.getElementById('lPw').addEventListener('keydown', e => { if (e.key === 'Enter') doLogin() });
 
+  /* ID/PW 찾기 모달 */
+  const btnFindIdPw = document.getElementById('btnFindIdPw');
+  const findModal = document.getElementById('findModal');
+  const btnCloseFindModal = document.getElementById('btnCloseFindModal');
+  const tabFindId = document.getElementById('tabFindId');
+  const tabFindPw = document.getElementById('tabFindPw');
+  const paneFindId = document.getElementById('paneFindId');
+  const paneFindPw = document.getElementById('paneFindPw');
+
+  if (btnFindIdPw && findModal) {
+    btnFindIdPw.addEventListener('click', (e) => {
+      e.stopPropagation();
+      findModal.style.display = 'flex';
+    });
+    if (btnCloseFindModal) {
+      btnCloseFindModal.addEventListener('click', () => findModal.style.display = 'none');
+    }
+    document.addEventListener('click', (e) => {
+      if (findModal.style.display === 'flex' && !findModal.contains(e.target) && e.target !== btnFindIdPw) {
+        findModal.style.display = 'none';
+      }
+    });
+    if (tabFindId && tabFindPw) {
+      tabFindId.addEventListener('click', () => {
+        tabFindId.style.borderBottom = '2px solid #111827';
+        tabFindId.style.color = '#111827';
+        tabFindId.style.fontWeight = '700';
+        tabFindPw.style.borderBottom = '2px solid transparent';
+        tabFindPw.style.color = '#9ca3af';
+        tabFindPw.style.fontWeight = '500';
+        paneFindId.style.display = 'flex';
+        paneFindPw.style.display = 'none';
+      });
+      tabFindPw.addEventListener('click', () => {
+        tabFindPw.style.borderBottom = '2px solid #111827';
+        tabFindPw.style.color = '#111827';
+        tabFindPw.style.fontWeight = '700';
+        tabFindId.style.borderBottom = '2px solid transparent';
+        tabFindId.style.color = '#9ca3af';
+        tabFindId.style.fontWeight = '500';
+        paneFindPw.style.display = 'flex';
+        paneFindId.style.display = 'none';
+      });
+    }
+
+    // 모달 내 폼 로직
+    const findIdPhone = document.getElementById('findIdPhone');
+    if (findIdPhone) {
+      findIdPhone.addEventListener('input', (e) => {
+        let val = e.target.value.replace(/[^0-9]/g, '');
+        if (val.length > 11) val = val.substring(0, 11);
+        if (val.length > 3 && val.length <= 7) {
+          val = val.replace(/(\d{3})(\d+)/, '$1 - $2');
+        } else if (val.length > 7) {
+          val = val.replace(/(\d{3})(\d{4})(\d+)/, '$1 - $2 - $3');
+        }
+        e.target.value = val;
+      });
+    }
+
+    const btnSendTempPwAuth = document.getElementById('btnSendTempPwAuth');
+    const tempPwAuthBlock = document.getElementById('tempPwAuthBlock');
+    const btnVerifyTempPw = document.getElementById('btnVerifyTempPw');
+
+    if (btnSendTempPwAuth) {
+      btnSendTempPwAuth.addEventListener('click', async () => {
+        const email = document.getElementById('findPwEmail').value.trim();
+        if (!email) { Toast.show({ title: '알림', msg: '이메일을 입력해주세요.', type: 'warning' }); return; }
+
+        try {
+          const response = await fetch('/api/auth/send-email', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email: email })
+          });
+          if (response.ok) {
+            Toast.show({ title: '인증요청', msg: '인증번호가 발송되었습니다.', type: 'info' });
+            tempPwAuthBlock.style.display = 'flex';
+          } else {
+            const res = await response.json();
+            Toast.show({ title: '오류', msg: res.message || '인증번호 발송 실패', type: 'error' });
+          }
+        } catch (e) {
+          Toast.show({ title: '오류', msg: '서버 연동 중 오류가 발생했습니다.', type: 'error' });
+        }
+      });
+    }
+
+    if (btnVerifyTempPw) {
+      btnVerifyTempPw.addEventListener('click', async () => {
+        const email = document.getElementById('findPwEmail').value.trim();
+        const code = document.getElementById('findPwAuthCode').value.trim();
+        if (!code) { Toast.show({ title: '알림', msg: '인증번호를 입력해주세요.', type: 'warning' }); return; }
+
+        try {
+          const response = await fetch('/api/auth/verify-email', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email: email, code: code })
+          });
+          if (response.ok) {
+            Toast.show({ title: '임시 비밀번호 발급', msg: '입력하신 이메일로 임시 비밀번호가 발송되었습니다.', type: 'success' });
+            setTimeout(() => {
+              tempPwAuthBlock.style.display = 'none';
+              findModal.style.display = 'none';
+            }, 1500);
+          } else {
+            const res = await response.json();
+            Toast.show({ title: '오류', msg: res.message || '인증번호가 일치하지 않습니다.', type: 'error' });
+          }
+        } catch (e) {
+          Toast.show({ title: '오류', msg: '서버 연동 중 오류가 발생했습니다.', type: 'error' });
+        }
+      });
+    }
+  }
+
   /* 소셜 */
-  document.getElementById('btnKakao').addEventListener('click', () => Toast.show({ title: '준비 중', msg: 'FESTIO 카카오 로그인 연동 예정', type: 'info' }));
-  document.getElementById('btnNaver').addEventListener('click', () => Toast.show({ title: '준비 중', msg: 'FESTIO 네이버 로그인 연동 예정', type: 'info' }));
-  document.getElementById('btnGoogle').addEventListener('click', () => Toast.show({ title: '준비 중', msg: 'FESTIO 구글 로그인 연동 예정', type: 'info' }));
-  document.getElementById('btnToss').addEventListener('click', () => Toast.show({ title: '준비 중', msg: 'FESTIO 토스 로그인 연동 예정', type: 'info' }));
+  document.querySelectorAll('.btn-kakao').forEach(btn => btn.addEventListener('click', () => Toast.show({ title: '준비 중', msg: 'FESTIO 카카오 로그인 연동 예정', type: 'info' })));
+  document.querySelectorAll('.btn-naver').forEach(btn => btn.addEventListener('click', () => Toast.show({ title: '준비 중', msg: 'FESTIO 네이버 로그인 연동 예정', type: 'info' })));
+  document.querySelectorAll('.btn-google').forEach(btn => btn.addEventListener('click', () => Toast.show({ title: '준비 중', msg: 'FESTIO 구글 로그인 연동 예정', type: 'info' })));
+  document.querySelectorAll('.btn-toss').forEach(btn => btn.addEventListener('click', () => Toast.show({ title: '준비 중', msg: 'FESTIO 토스 로그인 연동 예정', type: 'info' })));
   /* 전체동의 */
   const agAll = document.getElementById('agreeAll');
   const tcs = document.querySelectorAll('.tc');
@@ -143,10 +277,11 @@ document.addEventListener('DOMContentLoaded', () => {
   if (rPhone) {
     rPhone.addEventListener('input', (e) => {
       let val = e.target.value.replace(/[^0-9]/g, '');
+      if (val.length > 11) val = val.substring(0, 11);
       if (val.length > 3 && val.length <= 7) {
-        val = val.replace(/(\d{3})(\d+)/, '$1-$2');
+        val = val.replace(/(\d{3})(\d+)/, '$1 - $2');
       } else if (val.length > 7) {
-        val = val.replace(/(\d{3})(\d{4})(\d+)/, '$1-$2-$3');
+        val = val.replace(/(\d{3})(\d{4})(\d+)/, '$1 - $2 - $3');
       }
       e.target.value = val;
     });
@@ -155,7 +290,8 @@ document.addEventListener('DOMContentLoaded', () => {
   /* 비밀번호 표시/숨김 토글 */
   document.querySelectorAll('.btn-pw-toggle').forEach(btn => {
     btn.addEventListener('click', function () {
-      const input = this.previousElementSibling;
+      const input = this.parentElement.querySelector('input');
+      if (!input) return;
       const type = input.getAttribute('type') === 'password' ? 'text' : 'password';
       input.setAttribute('type', type);
       // 활성화 시 아이콘 색상 변경 효과 (선택사항)
@@ -163,41 +299,65 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   });
 
-  /* 비밀번호 강도 게이지 */
+  /* 비밀번호 강도 및 안내 가이드 */
   const rPw = document.getElementById('rPw');
   const strengthContainer = document.querySelector('.pw-strength-container');
-  const strengthText = document.querySelector('.pw-strength-text');
   const fills = document.querySelectorAll('.pw-strength-fill');
+  const pwGuideList = document.querySelector('.pw-guide');
+  const guide1 = document.getElementById('pwGuide1');
+  const guide2 = document.getElementById('pwGuide2');
+  const guide3 = document.getElementById('pwGuide3');
 
   if (rPw && strengthContainer) {
+    // 초기화
+    if (pwGuideList) pwGuideList.style.display = 'none';
+
+    rPw.addEventListener('focus', function () {
+      if (!this.value && pwGuideList) pwGuideList.style.display = 'flex';
+    });
+
     rPw.addEventListener('input', function () {
       const val = this.value;
       if (!val) {
         strengthContainer.style.display = 'none';
+        if (pwGuideList) pwGuideList.style.display = 'none';
+        if (guide1) guide1.style.color = '#9ca3af';
+        if (guide2) guide2.style.color = '#9ca3af';
+        if (guide3) guide3.style.color = '#9ca3af';
         return;
       }
       strengthContainer.style.display = 'block';
       let score = 0;
-      if (val.length >= 8) score++;
-      if (/[A-Za-z]/.test(val) && /[0-9]/.test(val)) score++;
-      if (/[^A-Za-z0-9]/.test(val)) score++;
+
+      // 조건 1: 8자 이상
+      const c1 = val.length >= 8;
+      if (guide1) guide1.style.color = c1 ? '#10B981' : '#9ca3af';
+      if (c1) score++;
+
+      // 조건 2: 대문자 포함 영문 + 숫자 + 특수문자
+      const c2 = /[A-Z]/.test(val) && /[a-zA-Z]/.test(val) && /[0-9]/.test(val) && /[^a-zA-Z0-9]/.test(val);
+      if (guide2) guide2.style.color = c2 ? '#10B981' : '#9ca3af';
+      if (c2) score++;
+
+      // 조건 3: 연속되는 숫자 사용 불가 (3자리 연속 오름/내림/동일)
+      const c3 = !/(012|123|234|345|456|567|678|789|890|098|987|876|765|654|543|432|321|210|(\d)\2\2)/.test(val);
+      if (guide3) guide3.style.color = c3 && val.length > 0 ? '#10B981' : '#9ca3af';
+      if (c3 && val.length > 0) score++;
 
       fills.forEach(f => f.style.background = 'transparent');
       if (score === 0 || score === 1) {
         fills[0].style.background = '#FF2D55';
-        strengthText.textContent = '약함';
-        strengthText.style.color = '#FF2D55';
+        if (pwGuideList) pwGuideList.style.display = 'flex';
       } else if (score === 2) {
         fills[0].style.background = '#F59E0B';
         fills[1].style.background = '#F59E0B';
-        strengthText.textContent = '보통';
-        strengthText.style.color = '#F59E0B';
+        if (pwGuideList) pwGuideList.style.display = 'flex';
       } else if (score >= 3) {
         fills[0].style.background = '#10B981';
         fills[1].style.background = '#10B981';
         fills[2].style.background = '#10B981';
-        strengthText.textContent = '안전';
-        strengthText.style.color = '#10B981';
+        // 모두 통과 시 가이드 숨김
+        if (pwGuideList) pwGuideList.style.display = 'none';
       }
     });
   }

@@ -1,175 +1,187 @@
-﻿<!doctype html>
-<html lang="ko" class="layout-menu-fixed layout-compact" data-assets-path="/assets/" data-template="vertical-menu-template-free">
-  <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0" />
-    <title>페스티벌 / 구역 셋업 | FESTIO</title>
+<!doctype html>
+<html lang="ko" class="light-style layout-menu-fixed layout-compact" dir="ltr" data-theme="theme-default"
+  data-assets-path="/assets/" data-template="vertical-menu-template-free">
 
-    <link rel="icon" type="image/x-icon" href="/assets/img/favicon/favicon.ico" />
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
-    <link rel="stylesheet" href="/assets/vendor/fonts/iconify-icons.css" />
-    <link rel="stylesheet" href="/assets/vendor/css/core.css" />
-    <link rel="stylesheet" href="/assets/css/demo.css" />
-    <link rel="stylesheet" href="/assets/vendor/libs/perfect-scrollbar/perfect-scrollbar.css" />
-    <link rel="stylesheet" href="/assets/vendor/libs/apex-charts/apex-charts.css" />
-    <script src="/assets/vendor/js/helpers.js"></script>
-    <script src="/assets/js/config.js"></script>
-    <link rel="stylesheet" href="./css/festival-setup.css" />
-  </head>
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport"
+    content="width=device-width, initial-scale=1.0, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0" />
+  <title>페스티벌 / 구역 셋업 | FESTIO</title>
 
-  <body>
-    <div class="layout-wrapper layout-content-navbar">
-      <div class="layout-container">
-        
-        <!-- Sidebar Menu -->
-        <aside id="layout-menu" class="layout-menu menu-vertical menu bg-menu-theme">
-          <!-- sidebar.js 가 런타임에 동적으로 삽입 -->
-        </aside>
+  <link rel="icon" type="image/x-icon" href="/assets/img/favicon/favicon.ico" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@300;400;500;600;700&display=swap"
+    rel="stylesheet" />
+  <link rel="stylesheet" href="/assets/vendor/fonts/iconify-icons.css" />
+  <link rel="stylesheet" href="/assets/vendor/css/core.css" />
+  <link rel="stylesheet" href="/assets/css/demo.css" />
+  <link rel="stylesheet" href="/assets/vendor/libs/perfect-scrollbar/perfect-scrollbar.css" />
+  <link rel="stylesheet" href="/assets/vendor/libs/apex-charts/apex-charts.css" />
+  <script src="/assets/vendor/js/helpers.js"></script>
+  <script src="/assets/js/config.js"></script>
+  <link rel="stylesheet" href="./css/festival-setup.css" />
+</head>
 
-        <div class="layout-page">
-          <!-- Navbar -->
-          <nav class="layout-navbar container-xxl navbar navbar-expand-xl navbar-detached align-items-center bg-navbar-theme" id="layout-navbar">
-            <div class="layout-menu-toggle navbar-nav align-items-xl-center me-4 me-xl-0 d-xl-none">
-              <a class="nav-item nav-link px-0 me-xl-6" href="javascript:void(0)">
-                <i class="bx bx-menu bx-sm"></i>
-              </a>
-            </div>
-            <div class="navbar-nav-right d-flex align-items-center" id="navbar-collapse">
-              <h5 class="mb-0 fw-bold"><i class="bx bx-map-alt me-2 text-primary"></i>페스티벌 / 구역 셋업</h5>
-              <ul class="navbar-nav flex-row align-items-center ms-auto">
-                <li class="nav-item dropdown-user dropdown">
-                  <a class="nav-link dropdown-toggle hide-arrow" href="javascript:void(0);" data-bs-toggle="dropdown">
-                    <div class="avatar avatar-online">
-                      <img src="/assets/img/avatars/1.png" class="w-px-40 h-auto rounded-circle" />
-                    </div>
-                  </a>
-                  <ul class="dropdown-menu dropdown-menu-end">
-                    <li>
-                      <a class="dropdown-item" href="#">
-                        <div class="d-flex">
-                          <div class="flex-shrink-0 me-3">
-                            <div class="avatar avatar-online">
-                              <img src="/assets/img/avatars/1.png" class="w-px-40 h-auto rounded-circle" />
-                            </div>
-                          </div>
-                          <div class="flex-grow-1">
-                            <span class="fw-medium d-block">최고 관리자</span>
-                            <small class="text-muted">Master Admin</small>
+<body>
+  <div class="layout-wrapper layout-content-navbar">
+    <div class="layout-container">
+
+      <!-- Sidebar Menu -->
+      <aside id="layout-menu" class="layout-menu menu-vertical menu bg-menu-theme">
+        <!-- sidebar.js 가 런타임에 동적으로 삽입 -->
+      </aside>
+
+      <div class="layout-page">
+        <!-- Navbar -->
+        <nav
+          class="layout-navbar container-xxl navbar navbar-expand-xl navbar-detached align-items-center bg-navbar-theme"
+          id="layout-navbar">
+          <div class="layout-menu-toggle navbar-nav align-items-xl-center me-4 me-xl-0 d-xl-none">
+            <a class="nav-item nav-link px-0 me-xl-6" href="javascript:void(0)">
+              <i class="bx bx-menu bx-sm"></i>
+            </a>
+          </div>
+          <div class="navbar-nav-right d-flex align-items-center" id="navbar-collapse">
+            <h5 class="mb-0 fw-bold"><i class="bx bx-map-alt me-2 text-primary"></i>페스티벌 / 구역 셋업</h5>
+            <ul class="navbar-nav flex-row align-items-center ms-auto">
+              <li class="nav-item dropdown-user dropdown">
+                <a class="nav-link dropdown-toggle hide-arrow" href="javascript:void(0);" data-bs-toggle="dropdown">
+                  <div class="avatar avatar-online">
+                    <img src="/assets/img/avatars/chibi_admin.png" class="w-px-40 h-auto rounded-circle" />
+                  </div>
+                </a>
+                <ul class="dropdown-menu dropdown-menu-end">
+                  <li>
+                    <a class="dropdown-item" href="#">
+                      <div class="d-flex">
+                        <div class="flex-shrink-0 me-3">
+                          <div class="avatar avatar-online">
+                            <img src="/assets/img/avatars/chibi_admin.png" class="w-px-40 h-auto rounded-circle" />
                           </div>
                         </div>
-                      </a>
-                    </li>
-                  </ul>
-                </li>
-              </ul>
-            </div>
-          </nav>
+                        <div class="flex-grow-1">
+                          <span class="fw-medium d-block">최고 관리자</span>
+                          <small class="text-muted">Master Admin</small>
+                        </div>
+                      </div>
+                    </a>
+                  </li>
+                </ul>
+              </li>
+            </ul>
+          </div>
+        </nav>
 
-          <!-- Content wrapper -->
-          <div class="content-wrapper">
-            <div class="container-xxl flex-grow-1 container-p-y">
-              
-<div class="row">
-  <div class="col-lg-8 mb-6">
-    <div class="card h-100">
-      <div class="card-header d-flex justify-content-between align-items-center">
-        <h5 class="card-title m-0 fw-semibold">SVG 구역 드로잉 에디터</h5>
-        <div class="btn-group">
-          <button class="btn btn-outline-primary btn-sm"><i class="bx bx-plus me-1"></i>구역 추가</button>
-          <button class="btn btn-outline-success btn-sm"><i class="bx bx-save me-1"></i>맵 저장</button>
-        </div>
-      </div>
-      <div class="card-body">
-        <div class="border rounded p-2 text-center bg-light position-relative" style="min-height: 450px;">
-          <!-- SVG Mockup -->
-          <svg width="100%" height="430" style="background: url('/assets/img/elements/18.jpg') center/cover; border-radius: 4px;">
-            <rect x="50" y="50" width="180" height="150" fill="rgba(105, 108, 255, 0.4)" stroke="#696cff" stroke-width="3" />
-            <text x="140" y="130" fill="white" font-weight="bold" text-anchor="middle">메인 무대 (Zone A)</text>
-            
-            <circle cx="450" cy="150" r="80" fill="rgba(3, 195, 236, 0.4)" stroke="#03c3ec" stroke-width="3" />
-            <text x="450" y="155" fill="white" font-weight="bold" text-anchor="middle">푸드트럭 존 (Zone B)</text>
-            
-            <polygon points="150,280 300,280 250,380" fill="rgba(113, 221, 55, 0.4)" stroke="#71dd37" stroke-width="3" />
-            <text x="233" y="320" fill="white" font-weight="bold" text-anchor="middle">MD/굿즈 존 (Zone C)</text>
-          </svg>
-          <div class="position-absolute bottom-0 end-0 m-3 badge bg-dark">지도 배경 업로드 완료</div>
-        </div>
-      </div>
-    </div>
-  </div>
-  
-  <div class="col-lg-4 mb-6">
-    <div class="card h-100">
-      <div class="card-header">
-        <h5 class="card-title m-0 fw-semibold">구역 속성 에디터</h5>
-      </div>
-      <div class="card-body">
-        <form>
-          <div class="mb-4">
-            <label class="form-label">활성 구역 선택</label>
-            <select class="form-select">
-              <option>메인 무대 (Zone A)</option>
-              <option>푸드트럭 존 (Zone B)</option>
-              <option>MD/굿즈 존 (Zone C)</option>
-            </select>
-          </div>
-          <div class="mb-4">
-            <label class="form-label">구역명</label>
-            <input type="text" class="form-value form-control" value="메인 무대 (Zone A)" />
-          </div>
-          <div class="mb-4">
-            <label class="form-label">최대 수용 인원 (Capacity)</label>
-            <input type="number" class="form-control" value="15000" />
-          </div>
-          <div class="mb-4">
-            <label class="form-label">혼잡 경고 임계값 (%)</label>
-            <input type="number" class="form-control" value="85" />
-          </div>
-          <div class="mb-4">
-            <label class="form-label">LED 팝업 연동</label>
-            <div class="form-check form-switch mt-2">
-              <input class="form-check-input" type="checkbox" checked />
-              <label class="form-check-label">경고 시 LED 보드 긴급 안내 송출</label>
-            </div>
-          </div>
-          <button type="button" class="btn btn-primary w-100">속성 적용 및 실시간 동기화</button>
-        </form>
-      </div>
-    </div>
-  </div>
-</div>
+        <!-- Content wrapper -->
+        <div class="content-wrapper">
+          <div class="container-xxl flex-grow-1 container-p-y">
 
-            </div>
+            <div class="row">
+              <div class="col-lg-8 mb-6">
+                <div class="card h-100">
+                  <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="card-title m-0 fw-semibold">SVG 구역 드로잉 에디터</h5>
+                    <div class="btn-group">
+                      <button class="btn btn-outline-primary btn-sm"><i class="bx bx-plus me-1"></i>구역 추가</button>
+                      <button class="btn btn-outline-success btn-sm"><i class="bx bx-save me-1"></i>맵 저장</button>
+                    </div>
+                  </div>
+                  <div class="card-body">
+                    <div class="border rounded p-2 text-center bg-light position-relative" style="min-height: 450px;">
+                      <!-- SVG Mockup -->
+                      <svg width="100%" height="430"
+                        style="background: url('/assets/img/elements/18.jpg') center/cover; border-radius: 4px;">
+                        <rect x="50" y="50" width="180" height="150" fill="rgba(105, 108, 255, 0.4)" stroke="#696cff"
+                          stroke-width="3" />
+                        <text x="140" y="130" fill="white" font-weight="bold" text-anchor="middle">메인 무대 (Zone A)</text>
 
-            <!-- Footer -->
-            <footer class="content-footer footer bg-footer-theme">
-              <div class="container-xxl d-flex flex-wrap justify-content-between py-2 flex-md-row flex-column">
-                <div class="mb-2 mb-md-0">
-                  © <script>document.write(new Date().getFullYear());</script> FESTIO
+                        <circle cx="450" cy="150" r="80" fill="rgba(3, 195, 236, 0.4)" stroke="#03c3ec"
+                          stroke-width="3" />
+                        <text x="450" y="155" fill="white" font-weight="bold" text-anchor="middle">푸드트럭 존 (Zone
+                          B)</text>
+
+                        <polygon points="150,280 300,280 250,380" fill="rgba(113, 221, 55, 0.4)" stroke="#71dd37"
+                          stroke-width="3" />
+                        <text x="233" y="320" fill="white" font-weight="bold" text-anchor="middle">MD/굿즈 존 (Zone
+                          C)</text>
+                      </svg>
+                      <div class="position-absolute bottom-0 end-0 m-3 badge bg-dark">지도 배경 업로드 완료</div>
+                    </div>
+                  </div>
                 </div>
               </div>
-            </footer>
 
-            <div class="content-backdrop fade"></div>
+              <div class="col-lg-4 mb-6">
+                <div class="card h-100">
+                  <div class="card-header">
+                    <h5 class="card-title m-0 fw-semibold">구역 속성 에디터</h5>
+                  </div>
+                  <div class="card-body">
+                    <form>
+                      <div class="mb-4">
+                        <label class="form-label">활성 구역 선택</label>
+                        <select class="form-select">
+                          <option>메인 무대 (Zone A)</option>
+                          <option>푸드트럭 존 (Zone B)</option>
+                          <option>MD/굿즈 존 (Zone C)</option>
+                        </select>
+                      </div>
+                      <div class="mb-4">
+                        <label class="form-label">구역명</label>
+                        <input type="text" class="form-value form-control" value="메인 무대 (Zone A)" />
+                      </div>
+                      <div class="mb-4">
+                        <label class="form-label">최대 수용 인원 (Capacity)</label>
+                        <input type="number" class="form-control" value="15000" />
+                      </div>
+                      <div class="mb-4">
+                        <label class="form-label">혼잡 경고 임계값 (%)</label>
+                        <input type="number" class="form-control" value="85" />
+                      </div>
+                      <div class="mb-4">
+                        <label class="form-label">LED 팝업 연동</label>
+                        <div class="form-check form-switch mt-2">
+                          <input class="form-check-input" type="checkbox" checked />
+                          <label class="form-check-label">경고 시 LED 보드 긴급 안내 송출</label>
+                        </div>
+                      </div>
+                      <button type="button" class="btn btn-primary w-100">속성 적용 및 실시간 동기화</button>
+                    </form>
+                  </div>
+                </div>
+              </div>
+            </div>
+
           </div>
+
+          <!-- Footer -->
+          <footer class="content-footer footer bg-footer-theme">
+            <div class="container-xxl d-flex flex-wrap justify-content-between py-2 flex-md-row flex-column">
+              <div class="mb-2 mb-md-0">
+                ©
+                <script>document.write(new Date().getFullYear());</script> FESTIO
+              </div>
+            </div>
+          </footer>
+
+          <div class="content-backdrop fade"></div>
         </div>
       </div>
-      <div class="layout-overlay layout-menu-toggle"></div>
     </div>
+    <div class="layout-overlay layout-menu-toggle"></div>
+  </div>
 
-    <!-- Scripts -->
-    <script src="/assets/vendor/libs/jquery/jquery.js"></script>
-    <script src="/assets/vendor/libs/popper/popper.js"></script>
-    <script src="/assets/vendor/js/bootstrap.js"></script>
-    <script src="/assets/vendor/libs/perfect-scrollbar/perfect-scrollbar.js"></script>
-    <script src="/assets/vendor/js/menu.js"></script>
-    <script src="/assets/vendor/libs/apex-charts/apexcharts.js"></script>
-    <script src="/assets/js/main.js"></script>
-    <script src="/assets/js/sidebar.js"></script>
-    
-  </body>
+  <!-- Scripts -->
+  <script src="/assets/vendor/libs/jquery/jquery.js"></script>
+  <script src="/assets/vendor/libs/popper/popper.js"></script>
+  <script src="/assets/vendor/js/bootstrap.js"></script>
+  <script src="/assets/vendor/libs/perfect-scrollbar/perfect-scrollbar.js"></script>
+  <script src="/assets/vendor/js/menu.js"></script>
+  <script src="/assets/vendor/libs/apex-charts/apexcharts.js"></script>
+  <script src="/assets/js/main.js"></script>
+  <script src="/assets/js/sidebar.js"></script>
+
+</body>
+
 </html>
-
-

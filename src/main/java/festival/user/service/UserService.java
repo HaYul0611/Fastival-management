@@ -48,6 +48,19 @@ public class UserService {
         return userRepository.findById(id).orElse(null);
     }
 
+    @Transactional
+    public void updatePassword(String userId, String currentPassword, String newPassword) {
+        UserVo user = userRepository.findById(userId)
+                .orElseThrow(() -> new IllegalArgumentException("사용자를 찾을 수 없습니다."));
+                
+        if (!passwordEncoder.matches(currentPassword, user.getPassword())) {
+            throw new IllegalArgumentException("현재 비밀번호가 일치하지 않습니다.");
+        }
+        
+        user.setPassword(passwordEncoder.encode(newPassword));
+        userRepository.save(user);
+    }
+
     public UserVo findByEmail(String email) {
         return userRepository.findByEmail(email).orElse(null);
     }

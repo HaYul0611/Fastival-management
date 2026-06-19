@@ -1,6 +1,6 @@
 <!doctype html>
-<html lang="ko" class="layout-menu-fixed layout-compact" data-assets-path="/assets/"
-  data-template="vertical-menu-template-free">
+<html lang="ko" class="light-style layout-menu-fixed layout-compact" dir="ltr" data-theme="theme-default"
+  data-assets-path="/assets/" data-template="vertical-menu-template-free">
 
 <head>
   <!-- Admin Security Guard (관리자 권한 검증 및 차단) -->
@@ -45,7 +45,8 @@
             </a>
           </div>
           <div class="navbar-nav-right d-flex align-items-center" id="navbar-collapse">
-            <h5 class="mb-0 fw-bold" id="navbar-title-text"><i class="bx bx-home-smile me-2 text-primary"></i>통합 관제 대시보드</h5>
+            <h5 class="mb-0 fw-bold" id="navbar-title-text"><i class="bx bx-home-smile me-2 text-primary"></i>통합 관제 대시보드
+            </h5>
             <ul class="navbar-nav flex-row align-items-center ms-auto">
               <!-- FESTIO 메인 바로가기 버튼 -->
               <li class="nav-item me-2">
@@ -58,9 +59,10 @@
                 </a>
               </li>
               <li class="nav-item dropdown-user dropdown">
-                <a class="nav-link dropdown-toggle hide-arrow" href="javascript:void(0);" data-bs-toggle="dropdown">
+                <a class="nav-link dropdown-toggle hide-arrow" href="javascript:void(0);" data-bs-toggle="dropdown"
+                  data-bs-offset="0,-26">
                   <div class="avatar avatar-online">
-                    <img src="/assets/img/avatars/1.png" class="w-px-40 h-auto rounded-circle" />
+                    <img src="/assets/img/avatars/chibi_admin.png" class="w-px-40 h-auto rounded-circle" />
                   </div>
                 </a>
                 <ul class="dropdown-menu dropdown-menu-end">
@@ -69,7 +71,7 @@
                       <div class="d-flex">
                         <div class="flex-shrink-0 me-3">
                           <div class="avatar avatar-online">
-                            <img src="/assets/img/avatars/1.png" class="w-px-40 h-auto rounded-circle" />
+                            <img src="/assets/img/avatars/chibi_admin.png" class="w-px-40 h-auto rounded-circle" />
                           </div>
                         </div>
                         <div class="flex-grow-1">
@@ -94,21 +96,19 @@
               <!-- 웰컴 카드 & 실시간 통계 -->
               <div class="row">
                 <div class="col-xxl-8 col-lg-12 mb-6">
-                  <div class="card premium-gradient">
-                    <div class="d-flex align-items-start row">
-                      <div class="col-sm-7">
-                        <div class="card-body">
-                          <h4 class="card-title text-white mb-3">페스티벌 통합 관제 시스템 🎉</h4>
-                          <p class="mb-6 text-white-50">
-                            오늘의 누적 입장 관객 수, 실시간 F&B 매출 및 구역별 혼잡도를 실시간으로 모니터링하고 제어할 수 있는 통합 마스터 관제 보드입니다.
+                  <div class="card premium-gradient h-100">
+                    <div class="d-flex align-items-start row h-100">
+                      <div class="col-sm-12 h-100">
+                        <div class="card-body py-5 px-sm-5 d-flex flex-column justify-content-center h-100">
+                          <h4 class="card-title text-white mb-3 fw-bold" style="z-index: 1;">페스티벌 통합 관제 시스템</h4>
+                          <p class="mb-6 text-white fs-6" style="z-index: 1;">
+                            오늘의 누적 입장 관객 수, 실시간 F&B 매출 및 구역별 혼잡도를 실시간으로<br class="d-none d-sm-block">
+                            모니터링하고 제어할 수 있는 통합 마스터 관제 보드입니다.
                           </p>
-                          <span class="badge bg-white text-primary">시스템 무결성 등급: 최고 안전(A+)</span>
-                        </div>
-                      </div>
-                      <div class="col-sm-5 text-center text-sm-left">
-                        <div class="card-body pb-0 px-0 px-md-6">
-                          <img src="/assets/img/illustrations/man-with-laptop.png" height="175"
-                            alt="Dashboard illustration" />
+                          <div class="mt-auto" style="z-index: 1;">
+                            <span class="badge bg-white text-primary px-3 py-2 fs-6 shadow-sm">시스템 무결성 등급: 최고 안전
+                              (A+)</span>
+                          </div>
                         </div>
                       </div>
                     </div>
@@ -120,8 +120,10 @@
                   <div class="card h-100 stat-card">
                     <div class="card-body">
                       <div class="d-flex align-items-start justify-content-between mb-4">
-                        <div class="avatar flex-shrink-0 bg-label-success p-2 rounded">
-                          <i class="bx bx-dollar-circle text-success fs-3"></i>
+                        <div class="avatar flex-shrink-0 bg-white border rounded shadow-sm p-1"
+                          style="width: 42px; height: 42px;">
+                          <img src="/assets/img/icons/meso_bag.png" alt="Meso Bag"
+                            style="width: 100%; height: 100%; object-fit: contain;" />
                         </div>
                         <span class="badge bg-label-success" id="todayRevenueGrowthBadge">실시간 집계 중</span>
                       </div>
@@ -155,7 +157,8 @@
                         <p class="text-muted fs-7">데이터 로딩 중...</p>
                       </div>
                       <div class="progress" style="height: 8px;">
-                        <div class="progress-bar bg-warning" role="progressbar" id="attendanceProgressBar" style="width: 0%"></div>
+                        <div class="progress-bar bg-warning" role="progressbar" id="attendanceProgressBar"
+                          style="width: 0%"></div>
                       </div>
                     </div>
                   </div>
@@ -261,7 +264,7 @@
 
             <!-- ================= [TAB 2: 축제 등록 심사 및 운영 상태 라이프사이클 관리] ================= -->
             <div id="tab-content-festivals" class="fade-tab-content d-none">
-              
+
               <!-- 대메뉴 탭 분할 -->
               <div class="row mb-6">
                 <div class="col-12">
@@ -269,12 +272,14 @@
                     <div class="card-body p-3">
                       <ul class="nav nav-pills nav-fill gap-2" id="mainLifecycleTabs" role="tablist">
                         <li class="nav-item" role="presentation">
-                          <button class="nav-link active fw-bold py-3" id="tab-review-btn" data-bs-toggle="pill" data-bs-target="#panel-review" type="button" role="tab">
+                          <button class="nav-link active fw-bold py-3" id="tab-review-btn" data-bs-toggle="pill"
+                            data-bs-target="#panel-review" type="button" role="tab">
                             <i class="bx bx-shield-quarter me-2"></i> 1단계: 등록 심사 관리 (Review Gate)
                           </button>
                         </li>
                         <li class="nav-item" role="presentation">
-                          <button class="nav-link fw-bold py-3" id="tab-operation-btn" data-bs-toggle="pill" data-bs-target="#panel-operation" type="button" role="tab">
+                          <button class="nav-link fw-bold py-3" id="tab-operation-btn" data-bs-toggle="pill"
+                            data-bs-target="#panel-operation" type="button" role="tab">
                             <i class="bx bx-rocket me-2"></i> 2단계: 운영 상태 관리 (Operation Live)
                           </button>
                         </li>
@@ -286,39 +291,51 @@
 
               <!-- 탭 콘텐츠 바디 -->
               <div class="tab-content p-0 bg-transparent border-0 shadow-none">
-                
+
                 <!-- [대메뉴 1: 등록 심사 관리 패널] -->
                 <div class="tab-pane fade show active" id="panel-review" role="tabpanel">
-                  
+
                   <!-- 등록 심사 관리의 서브 탭 -->
                   <div class="card mb-6">
-                    <div class="card-header border-bottom d-flex align-items-center justify-content-between py-3 flex-wrap gap-3">
+                    <div
+                      class="card-header border-bottom d-flex align-items-center justify-content-between py-3 flex-wrap gap-3">
                       <div class="d-flex align-items-center gap-3">
-                        <h5 class="card-title mb-0 fw-bold"><i class="bx bx-list-check me-2 text-warning"></i>축제 등록 심사 대기열</h5>
+                        <h5 class="card-title mb-0 fw-bold"><i class="bx bx-list-check me-2 text-warning"></i>축제 등록 심사
+                          대기열</h5>
                         <div class="btn-group" role="group">
-                          <button type="button" class="btn btn-sm btn-outline-warning active" id="subTabPendingBtn" onclick="switchReviewSubTab('PENDING')">대기중 (PENDING)</button>
-                          <button type="button" class="btn btn-sm btn-outline-danger" id="subTabRejectedBtn" onclick="switchReviewSubTab('REJECTED')">반려됨 (REJECTED)</button>
+                          <button type="button" class="btn btn-sm btn-outline-warning active" id="subTabPendingBtn"
+                            onclick="switchReviewSubTab('PENDING')">대기중 (PENDING)</button>
+                          <button type="button" class="btn btn-sm btn-outline-danger" id="subTabRejectedBtn"
+                            onclick="switchReviewSubTab('REJECTED')">반려됨 (REJECTED)</button>
                         </div>
                       </div>
                       <div class="d-flex align-items-center gap-3">
                         <span class="badge bg-label-warning font-mono" id="reviewCountBadge">Pending: 0</span>
-                        <button type="button" class="btn btn-primary fw-bold" data-bs-toggle="modal" data-bs-target="#createFestivalModal">
+                        <button type="button" class="btn btn-primary fw-bold" data-bs-toggle="modal"
+                          data-bs-target="#createFestivalModal">
                           <i class="bx bx-plus me-1"></i> 신규 축제 등록 신청
                         </button>
                       </div>
                     </div>
-                    
+
                     <!-- 카테고리 필터 칩 영역 -->
                     <div class="px-4 py-3 border-bottom bg-light d-flex align-items-center flex-wrap gap-2">
-                      <span class="text-secondary fw-bold me-2 fs-7"><i class="bx bx-filter-alt me-1 text-warning"></i>카테고리 필터:</span>
-                      <button type="button" class="btn btn-xs btn-warning category-chip active" data-category="ALL" onclick="filterByCategory('ALL')">전체</button>
-                      <button type="button" class="btn btn-xs btn-outline-warning category-chip" data-category="콘서트/뮤지컬" onclick="filterByCategory('콘서트/뮤지컬')">콘서트/뮤지컬</button>
-                      <button type="button" class="btn btn-xs btn-outline-warning category-chip" data-category="지역축제" onclick="filterByCategory('지역축제')">지역축제</button>
-                      <button type="button" class="btn btn-xs btn-outline-warning category-chip" data-category="대학축제" onclick="filterByCategory('대학축제')">대학축제</button>
-                      <button type="button" class="btn btn-xs btn-outline-warning category-chip" data-category="박람회" onclick="filterByCategory('박람회')">박람회</button>
-                      <button type="button" class="btn btn-xs btn-outline-warning category-chip" data-category="스포츠" onclick="filterByCategory('스포츠')">스포츠</button>
+                      <span class="text-secondary fw-bold me-2 fs-7"><i
+                          class="bx bx-filter-alt me-1 text-warning"></i>카테고리 필터:</span>
+                      <button type="button" class="btn btn-xs btn-warning category-chip active" data-category="ALL"
+                        onclick="filterByCategory('ALL')">전체</button>
+                      <button type="button" class="btn btn-xs btn-outline-warning category-chip" data-category="콘서트/뮤지컬"
+                        onclick="filterByCategory('콘서트/뮤지컬')">콘서트/뮤지컬</button>
+                      <button type="button" class="btn btn-xs btn-outline-warning category-chip" data-category="지역축제"
+                        onclick="filterByCategory('지역축제')">지역축제</button>
+                      <button type="button" class="btn btn-xs btn-outline-warning category-chip" data-category="대학축제"
+                        onclick="filterByCategory('대학축제')">대학축제</button>
+                      <button type="button" class="btn btn-xs btn-outline-warning category-chip" data-category="박람회"
+                        onclick="filterByCategory('박람회')">박람회</button>
+                      <button type="button" class="btn btn-xs btn-outline-warning category-chip" data-category="스포츠"
+                        onclick="filterByCategory('스포츠')">스포츠</button>
                     </div>
-                    
+
                     <div class="table-responsive text-nowrap">
                       <table class="table table-hover">
                         <thead>
@@ -338,27 +355,33 @@
                       </table>
                     </div>
                   </div>
-                  
+
                 </div>
 
                 <!-- [대메뉴 2: 운영 상태 관리 패널] -->
                 <div class="tab-pane fade" id="panel-operation" role="tabpanel">
-                  
+
                   <!-- 운영 상태 관리 서브 탭 -->
                   <div class="card">
-                    <div class="card-header border-bottom d-flex align-items-center justify-content-between py-3 flex-wrap gap-3">
+                    <div
+                      class="card-header border-bottom d-flex align-items-center justify-content-between py-3 flex-wrap gap-3">
                       <div class="d-flex align-items-center gap-3">
-                        <h5 class="card-title mb-0 fw-bold"><i class="bx bx-slideshow me-2 text-success"></i>실시간 서비스 운영 관리</h5>
+                        <h5 class="card-title mb-0 fw-bold"><i class="bx bx-slideshow me-2 text-success"></i>실시간 서비스 운영
+                          관리</h5>
                         <div class="btn-group" role="group">
-                          <button type="button" class="btn btn-sm btn-outline-warning active" id="subTabSettingBtn" onclick="switchOperationSubTab('SETTING')">정보 입력 대기 (SETTING)</button>
-                          <button type="button" class="btn btn-sm btn-outline-primary" id="subTabUpcomingBtn" onclick="switchOperationSubTab('UPCOMING')">진행 전 (UPCOMING)</button>
-                          <button type="button" class="btn btn-sm btn-outline-success" id="subTabOngoingBtn" onclick="switchOperationSubTab('ONGOING')">진행 중 (ONGOING)</button>
-                          <button type="button" class="btn btn-sm btn-outline-secondary" id="subTabCompletedBtn" onclick="switchOperationSubTab('COMPLETED')">진행 후 (COMPLETED)</button>
+                          <button type="button" class="btn btn-sm btn-outline-warning active" id="subTabSettingBtn"
+                            onclick="switchOperationSubTab('SETTING')">정보 입력 대기 (SETTING)</button>
+                          <button type="button" class="btn btn-sm btn-outline-primary" id="subTabUpcomingBtn"
+                            onclick="switchOperationSubTab('UPCOMING')">진행 전 (UPCOMING)</button>
+                          <button type="button" class="btn btn-sm btn-outline-success" id="subTabOngoingBtn"
+                            onclick="switchOperationSubTab('ONGOING')">진행 중 (ONGOING)</button>
+                          <button type="button" class="btn btn-sm btn-outline-secondary" id="subTabCompletedBtn"
+                            onclick="switchOperationSubTab('COMPLETED')">진행 후 (COMPLETED)</button>
                         </div>
                       </div>
                       <span class="badge bg-label-success font-mono" id="operationCountBadge">Setting: 0</span>
                     </div>
-                    
+
                     <div class="table-responsive text-nowrap">
                       <table class="table table-hover">
                         <thead>
@@ -413,7 +436,7 @@
   <script src="/assets/js/main.js"></script>
   <script src="/assets/js/sidebar.js"></script>
 
-  
+
 
   <!-- [상세 정보 기입 모달] -->
   <div class="modal fade" id="publishFestivalModal" tabindex="-1" aria-hidden="true">
@@ -423,31 +446,38 @@
           <h5 class="modal-title text-white fw-bold" id="publishModalLabel">
             <i class="bx bx-edit-alt me-2 fs-4"></i>축제 공식 발행 및 상세 정보 기입
           </h5>
-          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close" style="position: absolute; top: 1.5rem; right: 1.5rem; margin: 0; z-index: 10;"></button>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"
+            style="position: absolute; top: 1.5rem; right: 1.5rem; margin: 0; z-index: 10;"></button>
         </div>
         <div class="modal-body p-5">
           <form id="publishFestivalForm" onsubmit="event.preventDefault(); submitPublishFestival();">
             <input type="hidden" id="publishFestId" />
-            
+
             <div class="mb-4">
               <label class="form-label fw-bold text-secondary fs-7">축제 명칭</label>
-              <input type="text" id="publishFestName" class="form-control bg-light border-0 fw-semibold text-dark" readonly />
+              <input type="text" id="publishFestName" class="form-control bg-light border-0 fw-semibold text-dark"
+                readonly />
             </div>
 
             <!-- 예매 방식 선택 (ticket_mode) -->
             <div class="mb-4">
               <label class="form-label fw-bold text-secondary fs-7">예매 방식 *</label>
-              <div class="d-flex gap-4 align-items-center mt-1 p-3 rounded" style="background: #f8f9fa; border: 1px solid #dee2e6;">
+              <div class="d-flex gap-4 align-items-center mt-1 p-3 rounded"
+                style="background: #f8f9fa; border: 1px solid #dee2e6;">
                 <div class="form-check mb-0">
-                  <input class="form-check-input" type="radio" name="publishTicketMode" id="publishTicketModeSeat" value="SEAT" checked>
+                  <input class="form-check-input" type="radio" name="publishTicketMode" id="publishTicketModeSeat"
+                    value="SEAT" checked>
                   <label class="form-check-label fw-semibold" for="publishTicketModeSeat">
-                    <i class="bx bx-chair me-1 text-primary"></i> SEAT <span class="text-muted fw-normal fs-8">(좌석선택형)</span>
+                    <i class="bx bx-chair me-1 text-primary"></i> SEAT <span
+                      class="text-muted fw-normal fs-8">(좌석선택형)</span>
                   </label>
                 </div>
                 <div class="form-check mb-0">
-                  <input class="form-check-input" type="radio" name="publishTicketMode" id="publishTicketModeFree" value="FREE">
+                  <input class="form-check-input" type="radio" name="publishTicketMode" id="publishTicketModeFree"
+                    value="FREE">
                   <label class="form-check-label fw-semibold" for="publishTicketModeFree">
-                    <i class="bx bx-ticket-alt me-1 text-success"></i> FREE <span class="text-muted fw-normal fs-8">(입장권형)</span>
+                    <i class="bx bx-ticket-alt me-1 text-success"></i> FREE <span
+                      class="text-muted fw-normal fs-8">(입장권형)</span>
                   </label>
                 </div>
               </div>
@@ -462,15 +492,18 @@
               <label for="publishFestPrice" class="form-label fw-bold text-secondary fs-7">공식 티켓 가격 (원) *</label>
               <div class="input-group input-group-merge">
                 <span class="input-group-text bg-white border-primary"><i class="bx bx-won text-primary"></i></span>
-                <input type="number" id="publishFestPrice" class="form-control border-primary fw-semibold" placeholder="ex: 88000" required min="0" />
+                <input type="number" id="publishFestPrice" class="form-control border-primary fw-semibold"
+                  placeholder="ex: 88000" required min="0" />
               </div>
               <div class="form-text fs-8 text-muted">소비자 예매 페이지에 노출될 실제 공식 티켓 기본 가격입니다.</div>
             </div>
 
             <!-- [FREE 모드 전용 티켓 설정 영역] -->
-            <div id="freeTicketConfigSection" class="mb-4 d-none" style="background: #f8f9fa; border: 1px solid #dee2e6; border-radius: 8px; padding: 1.2rem;">
+            <div id="freeTicketConfigSection" class="mb-4 d-none"
+              style="background: #f8f9fa; border: 1px solid #dee2e6; border-radius: 8px; padding: 1.2rem;">
               <div class="d-flex justify-content-between align-items-center mb-3">
-                <label class="form-label fw-bold text-secondary mb-0"><i class="bx bx-cog me-1 text-success"></i> 티켓 종류 설정 *</label>
+                <label class="form-label fw-bold text-secondary mb-0"><i class="bx bx-cog me-1 text-success"></i> 티켓 종류
+                  설정 *</label>
                 <button type="button" class="btn btn-xs btn-outline-success fw-bold" onclick="addFreeTicketRow()">
                   <i class="bx bx-plus me-1"></i> 추가
                 </button>
@@ -495,10 +528,12 @@
 
             <!-- 공식 포스터 이미지 경로 또는 파일 첨부 (poster_url) -->
             <div class="mb-4">
-              <label for="publishFestPosterUrl" class="form-label fw-bold text-secondary fs-7">공식 포스터 이미지 URL / 경로 *</label>
+              <label for="publishFestPosterUrl" class="form-label fw-bold text-secondary fs-7">공식 포스터 이미지 URL / 경로
+                *</label>
               <div class="input-group">
                 <span class="input-group-text bg-light"><i class="bx bx-image-alt"></i></span>
-                <input type="url" id="publishFestPosterUrl" class="form-control border-start-0" placeholder="https://images.unsplash.com/photo-..." required />
+                <input type="url" id="publishFestPosterUrl" class="form-control border-start-0"
+                  placeholder="https://images.unsplash.com/photo-..." required />
               </div>
               <div class="form-text fs-8 text-muted">축제 홍보용 고해상도 공식 포스터 이미지 경로입니다.</div>
             </div>
@@ -506,7 +541,8 @@
             <!-- 축제 상세 설명 (description - textarea 영역) -->
             <div class="mb-4">
               <label for="publishFestDescription" class="form-label fw-bold text-secondary fs-7">축제 상세 설명 *</label>
-              <textarea id="publishFestDescription" class="form-control border-primary" rows="4" placeholder="이 축제에 대한 소개 글과 주요 라인업 정보를 자세하게 기입해 주세요." required></textarea>
+              <textarea id="publishFestDescription" class="form-control border-primary" rows="4"
+                placeholder="이 축제에 대한 소개 글과 주요 라인업 정보를 자세하게 기입해 주세요." required></textarea>
               <div class="form-text fs-8 text-muted">상세 보기 페이지의 본문에 노출되는 축제 소개글입니다.</div>
             </div>
 
@@ -532,24 +568,20 @@
           <h5 class="modal-title text-white fw-bold" id="createModalLabel">
             <i class="bx bx-plus-circle me-2 fs-4"></i>신규 축제 등록 신청서 제출 (기획사 신청용)
           </h5>
-          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close" style="position: absolute; top: 1.5rem; right: 1.5rem; margin: 0; z-index: 10;"></button>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"
+            style="position: absolute; top: 1.5rem; right: 1.5rem; margin: 0; z-index: 10;"></button>
         </div>
         <div class="modal-body p-5">
           <form id="createFestivalForm" onsubmit="event.preventDefault(); addFestival();">
             <div class="row g-4">
-              
+
               <!-- 축제 명칭 -->
               <div class="col-md-6 col-12 mb-3">
                 <label class="form-label fw-bold text-secondary">축제 명칭 *</label>
-                <input 
-                  type="text" 
-                  id="festName" 
-                  required 
-                  class="form-control" 
-                  placeholder="ex: 2026 워터밤 대전 (Waterbomb)"
-                />
+                <input type="text" id="festName" required class="form-control"
+                  placeholder="ex: 2026 워터밤 대전 (Waterbomb)" />
               </div>
-              
+
               <!-- 카테고리 -->
               <div class="col-md-6 col-12 mb-3">
                 <label class="form-label fw-bold text-secondary">카테고리 *</label>
@@ -565,95 +597,50 @@
               <!-- 개최 장소 -->
               <div class="col-md-6 col-12 mb-3">
                 <label class="form-label fw-bold text-secondary">개최 장소 *</label>
-                <input 
-                  type="text" 
-                  id="festVenue" 
-                  required 
-                  class="form-control" 
-                  placeholder="ex: DCC 대전컨벤션센터 야외무대"
-                />
+                <input type="text" id="festVenue" required class="form-control" placeholder="ex: DCC 대전컨벤션센터 야외무대" />
               </div>
 
               <!-- 최소 티켓 가격 -->
               <div class="col-md-6 col-12 mb-3">
                 <label class="form-label fw-bold text-secondary">최소 티켓 가격 (원) *</label>
-                <input 
-                  type="number" 
-                  id="festMinPrice" 
-                  required 
-                  class="form-control" 
-                  placeholder="ex: 55000"
-                />
+                <input type="number" id="festMinPrice" required class="form-control" placeholder="ex: 55000" />
               </div>
 
               <!-- 썸네일 이미지 URL -->
               <div class="col-md-6 col-12 mb-3">
                 <label class="form-label fw-bold text-secondary">포스터 썸네일 이미지 URL *</label>
-                <input 
-                  type="url" 
-                  id="festThumbnailUrl" 
-                  required 
-                  class="form-control" 
-                  placeholder="https://images.unsplash.com/photo-1533174072545-7a4b6ad7a6c3?q=80"
-                />
+                <input type="url" id="festThumbnailUrl" required class="form-control"
+                  placeholder="https://images.unsplash.com/photo-1533174072545-7a4b6ad7a6c3?q=80" />
               </div>
 
               <!-- 기획사/신청자 정보 -->
               <div class="col-md-6 col-12 mb-3">
                 <label class="form-label fw-bold text-secondary">기획사 / 신청 기관 *</label>
-                <input 
-                  type="text" 
-                  id="festAgency" 
-                  required 
-                  class="form-control" 
-                  placeholder="ex: (주)페스티오 엔터테인먼트"
-                />
+                <input type="text" id="festAgency" required class="form-control" placeholder="ex: (주)페스티오 엔터테인먼트" />
               </div>
 
               <!-- 시작 일자 -->
               <div class="col-md-3 col-6 mb-3">
                 <label class="form-label fw-bold text-secondary">시작 일자 *</label>
-                <input 
-                  type="date" 
-                  id="festStartDate" 
-                  required 
-                  class="form-control"
-                />
+                <input type="date" id="festStartDate" required class="form-control" />
               </div>
 
               <!-- 종료 일자 -->
               <div class="col-md-3 col-6 mb-3">
                 <label class="form-label fw-bold text-secondary">종료 일자 *</label>
-                <input 
-                  type="date" 
-                  id="festEndDate" 
-                  required 
-                  class="form-control"
-                />
+                <input type="date" id="festEndDate" required class="form-control" />
               </div>
 
               <!-- 시작 시간 -->
               <div class="col-md-3 col-6 mb-3">
                 <label class="form-label fw-bold text-secondary">시작 시간 *</label>
-                <input 
-                  type="time" 
-                  id="festStartTime" 
-                  required 
-                  class="form-control"
-                  value="13:00"
-                />
+                <input type="time" id="festStartTime" required class="form-control" value="13:00" />
               </div>
 
               <!-- 종료 시간 -->
               <div class="col-md-3 col-6 mb-3">
                 <label class="form-label fw-bold text-secondary">종료 시간 *</label>
-                <input 
-                  type="time" 
-                  id="festEndTime" 
-                  required 
-                  class="form-control"
-                  value="22:00"
-                />
+                <input type="time" id="festEndTime" required class="form-control" value="22:00" />
               </div>
 
               <!-- 배지 라벨 -->
@@ -672,7 +659,8 @@
                 <label class="form-label fw-bold text-secondary">예매 방식 *</label>
                 <div class="d-flex gap-4 align-items-center mt-1">
                   <div class="form-check">
-                    <input class="form-check-input" type="radio" name="festTicketMode" id="ticketModeSeat" value="SEAT" checked>
+                    <input class="form-check-input" type="radio" name="festTicketMode" id="ticketModeSeat" value="SEAT"
+                      checked>
                     <label class="form-check-label fw-semibold" for="ticketModeSeat">
                       <i class="bx bx-chair me-1 text-primary"></i> SEAT (좌석선택형)
                     </label>
@@ -693,7 +681,8 @@
               <div class="col-md-6 col-12 mb-3 d-flex flex-column justify-content-center">
                 <div class="form-check form-switch mb-2">
                   <input class="form-check-input" type="checkbox" id="festIsActive" checked>
-                  <label class="form-check-label fw-semibold" for="festIsActive">즉시 소비자 예매 사이트에 공개 및 활성화 (`is_active = TRUE` 상태)</label>
+                  <label class="form-check-label fw-semibold" for="festIsActive">즉시 소비자 예매 사이트에 공개 및 활성화 (`is_active =
+                    TRUE` 상태)</label>
                 </div>
                 <div class="form-check form-switch">
                   <input class="form-check-input" type="checkbox" id="festIsHot">
@@ -720,5 +709,3 @@
 </body>
 
 </html>
-
-

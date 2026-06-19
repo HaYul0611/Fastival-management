@@ -12,25 +12,25 @@ const MOCK_FESTIVALS = [
 ];
 
 let MOCK_INQUIRIES = [
-  { id:1, festivalId:1, inquiryType:'FOODTRUCK', companyName:'마포 닭강정 푸드트럭', managerName:'홍길동', phone:'010-1234-5678', email:'hong@food.com', content:'워터밤 행사 현장 내 10㎡ 구역에서 닭강정 및 음료 판매를 희망합니다. 사업자등록증 첨부드립니다.', createdAt:'2026-05-26T12:00:00', status:'PENDING', filePath1:'/uploads/business_license.pdf', filePath2:'/uploads/truck_proposal.pdf' },
-  { id:2, festivalId:1, inquiryType:'FOODTRUCK', companyName:'우주선 타코야끼', managerName:'김철수', phone:'010-9876-5432', email:'kim@tako.com', content:'타코야끼 및 크레페 전문 푸드트럭입니다. 5년 경력 위생 관리 우수 업체입니다.', createdAt:'2026-05-26T14:30:00', status:'PENDING', filePath1:'/uploads/tako_hygiene_license.pdf' },
-  { id:3, festivalId:1, inquiryType:'GOODS', companyName:'페스티벌 썬글라스 & 굿즈', managerName:'이영희', phone:'010-5555-1234', email:'lee@goods.com', content:'UV차단 썬글라스, 워터밤 MD 팔찌 등 굿즈 셀러 입점을 희망합니다. 연간 10개 이상 페스티벌 참여 이력 보유.', createdAt:'2026-05-25T09:00:00', status:'PENDING', filePath1:'/uploads/goods_catalog.pdf' },
-  { id:4, festivalId:1, inquiryType:'EVENT', companyName:'스타벅스 팝업', managerName:'박민준', phone:'010-7777-8888', email:'park@starbucks.com', content:'워터밤 현장 내 스타벅스 팝업 스토어 운영 제안드립니다. 음료 및 MD 판매 병행.', createdAt:'2026-05-24T18:15:00', status:'APPROVED', filePath1:'/uploads/starbucks_brand_proposal.pdf' },
-  { id:5, festivalId:2, inquiryType:'FOODTRUCK', companyName:'재즈밤 버거', managerName:'최재훈', phone:'010-2222-3333', email:'choi@burger.com', content:'수제버거 전문 푸드트럭. 재즈페스티벌 분위기에 맞는 감성 메뉴 구성 예정.', createdAt:'2026-05-22T10:45:00', status:'PENDING', filePath1:'/uploads/jazz_burger_menu.pdf' },
-  { id:6, festivalId:2, inquiryType:'GOODS', companyName:'비닐레코드 굿즈샵', managerName:'정수빈', phone:'010-4444-5555', email:'jung@vinyl.com', content:'LP판 및 재즈 아티스트 관련 굿즈 판매 목적 입점 신청. 음반 전문 MD 경력 8년.', createdAt:'2026-05-21T11:30:00', status:'REJECTED', filePath1:'/uploads/vinyl_store_license.pdf' },
-  { id:7, festivalId:3, inquiryType:'FOODTRUCK', companyName:'야경 포차', managerName:'오수연', phone:'010-6666-7777', email:'oh@pocha.com', content:'부산 불꽃축제 현장에서 포장마차 콘셉트의 야식 메뉴 운영 희망. 해산물 특화.', createdAt:'2026-05-20T16:00:00', status:'PENDING', filePath1:'/uploads/pocha_hygiene_certificate.pdf' },
+  { id: 1, festivalId: 1, inquiryType: 'FOODTRUCK', companyName: '마포 닭강정 푸드트럭', managerName: '홍길동', phone: '010-1234-5678', email: 'hong@food.com', content: '워터밤 행사 현장 내 10㎡ 구역에서 닭강정 및 음료 판매를 희망합니다. 사업자등록증 첨부드립니다.', createdAt: '2026-05-26T12:00:00', status: 'PENDING', filePath1: '/uploads/business_license.pdf', filePath2: '/uploads/truck_proposal.pdf' },
+  { id: 2, festivalId: 1, inquiryType: 'FOODTRUCK', companyName: '우주선 타코야끼', managerName: '김철수', phone: '010-9876-5432', email: 'kim@tako.com', content: '타코야끼 및 크레페 전문 푸드트럭입니다. 5년 경력 위생 관리 우수 업체입니다.', createdAt: '2026-05-26T14:30:00', status: 'PENDING', filePath1: '/uploads/tako_hygiene_license.pdf' },
+  { id: 3, festivalId: 1, inquiryType: 'GOODS', companyName: '페스티벌 썬글라스 & 굿즈', managerName: '이영희', phone: '010-5555-1234', email: 'lee@goods.com', content: 'UV차단 썬글라스, 워터밤 MD 팔찌 등 굿즈 셀러 입점을 희망합니다. 연간 10개 이상 페스티벌 참여 이력 보유.', createdAt: '2026-05-25T09:00:00', status: 'PENDING', filePath1: '/uploads/goods_catalog.pdf' },
+  { id: 4, festivalId: 1, inquiryType: 'EVENT', companyName: '스타벅스 팝업', managerName: '박민준', phone: '010-7777-8888', email: 'park@starbucks.com', content: '워터밤 현장 내 스타벅스 팝업 스토어 운영 제안드립니다. 음료 및 MD 판매 병행.', createdAt: '2026-05-24T18:15:00', status: 'APPROVED', filePath1: '/uploads/starbucks_brand_proposal.pdf' },
+  { id: 5, festivalId: 2, inquiryType: 'FOODTRUCK', companyName: '재즈밤 버거', managerName: '최재훈', phone: '010-2222-3333', email: 'choi@burger.com', content: '수제버거 전문 푸드트럭. 재즈페스티벌 분위기에 맞는 감성 메뉴 구성 예정.', createdAt: '2026-05-22T10:45:00', status: 'PENDING', filePath1: '/uploads/jazz_burger_menu.pdf' },
+  { id: 6, festivalId: 2, inquiryType: 'GOODS', companyName: '비닐레코드 굿즈샵', managerName: '정수빈', phone: '010-4444-5555', email: 'jung@vinyl.com', content: 'LP판 및 재즈 아티스트 관련 굿즈 판매 목적 입점 신청. 음반 전문 MD 경력 8년.', createdAt: '2026-05-21T11:30:00', status: 'REJECTED', filePath1: '/uploads/vinyl_store_license.pdf' },
+  { id: 7, festivalId: 3, inquiryType: 'FOODTRUCK', companyName: '야경 포차', managerName: '오수연', phone: '010-6666-7777', email: 'oh@pocha.com', content: '부산 불꽃축제 현장에서 포장마차 콘셉트의 야식 메뉴 운영 희망. 해산물 특화.', createdAt: '2026-05-20T16:00:00', status: 'PENDING', filePath1: '/uploads/pocha_hygiene_certificate.pdf' },
 ];
 
 let currentFestivalId = null; // 선택된 축제 ID
-let currentStatus     = 'PENDING'; // 현재 활성화된 심사 상태 탭
-let currentDetailId   = null;
-let activeFestivals   = []; // API 또는 로컬 축제 목록 저장 캐시
-let cachedInquiries   = []; // 현재 축제에 매핑된 신청서 목록 캐시
+let currentStatus = 'PENDING'; // 현재 활성화된 심사 상태 탭
+let currentDetailId = null;
+let activeFestivals = []; // API 또는 로컬 축제 목록 저장 캐시
+let cachedInquiries = []; // 현재 축제에 매핑된 신청서 목록 캐시
 
 document.addEventListener('DOMContentLoaded', async () => {
   await loadFestivals(); // 1. 진행 예정 축제 목록 로드
   initTabs(); // 2. 탭 이벤트 구성
-  
+
   // 모달 제어 이벤트 바인딩
   document.getElementById('detailModalBackdrop').addEventListener('click', e => {
     if (e.target === e.currentTarget) closeModal();
@@ -65,12 +65,12 @@ async function loadFestivals() {
     const res = await fetch('/api/festival');
     if (!res.ok) throw new Error('API 로드 에러');
     const allFests = await res.json();
-    
+
     // UPCOMING 상태인 페스티벌을 위주로 필터링하여 매핑
-    activeFestivals = allFests.length > 0 
-      ? allFests.filter(f => f.operationalStatus === 'UPCOMING' || f.operational_status === 'UPCOMING') 
+    activeFestivals = allFests.length > 0
+      ? allFests.filter(f => f.operationalStatus === 'UPCOMING' || f.operational_status === 'UPCOMING')
       : MOCK_FESTIVALS;
-      
+
     // 만약 UPCOMING 데이터가 아예 없다면 전체 목록 제공
     if (allFests.length > 0 && activeFestivals.length === 0) {
       activeFestivals = allFests;
@@ -89,7 +89,7 @@ async function loadFestivals() {
 function getFestivalPoster(f) {
   // DB에서 반환되는 카멜케이스(thumbnailUrl) 및 스네이크케이스(thumbnail_url) 모두 대응 지원
   const dbThumbnail = f.thumbnailUrl || f.thumbnail_url;
-  
+
   if (dbThumbnail && dbThumbnail.trim() !== "") {
     // data:image 규격의 base64 데이터에 대한 초정밀 디코딩 유효성 검사 (깨진 base64 사전 필터링)
     if (dbThumbnail.startsWith("data:")) {
@@ -181,7 +181,7 @@ async function selectFestival(id) {
   document.querySelectorAll('.festival-select-card').forEach(card => {
     card.classList.remove('active');
   });
-  
+
   const selectedCard = document.getElementById(`fest-card-${id}`);
   if (selectedCard) {
     selectedCard.classList.add('active');
@@ -252,13 +252,13 @@ async function fetchInquiries(status) {
  * 5. 통계 요약 카드 및 탭 렌더링 동기화
  */
 function updateSummary() {
-  document.getElementById('summaryPending').textContent  = statusCounts.PENDING  + ' 건';
+  document.getElementById('summaryPending').textContent = statusCounts.PENDING + ' 건';
   document.getElementById('summaryApproved').textContent = statusCounts.APPROVED + ' 건';
   document.getElementById('summaryRejected').textContent = statusCounts.REJECTED + ' 건';
 }
 
 function updateTabCounts() {
-  document.getElementById('tabCountPending').textContent  = statusCounts.PENDING;
+  document.getElementById('tabCountPending').textContent = statusCounts.PENDING;
   document.getElementById('tabCountApproved').textContent = statusCounts.APPROVED;
   document.getElementById('tabCountRejected').textContent = statusCounts.REJECTED;
 
@@ -278,16 +278,16 @@ function updateTabCounts() {
  * 6. 입점 신청 목록 테이블 동적 바인딩
  */
 function renderTable() {
-  const titleMap = { PENDING:'대기중 신청서', APPROVED:'승인된 신청서', REJECTED:'반려된 신청서' };
+  const titleMap = { PENDING: '대기중 신청서', APPROVED: '승인된 신청서', REJECTED: '반려된 신청서' };
   document.getElementById('tableHeadTitle').textContent = titleMap[currentStatus];
 
   const tbody = document.getElementById('appTableBody');
   if (!currentFestivalId) {
     tbody.innerHTML = `
       <tr class="empty-row">
-        <td colspan="7">
-          <i class="bx bx-calendar-check fs-2 d-block mb-2 text-primary"></i>
-          상단의 축제 카드를 선택하시면 입점 신청 내역을 확인할 수 있습니다.
+        <td colspan="7" class="text-center text-muted" style="padding: 60px 0;">
+          <i class="bx bx-calendar-check text-primary mb-3" style="font-size: 3rem;"></i>
+          <p class="mb-0 fs-6">상단의 축제 카드를 선택하시면 입점 신청 내역을 확인할 수 있습니다.</p>
         </td>
       </tr>`;
     return;
@@ -296,9 +296,9 @@ function renderTable() {
   if (!cachedInquiries.length) {
     tbody.innerHTML = `
       <tr class="empty-row">
-        <td colspan="7">
-          <i class="bx bx-inbox fs-2 d-block mb-2 text-muted"></i>
-          해당 축제에 접수된 신청서가 존재하지 않습니다.
+        <td colspan="7" class="text-center text-muted" style="padding: 60px 0;">
+          <i class="bx bx-inbox text-muted mb-3" style="font-size: 3rem;"></i>
+          <p class="mb-0 fs-6">해당 축제에 접수된 신청서가 존재하지 않습니다.</p>
         </td>
       </tr>`;
     return;
@@ -403,7 +403,7 @@ async function changeStatus(id, newStatus) {
       const errText = await res.text();
       throw new Error(`서버 오류 (${res.status}): ${errText || '상태 변경 실패'}`);
     }
-    
+
     // DB 성공 시 전역 Mock 동기화
     const idx = MOCK_INQUIRIES.findIndex(i => String(i.id) === String(id));
     if (idx !== -1) MOCK_INQUIRIES[idx].status = newStatus;
@@ -458,7 +458,7 @@ function openModal(id) {
       <div class="detail-row" style="flex-direction:column; margin-top: 14px;">
         <span class="dl" style="margin-bottom:6px;"><i class="bx bx-paperclip me-1"></i>첨부 서류 (제출 서류)</span>
         <div class="d-flex flex-column gap-2 mt-1">`;
-      
+
     if (file1) {
       const fileName1 = file1.substring(file1.lastIndexOf("/") + 1);
       fileHtml += `
@@ -467,7 +467,7 @@ function openModal(id) {
           <span class="badge bg-primary px-2 py-1" style="font-size: 10px;"><i class="bx bx-download me-1"></i>다운로드</span>
         </a>`;
     }
-    
+
     if (file2) {
       const fileName2 = file2.substring(file2.lastIndexOf("/") + 1);
       fileHtml += `
@@ -476,7 +476,7 @@ function openModal(id) {
           <span class="badge bg-primary px-2 py-1" style="font-size: 10px;"><i class="bx bx-download me-1"></i>다운로드</span>
         </a>`;
     }
-    
+
     fileHtml += `</div></div>`;
   } else {
     fileHtml += `
@@ -509,7 +509,7 @@ function openModal(id) {
       <button class="btn btn-success" id="modalApproveBtn">승인</button>
     `;
     document.getElementById('modalApproveBtn').onclick = () => changeStatus(id, 'APPROVED');
-    document.getElementById('modalRejectBtn').onclick  = () => changeStatus(id, 'REJECTED');
+    document.getElementById('modalRejectBtn').onclick = () => changeStatus(id, 'REJECTED');
   } else {
     actionWrap.innerHTML = `<button class="btn btn-outline-secondary" id="modalCloseBtn2">닫기</button>`;
     document.getElementById('modalCloseBtn2').onclick = closeModal;
@@ -532,7 +532,7 @@ function initTabs() {
       document.querySelectorAll('.status-tab').forEach(t => t.classList.remove('active'));
       tab.classList.add('active');
       currentStatus = tab.dataset.status;
-      
+
       if (currentFestivalId) {
         await fetchInquiries(currentStatus);
         renderTable();
@@ -546,12 +546,12 @@ function initTabs() {
  */
 function typeBadge(t) {
   if (t === 'FOODTRUCK') return `<span class="badge-type-food">🍔 푸드트럭</span>`;
-  if (t === 'GOODS')     return `<span class="badge-type-goods">🛍 굿즈/셀러</span>`;
+  if (t === 'GOODS') return `<span class="badge-type-goods">🛍 굿즈/셀러</span>`;
   return `<span class="badge-type-event">🎪 행사/제휴</span>`;
 }
 
 function statusBadge(s) {
-  if (s === 'PENDING')  return `<span class="badge bg-warning text-dark">대기중</span>`;
+  if (s === 'PENDING') return `<span class="badge bg-warning text-dark">대기중</span>`;
   if (s === 'APPROVED') return `<span class="badge bg-success">승인됨</span>`;
   return `<span class="badge bg-danger">반려됨</span>`;
 }
