@@ -25,6 +25,25 @@ const notifList = document.getElementById("notif-list");
 // Init App UI
 let selectedSeats = [];
 
+// React <-> Vanilla JS Bridge for ticketing
+window.goToTicketingFromReact = function(zoneName, seatsArray) {
+  const seasons = DB.options?.seasons || [{id: 1, name: "일반"}];
+  const rates = DB.options?.rates || [{id: 1, name: "기본 요금"}];
+  const defaultSeasonId = seasons.find(s => s.active)?.id || seasons[0].id;
+  const defaultRateId = rates[0].id;
+
+  let dbZone = zoneName.replace('존', '').replace(/\s*\(.*?\)/g, '').trim(); 
+
+  const pendingSeats = seatsArray.map(seatNum => ({
+    seatId: `${dbZone}-${seatNum}`,
+    seasonId: defaultSeasonId,
+    rateId: defaultRateId
+  }));
+
+  sessionStorage.setItem('pendingTicketingSeats', JSON.stringify(pendingSeats));
+  window.location.href = '/features/payment/staff/ticket-desk.html';
+};
+
 // Apply theme from localStorage or default to light-theme
 const savedTheme = localStorage.getItem("staff_theme") || "light";
 if (savedTheme === "light") {
@@ -1086,6 +1105,17 @@ async function renderTicketingScreen() {
   const view = document.getElementById("view-ticketing");
   if (!view) return;
 
+  // Restore pending seats from sessionStorage if arrived from React Seat Map
+  const pending = sessionStorage.getItem('pendingTicketingSeats');
+  if (pending) {
+    try {
+      selectedSeats = JSON.parse(pending);
+    } catch (e) {
+      console.error("Failed to parse pending seats", e);
+    }
+    sessionStorage.removeItem('pendingTicketingSeats');
+  }
+
   // 1. Fetch available festivals
   let festivals = [];
   try {
@@ -1134,33 +1164,33 @@ async function renderTicketingScreen() {
   const defaultRate = rates[0];
 
   view.innerHTML = `
-    <div class="ticketing-grid" style="display:flex; gap:20px; height: calc(100vh - 120px); overflow: hidden;">
-      <!-- 좌측 폼 영역 (고정 너비, 세로 스크롤) -->
-      <div class="panel-rigid" style="width: 400px; flex-shrink: 0; display: flex; flex-direction: column; overflow: hidden;">
-        <div class="panel-header-rigid" style="flex-shrink: 0;">현장 매표소 발권 및 티켓 커스텀 설정</div>
+    <div style="display:flex; justify-content: center; height: calc(100vh - 120px); overflow: hidden;">
+      <!-- 예매/결제 폼 영역 -->
+      <div class="panel-rigid" style="width: 100%; max-width: 800px; display: flex; flex-direction: column; overflow: hidden;">
+        <div class="panel-header-rigid" style="flex-shrink: 0;">선택된 티켓 결제 진행 및 커스텀 설정</div>
         <div class="panel-body-rigid" style="flex: 1; overflow-y: auto; display: flex; flex-direction: column;">
           <form id="ticketing-form" style="display: flex; flex-direction: column; height: 100%;">
-            <div class="form-group-rigid" style="margin-bottom: 15px; flex-shrink: 0;">
-              <label>진행 행사 (Festival) 선택</label>
-              <select id="ticketing-festival-select" class="input-rigid" style="width: 100%; padding: 10px;">
+            <div class="form-group-rigid" style="margin-bottom: 20px; flex-shrink: 0;">
+              <label style="font-size: 18px; font-weight: bold; margin-bottom: 10px; display: block;">진행 행사 (Festival) 선택</label>
+              <select id="ticketing-festival-select" class="input-rigid" style="width: 100%; padding: 15px; font-size: 18px;">
                 ${festivals.map(f => `<option value="${f.id}" ${f.id === currentFestivalId ? 'selected' : ''}>${f.name} (${f.startDate} ~ ${f.endDate})</option>`).join('')}
               </select>
             </div>
             
-            <div class="form-group-rigid" style="display: flex; flex-direction: column; flex: 1; min-height: 200px; margin-bottom: 15px;">
-              <label style="display: flex; justify-content: space-between; align-items: center; flex-shrink: 0; margin-bottom: 5px;">
-                <span>선택된 좌석 목록 및 이용 고객 지정</span>
-                <span id="selected-seats-count-lbl" style="font-size: 12px; color: var(--text-muted); font-weight: normal;">0개 선택됨</span>
+            <div class="form-group-rigid" style="display: flex; flex-direction: column; flex: 1; min-height: 250px; margin-bottom: 15px;">
+              <label style="display: flex; justify-content: space-between; align-items: center; flex-shrink: 0; margin-bottom: 10px;">
+                <span style="font-size: 18px; font-weight: bold;">선택된 좌석 목록 및 이용 고객 지정</span>
+                <span id="selected-seats-count-lbl" style="font-size: 16px; color: var(--text-muted); font-weight: bold;">0개 선택됨</span>
               </label>
-              <div class="selected-seats-table-container" style="flex: 1; overflow-y: auto; overflow-x: auto; border: 1px solid var(--border-color); background: #1a202c; border-radius: 2px;">
-                <table class="table-rigid" style="margin: 0; font-size: 12px; width: 100%; min-width: 350px;">
+              <div class="selected-seats-table-container" style="flex: 1; overflow-y: auto; overflow-x: auto; border: 1px solid var(--border-color); background: #1a202c; border-radius: 4px;">
+                <table class="table-rigid" style="margin: 0; font-size: 16px; width: 100%; min-width: 500px;">
                   <thead>
                     <tr>
-                      <th style="padding: 8px 10px;">좌석</th>
-                      <th style="padding: 8px 10px;">요금 선택</th>
-                      <th style="padding: 8px 10px;">이용 고객</th>
-                      <th style="padding: 8px 10px;" class="text-right">금액</th>
-                      <th style="padding: 8px 10px; width: 30px;"></th>
+                      <th style="padding: 12px 15px;">좌석</th>
+                      <th style="padding: 12px 15px;">요금 선택</th>
+                      <th style="padding: 12px 15px;">이용 고객</th>
+                      <th style="padding: 12px 15px;" class="text-right">금액</th>
+                      <th style="padding: 12px 15px; width: 40px;"></th>
                     </tr>
                   </thead>
                   <tbody id="selected-seats-tbody">
@@ -1171,45 +1201,17 @@ async function renderTicketingScreen() {
             </div>
 
             <div style="flex-shrink: 0;">
-              <div class="price-display-box-rigid" style="margin-top: 15px; background: rgba(16, 185, 129, 0.1); border: 2px solid var(--color-green); padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; border-radius: 4px;">
-                <span style="color: #fff; font-weight: 800; font-size: 14px;">최종 합산 결제 금액</span>
-                <strong id="ticket-final-price-lbl" style="color: var(--color-green); font-size: 24px; font-family: var(--font-mono);">0원</strong>
+              <div class="price-display-box-rigid" style="margin-top: 20px; background: rgba(16, 185, 129, 0.1); border: 2px solid var(--color-green); padding: 20px 25px; display: flex; justify-content: space-between; align-items: center; border-radius: 6px;">
+                <span style="color: #fff; font-weight: 800; font-size: 18px;">최종 합산 결제 금액</span>
+                <strong id="ticket-final-price-lbl" style="color: var(--color-green); font-size: 32px; font-family: var(--font-mono);">0원</strong>
               </div>
 
-              <button type="button" id="btn-request-ticket-pay" class="btn btn-rigid btn-green" style="width: 100%; font-weight:bold; margin-top:20px; padding: 15px; font-size: 15px;">
+              <button type="button" id="btn-request-ticket-pay" class="btn btn-rigid btn-green" style="width: 100%; font-weight:bold; margin-top:25px; padding: 20px; font-size: 20px;">
                 [결제요청] Toss 일괄 결제창 호출
               </button>
             </div>
           </form>
         </div>
-      </div>
-
-      <!-- 우측 SVG 도면 영역 -->
-      <div class="panel-rigid" style="flex: 1; min-width: 0; display: flex; flex-direction: column; overflow: hidden;">
-        <div class="panel-header-rigid" style="display:flex; justify-content: space-between; align-items:center; flex-shrink: 0;">
-          <span>실시간 전체 구역 배치도 (SVG)</span>
-        </div>
-        <div class="panel-body-rigid" style="flex: 1; overflow: hidden; padding: 0; background: #000; position:relative; display: flex; flex-direction: column;" id="ticketing-svg-map-container">
-          <div style="color:var(--text-muted); margin: auto; padding:50px;">배치도를 불러오는 중입니다...</div>
-        </div>
-
-      </div>
-    </div>
-
-    <!-- 상세 좌석표 모달 -->
-    <div id="seat-map-modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 9999; justify-content: center; align-items: center; padding: 20px;">
-      <div style="background: #1a202c; border: 1px solid var(--border-color); border-radius: 8px; width: 100%; max-width: 900px; max-height: 90vh; display: flex; flex-direction: column; overflow: hidden; box-shadow: 0 10px 30px rgba(0,0,0,0.5);">
-        <div style="padding: 15px 20px; border-bottom: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center; background: #2d3748;">
-          <h3 style="margin: 0; font-size: 18px; color: #fff;">상세 좌석 선택</h3>
-          <button type="button" id="btn-close-seat-modal" style="background: transparent; border: none; color: #fff; font-size: 24px; cursor: pointer;">&times;</button>
-        </div>
-        <div class="panel-body-rigid" style="overflow: auto; padding: 20px; flex: 1; min-height: 400px; max-height: 70vh;">
-          <div id="ticketing-seat-map-container" style="min-width: 600px; display: flex; justify-content: center;">
-            <div style="text-align:center; padding: 50px; color: var(--text-muted);">위의 지도에서 구역을 클릭하세요.</div>
-          </div>
-        </div>
-        <div style="padding: 15px 20px; border-top: 1px solid var(--border-color); display: flex; justify-content: flex-end; background: #2d3748;">
-          <button type="button" id="btn-confirm-seat-modal" class="btn btn-rigid btn-green" style="padding: 10px 30px; font-weight: bold; border-radius: 4px;">선택 완료</button>
         </div>
       </div>
     </div>
@@ -1224,7 +1226,7 @@ async function renderTicketingScreen() {
     let totalPrice = 0;
 
     if (selectedSeats.length === 0) {
-      tbody.innerHTML = `<tr><td colspan="5" class="text-center" style="color:#a0aec0; padding: 30px 0;">선택된 좌석이 없습니다.<br>모달창에서 좌석을 선택하세요.</td></tr>`;
+      tbody.innerHTML = `<tr><td colspan="5" class="text-center" style="color:#a0aec0; padding: 50px 0; font-size: 16px;">선택된 좌석이 없습니다.<br>좌석 현황 탭에서 좌석을 선택하세요.</td></tr>`;
       document.getElementById("ticket-final-price-lbl").innerText = "0원";
       document.getElementById("selected-seats-count-lbl").innerText = "0개 선택됨";
 
@@ -1243,20 +1245,20 @@ async function renderTicketingScreen() {
 
       const tr = document.createElement("tr");
       tr.innerHTML = `
-        <td style="padding: 6px 10px; font-weight: bold; color: #ffd65c; vertical-align: middle;">${item.seatId}</td>
-        <td style="padding: 6px 10px; vertical-align: middle;">
-          <select class="seat-season-select input-rigid input-small" style="padding: 2px 4px; font-size:11px; width: 100%; min-width: 80px;" data-index="${index}">
+        <td style="padding: 12px 15px; font-weight: bold; color: #ffd65c; font-size: 18px; vertical-align: middle;">${item.seatId}</td>
+        <td style="padding: 12px 15px; vertical-align: middle;">
+          <select class="seat-season-select input-rigid input-small" style="padding: 8px 10px; font-size:16px; width: 100%; min-width: 120px;" data-index="${index}">
             ${seasons.map(s => `<option value="${s.id}" ${s.id === item.seasonId ? 'selected' : ''}>${s.name}</option>`).join("")}
           </select>
         </td>
-        <td style="padding: 6px 10px; vertical-align: middle;">
-          <select class="seat-rate-select input-rigid input-small" style="padding: 2px 4px; font-size:11px; width: 100%; min-width: 80px;" data-index="${index}">
+        <td style="padding: 12px 15px; vertical-align: middle;">
+          <select class="seat-rate-select input-rigid input-small" style="padding: 8px 10px; font-size:16px; width: 100%; min-width: 120px;" data-index="${index}">
             ${rates.map(r => `<option value="${r.id}" ${r.id === item.rateId ? 'selected' : ''}>${r.name}</option>`).join("")}
           </select>
         </td>
-        <td style="padding: 6px 10px; text-align: right; font-weight: bold; font-family: var(--font-mono); vertical-align: middle;">${price.toLocaleString()}원</td>
-        <td style="padding: 6px 10px; text-align: center; vertical-align: middle;">
-          <button type="button" class="btn-remove-selected-seat" data-index="${index}" style="background: none; border: none; color: #ef4444; cursor: pointer; font-size: 16px; font-weight: bold; line-height: 1;">&times;</button>
+        <td style="padding: 12px 15px; text-align: right; font-weight: bold; font-family: var(--font-mono); font-size: 18px; vertical-align: middle;">${price.toLocaleString()}원</td>
+        <td style="padding: 12px 15px; text-align: center; vertical-align: middle;">
+          <button type="button" class="btn-remove-selected-seat" data-index="${index}" style="background: none; border: none; color: #ef4444; cursor: pointer; font-size: 24px; font-weight: bold; line-height: 1;">&times;</button>
         </td>
       `;
       tbody.appendChild(tr);
@@ -1288,125 +1290,16 @@ async function renderTicketingScreen() {
         updateSelectedSeatsUI();
       };
     });
-
-    // Update seat map highlights
-    document.querySelectorAll(".seat").forEach(el => {
-      const seatId = el.getAttribute("data-seat-id");
-      if (selectedSeats.some(item => item.seatId === seatId)) {
-        el.classList.add("selected-for-ticketing");
-      } else {
-        el.classList.remove("selected-for-ticketing");
-      }
-    });
   };
 
-  // Handle seat toggling
-  const handleSeatToggle = (seatId) => {
-    const existingIdx = selectedSeats.findIndex(item => item.seatId === seatId);
-    if (existingIdx > -1) {
-      selectedSeats.splice(existingIdx, 1);
-    } else {
-      const defaultSeasonId = defaultSeason ? defaultSeason.id : (seasons[0] ? seasons[0].id : "");
-      const defaultRateId = defaultRate ? defaultRate.id : (rates[0] ? rates[0].id : "");
-      selectedSeats.push({
-        seatId,
-        seasonId: defaultSeasonId,
-        rateId: defaultRateId
-      });
-    }
-    updateSelectedSeatsUI();
-  };
-
-  // Load SVG Map Function
-  const loadSvgMapForFestival = async (festivalId) => {
-    const svgContainer = document.getElementById("ticketing-svg-map-container");
-    if (!svgContainer) return;
-
-    try {
-      const res = await fetch(`/api/festival/${festivalId}/zones`);
-      if (res.ok) {
-        const zones = await res.json();
-        const zoneWithBg = zones.find(z => z.mapBgUrl);
-
-        svgContainer.innerHTML = '';
-        if (zoneWithBg && zoneWithBg.mapBgUrl && zoneWithBg.mapBgUrl.toLowerCase().includes('.svg')) {
-          const bgRes = await fetch(zoneWithBg.mapBgUrl);
-          const svgText = await bgRes.text();
-
-          const parser = new DOMParser();
-          const doc = parser.parseFromString(svgText, 'image/svg+xml');
-          const svgRoot = doc.documentElement;
-
-          // Remove inline onclick handlers from SVG to prevent ReferenceError: selectZone is not defined
-          svgRoot.querySelectorAll('[onclick]').forEach(el => {
-            el.removeAttribute('onclick');
-          });
-
-          svgRoot.setAttribute('width', '100%');
-          svgRoot.setAttribute('height', '100%');
-          svgRoot.style.pointerEvents = 'auto';
-          svgContainer.appendChild(svgRoot);
-
-          zones.forEach(zone => {
-            if (!zone.svgPoints) return;
-            const elementId = zone.svgPoints.replace('#', '');
-            const targetEl = svgRoot.getElementById(elementId) || svgRoot.querySelector(`[id="${elementId}"]`);
-            if (targetEl) {
-              targetEl.classList.add('zone-polygon');
-              targetEl.style.cursor = 'pointer';
-              targetEl.style.fill = 'rgba(105, 108, 255, 0.2)';
-              targetEl.style.stroke = '#696cff';
-              targetEl.style.strokeWidth = '2px';
-
-              targetEl.addEventListener('click', () => {
-                // Remove selected from others
-                svgRoot.querySelectorAll('.selected-zone-polygon').forEach(el => {
-                  el.classList.remove('selected-zone-polygon');
-                  el.style.fill = 'rgba(105, 108, 255, 0.2)';
-                });
-                targetEl.classList.add('selected-zone-polygon');
-                targetEl.style.fill = 'rgba(255, 171, 0, 0.5)';
-
-                // Clear and redraw seat map for this specific zone
-                const container = document.getElementById("ticketing-seat-map-container");
-                container.innerHTML = "";
-                // Render seat map for this zone using the exact DB zone name
-                renderSeatMap("ticketing-seat-map-container", handleSeatToggle, zone.zoneName);
-
-                // 모달 띄우기
-                document.getElementById('seat-map-modal').style.display = 'flex';
-              });
-            }
-          });
-        } else {
-          svgContainer.innerHTML = '<div style="color:var(--text-muted); text-align:center; padding:50px;">등록된 SVG 배치도가 없습니다. 좌측에서 직접 페스티벌을 다시 선택해주세요.</div>';
-          // 모달에는 모든 좌석을 띄울지, 아니면 버튼을 따로 만들지 결정해야 함
-          // 우선 빈 화면으로 유지
-          const container = document.getElementById("ticketing-seat-map-container");
-          container.innerHTML = '<div style="text-align:center; padding: 50px; color: var(--text-muted);">배치도가 없습니다.</div>';
-        }
-      }
-    } catch (e) {
-      console.error("Failed to load SVG zones", e);
-      svgContainer.innerHTML = '<div style="color:var(--text-muted); text-align:center; padding:50px;">SVG 배치도를 불러오는데 실패했습니다.</div>';
-    }
-  };
-
-  // Initial draw
-  if (currentFestivalId) {
-    await loadSvgMapForFestival(currentFestivalId);
-  }
+  // Pre-fill selected seats UI if data was passed from React Seat Map
+  updateSelectedSeatsUI();
 
   // Handle Festival Change
   document.getElementById("ticketing-festival-select").addEventListener("change", async (e) => {
     currentFestivalId = e.target.value;
     selectedSeats = []; // Reset selections
     await loadSeatsForFestival(currentFestivalId);
-    await loadSvgMapForFestival(currentFestivalId);
-
-    // Clear seat map until a zone is clicked
-    const container = document.getElementById("ticketing-seat-map-container");
-    container.innerHTML = '<div style="text-align:center; padding: 50px; color: var(--text-muted);">위의 지도에서 구역을 클릭하세요.</div>';
     updateSelectedSeatsUI();
   });
 
