@@ -141,10 +141,21 @@ body {
   border-color: #30363d;
 }
 
+body.light-theme .menu-link:hover {
+  background-color: rgba(0, 0, 0, 0.05);
+  color: #000;
+  border-color: #e2e8f0;
+}
+
 .menu-link.active {
   background-color: var(--bg-panel);
   color: #fff;
   border-color: var(--border-color);
+}
+
+body.light-theme .menu-link.active {
+  color: #000;
+  font-weight: bold;
 }
 
 .menu-icon {
