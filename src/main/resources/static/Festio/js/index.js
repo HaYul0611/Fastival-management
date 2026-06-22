@@ -417,7 +417,7 @@ function renderPosterGrid() {
         RecentViewed.add({
           eventNo: no,
           name: ev.eventName || ev.name,
-          thumbnailUrl: ev.thumbnailUrl,
+          thumbnailUrl: ev.thumbnailUrl || ev.thumbnail_url,
         });
       }
       location.href = `detail.html?eventNo=${no}`;
@@ -435,7 +435,7 @@ function buildPosterCard(ev, idx) {
   const badge = ev.badgeLabel || ev.badge_label || (isHot ? 'HOT' : null);
   const isAdult = ev.isAdultOnly || false;
   const isWished = _wishlist.includes(no);
-  const thumb = ev.thumbnailUrl;
+  const thumb = ev.thumbnailUrl || ev.thumbnail_url;
   const dday = calcDday(date, endDate);
   const views = ev.viewCount || 0;
 

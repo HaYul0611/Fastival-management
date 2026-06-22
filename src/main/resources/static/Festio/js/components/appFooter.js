@@ -320,7 +320,7 @@
             <span class="ft-logo-text">FESTIO</span>
             <p class="ft-corp-name">FESTIO(주)</p>
             <p class="ft-corp-info">
-              공동대표 : 강진원, 오하율, 임소희<br>
+              공동대표 : 강진원, 오하율<br>
               이메일 : FESTIO@festio.com<br>
               주소 : 서울특별시 마포구 월드컵북로 123 (상암동, 페스티오빌딩)<br>
               사업자등록번호 : 123-45-67890<br>

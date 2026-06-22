@@ -324,6 +324,7 @@ input:checked+.slider:before {
   }
 
   .mp-sidebar {
+    flex: none;
     display: flex;
     flex-direction: row;
     align-items: center;
@@ -359,7 +360,7 @@ input:checked+.slider:before {
   }
 
   .mp-profile-main {
-    flex-direction: column;
+    flex-direction: row;
     align-items: flex-start;
     gap: 16px;
   }
@@ -371,7 +372,7 @@ input:checked+.slider:before {
   .mp-user-info-row {
     flex-direction: column;
     align-items: flex-start;
-    gap: 12px;
+    gap: 4px;
   }
 
   .mp-user-info-row .btn-edit-profile {
@@ -390,3 +391,10 @@ input:checked+.slider:before {
     gap: 12px;
   }
 }
+
+/* 전역 바코드 폰트 (가독성 개선) */
+.barcode-text {
+    font-family: 'Consolas', 'Courier New', Courier, monospace !important;
+    letter-spacing: 2px !important;
+}
+

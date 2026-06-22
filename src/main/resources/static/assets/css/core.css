@@ -1,0 +1,8 @@
+
+
+/* 전역 바코드 폰트 (가독성 개선) */
+.barcode-text {
+    font-family: 'Consolas', 'Courier New', Courier, monospace !important;
+    letter-spacing: 2px !important;
+}
+

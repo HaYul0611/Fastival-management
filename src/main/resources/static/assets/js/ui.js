@@ -1375,9 +1375,9 @@ async function renderTicketingScreen() {
               <div>[ 현장결제 완료 ]</div>
               <div class="divider"></div>
               <div class="info">
-                <strong>주문번호:</strong> ORD-${result.orderId}<br>
+                <strong class="barcode-text">주문번호:</strong> <span class="barcode-text">ORD-${result.orderId}</span><br>
                 <strong>좌석정보:</strong> ${seatIdsText}<br>
-                <strong>티켓번호:</strong> ${result.ticketNumber}<br>
+                <strong class="barcode-text">티켓번호:</strong> <span class="barcode-text">${result.ticketNumber}</span><br>
                 <strong>결제금액:</strong> ${totalPrice.toLocaleString()}원
               </div>
               <div class="divider"></div>
