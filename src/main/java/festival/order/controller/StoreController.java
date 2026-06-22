@@ -27,10 +27,19 @@ public class StoreController {
     @GetMapping
     public ResponseEntity<List<StoreEntity>> getStoresByFestival(
             @RequestParam(value = "festivalId", required = false) Long festivalId) {
-        if (festivalId == null) {
-            return ResponseEntity.ok(storeService.getAllStores());
+        
+        List<StoreEntity> stores = storeService.getAllStores();
+        
+        if (festivalId != null) {
+            stores.sort((a, b) -> {
+                boolean aMatch = festivalId.equals(a.getFestivalId());
+                boolean bMatch = festivalId.equals(b.getFestivalId());
+                if (aMatch && !bMatch) return -1;
+                if (!aMatch && bMatch) return 1;
+                return a.getId().compareTo(b.getId());
+            });
         }
-        List<StoreEntity> stores = storeService.getStoresByFestival(festivalId);
+        
         return ResponseEntity.ok(stores);
     }
 

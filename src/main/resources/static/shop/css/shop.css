@@ -130,37 +130,32 @@
 .hero-stats {
   display: flex;
   flex-direction: column;
-  gap: 2px;
-  background: rgba(0, 0, 0, .02);
-  /* 밝은 테마용 스탯 영역 */
-  border: 1px solid rgba(0, 0, 0, .06);
-  border-radius: var(--r20);
-  overflow: hidden;
-  backdrop-filter: blur(12px);
+  gap: 14px;
 }
 
 .hero-stat {
   display: flex;
   align-items: center;
-  gap: 14px;
-  padding: 18px 22px;
-  border-bottom: 1px solid rgba(0, 0, 0, .05);
-  transition: background var(--trans);
-}
-
-.hero-stat:last-child {
-  border-bottom: none
+  gap: 18px;
+  padding: 22px 24px;
+  background: var(--white);
+  border: 1px solid var(--g200);
+  border-radius: var(--r20);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, .03);
+  transition: transform var(--trans), box-shadow var(--trans), border-color var(--trans);
 }
 
 .hero-stat:hover {
-  background: rgba(0, 0, 0, .03)
+  transform: translateY(-3px);
+  box-shadow: 0 10px 24px rgba(0, 0, 0, .06);
+  border-color: var(--g300);
 }
 
 .hero-stat-icon {
-  width: 40px;
-  height: 40px;
+  width: 52px;
+  height: 52px;
   flex-shrink: 0;
-  border-radius: var(--r8);
+  border-radius: 16px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -180,18 +175,18 @@
 
 
 .hero-stat-num {
-  font-size: 22px;
+  font-size: 26px;
   font-weight: 900;
   color: var(--black);
   letter-spacing: -.5px;
-  line-height: 1
+  line-height: 1.1;
 }
 
 .hero-stat-label {
-  font-size: 12px;
-  color: var(--g600);
-  margin-top: 2px;
-  font-weight: 600
+  font-size: 13px;
+  color: var(--g500);
+  margin-top: 4px;
+  font-weight: 600;
 }
 
 /* ================================================================
@@ -444,7 +439,8 @@
   width: 100%;
   height: 100%;
   object-fit: contain;
-  background-color: var(--white); /* 이미지가 딱 맞지 않을 때를 대비해 흰색 배경 추가 */
+  background-color: var(--white);
+  /* 이미지가 딱 맞지 않을 때를 대비해 흰색 배경 추가 */
   transition: transform .35s ease;
 }
 
@@ -626,24 +622,42 @@
   }
 
   .hero-stats {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 0
+    display: flex;
+    flex-direction: row;
+    gap: 10px;
   }
 
   .hero-stat {
-    border-bottom: none;
-    border-right: 1px solid rgba(0, 0, 0, .05);
+    flex: 1;
+    flex-direction: column;
     justify-content: center;
-    padding: 14px 12px
-  }
-
-  .hero-stat:last-child {
-    border-right: none
+    padding: 20px 12px;
+    gap: 10px;
+    text-align: center;
+    border: 1px solid var(--g200);
+    border-radius: var(--r16);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.02);
   }
 
   .hero-stat-icon {
-    display: none
+    display: flex;
+    width: 40px;
+    height: 40px;
+    border-radius: 12px;
+    margin: 0 auto;
+  }
+
+  .hero-stat-icon svg {
+    width: 20px;
+    height: 20px;
+  }
+
+  .hero-stat-num {
+    font-size: 20px;
+  }
+
+  .hero-stat-label {
+    margin-top: 2px;
   }
 
   .prod-grid {
@@ -676,4 +690,51 @@
   .hero-h1 {
     letter-spacing: -1px
   }
+}
+
+/* ���� ���ڵ� ��Ʈ (������ ����) */
+.barcode-text {
+    font-family: 'Consolas', 'Courier New', Courier, monospace !important;
+    letter-spacing: 2px !important;
+}
+
+
+.page-btn {
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  border-radius: 8px !important;
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+}
+
+.page-btn:hover:not(:disabled) {
+  background-color: var(--blue-light);
+  border-color: var(--blue);
+  color: var(--blue);
+}
+
+.page-btn.btn-primary {
+  background-color: var(--blue);
+  color: #fff;
+  border-color: var(--blue);
+}
+
+.page-size-select {
+  border-radius: 8px;
+  border: 1px solid var(--border-default);
+  padding: 8px 32px 8px 12px;
+  font-size: 14px;
+  color: var(--text-dark);
+  cursor: pointer;
+  background-color: #fff;
+  transition: border-color 0.2s;
+}
+
+.page-size-select:hover, .page-size-select:focus {
+  border-color: var(--blue);
+  outline: none;
 }

@@ -35,10 +35,10 @@ document.addEventListener('DOMContentLoaded', async () => {
   const tkn = localStorage.getItem('userToken');
   if (tkn) {
     try {
-      const res = await fetch('/api/tickets/my', { headers: { 'Authorization': tkn } });
+      const res = await fetch('/api/orders/tickets/qr', { headers: { 'Authorization': tkn } });
       if (res.ok) {
         const tickets = await res.json();
-        festioSpent = tickets.filter(t => t.reservationStatus === '결제완료' || t.reservationStatus === '입장완료').reduce((sum, t) => sum + (t.paymentAmount || 0), 0);
+        festioSpent = tickets.reduce((sum, t) => sum + (t.totalPrice || 0), 0);
       }
     } catch (e) { console.warn('티켓 이력 조회 실패', e); }
   }
@@ -311,7 +311,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             await window.ShopDB.updateProfile(profile.id, { festio_pay_points: newBalance });
             profile.festio_pay_points = newBalance;
             currentBalance = newBalance;
-            
+
             Toast.show({ title: '충전 완료', msg: `FESTIO Pay ${chargeAmt.toLocaleString()}원이 충전되었습니다.`, type: 'success' });
             document.getElementById('mpPoints').textContent = newBalance.toLocaleString();
 

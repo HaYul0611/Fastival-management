@@ -129,11 +129,41 @@ const RecentViewed = {
   KEY: 'festio_recent',
   MAX: 10,
   get() {
-    try { return JSON.parse(localStorage.getItem(this.KEY)) || []; } catch { return []; }
+    try {
+      let rawList = JSON.parse(localStorage.getItem(this.KEY)) || [];
+      let uniqueMap = new Map();
+      rawList.forEach(item => {
+        let key = String(item.eventNo);
+        if (!uniqueMap.has(key)) {
+          uniqueMap.set(key, item);
+        } else if (!uniqueMap.get(key).thumbnailUrl && item.thumbnailUrl) {
+          uniqueMap.set(key, item); // 썸네일 있는 데이터 우선
+        }
+      });
+      let uniqueList = Array.from(uniqueMap.values());
+
+      // 썸네일 없는 과거 캐시 데이터 복구 시도
+      let changed = false;
+      uniqueList = uniqueList.map(item => {
+        if (!item.thumbnailUrl && window._events) {
+          const ev = window._events.find(e => String(e.eventNo || e.id) === String(item.eventNo));
+          if (ev && (ev.thumbnailUrl || ev.thumbnail_url)) {
+            item.thumbnailUrl = ev.thumbnailUrl || ev.thumbnail_url;
+            changed = true;
+          }
+        }
+        return item;
+      });
+
+      if (rawList.length !== uniqueList.length || changed) {
+        localStorage.setItem(this.KEY, JSON.stringify(uniqueList));
+      }
+      return uniqueList;
+    } catch { return []; }
   },
   add(item) {
     try {
-      let list = this.get().filter(i => i.eventNo !== item.eventNo);
+      let list = this.get().filter(i => String(i.eventNo) !== String(item.eventNo));
       list.unshift(item);
       list = list.slice(0, this.MAX);
       localStorage.setItem(this.KEY, JSON.stringify(list));
