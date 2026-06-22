@@ -234,6 +234,7 @@ public class OrderController {
             }
 
             Map<String, Object> order = orderMap.get(orderId);
+            @SuppressWarnings("unchecked")
             List<Map<String, Object>> items = (List<Map<String, Object>>) order.get("shop_order_items");
 
             if (row.get("item_id") != null) {
@@ -623,6 +624,7 @@ public class OrderController {
     @PostMapping("/shop")
     public Map<String, Object> createShopOrder(@RequestBody Map<String, Object> payload) {
         int totalPrice = ((Number) payload.get("totalPrice")).intValue();
+        @SuppressWarnings("unchecked")
         List<Map<String, Object>> items = (List<Map<String, Object>>) payload.get("items");
 
         // festivalId 기본값 설정
