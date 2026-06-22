@@ -1,11 +1,366 @@
-body { margin: 0; padding: 0; background-color: #0d1117; color: white; font-family: 'Inter', sans-serif; display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100vh; }
-        .ticket-container { background: #161b22; padding: 30px; border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); text-align: center; max-width: 320px; width: 100%; box-sizing: border-box; }
-        .title { color: #10b981; font-weight: 900; font-size: 24px; margin-bottom: 5px; }
-        .subtitle { color: #a0aec0; font-size: 14px; margin-bottom: 30px; }
-        .qr-box { background: white; padding: 15px; border-radius: 12px; display: inline-block; margin-bottom: 20px; }
-        .timer-container { background: #30363d; border-radius: 10px; height: 10px; width: 100%; overflow: hidden; margin-top: 10px; }
-        .timer-bar { background: linear-gradient(90deg, #10b981, #38bdf8); height: 100%; width: 100%; transition: width 1s linear; }
-        .timer-text { font-size: 12px; color: #8b949e; margin-top: 5px; }
-        .warning { font-size: 11px; color: #ef4444; margin-top: 20px; }
-        #qr-code { width: 200px; height: 200px; margin: 0 auto; }
-        .totp-code { font-family: monospace; font-size: 24px; letter-spacing: 5px; color: #38bdf8; font-weight: bold; margin-bottom: 15px; }
+body {
+    margin: 0;
+    padding: 0;
+    background-color: #f0f2f5;
+    color: #111;
+    font-family: 'Inter', sans-serif;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    transition: background-color 0.3s, color 0.3s;
+}
+
+body.dark-theme {
+    background-color: #0d1117;
+    color: white;
+}
+
+.ticket-container {
+    background: #ffffff;
+    padding: 30px;
+    border-radius: 20px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+    text-align: center;
+    max-width: 320px;
+    width: 100%;
+    box-sizing: border-box;
+    position: relative;
+    transition: background 0.3s, box-shadow 0.3s;
+}
+
+body.dark-theme .ticket-container {
+    background: #161b22;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+}
+
+.back-btn {
+    position: absolute;
+    top: 15px;
+    left: 15px;
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: #333;
+    padding: 5px;
+    transition: color 0.3s;
+}
+
+body.dark-theme .back-btn {
+    color: white;
+}
+
+.title {
+    color: transparent;
+    background: linear-gradient(90deg, #38bdf8, #8930F8);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    font-weight: 900;
+    font-size: 24px;
+    margin-bottom: 5px;
+}
+
+.subtitle {
+    color: #666;
+    font-size: 14px;
+    margin-bottom: 30px;
+    transition: color 0.3s;
+}
+
+body.dark-theme .subtitle {
+    color: #a0aec0;
+}
+
+.qr-box {
+    background: white;
+    padding: 15px;
+    border-radius: 12px;
+    display: inline-block;
+    margin-bottom: 20px;
+}
+
+.timer-container {
+    background: #e2e8f0;
+    border-radius: 10px;
+    height: 10px;
+    width: 100%;
+    overflow: hidden;
+    margin-top: 10px;
+    transition: background 0.3s;
+}
+
+body.dark-theme .timer-container {
+    background: #30363d;
+}
+
+.timer-bar {
+    background: linear-gradient(90deg, #00d2ff, #8930F8);
+    height: 100%;
+    width: 100%;
+    transition: width 1s linear;
+}
+
+.timer-text {
+    font-size: 12px;
+    color: #666;
+    margin-top: 5px;
+    transition: color 0.3s;
+}
+
+body.dark-theme .timer-text {
+    color: #8b949e;
+}
+
+.warning {
+    font-size: 11px;
+    color: #ef4444;
+    margin-top: 20px;
+}
+
+.qr-wrapper {
+    position: relative;
+    display: inline-block;
+    overflow: hidden;
+    padding: 10px;
+    border-radius: 8px;
+    background: #fff;
+    margin: 0 auto;
+}
+
+#qr-code {
+    width: 200px;
+    height: 200px;
+    display: flex;
+    justify-content: center;
+}
+
+.totp-code {
+    font-family: 'Roboto Mono', 'Courier New', monospace;
+    font-size: 24px;
+    letter-spacing: 5px;
+    color: #555;
+    font-weight: bold;
+    margin-bottom: 15px;
+    transition: color 0.3s;
+}
+
+body.dark-theme .totp-code {
+    color: #38bdf8;
+}
+
+/* Theme Toggle Switch */
+.theme-switch-wrapper {
+    position: absolute;
+    top: 15px;
+    right: 15px;
+    z-index: 100;
+}
+
+.theme-switch {
+    position: relative;
+    display: inline-block;
+    width: 50px;
+    height: 26px;
+}
+
+.theme-switch input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+.slider {
+    position: absolute;
+    cursor: pointer;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: #ccc;
+    transition: .4s;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 4px;
+    box-sizing: border-box;
+}
+
+.slider:before {
+    position: absolute;
+    content: "";
+    height: 20px;
+    width: 20px;
+    left: 3px;
+    bottom: 3px;
+    background-color: white;
+    transition: .4s;
+    z-index: 2;
+}
+
+.theme-switch input:checked+.slider {
+    background-color: #2196F3;
+}
+
+.theme-switch input:checked+.slider:before {
+    transform: translateX(24px);
+}
+
+.slider.round {
+    border-radius: 34px;
+}
+
+.slider.round:before {
+    border-radius: 50%;
+}
+
+.sun-icon,
+.moon-icon {
+    width: 14px;
+    height: 14px;
+    z-index: 1;
+    color: #fff;
+}
+
+.sun-icon {
+    color: #f39c12;
+}
+
+.theme-switch input:checked+.slider .sun-icon {
+    opacity: 0;
+}
+
+.theme-switch input:not(:checked)+.slider .moon-icon {
+    opacity: 0;
+}
+
+/* ================================================================
+   BADGE
+   ================================================================ */
+.badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 3px 9px;
+    border-radius: 9999px;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: .2px;
+    line-height: 1;
+    white-space: nowrap;
+}
+
+.badge-bronze {
+    background: linear-gradient(135deg, #cd7f32 0%, #a0522d 100%);
+    color: #fff;
+    padding: 4px 10px;
+    border-radius: 9999px;
+    font-size: 13px;
+    font-weight: 800;
+    box-shadow: 0 3px 8px rgba(139, 69, 19, 0.2);
+}
+
+.badge-silver {
+    background: linear-gradient(135deg, #e2e8f0 0%, #cbd5e1 100%);
+    color: #334155;
+    padding: 4px 10px;
+    border-radius: 9999px;
+    font-size: 13px;
+    font-weight: 800;
+    box-shadow: 0 3px 8px rgba(148, 163, 184, 0.2);
+}
+
+.badge-gold {
+    background: linear-gradient(135deg, #fbbf24 0%, #d97706 100%);
+    color: #fff;
+    padding: 4px 10px;
+    border-radius: 9999px;
+    font-size: 13px;
+    font-weight: 800;
+    box-shadow: 0 3px 8px rgba(217, 119, 6, 0.2);
+}
+
+.badge-emerald {
+    background: linear-gradient(135deg, #34d399 0%, #059669 100%);
+    color: #fff;
+    padding: 4px 10px;
+    border-radius: 9999px;
+    font-size: 13px;
+    font-weight: 800;
+    box-shadow: 0 3px 8px rgba(5, 150, 105, 0.2);
+}
+
+.badge-diamond {
+    background: linear-gradient(135deg, #38bdf8 0%, #0284c7 100%);
+    color: #fff;
+    padding: 4px 10px;
+    border-radius: 9999px;
+    font-size: 13px;
+    font-weight: 800;
+    box-shadow: 0 3px 8px rgba(2, 132, 199, 0.2);
+}
+
+.badge-vip {
+    background: linear-gradient(135deg, #a78bfa 0%, #7c3aed 100%);
+    color: #fff;
+    padding: 4px 10px;
+    border-radius: 9999px;
+    font-size: 13px;
+    font-weight: 800;
+    box-shadow: 0 3px 8px rgba(124, 58, 237, 0.2);
+}
+
+.badge-svip {
+    background: linear-gradient(135deg, #f472b6 0%, #db2777 100%);
+    color: #fff;
+    padding: 4px 10px;
+    border-radius: 9999px;
+    font-size: 13px;
+    font-weight: 800;
+    box-shadow: 0 3px 8px rgba(219, 39, 119, 0.2);
+}
+
+.badge-vvip {
+    background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+    color: #fbbf24;
+    padding: 4px 10px;
+    border-radius: 9999px;
+    font-size: 13px;
+    font-weight: 800;
+    box-shadow: 0 3px 8px rgba(15, 23, 42, 0.3);
+}
+
+/* ================================================================
+   QR SCAN ANIMATION
+   ================================================================ */
+@keyframes scanLineAnim {
+    0% {
+        top: 0;
+        opacity: 0;
+    }
+
+    10% {
+        opacity: 1;
+    }
+
+    90% {
+        opacity: 1;
+    }
+
+    100% {
+        top: 100%;
+        opacity: 0;
+    }
+}
+
+.qr-scan-line {
+    position: absolute;
+    left: 0;
+    right: 0;
+    height: 4px;
+    background: rgba(0, 210, 255, 0.5);
+    box-shadow: 0 0 10px rgba(0, 210, 255, 0.8);
+    animation: scanLineAnim 2.5s linear infinite;
+    pointer-events: none;
+    z-index: 10;
+}

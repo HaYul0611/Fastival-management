@@ -2261,7 +2261,8 @@
   top: 0;
   height: 100%;
   background: #EFEFEF;
-  transition: width 0.5s ease-in-out;
+  width: 100%;
+  transition: width 1s linear;
 }
 
 @keyframes scanLineAnim {
@@ -3002,8 +3003,6 @@
   position: absolute;
   top: -10px;
   left: -10px;
-  background: #1e293b;
-  color: #fff;
   padding: 4px 10px;
   border-radius: 20px;
   font-size: 0.75rem;
@@ -3016,6 +3015,66 @@
   z-index: 10;
   cursor: pointer;
   transition: transform 0.2s;
+}
+
+/* 동적 뱃지 색상 클래스 (view.css와 동일하게 적용) */
+.badge {
+  display: inline-block;
+  padding: 4px 10px;
+  border-radius: 9999px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: .2px;
+  line-height: 1;
+  white-space: nowrap;
+}
+
+.badge-bronze {
+  background: linear-gradient(135deg, #cd7f32 0%, #a0522d 100%);
+  color: #fff;
+  box-shadow: 0 3px 8px rgba(139, 69, 19, 0.2);
+}
+
+.badge-silver {
+  background: linear-gradient(135deg, #e2e8f0 0%, #cbd5e1 100%);
+  color: #334155;
+  box-shadow: 0 3px 8px rgba(148, 163, 184, 0.2);
+}
+
+.badge-gold {
+  background: linear-gradient(135deg, #fbbf24 0%, #d97706 100%);
+  color: #fff;
+  box-shadow: 0 3px 8px rgba(217, 119, 6, 0.2);
+}
+
+.badge-emerald {
+  background: linear-gradient(135deg, #34d399 0%, #059669 100%);
+  color: #fff;
+  box-shadow: 0 3px 8px rgba(5, 150, 105, 0.2);
+}
+
+.badge-diamond {
+  background: linear-gradient(135deg, #38bdf8 0%, #0284c7 100%);
+  color: #fff;
+  box-shadow: 0 3px 8px rgba(2, 132, 199, 0.2);
+}
+
+.badge-vip {
+  background: linear-gradient(135deg, #a78bfa 0%, #7c3aed 100%);
+  color: #fff;
+  box-shadow: 0 3px 8px rgba(124, 58, 237, 0.2);
+}
+
+.badge-svip {
+  background: linear-gradient(135deg, #f472b6 0%, #db2777 100%);
+  color: #fff;
+  box-shadow: 0 3px 8px rgba(219, 39, 119, 0.2);
+}
+
+.badge-vvip {
+  background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+  color: #fbbf24;
+  box-shadow: 0 3px 8px rgba(15, 23, 42, 0.3);
 }
 
 .hero-qr-title {

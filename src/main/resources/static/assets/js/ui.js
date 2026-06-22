@@ -1,7 +1,7 @@
 // UI rendering and core control panel module
 import { DB, saveDB, publish, subscribe, addNotification } from './store.js';
 import { getCurrentUser, login, logout, getStaffList, generateTemporaryAccount } from './auth.js';
-import { initializeQRScanner, stopQRScanner, validateTicketState, validateExchangeQR } from './scanner.js?v=totp-fix';
+import { initializeQRScanner, stopQRScanner, validateTicketState, validateExchangeQR } from './scanner.js?v=totp-fix-5';
 import { getSeatStats, renderSeatMap, setupRealtimeSeatSync, manualReserveSeat, releaseSeat } from './seats.js';
 import { calculateTicketPrice, requestTossPayment, requestRefund, acceptRefund } from './payments.js';
 import { getGoodsAvailableStock, lockGoodsStock, unlockGoodsStock, finalizeGoodsPurchase, updateGoodsStock, registerGoods, toggleFoodIngredientOut, registerFood, updateSeasonalPrice, toggleActiveSeason } from './inventory.js';
@@ -26,13 +26,13 @@ const notifList = document.getElementById("notif-list");
 let selectedSeats = [];
 
 // React <-> Vanilla JS Bridge for ticketing
-window.goToTicketingFromReact = function(zoneName, seatsArray) {
-  const seasons = DB.options?.seasons || [{id: 1, name: "일반"}];
-  const rates = DB.options?.rates || [{id: 1, name: "기본 요금"}];
+window.goToTicketingFromReact = function (zoneName, seatsArray) {
+  const seasons = DB.options?.seasons || [{ id: 1, name: "일반" }];
+  const rates = DB.options?.rates || [{ id: 1, name: "기본 요금" }];
   const defaultSeasonId = seasons.find(s => s.active)?.id || seasons[0].id;
   const defaultRateId = rates[0].id;
 
-  let dbZone = zoneName.replace('존', '').replace(/\s*\(.*?\)/g, '').trim(); 
+  let dbZone = zoneName.replace('존', '').replace(/\s*\(.*?\)/g, '').trim();
 
   const pendingSeats = seatsArray.map(seatNum => ({
     seatId: `${dbZone}-${seatNum}`,
@@ -670,7 +670,10 @@ async function renderDashboard() {
             <span style="display: inline-block; width: 8px; height: 8px; background-color: var(--color-blue); border-radius: 50%; box-shadow: 0 0 6px var(--color-blue);" class="animate-pulse"></span>
             <span>🔌 실시간 통합 관제 시스템 텔레메트리 피드</span>
           </span>
-          <span style="font-family: var(--font-mono); color: var(--text-muted); font-size: 11px;">WEBSOCKET LIVE</span>
+          <span style="display: flex; align-items: center; gap: 6px;">
+            <span style="display: inline-block; width: 6px; height: 6px; border-radius: 50%; background-color: #ef4444; box-shadow: 0 0 6px #ef4444;" class="animate-pulse"></span>
+            <span style="font-family: var(--font-mono); color: var(--text-muted); font-size: 11px;">WEBSOCKET LIVE</span>
+          </span>
         </div>
         <div class="panel-body-rigid" style="padding: 0;">
           <div class="telemetry-terminal" id="dash-telemetry-logs" style="height: 180px; max-height: 180px; overflow-y: auto;">
@@ -747,11 +750,14 @@ function renderScannerScreen() {
     <div class="panel-rigid" style="max-width: 600px; margin: 0 auto;">
       <div class="panel-header-rigid">입장 게이트 실시간 QR 카메라 스캐너</div>
       <div class="panel-body-rigid text-center">
-        <div id="qr-camera-reader-wrapper" style="position:relative;">
-          <div id="qr-camera-reader" style="width: 100%; max-width: 450px; margin: 0 auto; border: 2px solid #2d3748; background:#1a202c;">
-            <!-- html5-qrcode camera goes here -->
+        <div id="qr-camera-reader-wrapper" style="position:relative; width: 100%; margin: 0 auto;">
+          <div id="qr-camera-reader" style="width: 100%; max-width: 450px; margin: 0 auto; min-height: 350px; border: 2px solid #2d3748; background:#1a202c; border-radius: 12px; display: flex; flex-direction: column; align-items: center; justify-content: center; overflow: hidden; position: relative;">
+            <div id="qr-camera-placeholder" style="display: flex; flex-direction: column; align-items: center; color: #64748b; font-family: var(--font-sans);">
+              <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="margin-bottom: 12px; opacity: 0.7;"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path><circle cx="12" cy="13" r="4"></circle></svg>
+              <span style="font-weight: 500;">카메라가 꺼져 있습니다</span>
+            </div>
           </div>
-          <button id="btn-stop-camera" class="btn btn-rigid btn-red" style="display:none; margin-top:10px;">카메라 끄기 / 스캔 중단</button>
+          <button id="btn-stop-camera" class="btn btn-rigid btn-red" style="display:none; margin-top:10px; width: 100%;">카메라 끄기 / 스캔 중단</button>
           
           <!-- Confirm Scan Overlay (Removed to speed up line) -->
           
@@ -765,8 +771,15 @@ function renderScannerScreen() {
             </div>
           </div>
         </div>
-        <div style="margin-top: 15px;">
-          <button id="btn-start-camera" class="btn btn-rigid btn-blue">카메라 연결 및 스캔 시작</button>
+        <div style="margin-top: 15px; display: flex; justify-content: center;">
+          <button id="btn-start-camera" class="btn btn-rigid btn-blue" style="width: 100%; max-width: 450px; font-weight: bold; padding: 12px;">카메라 연결 및 스캔 시작</button>
+        </div>
+        <div style="margin-top: 25px; padding-top: 15px; border-top: 1px solid #2d3748;">
+          <label style="display:block; text-align:left; font-size:12px; color:#a0aec0; margin-bottom:5px;">수동 바코드 12자리 입력 (QR 인식 불가시)</label>
+          <div style="display:flex; gap:10px;">
+            <input type="text" id="manual-barcode-input" class="input-rigid" placeholder="예: T00001X4M9K2" style="flex:1;">
+            <button id="btn-manual-barcode" class="btn btn-rigid btn-green">검증</button>
+          </div>
         </div>
       </div>
     </div>
@@ -832,6 +845,22 @@ function renderScannerScreen() {
     startCamBtn.style.display = "inline-block";
     stopCamBtn.style.display = "none"; // 빨간 버튼 숨김 처리 추가
   };
+
+  const manualInput = document.getElementById("manual-barcode-input");
+  const manualBtn = document.getElementById("btn-manual-barcode");
+
+  if (manualBtn && manualInput) {
+    const handleManualScan = async () => {
+      const val = manualInput.value.trim().toUpperCase();
+      if (!val) return;
+      manualInput.value = "";
+      await triggerScanValidationUI(val);
+    };
+    manualBtn.onclick = handleManualScan;
+    manualInput.addEventListener("keydown", (e) => {
+      if (e.key === "Enter") handleManualScan();
+    });
+  }
 }
 
 async function triggerScanValidationUI(ticketId) {
