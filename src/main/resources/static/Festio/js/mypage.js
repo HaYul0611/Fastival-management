@@ -3076,7 +3076,7 @@ function startQRRefreshCycle() {
     _qrCountdown = remaining;
     updateQRTimerDisplay(remaining);
 
-    const bg = remaining < 10 ? 'linear-gradient(90deg, #ff4d4f, #ff7875)' : 'linear-gradient(90deg, #00d2ff, #8930F8)';
+    const bg = remaining < 60 ? '#ff4d4f' : '#8930F8';
     const pct = (remaining / 180) * 100;
 
     const bars = [document.getElementById('dynamicQrTimerBar'), document.getElementById('heroQrTimerBar')];
