@@ -51,7 +51,7 @@ public class ExternalApiController {
                     .contentType(MediaType.parseMediaType("application/json;charset=UTF-8"))
                     .body(response);
         } catch (Exception e) {
-            System.err.println("Tour API Error: " + e.getMessage());
+            // System.err.println("Tour API Error: " + e.getMessage());
             // 공공데이터 API 오류 시 마이페이지 등 대시보드가 깨지지 않도록 정상적인 빈 JSON 구조 반환
             return ResponseEntity.ok()
                     .contentType(MediaType.parseMediaType("application/json;charset=UTF-8"))

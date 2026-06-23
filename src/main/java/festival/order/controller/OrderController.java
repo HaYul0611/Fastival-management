@@ -34,7 +34,7 @@ public class OrderController {
         String sql;
         List<Map<String, Object>> rows;
         if (userId != null) {
-            sql = "SELECT oi.id as item_id, p.name as product_name, oi.quantity, p.price, oi.item_status, oi.updated_at "
+            sql = "SELECT oi.id as item_id, p.name as product_name, oi.quantity, p.price, oi.item_status, oi.updated_at, o.qr_code "
                     +
                     "FROM order_item oi " +
                     "JOIN product p ON oi.product_id = p.id " +
@@ -43,7 +43,6 @@ public class OrderController {
                     "ORDER BY oi.updated_at DESC";
             rows = jdbcTemplate.queryForList(sql, userId);
         } else {
-            // 비로그인 상태일 때는 빈 리스트를 반환하여 현장 주문 내역이 임의 유저에게 노출되지 않도록 함
             rows = new ArrayList<>();
         }
 
@@ -55,6 +54,7 @@ public class OrderController {
             Long itemId = ((Number) row.get("item_id")).longValue();
             order.put("id", String.format("F%011d", itemId));
             order.put("type", "FOOD");
+            order.put("totp_secret", row.get("qr_code") != null ? ((String) row.get("qr_code")).replace("SECRET:", "") : "dummysecret12345");
 
             String itemStatus = (String) row.get("item_status");
             if (itemStatus == null || itemStatus.equals("ORDERED") || itemStatus.equals("PAID")
@@ -203,9 +203,9 @@ public class OrderController {
             return new ArrayList<>();
         }
 
-        String sql = "SELECT o.id as order_id, o.created_at, o.total_price, o.payment_status, " +
+        String sql = "SELECT o.id as order_id, o.created_at, o.total_price, o.payment_status, o.qr_code, " +
                      "oi.id as item_id, oi.product_type, oi.quantity, oi.item_status, " +
-                     "p.id as product_id, p.name as product_name, p.price as item_price " +
+                     "p.id as product_id, p.name as product_name, p.price as item_price, p.image_url " +
                      "FROM orders o " +
                      "LEFT JOIN order_item oi ON o.id = oi.order_id " +
                      "LEFT JOIN product p ON oi.product_id = p.id " +
@@ -224,7 +224,7 @@ public class OrderController {
                 order.put("delivery_type", "PICKUP"); 
                 order.put("payment_method", "FESTIO_PAY");
                 order.put("total_amount", row.get("total_price"));
-                order.put("totp_secret", "dummysecret12345");
+                order.put("totp_secret", row.get("qr_code") != null ? ((String) row.get("qr_code")).replace("SECRET:", "") : "dummysecret12345");
 
                 String oStatus = (String) row.get("payment_status");
                 order.put("status", oStatus);
@@ -234,6 +234,7 @@ public class OrderController {
             }
 
             Map<String, Object> order = orderMap.get(orderId);
+            @SuppressWarnings("unchecked")
             List<Map<String, Object>> items = (List<Map<String, Object>>) order.get("shop_order_items");
 
             if (row.get("item_id") != null) {
@@ -246,6 +247,7 @@ public class OrderController {
                 String pType = (String) row.get("product_type");
                 Map<String, Object> sp = new HashMap<>();
                 sp.put("type", pType);
+                sp.put("thumbnail_image_url", row.get("image_url"));
                 item.put("shop_products", sp);
 
                 items.add(item);
@@ -421,7 +423,7 @@ public class OrderController {
             for (int i = 0; i < key.length; i++) {
                 key[i] = (byte) Integer.parseInt(hexSecret.substring(i * 2, i * 2 + 2), 16);
             }
-            long currentTime = System.currentTimeMillis() / 30000;
+            long currentTime = System.currentTimeMillis() / 180000;
 
             for (int i = -1; i <= 1; i++) {
                 String calculated = generateTotpCode(key, currentTime + i);
@@ -452,8 +454,12 @@ public class OrderController {
                 ((hash[offset + 2] & 0xff) << 8) |
                 (hash[offset + 3] & 0xff);
 
-        int otp = binary % 1000000;
-        return String.format("%06d", otp);
+        long otp = binary % 2176782336L;
+        String code = Long.toString(otp, 36).toUpperCase();
+        while (code.length() < 6) {
+            code = "0" + code;
+        }
+        return code;
     }
 
     private void insertScanLog(Long orderId, Long scannerUserId, boolean isValid) {
@@ -618,6 +624,7 @@ public class OrderController {
     @PostMapping("/shop")
     public Map<String, Object> createShopOrder(@RequestBody Map<String, Object> payload) {
         int totalPrice = ((Number) payload.get("totalPrice")).intValue();
+        @SuppressWarnings("unchecked")
         List<Map<String, Object>> items = (List<Map<String, Object>>) payload.get("items");
 
         // festivalId 기본값 설정
@@ -635,7 +642,10 @@ public class OrderController {
 
         // orders 테이블 인서트 (샵 주문은 티켓 번호나 구역이 필요하지 않으므로 임의의 값 삽입)
         String ticketNum = "S" + System.currentTimeMillis();
-        String orderSql = "INSERT INTO orders (user_id, festival_id, total_price, payment_status, created_at, is_entered, ticket_type, ticket_number) VALUES (?, ?, ?, 'PAID', NOW(), false, 'SHOP', ?)";
+        String secret = generateHexSecret();
+        String qrPayload = "SECRET:" + secret;
+        
+        String orderSql = "INSERT INTO orders (user_id, festival_id, total_price, payment_status, created_at, is_entered, ticket_type, ticket_number, qr_code) VALUES (?, ?, ?, 'PAID', NOW(), false, 'SHOP', ?, ?)";
         
         final String finalUserId = userId;
         final int finalFestivalId = festivalId;
@@ -647,6 +657,7 @@ public class OrderController {
             ps.setInt(2, finalFestivalId);
             ps.setInt(3, totalPrice);
             ps.setString(4, ticketNum);
+            ps.setString(5, qrPayload);
             return ps;
         }, keyHolder);
         
@@ -669,8 +680,9 @@ public class OrderController {
         }
 
         Map<String, Object> res = new HashMap<>();
-        res.put("status", "success");
+        res.put("success", true);
         res.put("orderId", orderId);
+        res.put("qrPayload", qrPayload);
         return res;
     }
 
@@ -743,28 +755,21 @@ public class OrderController {
 
     @PostMapping("/tickets/scan")
     public Map<String, Object> scanQrTicket(@RequestBody Map<String, String> payload) {
-        String qrText = payload.get("qrText"); // format: TOTP:15:123456
         Map<String, Object> res = new HashMap<>();
+        String qrText = payload.get("qrText"); // format: e.g. F0001OX4M9K2
 
-        if (qrText == null || !qrText.startsWith("TOTP:")) {
-            insertScanLog(-1L, 1L, false); // 형식이 맞지 않는 스캔도 실패로 기록
-            res.put("status", "INVALID");
-            res.put("message", "올바른 동적(TOTP) 모바일 티켓 형식이 아닙니다. [입력값: " + qrText + "]");
-            return res;
-        }
-
-        String[] parts = qrText.split(":");
-        if (parts.length != 3) {
+        if (qrText == null || qrText.length() != 12) {
             insertScanLog(-1L, 1L, false);
             res.put("status", "INVALID");
-            res.put("message", "티켓 데이터가 손상되었습니다.");
+            res.put("message", "올바른 동적 바코드 형식이 아닙니다.");
             return res;
         }
 
         Long orderId;
-        String totpCode = parts[2];
+        String totpCode = qrText.substring(6, 12);
         try {
-            orderId = Long.parseLong(parts[1]);
+            String orderIdBase36 = qrText.substring(1, 6);
+            orderId = Long.parseLong(orderIdBase36, 36);
         } catch (Exception e) {
             insertScanLog(-1L, 1L, false);
             res.put("status", "INVALID");

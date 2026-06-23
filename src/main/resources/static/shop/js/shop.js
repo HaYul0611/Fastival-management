@@ -14,7 +14,9 @@ window.FS_PRODUCTS = ALL_PRODUCTS;
 const S = {
   cat: 'all', sort: 'popular', q: '',
   wish: JSON.parse(localStorage.getItem('fs_wish') || '[]'),
-  selectedStoreId: null
+  selectedStoreId: null,
+  currentPage: 1,
+  itemsPerPage: 16
 };
 
 /* ── 필터 ───────────────────────────────────────────────────── */
@@ -28,13 +30,11 @@ function filtered() {
 
   if (S.cat !== 'all') list = list.filter(p => p.cat === S.cat);
   if (S.q) { const q = S.q.toLowerCase(); list = list.filter(p => p.name.toLowerCase().includes(q) || p.brand.toLowerCase().includes(q)) }
-  
+
   if (S.selectedStoreId) {
     if (S.sort === 'newest') list.sort((a, b) => b.id - a.id);
     else if (S.sort === 'price_asc') list.sort((a, b) => a.price - b.price);
     else if (S.sort === 'price_desc') list.sort((a, b) => b.price - a.price);
-  } else {
-    if (S.sort === 'newest') list.sort((a, b) => b.storeId - a.storeId);
   }
   return list;
 }
@@ -115,11 +115,11 @@ function cardHTML(p) {
     <div class="pcard-foot">
       <div class="pcard-price">
         ${p.isStoreCard
-          ? `<span class="pcard-price-num" style="font-size:14px;color:var(--g500);">상점 보기</span>`
-          : (p.isStorePlaceholder
-              ? `<span class="pcard-price-num" style="font-size:13px;color:var(--g400);">상품 준비 중</span>`
-              : `<span class="pcard-price-num">${p.price.toLocaleString()}</span><span class="pcard-price-unit">원</span>`)
-        }
+      ? `<span class="pcard-price-num" style="font-size:14px;color:var(--g500);">상점 보기</span>`
+      : (p.isStorePlaceholder
+        ? `<span class="pcard-price-num" style="font-size:13px;color:var(--g400);">상품 준비 중</span>`
+        : `<span class="pcard-price-num">${p.price.toLocaleString()}</span><span class="pcard-price-unit">원</span>`)
+    }
       </div>
       <div class="pcard-meta">${stock}</div>
     </div>
@@ -151,20 +151,101 @@ function render() {
     `;
   }
 
-  grid.innerHTML = html + list.map(cardHTML).join('');
+  // 데스크톱일 경우 페이지네이션 적용
+  let renderList = list;
+  let totalPages = 1;
+  const isDesktop = window.innerWidth > 768;
+
+  if (isDesktop) {
+    totalPages = Math.ceil(list.length / S.itemsPerPage);
+    if (S.currentPage > totalPages && totalPages > 0) S.currentPage = totalPages;
+    const startIdx = (S.currentPage - 1) * S.itemsPerPage;
+    renderList = list.slice(startIdx, startIdx + S.itemsPerPage);
+  }
+
+  grid.innerHTML = html + renderList.map(cardHTML).join('');
   if (sr) sr.textContent = `${list.length}개 항목 표시됨`;
   bindCards();
+
+  renderPagination(totalPages, isDesktop);
 }
 
-window.FS_goBackToStores = function() {
+function renderPagination(totalPages, isDesktop) {
+  let wrapper = document.getElementById('shopPaginationWrapper');
+  if (!wrapper) {
+    wrapper = document.createElement('div');
+    wrapper.id = 'shopPaginationWrapper';
+    wrapper.style.display = 'flex';
+    wrapper.style.alignItems = 'center';
+    wrapper.style.justifyContent = 'center';
+    wrapper.style.position = 'relative';
+    wrapper.style.marginTop = '40px';
+    wrapper.style.marginBottom = '20px';
+    document.getElementById('prodGrid').parentNode.appendChild(wrapper);
+  }
+
+  if (!isDesktop || totalPages <= 1) {
+    wrapper.innerHTML = '';
+    return;
+  }
+
+  // Prev Button
+  const prevDisabled = S.currentPage === 1 ? 'disabled' : '';
+  let html = `
+    <div style="display: flex; gap: 8px; justify-content: center;">
+      <button class="btn btn-outline-primary page-btn" ${prevDisabled} onclick="window.FS_goToPage(${S.currentPage - 1})">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg>
+      </button>
+  `;
+
+  // Page numbers
+  for (let i = 1; i <= totalPages; i++) {
+    html += `<button class="btn ${i === S.currentPage ? 'btn-primary' : 'btn-outline-primary'} page-btn" onclick="window.FS_goToPage(${i})">${i}</button>`;
+  }
+
+  // Next Button
+  const nextDisabled = S.currentPage === totalPages ? 'disabled' : '';
+  html += `
+      <button class="btn btn-outline-primary page-btn" ${nextDisabled} onclick="window.FS_goToPage(${S.currentPage + 1})">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
+      </button>
+    </div>
+    
+    <div style="position: absolute; right: 0;">
+      <select class="form-select page-size-select" onchange="window.FS_changePerPage(this.value)">
+        <option value="16" ${S.itemsPerPage === 16 ? 'selected' : ''}>16개씩 보기</option>
+        <option value="32" ${S.itemsPerPage === 32 ? 'selected' : ''}>32개씩 보기</option>
+        <option value="48" ${S.itemsPerPage === 48 ? 'selected' : ''}>48개씩 보기</option>
+      </select>
+    </div>
+  `;
+
+  wrapper.innerHTML = html;
+}
+
+window.FS_goToPage = function (page) {
+  S.currentPage = page;
+  render();
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+};
+
+window.FS_changePerPage = function (size) {
+  S.itemsPerPage = parseInt(size, 10);
+  S.currentPage = 1;
+  render();
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+};
+
+window.FS_goBackToStores = function () {
   S.selectedStoreId = null;
+  S.currentPage = 1;
   render();
 };
 
 function bindCards() {
   document.querySelectorAll('.pcard:not(.sold)').forEach(c => {
-    c.addEventListener('click', e => { 
-      if (e.target.closest('.pcard-wish')) return; 
+    c.addEventListener('click', e => {
+      if (e.target.closest('.pcard-wish')) return;
       const id = c.dataset.id;
       if (id && id.toString().startsWith('store_')) {
         const sId = parseInt(id.replace('store_', ''), 10);
@@ -174,9 +255,9 @@ function bindCards() {
         goto(id);
       }
     });
-    c.addEventListener('keydown', e => { 
-      if ((e.key === 'Enter' || e.key === ' ') && !e.target.closest('.pcard-wish')) { 
-        e.preventDefault(); 
+    c.addEventListener('keydown', e => {
+      if ((e.key === 'Enter' || e.key === ' ') && !e.target.closest('.pcard-wish')) {
+        e.preventDefault();
         const id = c.dataset.id;
         if (id && id.toString().startsWith('store_')) {
           const sId = parseInt(id.replace('store_', ''), 10);
@@ -185,7 +266,7 @@ function bindCards() {
         } else {
           goto(id);
         }
-      } 
+      }
     });
   });
   document.querySelectorAll('.pcard-wish').forEach(b => {
@@ -244,7 +325,7 @@ document.addEventListener('DOMContentLoaded', () => {
       x.classList.toggle('on', x.dataset.cat === S.cat);
     });
   }
-  
+
   // 로딩 인디케이터 렌더링
   const grid = document.getElementById('prodGrid');
   if (grid) {
@@ -256,7 +337,7 @@ document.addEventListener('DOMContentLoaded', () => {
   if (festivalId) {
     fetchUrl += `?festivalId=${festivalId}`;
   }
-  
+
   fetch(fetchUrl)
     .then(res => {
       if (!res.ok) throw new Error('입점 상점 정보를 불러올 수 없습니다.');
@@ -347,6 +428,15 @@ document.addEventListener('DOMContentLoaded', () => {
       window.FS_PRODUCTS = ALL_PRODUCTS;
       console.log('[Shop] Loaded & formatted products list:', ALL_PRODUCTS);
 
+      // 대시보드 통계 숫자 동기화
+      const statStore = document.getElementById('stat-store-cnt');
+      const statProduct = document.getElementById('stat-product-cnt');
+      const statFood = document.getElementById('stat-food-cnt');
+
+      if (statStore) statStore.textContent = STORES.length;
+      if (statProduct) statProduct.textContent = ALL_PRODUCTS.length;
+      if (statFood) statFood.textContent = STORES.filter(s => s.cat === 'food').length;
+
       // 화면 렌더링
       render();
     })
@@ -364,6 +454,7 @@ document.addEventListener('DOMContentLoaded', () => {
       b.classList.add('on');
       S.cat = b.dataset.cat;
       S.selectedStoreId = null; // 카테고리 탭을 누르면 상점 목록으로 이동
+      S.currentPage = 1;
       /* 필터 태그도 동기화 */
       document.querySelectorAll('.ftag').forEach(x => {
         x.classList.toggle('on', x.dataset.cat === S.cat);
@@ -379,6 +470,7 @@ document.addEventListener('DOMContentLoaded', () => {
       b.classList.add('on');
       S.cat = b.dataset.cat;
       S.selectedStoreId = null; // 필터 탭을 누르면 상점 목록으로 이동
+      S.currentPage = 1;
       document.querySelectorAll('.cat-btn').forEach(x => {
         x.classList.toggle('on', x.dataset.cat === S.cat);
       });

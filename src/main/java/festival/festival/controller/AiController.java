@@ -23,6 +23,23 @@ public class AiController {
         String apiKey = request.get("apiKey");
         if (apiKey == null || apiKey.isEmpty() || apiKey.equals("YOUR_HUGGING_FACE_API_KEY")) {
             apiKey = envApiKey;
+            
+            // Fallback: 로컬 환경에서 .env 파일 직접 읽기
+            if (apiKey == null || apiKey.isEmpty()) {
+                try {
+                    java.nio.file.Path envPath = java.nio.file.Paths.get(".env");
+                    if (java.nio.file.Files.exists(envPath)) {
+                        for (String line : java.nio.file.Files.readAllLines(envPath)) {
+                            if (line != null && line.startsWith("HF_API_KEY=")) {
+                                apiKey = line.substring("HF_API_KEY=".length()).trim();
+                                break;
+                            }
+                        }
+                    }
+                } catch (Exception ex) {
+                    // 무시
+                }
+            }
         }
         if (apiKey != null) {
             apiKey = apiKey.trim();
