@@ -91,7 +91,7 @@ function updateTimer() {
     const s = remaining % 60;
     const timerSecEl = document.getElementById('timer-sec');
     const timerBarEl = document.getElementById('timer-bar');
-    
+
     timerSecEl.innerText = `0${m}:${s.toString().padStart(2, '0')}`;
     const percentage = (remaining / 180) * 100;
     timerBarEl.style.width = percentage + '%';
@@ -103,7 +103,7 @@ function updateTimer() {
     } else {
         timerSecEl.classList.remove('qr-danger-text');
         timerSecEl.style.color = '#2D1A54';
-        timerBarEl.style.background = '#8930F8';
+        timerBarEl.style.background = 'linear-gradient(90deg, #00d2ff, #8930F8)';
     }
 
     if (remaining === 180 || remaining === 179 && currentSeconds === 1) { // Redraw when window resets

@@ -309,7 +309,7 @@ function renderProfile() {
       svg.removeAttribute('class');
       svg.setAttribute('width', '28');
       svg.setAttribute('height', '28');
-      
+
       let iconColor = '#cd7f32'; // BRONZE
       const g = (_member.grade || 'BRONZE').toUpperCase();
       if (g === 'SILVER') iconColor = '#94a3b8';
@@ -3076,7 +3076,7 @@ function startQRRefreshCycle() {
     _qrCountdown = remaining;
     updateQRTimerDisplay(remaining);
 
-    const bg = remaining < 60 ? '#ff4d4f' : '#8930F8';
+    const bg = remaining < 60 ? '#ff4d4f' : 'linear-gradient(90deg, #00d2ff, #8930F8)';
     const pct = (remaining / 180) * 100;
 
     const bars = [document.getElementById('dynamicQrTimerBar'), document.getElementById('heroQrTimerBar')];
