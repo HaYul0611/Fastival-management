@@ -72,6 +72,12 @@ async function refreshTotp() {
             colorLight: "#ffffff",
             correctLevel: QRCode.CorrectLevel.H
         });
+
+        setTimeout(() => {
+            const qrEls = qrContainer.querySelectorAll('canvas, img');
+            qrEls.forEach(el => el.removeAttribute('title'));
+            qrContainer.removeAttribute('title');
+        }, 50);
     } catch (e) {
         console.error(e);
     }

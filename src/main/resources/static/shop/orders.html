@@ -227,12 +227,11 @@
           </button>
 
           <!-- 첨부된 썸네일 영역 (가로 스크롤) -->
-          <div style="display:flex; align-items:center; gap:8px; margin-top:12px;">
+          <div id="rvThumbWrapper" style="display:none; align-items:center; gap:8px; margin-top:12px;">
             <button onclick="scrollReviewThumbs(-1)"
               style="width:24px; height:60px; border:none; background:transparent; cursor:pointer; flex-shrink:0;">&lt;</button>
             <div id="rvThumbContainer"
               style="flex:1; height:60px; display:flex; gap:8px; overflow-x:auto; scroll-behavior:smooth; -ms-overflow-style:none; scrollbar-width:none;">
-              <div style="color:var(--g400); font-size:13px; line-height:60px;">사진을 첨부해주세요.</div>
             </div>
             <button onclick="scrollReviewThumbs(1)"
               style="width:24px; height:60px; border:none; background:transparent; cursor:pointer; flex-shrink:0;">&gt;</button>
@@ -255,6 +254,7 @@
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="js/supabase_client.js?v=2"></script>
+  <script src="https://cdn.jsdelivr.net/gh/davidshimjs/qrcodejs/qrcode.min.js"></script>
   <script src="js/common.js?v=4"></script>
   <script src="js/orders.js?v=4"></script>
 </body>

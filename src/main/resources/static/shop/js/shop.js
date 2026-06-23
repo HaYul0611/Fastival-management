@@ -100,9 +100,132 @@ function cardHTML(p) {
     </button>
     ` : ''}
 
-    ${p.imageUrl
-      ? `<img src="${p.imageUrl}" alt="${p.name}" class="pcard-img">`
-      : `<div class="pcard-placeholder">${placeholder(p.cat)}</div>`}
+    ${(function () {
+      const pid = parseInt(p.id.toString().replace('store_', '')) || 1;
+      let mockImg = '';
+
+      if (p.cat === 'food') {
+        if (p.isStoreCard) {
+          const storeImgs = [
+            '/shop/img/stores/food/0.jpg',
+            '/shop/img/stores/food/1.jpg',
+            '/shop/img/stores/food/2.jpg',
+            '/shop/img/stores/food/3.jpg',
+            '/shop/img/stores/food/4.jpg',
+            '/shop/img/stores/food/5.jpg',
+            '/shop/img/stores/food/6.jpg',
+            '/shop/img/stores/food/7.jpg',
+            '/shop/img/stores/food/8.jpg',
+            '/shop/img/stores/food/9.jpg'
+          ];
+          mockImg = storeImgs[pid % storeImgs.length];
+        } else {
+          const foodImgs = [
+            'https://www.themealdb.com/images/media/meals/8rfd4q1764112993.jpg',
+            'https://www.themealdb.com/images/media/meals/13fg4j1764441982.jpg',
+            'https://www.themealdb.com/images/media/meals/jgl9qq1764437635.jpg',
+            'https://www.themealdb.com/images/media/meals/kgfh3q1763075438.jpg',
+            'https://www.themealdb.com/images/media/meals/44bzep1761848278.jpg',
+            'https://www.themealdb.com/images/media/meals/m0p0j81765568742.jpg',
+            'https://www.themealdb.com/images/media/meals/sytuqu1511553755.jpg',
+            'https://www.themealdb.com/images/media/meals/wrssvt1511556563.jpg',
+            'https://www.themealdb.com/images/media/meals/pkopc31683207947.jpg',
+            'https://www.themealdb.com/images/media/meals/z0ageb1583189517.jpg',
+            'https://www.themealdb.com/images/media/meals/vtqxtu1511784197.jpg',
+            'https://www.themealdb.com/images/media/meals/ursuup1487348423.jpg',
+            'https://www.themealdb.com/images/media/meals/41cxjh1683207682.jpg',
+            'https://www.themealdb.com/images/media/meals/uyqrrv1511553350.jpg',
+            'https://www.themealdb.com/images/media/meals/dxpc7j1764370714.jpg',
+            'https://www.themealdb.com/images/media/meals/1529444830.jpg',
+            'https://www.themealdb.com/images/media/meals/t2b8bn1779737789.jpg',
+            'https://www.themealdb.com/images/media/meals/1nalo51765188375.jpg',
+            'https://www.themealdb.com/images/media/meals/cgl60b1683206581.jpg',
+            'https://www.themealdb.com/images/media/meals/pbzcrx1763765096.jpg',
+            'https://www.themealdb.com/images/media/meals/vdwloy1713225718.jpg',
+            'https://www.themealdb.com/images/media/meals/020z181619788503.jpg',
+            'https://www.themealdb.com/images/media/meals/9ya6o71780262651.jpg',
+            'https://www.themealdb.com/images/media/meals/sypxpx1515365095.jpg',
+            'https://www.themealdb.com/images/media/meals/sbx7n71587673021.jpg',
+            'https://www.themealdb.com/images/media/meals/fk80jp1763280767.jpg',
+            'https://www.themealdb.com/images/media/meals/uuuspp1511297945.jpg',
+            'https://www.themealdb.com/images/media/meals/syqypv1486981727.jpg',
+            'https://www.themealdb.com/images/media/meals/wruvqv1511880994.jpg',
+            'https://www.themealdb.com/images/media/meals/1529446352.jpg',
+            'https://www.themealdb.com/images/media/meals/qxytrx1511304021.jpg',
+            'https://www.themealdb.com/images/media/meals/qtuwxu1468233098.jpg',
+            'https://www.themealdb.com/images/media/meals/qrqywr1503066605.jpg',
+            'https://www.themealdb.com/images/media/meals/wuyd2h1765655837.jpg',
+            'https://www.themealdb.com/images/media/meals/xrrtss1511555269.jpg',
+            'https://www.themealdb.com/images/media/meals/wyxwsp1486979827.jpg',
+            'https://www.themealdb.com/images/media/meals/tyywsw1505930373.jpg',
+            'https://www.themealdb.com/images/media/meals/hob03q1780264260.jpg',
+            'https://www.themealdb.com/images/media/meals/er4d081765186828.jpg',
+            'https://www.themealdb.com/images/media/meals/qpxvuq1511798906.jpg'
+          ];
+          mockImg = foodImgs[pid % foodImgs.length];
+        }
+      } else {
+        if (p.isStoreCard) {
+          const goodsStoreImgs = [
+            '/shop/img/stores/goods/gen_0.png',
+            '/shop/img/stores/goods/gen_1.png',
+            '/shop/img/stores/goods/gen_2.png',
+            '/shop/img/stores/goods/gen_3.png',
+            '/shop/img/stores/goods/gen_4.png',
+            '/shop/img/stores/goods/gen_5.png',
+            '/shop/img/stores/goods/gen_6.png',
+            '/shop/img/stores/goods/gen_7.png',
+            '/shop/img/stores/goods/gen_8.png',
+            '/shop/img/stores/goods/gen_9.png'
+          ];
+          mockImg = goodsStoreImgs[pid % goodsStoreImgs.length];
+        } else {
+          const goodsImgs = [
+            'https://shopkpop.cafe24.com/web/upload/weskin14/kr/main/ATZ_14TH_PC.jpg',
+            'https://shopkpop.cafe24.com/web/upload/weskin14/kr/main/ADB_VC_PC.png',
+            'https://shopkpop.cafe24.com/web/upload/weskin14/kr/main/HTW_3RD_PC.png',
+            'https://shopkpop.cafe24.com/web/upload/weskin14/kr/main/QWER_PC_0527.png',
+            'https://shopkpop.cafe24.com/web/upload/weskin14/kr/main/hzwav_pc.png',
+            'https://shopkpop.cafe24.com/web/upload/weskin14/kr/main/evven_pc.png',
+            'https://shopkpop.cafe24.com/web/upload/weskin14/kr/main/ald1ols_pc.png',
+            'https://shopkpop.cafe24.com/web/upload/weskin14/kr/main/A2B_PC.png',
+            'https://shopkpop.cafe24.com/web/upload/weskin14/kr/main/HTW_PC.png',
+            'https://shopkpop.cafe24.com/web/upload/weskin14/kr/main/XIKERS_7TH_PC_F.png',
+            'https://shopkpop.cafe24.com/web/upload/weskin14/kr/main/WOODZ_2ND_PC.jpg',
+            'https://shopkpop.cafe24.com/web/upload/weskin14/kr/main/QWER_PC.jpg',
+            'https://shopkpop.cafe24.com/web/upload/weskin14/kr/main/H2H_260317_PC.jpg',
+            'https://shopkpop.cafe24.com/web/upload/weskin14/kr/main/LJS_NEW_PC.jpg',
+            'https://shopkpop.cafe24.com/web/upload/weskin14/kr/main/MIYEON_LD4_PC.png',
+            'https://dokidokigoods.co.kr/web/product/medium/202606/bffa43558cb7e84a3361e4a75b786a3d.png',
+            'https://dokidokigoods.co.kr/web/product/medium/202606/9bae5a6662d312f1af7df7dc1b87c811.png',
+            'https://dokidokigoods.co.kr/web/product/medium/202606/d8f3fe91bf40ca88c82735dfba2553eb.png',
+            'https://dokidokigoods.co.kr/web/product/medium/202606/90962947887dcc67632c06a2e1c9bfc3.png',
+            'https://dokidokigoods.co.kr/web/product/medium/202606/1de798c15be2ac32aaf84d8bba71294a.png',
+            'https://dokidokigoods.co.kr/web/product/medium/202606/a677f69c9ac28fa7068e5894c3ef93d8.png',
+            'https://dokidokigoods.co.kr/web/product/medium/202404/288d18d67410c1f248e0e2764a9297f1.jpg',
+            'https://dokidokigoods.co.kr/web/product/big/202606/50bc807823ee1081cdfbeaff7abbd7f8.png',
+            'https://dokidokigoods.co.kr/web/product/big/202606/d5fcbc07c5112d5bd2c1b911b684f3ae.png',
+            'https://dokidokigoods.co.kr/web/product/big/202606/8554744a9f66f780be4fdb09a0cf2fd8.png',
+            'https://dokidokigoods.co.kr/web/product/big/202606/ccbd726fa9fc5fbe93052125b7073244.png',
+            'https://dokidokigoods.co.kr/web/product/big/202606/d9014728ae5cbd5cacb2ffa1a965819b.png',
+            'https://dokidokigoods.co.kr/web/product/big/202606/ac6b65b316e5222683771ec6f8ac7c25.png',
+            'https://dokidokigoods.co.kr/web/product/big/202606/061a8af2169e5203772d34b94729680f.png',
+            'https://dokidokigoods.co.kr/web/product/big/202606/70bcd81b4414ffd901a5d844c6fb4e7c.png',
+            'https://dokidokigoods.co.kr/web/product/big/202606/1e21d49da08367eb8396ec8f537dbefa.png',
+            'https://dokidokigoods.co.kr/web/product/big/202606/89eda58119cfa62779fa639da8bbfe04.png'
+          ];
+          mockImg = goodsImgs[pid % goodsImgs.length];
+        }
+      }
+
+      const fallbackUrl = p.cat === 'food'
+        ? (p.isStoreCard ? '/shop/img/stores/food/0.jpg' : 'https://www.themealdb.com/images/media/meals/8rfd4q1764112993.jpg')
+        : (p.isStoreCard ? '/shop/img/stores/goods/gen_0.png' : '/shop/img/poster1.png');
+
+      return p.imageUrl
+        ? `<img src="${p.imageUrl}" alt="${p.name}" class="pcard-img" onerror="if(!this.dataset.failed){this.dataset.failed=true;this.src='${mockImg}';}else{this.src='${fallbackUrl}';}">`
+        : `<img src="${mockImg}" alt="${p.name}" class="pcard-img" onerror="if(!this.dataset.failed){this.dataset.failed=true;this.src='${fallbackUrl}';}">`;
+    })()}
 
     ${sold ? `<div class="sold-cover" aria-hidden="true"><span class="sold-label">SOLD OUT</span></div>` : ''}
   </div>

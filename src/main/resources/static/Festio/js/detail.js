@@ -155,8 +155,36 @@ function renderEventDetail(detail) {
       googleMapFrame.style.display = 'block';
       googleMapFrame.style.width = '100%';
       googleMapFrame.style.height = '100%';
-      googleMapFrame.src = `https://maps.google.com/maps?q=${encodeURIComponent(address.split(' 상세:')[0])}&output=embed`;
+      googleMapFrame.setAttribute('loading', 'lazy');
+
+      // 구글맵 렌더링을 페이지 로드 1.5초 뒤로 지연시켜 초기 체감 속도 극대화
+      setTimeout(() => {
+        googleMapFrame.src = `https://maps.google.com/maps?q=${encodeURIComponent(address.split(' 상세:')[0])}&output=embed`;
+      }, 1500);
+
       mapWrap.appendChild(googleMapFrame);
+
+      // [TODO] 카카오맵 API 연동 시 아래 코드를 사용 (현재는 인증키 문제로 구글맵 유지)
+      /*
+      let kakaoMapDiv = document.createElement('div');
+      kakaoMapDiv.id = 'kakaoMapContainer';
+      kakaoMapDiv.style.width = '100%';
+      kakaoMapDiv.style.height = '100%';
+      kakaoMapDiv.style.display = 'none'; // 구글맵 대체 시 display: block
+      mapWrap.appendChild(kakaoMapDiv);
+      
+      if (typeof kakao !== 'undefined' && kakao.maps && kakao.maps.services) {
+        let geocoder = new kakao.maps.services.Geocoder();
+        geocoder.addressSearch(address.split(' 상세:')[0], function(result, status) {
+          if (status === kakao.maps.services.Status.OK) {
+            let coords = new kakao.maps.LatLng(result[0].y, result[0].x);
+            let mapOption = { center: coords, level: 3 };
+            let map = new kakao.maps.Map(kakaoMapDiv, mapOption);
+            let marker = new kakao.maps.Marker({ map: map, position: coords });
+          }
+        });
+      }
+      */
 
       // 2. Text Address Update
       let addressWrap = document.createElement('div');
@@ -211,14 +239,14 @@ function renderEventDetail(detail) {
   const ctaZoneName = document.getElementById('ctaZoneName');
   const ctaTotal = document.getElementById('ctaTotal');
   const btnBook = document.getElementById('btn-book');
-  
+
   if (layoutEl) {
     if (detail.ticketMode === 'FREE') {
       layoutEl.classList.add('free-mode');
-      
+
       // 우측 CTA 바 텍스트 최적화
       if (ctaZoneName) ctaZoneName.textContent = '일반 입장권 (자유석)';
-      
+
       // 가격 범위 계산
       if (ctaTotal && detail.zones && detail.zones.length > 0) {
         const prices = detail.zones.map(z => z.price);
@@ -232,7 +260,7 @@ function renderEventDetail(detail) {
       } else if (ctaTotal) {
         ctaTotal.textContent = '￦ -원';
       }
-      
+
       if (btnBook) {
         btnBook.innerHTML = `
           <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -243,7 +271,7 @@ function renderEventDetail(detail) {
           입장권 예매하기
         `;
       }
-      
+
       // 안내 카드 삽입 (이미 없으면 추가)
       const bookingCta = document.getElementById('bookingCta');
       if (bookingCta && !document.getElementById('freeModeNoticeCard')) {
@@ -1464,9 +1492,9 @@ async function initiateTossPayment() {
     const seatDisplay = _eventDetail?.ticketMode === 'FREE'
       ? seatLabels.join(', ')
       : _selectedSeats.map(s => {
-          const rowClean = (s.seatRow || '').replace(/열$/, '');
-          return `${rowClean}열 ${s.seatNumber}번`;
-        }).join(', ');
+        const rowClean = (s.seatRow || '').replace(/열$/, '');
+        return `${rowClean}열 ${s.seatNumber}번`;
+      }).join(', ');
 
     IMP.request_pay({
       pg: "html5_inicis.INIpayTest", // 이니시스 테스트 상점 ID (INIpayTest)
@@ -1516,9 +1544,9 @@ async function initiateTossPayment() {
     const seatDisplay = _eventDetail?.ticketMode === 'FREE'
       ? seatLabels.join(', ')
       : _selectedSeats.map(s => {
-          const rowClean = (s.seatRow || '').replace(/열$/, '');
-          return `${rowClean}열 ${s.seatNumber}번`;
-        }).join(', ');
+        const rowClean = (s.seatRow || '').replace(/열$/, '');
+        return `${rowClean}열 ${s.seatNumber}번`;
+      }).join(', ');
 
     await tossPayments.requestPayment('가상계좌', {
       amount: netAmount,
@@ -1585,7 +1613,7 @@ function showBookingSuccess() {
 ═══════════════════════════════════════════════════════════ */
 function enterPaymentModal() {
   Modal.close('modal-queue');
-  
+
   let zone = null;
   if (_eventDetail?.ticketMode === 'FREE') {
     const firstSelectedZoneNo = Object.keys(_freeTicketQty).find(k => _freeTicketQty[k] > 0);
@@ -1594,7 +1622,7 @@ function enterPaymentModal() {
   } else {
     zone = _eventDetail?.zones.find(z => z.zoneNo === _selectedZoneNo);
   }
-  
+
   if (!zone) return;
 
   // 기본 결제 수단으로 카드(Portone) 선택 및 버튼 텍스트 설정
@@ -1633,8 +1661,8 @@ function updatePaymentSummary(zone) {
       ? _selectedSeats.reduce((sum, s) => sum + s.price, 0)
       : zone.price * _quantity;
     const seatLabels = _selectedSeats.map(s => `${s.seatRow}-${s.seatNumber}`).join(', ');
-    zoneText = _selectedSeats.length > 0 
-      ? `${zone.zoneName} (${seatLabels}) × ${_quantity}매` 
+    zoneText = _selectedSeats.length > 0
+      ? `${zone.zoneName} (${seatLabels}) × ${_quantity}매`
       : `${zone.zoneName} × ${_quantity}매`;
   }
 
@@ -3968,6 +3996,18 @@ document.addEventListener('DOMContentLoaded', () => {
       if (tooltip) {
         tooltip.style.display = 'none';
       }
+    }
+  });
+
+  // 모달 닫힐 때 선택된 구역 시각적 상태 초기화
+  document.addEventListener('modalClose', (e) => {
+    if (e.target && e.target.id === 'modal-select-seats') {
+      document.querySelectorAll('#venueSvgLayer .zone-polygon.selected').forEach(el => {
+        el.classList.remove('selected');
+      });
+      // 미니맵에 복사되었던 중복 SVG 요소 제거 (ID 중복으로 인한 호버 렌더링 버벅임/충돌 방지)
+      const miniMap = document.getElementById('modalMiniMap');
+      if (miniMap) miniMap.innerHTML = '';
     }
   });
 });

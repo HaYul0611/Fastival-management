@@ -708,7 +708,7 @@
         style="padding:28px; border-radius:20px; width: 340px; text-align:center; position: relative;">
         <button class="qr-modal-close" onclick="closeGradeModal()" aria-label="닫기"
           style="position:absolute; top:12px; right:12px; border:none; background:none; font-size:1.5rem; cursor:pointer; color:#64748b;">×</button>
-        <div
+        <div id="gradeModalIconWrap"
           style="display:inline-flex; align-items:center; justify-content:center; width:48px; height:48px; border-radius:50%; background:rgba(205,127,50,0.1); margin-bottom:12px; border:1px solid rgba(205,127,50,0.3);">
           <svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="#cd7f32" stroke-width="2"
             stroke-linecap="round" stroke-linejoin="round">
@@ -716,19 +716,21 @@
             <polyline points="8.21 13.89 7 23 12 20 17 23 15.79 13.88"></polyline>
           </svg>
         </div>
-        <h3 style="font-size:1.2rem; font-weight:bold; margin-bottom:8px; color:#1e293b;">현재 등급: BRONZE</h3>
+        <h3 id="gradeModalTitle" style="font-size:1.2rem; font-weight:bold; margin-bottom:8px; color:#1e293b;">현재 등급:
+          BRONZE</h3>
         <div style="display:flex; justify-content:space-between; align-items:end; margin-bottom:8px;">
-          <p style="font-size:0.75rem; color:#64748b; margin:0; font-weight:600;">Silver 등급까지 ₩50,000 남음</p>
-          <span style="font-size:0.75rem; color:#64748b; font-weight:600;">총 사용: ₩150,000</span>
+          <p id="gradeModalRemain" style="font-size:0.75rem; color:#64748b; margin:0; font-weight:600;">Silver 등급까지
+            ₩50,000 남음</p>
+          <span id="gradeModalTotal" style="font-size:0.75rem; color:#64748b; font-weight:600;">총 사용: ₩150,000</span>
         </div>
         <div style="height: 8px; background: #e2e8f0; border-radius: 4px; overflow: hidden; margin-bottom: 8px;">
-          <div
+          <div id="gradeModalBar"
             style="height: 100%; width: 30%; background: linear-gradient(90deg, #f093fb 0%, #f5576c 100%); border-radius: 4px;">
           </div>
         </div>
         <div style="display:flex; justify-content:space-between; font-size:0.8rem; color:#94a3b8; font-weight:600;">
-          <span>Bronze</span>
-          <span>Silver</span>
+          <span id="gradeModalCurrentLabel">Bronze</span>
+          <span id="gradeModalNextLabel">Silver</span>
         </div>
       </div>
     </div>

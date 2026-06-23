@@ -366,6 +366,7 @@ const Modal = {
     el.classList.remove('active');
     this._stack = this._stack.filter(i => i !== id);
     if (!this._stack.length) document.body.style.overflow = '';
+    el.dispatchEvent(new CustomEvent('modalClose', { bubbles: true }));
   },
   closeAll() {
     this._stack.forEach(id => document.getElementById(id)?.classList.remove('active'));

@@ -3005,14 +3005,17 @@ body.edit-mode .detail-tabs-section .detail-tab-content.active {
   transition: all 0.2s ease-in-out;
 }
 
+/* ── 모달 미니맵 전용 (호버 차단) ── */
+#modalMiniMap .zone-polygon {
+  pointer-events: none !important;
+}
+
 /* 실제 text/tspan 요소인 경우 폰트 사이즈 스케일업 추가 */
 .zone-polygon:hover text,
 .zone-polygon:hover tspan,
 .zone-polygon.selected text,
 .zone-polygon.selected tspan {
-  transform: scale(1.1);
-  transform-origin: center;
-  transform-box: fill-box;
+  font-size: 1.15em !important;
 }
 
 .zone-polygon.sold-out {

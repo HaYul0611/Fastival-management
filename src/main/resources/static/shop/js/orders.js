@@ -40,27 +40,39 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   // TOTP 로직
   let totpTimer = null;
-  async function generateMockTotp(secret, timeWindow) {
-    // 프론트엔드 모의 시연용 (실제는 백엔드와 HMAC-SHA1 일치 필요)
-    let hash = 0;
-    const str = secret + timeWindow;
-    for (let i = 0; i < str.length; i++) {
-      hash = ((hash << 5) - hash) + str.charCodeAt(i);
-      hash |= 0;
+  async function generateTotpCode(hexSecret) {
+    if (!hexSecret) hexSecret = 'dummysecret12345';
+    let keyBytes;
+    try {
+      keyBytes = new Uint8Array(hexSecret.match(/.{1,2}/g).map(byte => parseInt(byte, 16)));
+    } catch (e) {
+      keyBytes = new TextEncoder().encode(hexSecret);
     }
-    return String(Math.abs(hash) % 1000000).padStart(6, '0');
+    const cryptoKey = await crypto.subtle.importKey(
+      "raw", keyBytes, { name: "HMAC", hash: "SHA-1" }, false, ["sign"]
+    );
+    const counterBytes = new Uint8Array(8);
+    let temp = Math.floor(Date.now() / 180000);
+    for (let i = 7; i >= 0; i--) {
+      counterBytes[i] = temp & 0xFF;
+      temp = Math.floor(temp / 256);
+    }
+    const signature = await crypto.subtle.sign("HMAC", cryptoKey, counterBytes);
+    const hash = new Uint8Array(signature);
+    const offset = hash[hash.length - 1] & 0x0F;
+    const binary = ((hash[offset] & 0x7F) << 24) |
+      ((hash[offset + 1] & 0xFF) << 16) |
+      ((hash[offset + 2] & 0xFF) << 8) |
+      (hash[offset + 3] & 0xFF);
+    return (binary % 1000000).toString().padStart(6, '0');
   }
 
-  let manualOffset = 0;
   window.openQrModal = function (orderNo) {
     const order = window.currentOrders.find(o => o.order_number === orderNo);
     let secret = order?.totp_secret || 'dummysecret12345';
-    manualOffset = 0; // 모달 열때 초기화
 
-    const updateQr = async (isManual = false) => {
-      if (isManual) manualOffset++;
-      const timeWindow = Math.floor(Date.now() / 180000) + manualOffset; // 3분 단위 + 수동오프셋
-      const totpCode = await generateMockTotp(secret, timeWindow);
+    const updateQr = async () => {
+      const totpCode = await generateTotpCode(secret);
 
       let displayOrderNo = orderNo;
       const match = orderNo.match(/0+(\d+)$/);
@@ -72,8 +84,21 @@ document.addEventListener('DOMContentLoaded', async () => {
       while (orderIdBase36.length < 5) orderIdBase36 = '0' + orderIdBase36;
 
       const barcodeData = prefix + orderIdBase36 + totpCode;
-      document.getElementById('totpCode').textContent = barcodeData;
-      document.getElementById('qrOrderNo').textContent = '주문번호: ' + (prefix + orderIdBase36 + "000000");
+
+      const isFood = order.shop_order_items?.some(item => item.shop_products?.type === 'FOOD');
+
+      const totpCodeEl = document.getElementById('totpCode');
+      totpCodeEl.style.letterSpacing = 'normal';
+      totpCodeEl.style.fontFamily = 'inherit';
+      totpCodeEl.style.fontSize = '26px';
+
+      if (isFood) {
+        totpCodeEl.textContent = `대기번호: ${numericId}번`;
+      } else {
+        totpCodeEl.textContent = `수령번호: ${numericId}번`;
+      }
+
+      document.getElementById('qrOrderNo').textContent = '주문번호: ' + orderNo;
 
       const qrData = 'TOTP:' + orderNo + ':' + totpCode;
       let qrImage = document.getElementById('qrImage');
@@ -88,20 +113,16 @@ document.addEventListener('DOMContentLoaded', async () => {
         bgElem.style.position = 'absolute';
         bgElem.style.width = '300%';
         bgElem.style.height = '300%';
-        bgElem.style.top = '-100%'; // -200px (multiple of 40px)
+        bgElem.style.top = '-100%';
         bgElem.style.left = '-100%';
-        // QR 이미지와 완벽하게 동일한 각도 및 스케일 적용 (격자선 일치)
         bgElem.style.transform = 'translateY(11px) rotate(45deg) scale(0.5)';
         bgElem.style.zIndex = '0';
         bgElem.style.imageRendering = 'pixelated';
         bgElem.style.backgroundRepeat = 'repeat';
-        // 40px 타일 (8px 모듈 5개) -> 200px에 정확히 맞아떨어짐
         bgElem.style.backgroundSize = '40px 40px';
         container.insertBefore(bgElem, qrImage);
       }
 
-      // QR 마커(Finder Pattern)가 중복해서 나타나는 것을 방지하기 위해,
-      // 순수하게 8px 네모들로만 이루어진 가짜 패턴을 생성하여 배경에 타일링함.
       let svg = "<svg xmlns='http://www.w3.org/2000/svg' width='40' height='40'><rect width='40' height='40' fill='#fff'/>";
       for (let y = 0; y < 5; y++) {
         for (let x = 0; x < 5; x++) {
@@ -113,21 +134,54 @@ document.addEventListener('DOMContentLoaded', async () => {
       svg += "</svg>";
       bgElem.style.backgroundImage = `url("data:image/svg+xml;utf8,${encodeURIComponent(svg)}")`;
 
-      // 시간차 없이 동시에 나타나도록 처리
-      qrImage.style.transition = 'opacity 0.3s ease';
-      bgElem.style.transition = 'opacity 0.3s ease';
-      qrImage.style.opacity = '0';
+      qrImage.style.display = 'none';
+      let qrWrap = document.getElementById('realQrWrap_' + orderNo);
+      if (!qrWrap) {
+        qrWrap = document.createElement('div');
+        qrWrap.id = 'realQrWrap_' + orderNo;
+        qrWrap.style.width = '100%';
+        qrWrap.style.height = '100%';
+        qrWrap.style.position = 'absolute';
+        qrWrap.style.top = '0';
+        qrWrap.style.left = '0';
+        qrWrap.style.zIndex = '1';
+        container.appendChild(qrWrap);
+      }
+      qrWrap.innerHTML = '';
+
+      qrWrap.style.opacity = '0';
       bgElem.style.opacity = '0';
+      qrWrap.style.transition = 'opacity 0.3s ease';
+      bgElem.style.transition = 'opacity 0.3s ease';
 
-      qrImage.onload = () => {
-        qrImage.style.opacity = '1';
+      new QRCode(qrWrap, {
+        text: qrData,
+        width: 200,
+        height: 200,
+        colorDark: "#000000",
+        colorLight: "#ffffff",
+        correctLevel: QRCode.CorrectLevel.H
+      });
+
+      setTimeout(() => {
+        const qrEls = qrWrap.querySelectorAll('canvas, img');
+        qrEls.forEach(el => {
+          el.style.width = '100%';
+          el.style.height = '100%';
+          el.style.objectFit = 'cover';
+          el.style.imageRendering = 'pixelated';
+          el.removeAttribute('title');
+          el.style.transform = 'translateY(11px) rotate(45deg) scale(0.5)';
+        });
+        qrWrap.removeAttribute('title');
+        container.removeAttribute('title');
+
+        qrWrap.style.opacity = '1';
         bgElem.style.opacity = '1';
-      };
+      }, 50);
 
-      qrImage.src = 'https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=' + encodeURIComponent(qrData) + '&margin=0&format=svg';
-
-      // 남은 시간 초기화 (수동 리셋 시 180초 풀로 시작)
-      let timeLeft = isManual ? 180 : 180 - Math.floor((Date.now() % 180000) / 1000);
+      // 남은 시간 초기화
+      let timeLeft = 180 - Math.floor((Date.now() % 180000) / 1000);
 
       const bar = document.getElementById('totpTimerBar');
       const txt = document.getElementById('totpTimeTxt');
@@ -156,8 +210,9 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (btnReset) {
       btnReset.onclick = () => {
         btnReset.style.transition = 'transform 0.3s';
-        btnReset.style.transform = `rotate(${manualOffset * 180 + 180}deg)`;
-        updateQr(true);
+        btnReset.style.transform = `rotate(180deg)`;
+        updateQr();
+        setTimeout(() => btnReset.style.transform = `rotate(0deg)`, 300);
       };
     }
 
@@ -172,26 +227,22 @@ document.addEventListener('DOMContentLoaded', async () => {
     const order = window.currentOrders.find(o => o.order_number === orderNo);
     if (!order) return;
 
-    let displayOrderNo = orderNo;
-    const match = orderNo.match(/0+(\d+)$/);
-    if (match) displayOrderNo = match[1];
 
-    let prefix = orderNo.startsWith('F') ? 'F' : (orderNo.startsWith('G') ? 'G' : 'O');
-    let numericId = parseInt(displayOrderNo, 10);
-    let orderIdBase36 = (isNaN(numericId) ? 0 : numericId).toString(36).toUpperCase();
-    while (orderIdBase36.length < 5) orderIdBase36 = '0' + orderIdBase36;
-
-    const fullBarcode = prefix + orderIdBase36 + "000000";
 
     const itemsHtml = (order.shop_order_items || []).map(item => {
       const isFood = item.shop_products && item.shop_products.type === 'FOOD';
-      const imageUrl = (item.shop_products && item.shop_products.thumbnail_image_url)
-        ? item.shop_products.thumbnail_image_url
-        : (isFood ? '/Festio/images/food1.jpg' : '/Festio/images/goods1.jpg');
+      const hasImage = !!(item.shop_products && item.shop_products.thumbnail_image_url);
+      const imageUrl = hasImage ? item.shop_products.thumbnail_image_url : '';
+      
+      const svgFood = `<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#9ca3af" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 2v7c0 1.1.9 2 2 2h4a2 2 0 0 0 2-2V2"></path><path d="M7 2v20"></path><path d="M21 15V2v0a5 5 0 0 0-5 5v6c0 1.1.9 2 2 2h3Zm0 0v7"></path></svg>`;
+      const svgGoods = `<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#9ca3af" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"></path><line x1="3" y1="6" x2="21" y2="6"></line><path d="M16 10a4 4 0 0 1-8 0"></path></svg>`;
 
       return `
       <div style="display:flex; gap:12px; padding: 12px 0; border-bottom:1px solid var(--g100);">
-        <div style="width:60px; height:60px; border-radius:8px; background: url('${imageUrl}') center/cover no-repeat; flex-shrink:0;"></div>
+        ${hasImage 
+          ? `<div style="width:60px; height:60px; border-radius:8px; background: url('${imageUrl}') center/cover no-repeat; flex-shrink:0;"></div>`
+          : `<div style="width:60px; height:60px; border-radius:8px; background:var(--g100); display:flex; align-items:center; justify-content:center; flex-shrink:0;">${isFood ? svgFood : svgGoods}</div>`
+        }
         <div style="flex:1; display:flex; justify-content:space-between;">
           <div>
             <div style="font-weight:700; color:var(--g900); font-size:15px; margin-bottom:4px;">${item.product_name || '상품명'}</div>
@@ -210,7 +261,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       <div style="margin-bottom:24px;">
         <div style="display:flex; justify-content:space-between; margin-bottom:8px;">
           <span style="color:var(--g500);">주문번호</span>
-          <span class="barcode-text" style="font-weight:700;">${fullBarcode}</span>
+          <span class="barcode-text" style="font-weight:700;">${orderNo}</span>
         </div>
         <div style="display:flex; justify-content:space-between; margin-bottom:8px;">
           <span style="color:var(--g500);">결제일시</span>
@@ -348,9 +399,20 @@ function renderOrderCard(order) {
     `;
   }
 
-  const itemsHtml = (order.shop_order_items || []).map(item => `
+  const itemsHtml = (order.shop_order_items || []).map(item => {
+    const isFood = item.shop_products && item.shop_products.type === 'FOOD';
+    const hasImage = !!(item.shop_products && item.shop_products.thumbnail_image_url);
+    const imageUrl = hasImage ? item.shop_products.thumbnail_image_url : '';
+
+    const svgFood = `<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#9ca3af" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 2v7c0 1.1.9 2 2 2h4a2 2 0 0 0 2-2V2"></path><path d="M7 2v20"></path><path d="M21 15V2v0a5 5 0 0 0-5 5v6c0 1.1.9 2 2 2h3Zm0 0v7"></path></svg>`;
+    const svgGoods = `<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#9ca3af" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"></path><line x1="3" y1="6" x2="21" y2="6"></line><path d="M16 10a4 4 0 0 1-8 0"></path></svg>`;
+
+    return `
     <div class="order-item">
-      <div class="oi-img" style="background:#f0f0f0"></div>
+      ${hasImage 
+        ? `<div class="oi-img" style="background: url('${imageUrl}') center/cover no-repeat;"></div>`
+        : `<div class="oi-img" style="background:var(--g100); display:flex; align-items:center; justify-content:center;">${isFood ? svgFood : svgGoods}</div>`
+      }
       <div class="oi-info">
         <span class="oi-status ${isPickup ? 'pickup' : 'shipping'}">${isPickup ? (isFood ? '푸드트럭 현장수령' : '현장 픽업') : '일반 배송'}</span>
         <div class="oi-name">${item.product_name || '상품'}</div>
@@ -358,23 +420,15 @@ function renderOrderCard(order) {
         <div class="oi-price">${(item.price_at_purchase || 0).toLocaleString()}원</div>
       </div>
     </div>
-  `).join('');
-
-  let displayOrderNo = order.order_number;
-  const match = order.order_number.match(/0+(\d+)$/);
-  if (match) displayOrderNo = match[1];
-  let prefix = order.order_number.startsWith('F') ? 'F' : (order.order_number.startsWith('G') ? 'G' : 'O');
-  let numericId = parseInt(displayOrderNo, 10);
-  let orderIdBase36 = (isNaN(numericId) ? 0 : numericId).toString(36).toUpperCase();
-  while (orderIdBase36.length < 5) orderIdBase36 = '0' + orderIdBase36;
-  const fullBarcode = prefix + orderIdBase36 + "000000";
+    `;
+  }).join('');
 
   return `
     <div class="order-card">
       <div class="order-header">
         <div>
           <span class="order-date">${new Date(order.created_at).toLocaleDateString()}</span>
-          <span class="order-no barcode-text">주문번호 ${fullBarcode}</span>
+          <span class="order-no barcode-text">주문번호 ${order.order_number}</span>
         </div>
         <a href="javascript:void(0)" onclick="openDetailModal('${order.order_number}')" class="order-detail-btn">주문상세 보기 &gt;</a>
       </div>
@@ -418,7 +472,9 @@ window.openReviewModal = function (productId) {
   updateReviewScore();
   renderReviewThumbs();
   document.getElementById('rvText').value = '';
-  document.getElementById('reviewModal').classList.add('show');
+  const reviewModal = document.getElementById('reviewModal');
+  reviewModal.style.zIndex = '2147483648';
+  reviewModal.classList.add('show');
 };
 
 window.closeReviewModal = function () {
@@ -434,8 +490,43 @@ window.handleReviewImageSelect = function (e) {
   files.forEach(f => {
     const reader = new FileReader();
     reader.onload = ev => {
-      reviewImages.push(ev.target.result);
-      renderReviewThumbs();
+      const src = ev.target.result;
+      const img = new Image();
+      img.onload = function () {
+        let isBright = false;
+        try {
+          const canvas = document.createElement('canvas');
+          canvas.width = img.width;
+          canvas.height = img.height;
+          const ctx = canvas.getContext('2d');
+          ctx.drawImage(img, 0, 0);
+
+          // 우상단 영역(버튼이 위치할 곳)의 밝기 체크
+          const w = Math.min(50, img.width / 2);
+          const h = Math.min(50, img.height / 2);
+          const imageData = ctx.getImageData(img.width - w, 0, w, h);
+          const data = imageData.data;
+          let sum = 0;
+          let count = 0;
+          for (let i = 0; i < data.length; i += 4) {
+            // 투명도가 있는 경우 무시하거나 배경을 흰색으로 가정
+            const alpha = data[i + 3] / 255;
+            const r = data[i] * alpha + 255 * (1 - alpha);
+            const g = data[i + 1] * alpha + 255 * (1 - alpha);
+            const b = data[i + 2] * alpha + 255 * (1 - alpha);
+            sum += (r * 299 + g * 587 + b * 114) / 1000;
+            count++;
+          }
+          if (count > 0 && (sum / count) > 180) {
+            isBright = true;
+          }
+        } catch (err) {
+          // CORS 등 canvas 접근 오류 시 기본값 사용
+        }
+        reviewImages.push({ src, isBright });
+        renderReviewThumbs();
+      };
+      img.src = src;
     };
     reader.readAsDataURL(f);
   });
@@ -458,18 +549,32 @@ window.scrollReviewThumbs = function (dir) {
 
 function renderReviewThumbs() {
   const container = document.getElementById('rvThumbContainer');
+  const wrapper = document.getElementById('rvThumbWrapper');
+
   if (reviewImages.length === 0) {
-    container.innerHTML = '<div style="color:var(--g400); font-size:13px; line-height:60px;">사진을 첨부해주세요.</div>';
+    if (wrapper) wrapper.style.display = 'none';
+    container.innerHTML = '';
     return;
   }
-  container.innerHTML = reviewImages.map((src, i) => `
+
+  if (wrapper) wrapper.style.display = 'flex';
+  container.innerHTML = reviewImages.map((item, i) => {
+    const src = typeof item === 'string' ? item : item.src;
+    const isBright = typeof item === 'string' ? false : item.isBright;
+    // 밝은 이미지일 경우 검은색(#000), 어두울 경우 흰색(#fff)으로 확실히 대비되도록 설정
+    const btnColor = isBright ? '#000' : '#fff';
+    // 색상만으로는 부족할 수 있으므로, 반대되는 색상의 그림자를 추가해 시인성을 극대화
+    const dropShadow = isBright ? 'drop-shadow(0 0 2px rgba(255,255,255,0.9))' : 'drop-shadow(0 0 2px rgba(0,0,0,0.8))';
+
+    return `
     <div class="rv-thumb-item" style="position:relative; width:60px; height:60px; flex-shrink:0; border-radius:8px; overflow:hidden; background:var(--g100);">
       <img src="${src}" style="width:100%; height:100%; object-fit:cover;">
-      <button onclick="removeReviewImage(${i})" class="rv-thumb-del" style="position:absolute; top:4px; right:4px; background:transparent; border:none; color:#fff; cursor:pointer; width:20px; height:20px; display:flex; align-items:center; justify-content:center; opacity:0; transition:opacity 0.2s;">
+      <button onclick="removeReviewImage(${i})" class="rv-thumb-del" style="position:absolute; top:4px; right:4px; background:transparent; border:none; color:${btnColor}; cursor:pointer; width:20px; height:20px; display:flex; align-items:center; justify-content:center; opacity:0; transition:opacity 0.2s; filter:${dropShadow};">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
       </button>
     </div>
-  `).join('');
+    `;
+  }).join('');
 }
 
 window.setRating = function (val) {
