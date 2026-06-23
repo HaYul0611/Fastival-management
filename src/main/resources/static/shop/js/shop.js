@@ -20,6 +20,11 @@ const S = {
 };
 
 /* ── 필터 ───────────────────────────────────────────────────── */
+
+/**
+ * @description 현재 선택된 필터(카테고리, 검색어, 상점)와 정렬 방식에 따라 목록을 필터링 및 정렬하여 반환합니다.
+ * @returns {Array} 필터링 및 정렬된 상품 또는 상점 데이터 배열
+ */
 function filtered() {
   let list = [];
   if (!S.selectedStoreId) {
@@ -61,7 +66,15 @@ function placeholder(cat) {
   return `<svg width="100" height="100" viewBox="0 0 100 100" fill="none" aria-hidden="true">${c.path}</svg>`;
 }
 
-/* ── 카드 HTML ──────────────────────────────────────────────── */
+/* ================================================================
+   UI 컴포넌트 (UI Components)
+   ================================================================ */
+
+/**
+ * @description 단일 상품 또는 상점 객체를 받아 HTML 카드 요소 문자열을 생성합니다.
+ * @param {Object} p - 렌더링할 상품/상점 객체
+ * @returns {string} 카드 UI HTML 문자열
+ */
 function cardHTML(p) {
   const sold = p.stock === 0;
   const low = !sold && p.stock > 0 && p.stock <= 5;
@@ -106,18 +119,8 @@ function cardHTML(p) {
 
       if (p.cat === 'food') {
         if (p.isStoreCard) {
-          const storeImgs = [
-            '/shop/img/stores/food/0.jpg',
-            '/shop/img/stores/food/1.jpg',
-            '/shop/img/stores/food/2.jpg',
-            '/shop/img/stores/food/3.jpg',
-            '/shop/img/stores/food/4.jpg',
-            '/shop/img/stores/food/5.jpg',
-            '/shop/img/stores/food/6.jpg',
-            '/shop/img/stores/food/7.jpg',
-            '/shop/img/stores/food/8.jpg',
-            '/shop/img/stores/food/9.jpg'
-          ];
+          const validIndices = [9, 14, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49];
+          const storeImgs = validIndices.map(i => `/shop/img/stores/food/gen_${i}.jpg`);
           mockImg = storeImgs[pid % storeImgs.length];
         } else {
           const foodImgs = [
@@ -218,8 +221,8 @@ function cardHTML(p) {
         }
       }
 
-      const fallbackUrl = p.cat === 'food'
-        ? (p.isStoreCard ? '/shop/img/stores/food/0.jpg' : 'https://www.themealdb.com/images/media/meals/8rfd4q1764112993.jpg')
+      const fallbackUrl = p.cat === 'food' 
+        ? (p.isStoreCard ? '/shop/img/stores/food/gen_0.jpg' : 'https://www.themealdb.com/images/media/meals/8rfd4q1764112993.jpg')
         : (p.isStoreCard ? '/shop/img/stores/goods/gen_0.png' : '/shop/img/poster1.png');
 
       return p.imageUrl
@@ -252,6 +255,13 @@ function cardHTML(p) {
 }
 
 /* ── 렌더 ───────────────────────────────────────────────────── */
+/* ================================================================
+   UI 렌더링 (UI Rendering)
+   ================================================================ */
+
+/**
+ * @description 상태 객체(S)를 기준으로 필터링된 상품 목록과 화면 UI를 다시 렌더링합니다.
+ */
 function render() {
   const grid = document.getElementById('prodGrid');
   const empty = document.getElementById('gridEmpty');
@@ -293,6 +303,11 @@ function render() {
   renderPagination(totalPages, isDesktop);
 }
 
+/**
+ * @description 하단 페이지네이션 숫자 버튼 및 이전/다음 이동 버튼을 렌더링합니다.
+ * @param {number} totalPages - 계산된 전체 페이지 개수
+ * @param {boolean} isDesktop - 데스크톱 모드 여부
+ */
 function renderPagination(totalPages, isDesktop) {
   let wrapper = document.getElementById('shopPaginationWrapper');
   if (!wrapper) {
@@ -317,7 +332,7 @@ function renderPagination(totalPages, isDesktop) {
   let html = `
     <div style="display: flex; gap: 8px; justify-content: center;">
       <button class="btn btn-outline-primary page-btn" ${prevDisabled} onclick="window.FS_goToPage(${S.currentPage - 1})">
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg>
+        &lt;
       </button>
   `;
 
@@ -330,7 +345,7 @@ function renderPagination(totalPages, isDesktop) {
   const nextDisabled = S.currentPage === totalPages ? 'disabled' : '';
   html += `
       <button class="btn btn-outline-primary page-btn" ${nextDisabled} onclick="window.FS_goToPage(${S.currentPage + 1})">
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
+        &gt;
       </button>
     </div>
     
@@ -344,8 +359,17 @@ function renderPagination(totalPages, isDesktop) {
   `;
 
   wrapper.innerHTML = html;
+  if (window.FS_convertSelectToCustom) window.FS_convertSelectToCustom();
 }
 
+/* ================================================================
+   전역 상태 및 이벤트 핸들러 (Event Handlers)
+   ================================================================ */
+
+/**
+ * @description 지정된 페이지 번호로 이동하고 화면을 맨 위로 올립니다.
+ * @param {number} page - 이동할 페이지 숫자
+ */
 window.FS_goToPage = function (page) {
   S.currentPage = page;
   render();
@@ -365,6 +389,9 @@ window.FS_goBackToStores = function () {
   render();
 };
 
+/**
+ * @description 렌더링된 각 카드(.pcard) 요소에 상품 상세페이지 이동 또는 찜 이벤트 리스너를 바인딩합니다.
+ */
 function bindCards() {
   document.querySelectorAll('.pcard:not(.sold)').forEach(c => {
     c.addEventListener('click', e => {
@@ -400,6 +427,10 @@ function bindCards() {
 function goto(id) { window.location.href = `shop-detail.html?id=${id}` }
 
 /* ── 찜 ─────────────────────────────────────────────────────── */
+/**
+ * @description 상품 찜하기 토글 로직. 로컬 스토리지 및 UI를 업데이트합니다.
+ * @param {number|string} id - 상품 ID
+ */
 function toggleWish(id) {
   const i = S.wish.indexOf(id);
   if (i === -1) { S.wish.push(id); window.FS.Toast.show({ title: '찜 목록에 추가했어요', type: 'success', dur: 2000 }) }
@@ -607,4 +638,64 @@ document.addEventListener('DOMContentLoaded', () => {
 
   /* 검색 */
   document.addEventListener('shop:search', e => { S.q = e.detail.q; render() });
+
+  if (window.FS_convertSelectToCustom) window.FS_convertSelectToCustom();
+});
+
+/* ================================================================
+   유틸리티 및 초기화 (Utilities & Init)
+   ================================================================ */
+
+/**
+ * @description 투박한 기본 HTML <select> 태그를 찾아서 세련된 커스텀 드롭다운 UI로 자동 변환합니다.
+ */
+window.FS_convertSelectToCustom = function () {
+  document.querySelectorAll('select.sort-sel, select.page-size-select').forEach(select => {
+    if (select.dataset.customized) return;
+    select.dataset.customized = "true";
+    select.style.display = 'none';
+
+    const wrapper = document.createElement('div');
+    wrapper.className = 'custom-select-wrapper';
+
+    const trigger = document.createElement('div');
+    trigger.className = 'custom-select-trigger';
+    const selectedOption = select.options[select.selectedIndex];
+    trigger.textContent = selectedOption ? selectedOption.textContent : '';
+
+    const optionsList = document.createElement('ul');
+    optionsList.className = 'custom-select-options';
+
+    Array.from(select.options).forEach((option, idx) => {
+      const li = document.createElement('li');
+      li.className = 'custom-option';
+      if (idx === select.selectedIndex) li.classList.add('selected');
+      li.textContent = option.textContent;
+      li.addEventListener('click', () => {
+        select.selectedIndex = idx;
+        trigger.textContent = option.textContent;
+        optionsList.querySelectorAll('.custom-option').forEach(el => el.classList.remove('selected'));
+        li.classList.add('selected');
+        wrapper.classList.remove('open');
+        select.dispatchEvent(new Event('change'));
+      });
+      optionsList.appendChild(li);
+    });
+
+    trigger.addEventListener('click', (e) => {
+      e.stopPropagation();
+      document.querySelectorAll('.custom-select-wrapper').forEach(w => {
+        if (w !== wrapper) w.classList.remove('open');
+      });
+      wrapper.classList.toggle('open');
+    });
+
+    wrapper.appendChild(trigger);
+    wrapper.appendChild(optionsList);
+    select.parentNode.insertBefore(wrapper, select.nextSibling);
+  });
+};
+
+document.addEventListener('click', () => {
+  document.querySelectorAll('.custom-select-wrapper').forEach(w => w.classList.remove('open'));
 });

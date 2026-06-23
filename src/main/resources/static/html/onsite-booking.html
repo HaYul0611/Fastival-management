@@ -1,20 +1,24 @@
 ﻿<!DOCTYPE html>
 <html lang="ko">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>FESTIO - 현장 예매</title>
+    <title>FESTIO | 현장 예매</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link href="https://fonts.googleapis.com/css2?family=Pretendard:wght@400;500;600;700&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Pretendard:wght@400;500;600;700&family=JetBrains+Mono:wght@500&display=swap"
+        rel="stylesheet">
     <link rel="stylesheet" href="../assets/css/onsite-booking.css">
     <link rel="stylesheet" href="css/onsite-booking.css" />
 </head>
+
 <body>
 
     <header class="ob-header">
         <div class="ob-header__badge">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
             </svg>
             STAFF
         </div>
@@ -34,8 +38,7 @@
             <div class="ob-search-box">
                 <label class="ob-label">이름 또는 이메일로 검색</label>
                 <div class="ob-search-row">
-                    <input class="ob-input" id="obUserSearch" type="text"
-                        placeholder="홍길동 / hong@email.com"
+                    <input class="ob-input" id="obUserSearch" type="text" placeholder="홍길동 / hong@email.com"
                         autocomplete="off" spellcheck="false">
                     <button class="ob-btn ob-btn--primary" id="obUserSearchBtn" type="button">검색</button>
                 </div>
@@ -52,8 +55,8 @@
                 </div>
                 <button class="ob-selected-user__clear" id="obClearUser" type="button">
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <line x1="18" y1="6" x2="6" y2="18"/>
-                        <line x1="6" y1="6" x2="18" y2="18"/>
+                        <line x1="18" y1="6" x2="6" y2="18" />
+                        <line x1="6" y1="6" x2="18" y2="18" />
                     </svg>
                 </button>
             </div>
@@ -101,9 +104,11 @@
             </div>
 
             <div class="ob-ticket-types" id="obTicketTypes" hidden>
-                <button class="ob-ticket-type-btn ob-ticket-type-btn--active" id="obTypeGeneral" type="button" data-type="GENERAL">
+                <button class="ob-ticket-type-btn ob-ticket-type-btn--active" id="obTypeGeneral" type="button"
+                    data-type="GENERAL">
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/>
+                        <path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2" />
+                        <circle cx="12" cy="7" r="4" />
                     </svg>
                     <div>
                         <div class="ob-ticket-type-btn__name">일반 모바일 발권</div>
@@ -113,9 +118,10 @@
 
                 <button class="ob-ticket-type-btn" id="obTypeVulnerable" type="button" data-type="VULNERABLE">
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/>
-                        <circle cx="9" cy="7" r="4"/>
-                        <path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/>
+                        <path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2" />
+                        <circle cx="9" cy="7" r="4" />
+                        <path d="M23 21v-2a4 4 0 00-3-3.87" />
+                        <path d="M16 3.13a4 4 0 010 7.75" />
                     </svg>
                     <div>
                         <div class="ob-ticket-type-btn__name">노인 / 아동 팔찌 발권</div>
@@ -153,8 +159,10 @@
                     <div class="ob-pay-methods">
                         <label class="ob-pay-method-item ob-pay-method-item--active">
                             <input type="radio" name="payMethod" value="FESTIO_PAY" checked>
-                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/>
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2">
+                                <rect x="2" y="5" width="20" height="14" rx="2" />
+                                <line x1="2" y1="10" x2="22" y2="10" />
                             </svg>
                             <div>
                                 <div class="ob-pay-method-item__name">FESTIO Pay</div>
@@ -163,9 +171,10 @@
                         </label>
                         <label class="ob-pay-method-item">
                             <input type="radio" name="payMethod" value="CASH">
-                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <line x1="12" y1="1" x2="12" y2="23"/>
-                                <path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/>
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2">
+                                <line x1="12" y1="1" x2="12" y2="23" />
+                                <path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6" />
                             </svg>
                             <div>
                                 <div class="ob-pay-method-item__name">현금 / 기타</div>
@@ -192,8 +201,8 @@
 
                 <button class="ob-submit-btn" id="obPayBtn" type="button" disabled>
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <path d="M22 11.08V12a10 10 0 11-5.93-9.14"/>
-                        <polyline points="22 4 12 14.01 9 11.01"/>
+                        <path d="M22 11.08V12a10 10 0 11-5.93-9.14" />
+                        <polyline points="22 4 12 14.01 9 11.01" />
                     </svg>
                     현장 예매 완료
                 </button>
@@ -208,7 +217,8 @@
         <div class="festio-modal__box">
             <div class="festio-modal__icon festio-modal__icon--success">
                 <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/>
+                    <path d="M22 11.08V12a10 10 0 11-5.93-9.14" />
+                    <polyline points="22 4 12 14.01 9 11.01" />
                 </svg>
             </div>
             <h3 class="festio-modal__title">현장 예매 완료</h3>
@@ -228,8 +238,9 @@
         <div class="festio-modal__box">
             <div class="festio-modal__icon festio-modal__icon--warning">
                 <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/>
-                    <line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>
+                    <path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" />
+                    <line x1="12" y1="9" x2="12" y2="13" />
+                    <line x1="12" y1="17" x2="12.01" y2="17" />
                 </svg>
             </div>
             <h3 class="festio-modal__title">FESTIO Pay 잔액 부족</h3>
@@ -245,29 +256,34 @@
     <nav class="ob-mobile-nav">
         <a class="ob-mobile-nav__item" href="/">
             <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/>
-                <polyline points="9 22 9 12 15 12 15 22"/>
+                <path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z" />
+                <polyline points="9 22 9 12 15 12 15 22" />
             </svg>
             <span>홈</span>
         </a>
         <a class="ob-mobile-nav__item ob-mobile-nav__item--active" href="#">
             <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <path d="M20 12V22H4V12"/><path d="M22 7H2v5h20V7z"/>
-                <path d="M12 22V7"/><path d="M12 7H7.5a2.5 2.5 0 010-5C11 2 12 7 12 7z"/>
-                <path d="M12 7h4.5a2.5 2.5 0 000-5C13 2 12 7 12 7z"/>
+                <path d="M20 12V22H4V12" />
+                <path d="M22 7H2v5h20V7z" />
+                <path d="M12 22V7" />
+                <path d="M12 7H7.5a2.5 2.5 0 010-5C11 2 12 7 12 7z" />
+                <path d="M12 7h4.5a2.5 2.5 0 000-5C13 2 12 7 12 7z" />
             </svg>
             <span>현장 예매</span>
         </a>
         <a class="ob-mobile-nav__item" href="../payment/staff-scan.html">
             <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/>
-                <rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="3" height="3"/>
+                <rect x="3" y="3" width="7" height="7" />
+                <rect x="14" y="3" width="7" height="7" />
+                <rect x="3" y="14" width="7" height="7" />
+                <rect x="14" y="14" width="3" height="3" />
             </svg>
             <span>스캔</span>
         </a>
         <a class="ob-mobile-nav__item" href="../payment/refund.html">
             <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <path d="M9 14l-4-4 4-4"/><path d="M5 10h11a4 4 0 010 8h-1"/>
+                <path d="M9 14l-4-4 4-4" />
+                <path d="M5 10h11a4 4 0 010 8h-1" />
             </svg>
             <span>환불</span>
         </a>
@@ -275,4 +291,5 @@
 
     <script src="../js/onsite-booking-v3.js"></script>
 </body>
+
 </html>

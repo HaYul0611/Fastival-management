@@ -40,6 +40,15 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   // TOTP 로직
   let totpTimer = null;
+  /* ================================================================
+     TOTP 로직 (보안 QR 코드 생성)
+     ================================================================ */
+
+  /**
+   * @description HMAC-SHA1 알고리즘을 사용하여 동적 TOTP 코드를 생성합니다.
+   * @param {string} hexSecret - 16진수 시크릿 키
+   * @returns {Promise<string>} 생성된 6자리 TOTP 코드
+   */
   async function generateTotpCode(hexSecret) {
     if (!hexSecret) hexSecret = 'dummysecret12345';
     let keyBytes;
@@ -67,6 +76,14 @@ document.addEventListener('DOMContentLoaded', async () => {
     return (binary % 1000000).toString().padStart(6, '0');
   }
 
+  /* ================================================================
+     모달 핸들러 (Modal Handlers)
+     ================================================================ */
+
+  /**
+   * @description 특정 주문의 QR 코드 수령 모달을 띄우고 실시간 TOTP QR 코드를 렌더링합니다.
+   * @param {string} orderNo - 주문 번호
+   */
   window.openQrModal = function (orderNo) {
     const order = window.currentOrders.find(o => o.order_number === orderNo);
     let secret = order?.totp_secret || 'dummysecret12345';
@@ -223,6 +240,10 @@ document.addEventListener('DOMContentLoaded', async () => {
   };
 
   // 상세 모달 열기
+  /**
+   * @description 특정 주문의 상세 내역 모달을 열어 구매 상품 및 영수증 정보를 표시합니다.
+   * @param {string} orderNo - 주문 번호
+   */
   window.openDetailModal = async function (orderNo) {
     const order = window.currentOrders.find(o => o.order_number === orderNo);
     if (!order) return;
@@ -233,13 +254,13 @@ document.addEventListener('DOMContentLoaded', async () => {
       const isFood = item.shop_products && item.shop_products.type === 'FOOD';
       const hasImage = !!(item.shop_products && item.shop_products.thumbnail_image_url);
       const imageUrl = hasImage ? item.shop_products.thumbnail_image_url : '';
-      
+
       const svgFood = `<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#9ca3af" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 2v7c0 1.1.9 2 2 2h4a2 2 0 0 0 2-2V2"></path><path d="M7 2v20"></path><path d="M21 15V2v0a5 5 0 0 0-5 5v6c0 1.1.9 2 2 2h3Zm0 0v7"></path></svg>`;
       const svgGoods = `<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#9ca3af" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"></path><line x1="3" y1="6" x2="21" y2="6"></line><path d="M16 10a4 4 0 0 1-8 0"></path></svg>`;
 
       return `
       <div style="display:flex; gap:12px; padding: 12px 0; border-bottom:1px solid var(--g100);">
-        ${hasImage 
+        ${hasImage
           ? `<div style="width:60px; height:60px; border-radius:8px; background: url('${imageUrl}') center/cover no-repeat; flex-shrink:0;"></div>`
           : `<div style="width:60px; height:60px; border-radius:8px; background:var(--g100); display:flex; align-items:center; justify-content:center; flex-shrink:0;">${isFood ? svgFood : svgGoods}</div>`
         }
@@ -341,6 +362,18 @@ document.addEventListener('DOMContentLoaded', async () => {
   fetchOrders();
 });
 
+/* ================================================================
+   FESTIO SHOP — orders.js
+   주문 내역 조회 · QR 생성(TOTP) · 주문 상세 · 리뷰 작성
+   ================================================================ */
+
+/* ── 상태 및 전역 변수 ────────────────────────────────────────────── */
+
+/**
+ * @description 주문 객체 데이터를 기반으로 화면에 표시할 주문 카드 HTML 문자열을 생성합니다.
+ * @param {Object} order - 주문 데이터 객체
+ * @returns {string} 주문 카드 HTML
+ */
 function renderOrderCard(order) {
   const isPickup = order.delivery_type === 'PICKUP';
   let steps = '';
@@ -409,7 +442,7 @@ function renderOrderCard(order) {
 
     return `
     <div class="order-item">
-      ${hasImage 
+      ${hasImage
         ? `<div class="oi-img" style="background: url('${imageUrl}') center/cover no-repeat;"></div>`
         : `<div class="oi-img" style="background:var(--g100); display:flex; align-items:center; justify-content:center;">${isFood ? svgFood : svgGoods}</div>`
       }
@@ -449,6 +482,14 @@ function renderOrderCard(order) {
 }
 
 // 주문 취소
+/* ================================================================
+   주문 취소 및 리뷰 작성 (Actions)
+   ================================================================ */
+
+/**
+ * @description 결제 완료된 주문을 취소 처리합니다.
+ * @param {string} orderNo - 취소할 주문 번호
+ */
 window.cancelOrder = function (orderNo) {
   if (confirm(orderNo + ' 주문을 취소하시겠습니까?')) {
     alert('주문이 취소되었습니다.');
@@ -460,6 +501,10 @@ window.cancelOrder = function (orderNo) {
 let reviewImages = [];
 let currentRating = 0;
 
+/**
+ * @description 수령 완료된 상품에 대해 리뷰를 작성하는 모달을 엽니다.
+ * @param {string} productId - 리뷰를 작성할 상품 ID
+ */
 window.openReviewModal = function (productId) {
   if (!productId || productId === 'undefined') {
     alert('상품 정보가 부족하여 리뷰를 작성할 수 없습니다.');
