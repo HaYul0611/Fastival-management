@@ -96,7 +96,11 @@ body.dark-theme .timer-container {
 }
 
 .timer-bar {
+<<<<<<< HEAD
     background: linear-gradient(90deg, #00d2ff, #8930F8);
+=======
+    background: #8930F8;
+>>>>>>> e8a1112b93310ad09f5e536736db1d35babdbbfa
     height: 100%;
     width: 100%;
     transition: width 1s linear;
@@ -358,9 +362,50 @@ body.dark-theme .totp-code {
     left: 0;
     right: 0;
     height: 4px;
+<<<<<<< HEAD
     background: rgba(0, 210, 255, 0.5);
     box-shadow: 0 0 10px rgba(0, 210, 255, 0.8);
     animation: scanLineAnim 2.5s linear infinite;
     pointer-events: none;
     z-index: 10;
+=======
+    background: rgba(137, 48, 248, 0.5);
+    box-shadow: 0 0 10px rgba(137, 48, 248, 0.8);
+    animation: scanLineAnim 2.5s linear infinite;
+    z-index: 10;
+}
+
+@keyframes gentleShake {
+
+    0%,
+    100% {
+        transform: translateX(0);
+    }
+
+    10% {
+        transform: translateX(-0.5px);
+    }
+
+    30% {
+        transform: translateX(0.8px);
+    }
+
+    50% {
+        transform: translateX(-0.8px);
+    }
+
+    70% {
+        transform: translateX(0.5px);
+    }
+
+    90% {
+        transform: translateX(-0.3px);
+    }
+}
+
+.qr-danger-text {
+    color: #ff4d4f !important;
+    display: inline-block !important;
+    animation: gentleShake 1.5s ease-in-out infinite !important;
+>>>>>>> e8a1112b93310ad09f5e536736db1d35babdbbfa
 }

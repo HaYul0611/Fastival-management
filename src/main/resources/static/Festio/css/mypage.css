@@ -1817,7 +1817,7 @@
   left: 0;
   right: 0;
   height: 2px;
-  background: linear-gradient(90deg, transparent, #6a4dff, transparent);
+  background: linear-gradient(90deg, transparent, #8930F8, transparent);
   animation: scanLine 2.2s ease-in-out infinite;
   opacity: 0.85;
 }
@@ -2247,7 +2247,7 @@
 .qr-modal-timer-bar-wrap {
   width: 100%;
   height: 6px;
-  background: linear-gradient(135deg, var(--color-primary), var(--color-accent));
+  background: linear-gradient(135deg, #00d2ff, #8930F8);
   border-radius: 6px;
   border: 1px solid rgba(0, 0, 0, 0.1);
   overflow: hidden;
@@ -2290,8 +2290,8 @@
   left: 0;
   right: 0;
   height: 4px;
-  background: rgba(0, 210, 255, 0.5);
-  box-shadow: 0 0 10px rgba(0, 210, 255, 0.8);
+  background: rgba(137, 48, 248, 0.5);
+  box-shadow: 0 0 10px rgba(137, 48, 248, 0.8);
   animation: scanLineAnim 2.5s linear infinite;
   pointer-events: none;
   z-index: 10;

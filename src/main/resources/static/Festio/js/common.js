@@ -366,6 +366,7 @@ const Modal = {
     el.classList.remove('active');
     this._stack = this._stack.filter(i => i !== id);
     if (!this._stack.length) document.body.style.overflow = '';
+    el.dispatchEvent(new CustomEvent('modalClose', { bubbles: true }));
   },
   closeAll() {
     this._stack.forEach(id => document.getElementById(id)?.classList.remove('active'));
@@ -559,7 +560,107 @@ document.addEventListener('DOMContentLoaded', () => {
       window.location.href = 'index.html';
     }
   });
+
+  initFestioNotifications();
 });
+
+/* ── FESTIO 알림 시스템 ─────────────────────────────────────── */
+function initFestioNotifications() {
+  const btnHeaderNotification = document.getElementById('btnHeaderNotification');
+  if (btnHeaderNotification) {
+    on(btnHeaderNotification, 'click', () => {
+      Modal.open('modal-festio-notifications');
+    });
+  }
+
+  const notiThemeToggle = document.getElementById('notiThemeToggle');
+  const notiModalSheet = document.querySelector('.noti-modal-sheet');
+  if (notiThemeToggle && notiModalSheet) {
+    notiThemeToggle.addEventListener('change', (e) => {
+      if (e.target.checked) {
+        notiModalSheet.classList.remove('light-mode');
+        notiModalSheet.classList.add('dark-mode');
+      } else {
+        notiModalSheet.classList.remove('dark-mode');
+        notiModalSheet.classList.add('light-mode');
+      }
+    });
+  }
+
+  const btnNotiReadAll = document.getElementById('btnNotiReadAll');
+  if (btnNotiReadAll) {
+    btnNotiReadAll.addEventListener('click', () => {
+      const listContainer = document.getElementById('festioNotiListContainer');
+      if (listContainer) {
+        listContainer.innerHTML = '<div style="padding: 24px; text-align: center; color: var(--g500);">새로운 알림이 없습니다.</div>';
+      }
+      const badge = document.getElementById('notificationBadge');
+      if (badge) {
+        badge.style.display = 'none';
+        badge.textContent = '0';
+      }
+      localStorage.removeItem('festioMockNotifications');
+      Toast.success('모든 알림을 읽음 처리했습니다.');
+      Modal.close('modal-festio-notifications');
+    });
+  }
+
+  if (Auth.isLoggedIn()) {
+    fetchFestioNotifications();
+    setInterval(fetchFestioNotifications, 10000);
+  }
+}
+
+function fetchFestioNotifications() {
+  const listContainer = document.getElementById('festioNotiListContainer');
+  const badge = document.getElementById('notificationBadge');
+  if (!listContainer || !badge) return;
+
+  // 실제로는 API 호출을 통해 알림 데이터를 가져옵니다.
+  // 여기서는 로컬 스토리지 또는 목업 데이터를 시뮬레이션합니다.
+  let notifs = JSON.parse(localStorage.getItem('festioMockNotifications') || '[]');
+
+  if (notifs.length === 0) {
+    // 테스트용 임시 알림 생성
+    notifs = [
+      { id: 1, type: 'WISH', title: '관심 행사', msg: '선택하신 행사가 찜 목록에 추가되었습니다.' },
+      { id: 2, type: 'PAID', title: '결제 완료', msg: '행사 티켓의 결제 및 예매가 성공적으로 완료되었습니다.' },
+      { id: 3, type: 'GRADE_UP', title: '등급 혜택', msg: '축하합니다! 멤버십 등급이 상승했습니다. 🎉' }
+    ];
+    localStorage.setItem('festioMockNotifications', JSON.stringify(notifs));
+  }
+
+  if (notifs.length > 0) {
+    badge.style.display = 'block';
+    badge.textContent = notifs.length;
+
+    listContainer.innerHTML = notifs.map(n => {
+      let iconSvg = '';
+      if (n.type === 'WISH') iconSvg = '<svg viewBox="0 0 24 24" fill="var(--blue)" style="width:20px;height:20px;"><path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/></svg>';
+      else if (n.type === 'PAID') iconSvg = '<svg viewBox="0 0 24 24" fill="none" stroke="var(--blue)" stroke-width="2" style="width:20px;height:20px;"><rect x="2" y="5" width="20" height="14" rx="2" ry="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg>';
+      else if (n.type === 'GRADE_UP') iconSvg = '<span style="font-size:18px;">🎉</span>';
+      else if (n.type === 'QNA_ANSWERED') iconSvg = '<svg viewBox="0 0 24 24" fill="none" stroke="var(--blue)" stroke-width="2" style="width:20px;height:20px;"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2v10z"/></svg>';
+      else if (n.type === 'CHECK_IN') iconSvg = '<svg viewBox="0 0 24 24" fill="none" stroke="var(--blue)" stroke-width="2" style="width:20px;height:20px;"><path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>';
+      else iconSvg = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:20px;height:20px;"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>';
+
+      return `
+        <div class="noti-item" style="display:flex; gap:12px; padding:16px; border-bottom:1px solid var(--border-color); align-items:flex-start;">
+          <div class="noti-icon-wrap" style="flex-shrink:0; width:36px; height:36px; border-radius:50%; background:var(--bg-secondary); display:flex; align-items:center; justify-content:center;">
+            ${iconSvg}
+          </div>
+          <div class="noti-content">
+            <strong style="display:block; font-size:14px; margin-bottom:4px; color:var(--text-primary);">${n.title}</strong>
+            <p style="margin:0; font-size:13px; color:var(--text-secondary); line-height:1.4;">${n.msg}</p>
+          </div>
+        </div>
+      `;
+    }).join('');
+  } else {
+    badge.style.display = 'none';
+    badge.textContent = '0';
+    listContainer.innerHTML = '<div style="padding: 24px; text-align: center; color: var(--text-secondary);">새로운 알림이 없습니다.</div>';
+  }
+}
 
 /* ── 전역 노출 ──────────────────────────────────────────────── */
 window.$ = $; window.$$ = $$; window.on = on; window.off = off;

@@ -1,4 +1,8 @@
+<<<<<<< HEAD
 import { useState, useMemo, useEffect } from 'react';
+=======
+import { useState, useMemo } from 'react';
+>>>>>>> e8a1112b93310ad09f5e536736db1d35babdbbfa
 import { motion } from 'motion/react';
 
 interface SeatSection {
@@ -101,11 +105,19 @@ export function ConcertHallSeatingMap() {
         <p className="text-sm md:text-base text-gray-600">구역을 클릭하여 선택하세요</p>
       </div>
 
+<<<<<<< HEAD
       <div className="relative bg-white rounded-2xl shadow-xl px-1 py-4 md:px-2 md:py-6 w-full max-w-5xl flex justify-center">
         <svg
           viewBox="0 0 800 660"
           className="w-full h-auto"
           style={{ maxHeight: '75vh' }}
+=======
+      <div className="relative bg-white rounded-2xl shadow-2xl p-8 w-full max-w-7xl flex justify-center">
+        <svg
+          viewBox="0 0 800 660"
+          className="w-full h-auto"
+          style={{ minHeight: '600px', maxHeight: '80vh' }}
+>>>>>>> e8a1112b93310ad09f5e536736db1d35babdbbfa
         >
           <defs>
             {/* 그림자 필터 */}
@@ -245,6 +257,7 @@ function DetailedSeatGrid({ section, onClose }: { section: SeatSection, onClose:
   // "100석" 등에서 숫자만 추출
   const numSeats = parseInt(section.capacity?.replace(/[^0-9]/g, '') || '0', 10);
 
+<<<<<<< HEAD
   // 서버에서 실제 예매된 좌석 데이터를 가져옵니다.
   const [reservedSeats, setReservedSeats] = useState<Set<number>>(new Set());
 
@@ -274,6 +287,16 @@ function DetailedSeatGrid({ section, onClose }: { section: SeatSection, onClose:
         console.error("Failed to fetch real seat data:", err);
       });
   }, [section.name]);
+=======
+  // 목업용 예매 완료 좌석 (고정된 난수로 한 번만 생성되도록 useMemo 사용)
+  const reservedSeats = useMemo(() => {
+    const reserved = new Set<number>();
+    for (let i = 1; i <= numSeats; i++) {
+      if (Math.random() < 0.1) reserved.add(i); // 10% 확률로 예매 완료
+    }
+    return reserved;
+  }, [numSeats]);
+>>>>>>> e8a1112b93310ad09f5e536736db1d35babdbbfa
 
   const toggleSeat = (seat: number) => {
     setSelectedSeats(prev => 

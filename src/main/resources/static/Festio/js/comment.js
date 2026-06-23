@@ -117,10 +117,15 @@ window.initCommentUI = function () {
     }
   } else {
     const myGender = localStorage.getItem('userGender') || 'U';
+    const savedAvatar = localStorage.getItem('festio_avatar');
     if (myProfileAvatarWrap) {
       myProfileAvatarWrap.style.width = '40px';
       myProfileAvatarWrap.style.height = '40px';
-      myProfileAvatarWrap.innerHTML = getAvatarSVG(myGender);
+      if (savedAvatar) {
+        myProfileAvatarWrap.innerHTML = `<img src="${savedAvatar}" style="width:100%; height:100%; object-fit:cover; border-radius:50%;">`;
+      } else {
+        myProfileAvatarWrap.innerHTML = getAvatarSVG(myGender);
+      }
     }
   }
 
@@ -378,6 +383,27 @@ window.initCommentUI = function () {
     const div = document.createElement('div');
     div.className = 'comment-item';
     div.dataset.id = comment.id;
+
+    const currentUser = window.FS && window.FS.Session ? window.FS.Session.get() : null;
+    const isMyComment = currentUser && currentUser.id === comment.user_id;
+    let avatarHtml = '';
+
+    if (isMyComment) {
+      const savedAvatar = localStorage.getItem('festio_avatar');
+      const myGender = localStorage.getItem('userGender') || 'U';
+      if (savedAvatar) {
+        avatarHtml = `<img src="${savedAvatar}" style="width:100%; height:100%; object-fit:cover; border-radius:50%;">`;
+      } else {
+        avatarHtml = getAvatarSVG(myGender);
+      }
+    } else {
+      const authorGender = comment.author_gender || 'U';
+      if (comment.author_avatar) {
+        avatarHtml = `<img src="${comment.author_avatar}" style="width:100%; height:100%; object-fit:cover; border-radius:50%;">`;
+      } else {
+        avatarHtml = getAvatarSVG(authorGender);
+      }
+    }
 
     // 대댓글 스타일 처리
     if (isReply) {

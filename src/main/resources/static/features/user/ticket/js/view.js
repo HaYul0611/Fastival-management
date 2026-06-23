@@ -72,6 +72,15 @@ async function refreshTotp() {
             colorLight: "#ffffff",
             correctLevel: QRCode.CorrectLevel.H
         });
+<<<<<<< HEAD
+=======
+
+        setTimeout(() => {
+            const qrEls = qrContainer.querySelectorAll('canvas, img');
+            qrEls.forEach(el => el.removeAttribute('title'));
+            qrContainer.removeAttribute('title');
+        }, 50);
+>>>>>>> e8a1112b93310ad09f5e536736db1d35babdbbfa
     } catch (e) {
         console.error(e);
     }
@@ -83,9 +92,28 @@ function updateTimer() {
 
     const m = Math.floor(remaining / 60);
     const s = remaining % 60;
+<<<<<<< HEAD
     document.getElementById('timer-sec').innerText = `0${m}:${s.toString().padStart(2, '0')}`;
     const percentage = (remaining / 180) * 100;
     document.getElementById('timer-bar').style.width = percentage + '%';
+=======
+    const timerSecEl = document.getElementById('timer-sec');
+    const timerBarEl = document.getElementById('timer-bar');
+
+    timerSecEl.innerText = `0${m}:${s.toString().padStart(2, '0')}`;
+    const percentage = (remaining / 180) * 100;
+    timerBarEl.style.width = percentage + '%';
+
+    if (remaining < 60) {
+        timerSecEl.classList.add('qr-danger-text');
+        timerSecEl.style.color = '#ff4d4f';
+        timerBarEl.style.background = '#ff4d4f';
+    } else {
+        timerSecEl.classList.remove('qr-danger-text');
+        timerSecEl.style.color = '#2D1A54';
+        timerBarEl.style.background = 'linear-gradient(90deg, #00d2ff, #8930F8)';
+    }
+>>>>>>> e8a1112b93310ad09f5e536736db1d35babdbbfa
 
     if (remaining === 180 || remaining === 179 && currentSeconds === 1) { // Redraw when window resets
         refreshTotp();

@@ -40,6 +40,7 @@ window.goToTicketingFromReact = function (zoneName, seatsArray) {
     rateId: defaultRateId
   }));
 
+<<<<<<< HEAD
   if (window.opener && !window.opener.closed) {
     window.opener.postMessage({ type: 'SEATS_SELECTED', seats: pendingSeats }, '*');
     window.close();
@@ -47,6 +48,10 @@ window.goToTicketingFromReact = function (zoneName, seatsArray) {
     sessionStorage.setItem('pendingTicketingSeats', JSON.stringify(pendingSeats));
     window.location.href = '/features/payment/staff/ticket-desk.html';
   }
+=======
+  sessionStorage.setItem('pendingTicketingSeats', JSON.stringify(pendingSeats));
+  window.location.href = '/features/payment/staff/ticket-desk.html';
+>>>>>>> e8a1112b93310ad09f5e536736db1d35babdbbfa
 };
 
 // Apply theme from localStorage or default to light-theme
@@ -416,9 +421,24 @@ function renderLoginScreen() {
           </button>
         </div>
         <div class="login-helper-text">
+<<<<<<< HEAD
           <p>* 로그인은 supabase에서 app_user table 계정으로 로그인이 가능합니다.</p>
         </div>
       </form>
+=======
+          <p>* 시스템 액세스 인증은 임시 계정으로 로그인이 가능합니다.</p>
+          <p>* 로그인은 supabase에서 app_user table 계정으로 로그인이 가능합니다.</p>
+        </div>
+      </form>
+
+      <div class="temp-accounts-box">
+        <h4>임시 생성된 계정 목록 (테스트용)</h4>
+        <ul id="temp-accounts-list"></ul>
+        <button id="btn-gen-temp-acc" class="btn btn-rigid btn-blue" style="width:100%; margin-top:10px; padding: 12px 15px; font-size: 14px;">
+          + 테스트용 신규 임시 계정 즉시 발급
+        </button>
+      </div>
+>>>>>>> e8a1112b93310ad09f5e536736db1d35babdbbfa
     </div>
   `;
 
@@ -427,6 +447,12 @@ function renderLoginScreen() {
   // Theme Toggle logic
   const themeSwitch = document.getElementById("theme-toggle-switch");
 
+<<<<<<< HEAD
+=======
+  // Theme Toggle logic
+  const themeSwitch = document.getElementById("theme-toggle-switch");
+
+>>>>>>> e8a1112b93310ad09f5e536736db1d35babdbbfa
   function updateThemeSwitch() {
     if (document.body.classList.contains("light-theme")) {
       if (themeSwitch) themeSwitch.checked = true;
@@ -450,12 +476,23 @@ function renderLoginScreen() {
     };
   }
 
+<<<<<<< HEAD
   document.getElementById("login-form").onsubmit = async (e) => {
+=======
+  document.getElementById("login-form").onsubmit = (e) => {
+>>>>>>> e8a1112b93310ad09f5e536736db1d35babdbbfa
     e.preventDefault();
     const id = document.getElementById("login-id").value.trim();
     const pw = document.getElementById("login-pw").value.trim();
 
+<<<<<<< HEAD
     if (!id || !pw) {
+=======
+    const res = login(id, pw);
+    if (res.success) {
+      checkAuthSession();
+    } else {
+>>>>>>> e8a1112b93310ad09f5e536736db1d35babdbbfa
       const errorBox = document.getElementById("login-error-alert");
       errorBox.innerText = "이메일과 비밀번호를 모두 입력해주세요.";
       errorBox.style.display = "block";
@@ -507,6 +544,53 @@ function renderLoginScreen() {
         pwInput.type = "password";
         eyeOn.style.display = "block";
         eyeOff.style.display = "none";
+<<<<<<< HEAD
+=======
+      }
+    };
+  }
+
+  const secondaryLoginBtn = document.getElementById("btn-secondary-login");
+  if (secondaryLoginBtn) {
+    secondaryLoginBtn.onclick = async (e) => {
+      e.preventDefault();
+      const id = document.getElementById("login-id").value.trim();
+      const pw = document.getElementById("login-pw").value.trim();
+
+      if (!id || !pw) {
+        const errorBox = document.getElementById("login-error-alert");
+        errorBox.innerText = "이메일과 비밀번호를 모두 입력해주세요.";
+        errorBox.style.display = "block";
+        return;
+      }
+
+      try {
+        const response = await fetch('/api/payment/staff/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email: id, password: pw })
+        });
+
+        const res = await response.json();
+        if (response.ok && res.success) {
+          // sessionStorage 기반 기존 로직 호환 (auth.js의 구조)
+          sessionStorage.setItem("STAFF_CURRENT_USER", JSON.stringify(res.user));
+          sessionStorage.setItem("festio_staff_token", res.token);
+
+          import('./store.js').then(module => {
+            module.addNotification("AUTH", `[실제 DB 로그인 성공] ${res.user.name} 계정`);
+          });
+          checkAuthSession();
+        } else {
+          const errorBox = document.getElementById("login-error-alert");
+          errorBox.innerText = res.error || "이메일 또는 비밀번호가 올바르지 않습니다.";
+          errorBox.style.display = "block";
+        }
+      } catch (err) {
+        const errorBox = document.getElementById("login-error-alert");
+        errorBox.innerText = "서버 통신 중 오류가 발생했습니다.";
+        errorBox.style.display = "block";
+>>>>>>> e8a1112b93310ad09f5e536736db1d35babdbbfa
       }
     };
   }
@@ -1212,7 +1296,11 @@ async function renderTicketingScreen() {
 
             <div style="flex-shrink: 0;">
               <div class="price-display-box-rigid" style="margin-top: 20px; background: rgba(16, 185, 129, 0.1); border: 2px solid var(--color-green); padding: 20px 25px; display: flex; justify-content: space-between; align-items: center; border-radius: 6px;">
+<<<<<<< HEAD
                 <span style="color: #000; font-weight: 800; font-size: 18px;">최종 합산 결제 금액</span>
+=======
+                <span style="color: #fff; font-weight: 800; font-size: 18px;">최종 합산 결제 금액</span>
+>>>>>>> e8a1112b93310ad09f5e536736db1d35babdbbfa
                 <strong id="ticket-final-price-lbl" style="color: var(--color-green); font-size: 32px; font-family: var(--font-mono);">0원</strong>
               </div>
 
@@ -1374,7 +1462,11 @@ async function renderTicketingScreen() {
           const ticketUrl = `${window.location.origin}/features/user/ticket/view.html?orderId=${result.orderId}&secret=${secretStr}`;
           const qrImgSrc = `https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(ticketUrl)}`;
 
+<<<<<<< HEAD
           const printWindow = window.open('', '_blank', 'width=450,height=800');
+=======
+          const printWindow = window.open('', '_blank', 'width=400,height=700');
+>>>>>>> e8a1112b93310ad09f5e536736db1d35babdbbfa
           const receiptHtml = `
             <html>
             <head>

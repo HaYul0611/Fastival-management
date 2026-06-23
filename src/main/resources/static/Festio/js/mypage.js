@@ -229,6 +229,21 @@ function fallbackLocalUserInfo() {
 /* ═══════════════════════════════════════════════════════════
    2. 프로필 & 등급 동적 바인딩
    ═══════════════════════════════════════════════════════════ */
+function getGradeSvgIcon(grade) {
+  const g = (grade || 'BRONZE').toUpperCase();
+  if (['VIP', 'SVIP', 'SSVIP'].includes(g)) {
+    return `<svg class="icon mp-icon-sm" viewBox="0 0 24 24" fill="currentColor" stroke="none"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 4-6 8-6s8 2 8 6"/></svg>`;
+  }
+  switch (g) {
+    case 'BRONZE': return `<svg class="icon mp-icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>`;
+    case 'SILVER': return `<svg class="icon mp-icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 15a5 5 0 1 0 0-10 5 5 0 0 0 0 10z"/><path d="M8.21 13.89L7 23l5-3 5 3-1.21-9.11"/></svg>`;
+    case 'GOLD': return `<svg class="icon mp-icon-sm" viewBox="0 0 24 24" fill="currentColor" stroke="none"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>`;
+    case 'EMERALD': return `<svg class="icon mp-icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 22 8.5 22 15.5 12 22 2 15.5 2 8.5 12 2"/></svg>`;
+    case 'DIAMOND': return `<svg class="icon mp-icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 2 7 12 22 22 7 12 2"/></svg>`;
+    default: return `<svg class="icon mp-icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>`;
+  }
+}
+
 function renderProfile() {
   if (!_member) return;
 
@@ -252,7 +267,6 @@ function renderProfile() {
   }
 
   // 등급 배지 설정
-  // 등급 배지 및 프로그레스 바 로직 (SHOP 기준 통합)
   const gradeBadge = document.getElementById('profileGrade');
   const nextText = document.getElementById('gradeNextText');
   const gradeBar = document.getElementById('gradeBar');
@@ -260,7 +274,7 @@ function renderProfile() {
   const totalSpent = _member.totalPurchaseAmount || 0;
   let nextTier = 'SILVER', nextGoal = 150000;
 
-  if (['VIP', 'SVIP', 'VVIP'].includes(_member.grade)) {
+  if (['VIP', 'SVIP', 'SSVIP'].includes(_member.grade.toUpperCase())) {
     nextTier = 'SPECIAL';
   } else {
     if (totalSpent >= 10000000) { nextTier = 'MAX'; nextGoal = totalSpent; }
@@ -271,15 +285,50 @@ function renderProfile() {
   }
 
   if (gradeBadge) {
-    // 뱃지 클래스를 소문자 통일 (CSS에서 대응 필요)
     gradeBadge.className = `grade-badge badge-${_member.grade.toLowerCase()}`;
     gradeBadge.innerHTML = `
-      <svg class="icon mp-icon-sm" viewBox="0 0 24 24" fill="currentColor" stroke="none">
-        <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
-      </svg>
+      ${getGradeSvgIcon(_member.grade)}
       ${_member.grade}
     `;
   }
+
+  // 등급 모달 업데이트 로직
+  const gradeModalIconWrap = document.getElementById('gradeModalIconWrap');
+  const gradeModalTitle = document.getElementById('gradeModalTitle');
+  const gradeModalRemain = document.getElementById('gradeModalRemain');
+  const gradeModalTotal = document.getElementById('gradeModalTotal');
+  const gradeModalBar = document.getElementById('gradeModalBar');
+  const gradeModalCurrentLabel = document.getElementById('gradeModalCurrentLabel');
+  const gradeModalNextLabel = document.getElementById('gradeModalNextLabel');
+
+  if (gradeModalIconWrap) {
+    gradeModalIconWrap.innerHTML = getGradeSvgIcon(_member.grade);
+    // Remove "icon mp-icon-sm" class and set dimensions for the modal
+    const svg = gradeModalIconWrap.querySelector('svg');
+    if (svg) {
+      svg.removeAttribute('class');
+      svg.setAttribute('width', '28');
+      svg.setAttribute('height', '28');
+
+      let iconColor = '#cd7f32'; // BRONZE
+      const g = (_member.grade || 'BRONZE').toUpperCase();
+      if (g === 'SILVER') iconColor = '#94a3b8';
+      else if (g === 'GOLD') iconColor = '#fbbf24';
+      else if (g === 'EMERALD') iconColor = '#10b981';
+      else if (g === 'DIAMOND') iconColor = '#3b82f6';
+      else if (['VIP', 'SVIP', 'SSVIP'].includes(g)) iconColor = '#8b5cf6';
+
+      if (svg.getAttribute('fill') === 'currentColor') {
+        svg.setAttribute('fill', iconColor);
+      } else {
+        svg.setAttribute('stroke', iconColor);
+      }
+    }
+  }
+  if (gradeModalTitle) gradeModalTitle.textContent = `현재 등급: ${_member.grade}`;
+  if (gradeModalTotal) gradeModalTotal.textContent = `총 사용: ₩${totalSpent.toLocaleString()}`;
+  if (gradeModalCurrentLabel) gradeModalCurrentLabel.textContent = _member.grade;
+  if (gradeModalNextLabel) gradeModalNextLabel.textContent = nextTier === 'SPECIAL' || nextTier === 'MAX' ? '-' : nextTier;
 
   if (nextTier === 'SPECIAL') {
     if (nextText) nextText.textContent = '특수 등급 계정입니다.';
@@ -290,9 +339,14 @@ function renderProfile() {
   } else {
     let remain = nextGoal - totalSpent;
     if (nextText) nextText.textContent = `${nextTier} 등급까지 ₩${remain.toLocaleString()} 남음`;
+    if (gradeModalRemain) gradeModalRemain.textContent = `${nextTier} 등급까지 ₩${remain.toLocaleString()} 남음`;
+
+    let percent = Math.min((totalSpent / nextGoal) * 100, 100);
     if (gradeBar) {
-      let percent = Math.min((totalSpent / nextGoal) * 100, 100);
       gradeBar.style.width = percent + '%';
+    }
+    if (gradeModalBar) {
+      gradeModalBar.style.width = percent + '%';
     }
   }
 
@@ -737,6 +791,15 @@ async function generateHeroQR(token) {
     colorLight: "#ffffff",
     correctLevel: QRCode.CorrectLevel.H
   });
+<<<<<<< HEAD
+=======
+
+  setTimeout(() => {
+    const qrEls = container.querySelectorAll('canvas, img');
+    qrEls.forEach(el => el.removeAttribute('title'));
+    container.removeAttribute('title');
+  }, 50);
+>>>>>>> e8a1112b93310ad09f5e536736db1d35babdbbfa
 }
 
 async function generateModalQR(token, type = 'TICKET') {
@@ -766,6 +829,15 @@ async function generateModalQR(token, type = 'TICKET') {
     colorLight: "#ffffff",
     correctLevel: QRCode.CorrectLevel.H
   });
+<<<<<<< HEAD
+=======
+
+  setTimeout(() => {
+    const qrEls = container.querySelectorAll('canvas, img');
+    qrEls.forEach(el => el.removeAttribute('title'));
+    container.removeAttribute('title');
+  }, 50);
+>>>>>>> e8a1112b93310ad09f5e536736db1d35babdbbfa
 }
 
 /* 히어로 QR + 모달 QR 피해 토큰 공유 */
@@ -2726,6 +2798,7 @@ async function openQrModalView(token, type = 'TICKET') {
                 <div style="font-size: 0.8rem; color: #888; margin-top: 2px;" id="dynamicQrPurchaseDate">${dateStr} 구매</div>
             </div>
             
+<<<<<<< HEAD
             <div style="width: 100%; display: flex; align-items: center; justify-content: center; gap: 8px; max-width: 180px; margin: 4px auto 0;">
               <div style="flex: 1; height: 6px; background: #EFEFEF; border-radius: 6px; overflow: hidden; position: relative;">
                 <div id="dynamicQrTimerBar" style="position: absolute; left: 0; top: 0; height: 100%; width: 100%; background: linear-gradient(90deg, #00d2ff, #8930F8); transform-origin: left; transition: transform 1s linear, background 0.3s ease;"></div>
@@ -2734,6 +2807,18 @@ async function openQrModalView(token, type = 'TICKET') {
               <button id="dynamicQrRefresh" style="background: none; border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; padding: 4px; color: #8930F8; transition: transform 0.2s;" title="새로고침">
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21.5 2v6h-6M2.5 22v-6h6M2 11.5a10 10 0 0 1 18.8-4.3M22 12.5a10 10 0 0 1-18.8 4.2"/></svg>
               </button>
+=======
+            <div style="width: 100%; display: flex; flex-direction: column; align-items: center; gap: 8px; max-width: 180px; margin: 4px auto 0;">
+              <div style="width: 100%; display: flex; align-items: center; justify-content: space-between; gap: 8px;">
+                <div style="flex: 1; height: 6px; background: #EFEFEF; border-radius: 6px; overflow: hidden; position: relative;">
+                  <div id="dynamicQrTimerBar" style="position: absolute; left: 0; top: 0; height: 100%; width: 100%; background: #8930F8; transform-origin: left; transition: transform 1s linear, background 0.3s ease;"></div>
+                </div>
+                <button id="dynamicQrRefresh" style="background: none; border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; padding: 4px; color: #8930F8; transition: transform 0.2s; flex-shrink: 0;" title="새로고침">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21.5 2v6h-6M2.5 22v-6h6M2 11.5a10 10 0 0 1 18.8-4.3M22 12.5a10 10 0 0 1-18.8 4.2"/></svg>
+                </button>
+              </div>
+              <span id="dynamicQrTimerText" style="font-size: 0.9rem; font-weight: 800; color: #2D1A54; display: block; text-align: center;">03:00</span>
+>>>>>>> e8a1112b93310ad09f5e536736db1d35babdbbfa
             </div>
 
             <div class="qr-accordion">
@@ -2902,6 +2987,7 @@ function generateDynamicQR(containerId, token, size, type = 'TICKET') {
   });
 
   setTimeout(() => {
+<<<<<<< HEAD
     const qrEl = qrContainer.querySelector('canvas') || qrContainer.querySelector('img');
     if (qrEl) {
       qrEl.style.width = '100%';
@@ -2912,6 +2998,21 @@ function generateDynamicQR(containerId, token, size, type = 'TICKET') {
         qrEl.style.transform = 'translateY(9px) rotate(45deg) scale(0.5)';
       }
     }
+=======
+    const qrEls = qrContainer.querySelectorAll('canvas, img');
+    qrEls.forEach(el => {
+      el.style.width = '100%';
+      el.style.height = '100%';
+      el.style.objectFit = 'cover';
+      el.style.imageRendering = 'pixelated';
+      el.removeAttribute('title');
+      if (isHeart) {
+        el.style.transform = 'translateY(9px) rotate(45deg) scale(0.5)';
+      }
+    });
+    qrContainer.removeAttribute('title');
+    container.removeAttribute('title');
+>>>>>>> e8a1112b93310ad09f5e536736db1d35babdbbfa
   }, 10);
 
   if (isHeart) {
@@ -3005,6 +3106,7 @@ function startQRRefreshCycle() {
     _qrCountdown = remaining;
     updateQRTimerDisplay(remaining);
 
+<<<<<<< HEAD
     const bg = remaining < 10 ? 'linear-gradient(90deg, #ff4d4f, #ff7875)' : 'linear-gradient(90deg, #00d2ff, #8930F8)';
     const pct = (remaining / 180) * 100;
 
@@ -3012,6 +3114,15 @@ function startQRRefreshCycle() {
     bars.forEach(bar => { 
       if (bar) {
         bar.style.background = bg; 
+=======
+    const bg = remaining < 60 ? '#ff4d4f' : 'linear-gradient(90deg, #00d2ff, #8930F8)';
+    const pct = (remaining / 180) * 100;
+
+    const bars = [document.getElementById('dynamicQrTimerBar'), document.getElementById('heroQrTimerBar')];
+    bars.forEach(bar => {
+      if (bar) {
+        bar.style.background = bg;
+>>>>>>> e8a1112b93310ad09f5e536736db1d35babdbbfa
         bar.style.width = `${pct}%`;
       }
     });

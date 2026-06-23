@@ -7,6 +7,11 @@ const SHOP_SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBh
 window.ShopDB = (function () {
   let _client = null;
 
+  /**
+   * @description FESTIO SHOP 전용 Supabase 클라이언트 객체를 반환합니다.
+   * 싱글톤 패턴을 사용하여 한 번만 초기화됩니다.
+   * @returns {Object} Supabase client
+   */
   function getClient() {
     if (!_client && window.supabase) {
       _client = window.supabase.createClient(SHOP_SUPABASE_URL, SHOP_SUPABASE_KEY);
@@ -74,7 +79,7 @@ window.ShopDB = (function () {
       const sb = getClient();
       if (!sb) return [];
       const { data, error } = await sb.from('shop_wallet_history').select('*').eq('user_email', email).order('created_at', { ascending: false });
-      if (error) { 
+      if (error) {
         // 테이블이 없을 경우 로컬 스토리지 폴백
         return JSON.parse(localStorage.getItem('shopWalletHistory_' + email) || '[]');
       }

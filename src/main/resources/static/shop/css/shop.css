@@ -1,4 +1,4 @@
-/* ================================================================
+﻿/* ================================================================
    FESTIO SHOP — shop.css
    굿즈·F&B 판매 사이트인 메인 페이지 디자인
    ================================================================ */
@@ -438,7 +438,11 @@
 .pcard-img {
   width: 100%;
   height: 100%;
+<<<<<<< HEAD
   object-fit: contain;
+=======
+  object-fit: cover;
+>>>>>>> e8a1112b93310ad09f5e536736db1d35babdbbfa
   background-color: var(--white);
   /* 이미지가 딱 맞지 않을 때를 대비해 흰색 배경 추가 */
   transition: transform .35s ease;
@@ -692,7 +696,11 @@
   }
 }
 
+<<<<<<< HEAD
 /* ���� ���ڵ� ��Ʈ (������ ����) */
+=======
+/* ���� ���ڵ� ��Ʈ (������ ����) */
+>>>>>>> e8a1112b93310ad09f5e536736db1d35babdbbfa
 .barcode-text {
     font-family: 'Consolas', 'Courier New', Courier, monospace !important;
     letter-spacing: 2px !important;
@@ -738,3 +746,110 @@
   border-color: var(--blue);
   outline: none;
 }
+<<<<<<< HEAD
+=======
+:root {
+  --blue: #1864f9;
+  --blue-light: #e6f0ff;
+  --g800: #222222;
+  --g900: #111111;
+}
+
+.custom-select-wrapper {
+  position: relative;
+  display: inline-block;
+  user-select: none;
+}
+.custom-select-trigger {
+  border-radius: 6px;
+  border: 1px solid var(--g300);
+  padding: 8px 32px 8px 12px;
+  font-size: 14px;
+  color: var(--g800);
+  cursor: pointer;
+  background-color: #fff;
+  transition: border-color 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-width: 130px;
+}
+.custom-select-trigger:after {
+  content: '';
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  border: 4px solid transparent;
+  border-top-color: var(--g600);
+}
+.custom-select-trigger.open {
+  border-color: var(--blue);
+}
+.custom-select-options {
+  position: absolute;
+  display: block;
+  top: calc(100% + 4px);
+  left: 0;
+  right: 0;
+  background: #fff;
+  border: 1px solid var(--g200);
+  border-radius: 6px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+  z-index: 100;
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transition: all 0.2s;
+  overflow: hidden;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.custom-select-wrapper.open .custom-select-options {
+  opacity: 1;
+  visibility: visible;
+  pointer-events: all;
+}
+.custom-option {
+  padding: 10px 12px;
+  font-size: 14px;
+  color: var(--g800);
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.custom-option:hover, .custom-option.selected {
+  background-color: var(--blue);
+  color: #fff;
+}
+
+#shopPaginationWrapper .page-btn {
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  border-radius: 6px !important;
+  font-weight: 500;
+  font-size: 14px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+  background-color: transparent;
+  border: 1px solid transparent;
+  color: var(--g800);
+}
+#shopPaginationWrapper .page-btn:hover:not(:disabled) {
+  background-color: var(--g100);
+  color: var(--g900);
+}
+#shopPaginationWrapper .page-btn.btn-primary {
+  background-color: var(--blue) !important;
+  color: #fff !important;
+  border-color: var(--blue) !important;
+  font-weight: 600;
+}
+#shopPaginationWrapper .page-btn:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+}
+>>>>>>> e8a1112b93310ad09f5e536736db1d35babdbbfa

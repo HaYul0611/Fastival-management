@@ -59,10 +59,27 @@
             <span id="user-display">이용자</span>
         </div>
 
-        <div class="timer-container">
-            <div class="timer-bar" id="timer-bar"></div>
+        <div
+            style="width: 100%; display: flex; flex-direction: column; align-items: center; gap: 8px; max-width: 180px; margin: 4px auto 0;">
+            <div style="width: 100%; display: flex; align-items: center; justify-content: space-between; gap: 8px;">
+                <div
+                    style="flex: 1; height: 6px; background: #EFEFEF; border-radius: 6px; overflow: hidden; position: relative;">
+                    <div id="timer-bar"
+                        style="position: absolute; left: 0; top: 0; height: 100%; width: 100%; background: linear-gradient(90deg, #00d2ff, #8930F8); transform-origin: left; transition: transform 1s linear, background 0.3s ease;">
+                    </div>
+                </div>
+                <button id="timer-refresh-btn" onclick="refreshTotp();"
+                    style="background: none; border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; padding: 4px; color: #8930F8; transition: transform 0.2s; flex-shrink: 0;"
+                    title="새로고침">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+                        stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M21.5 2v6h-6M2.5 22v-6h6M2 11.5a10 10 0 0 1 18.8-4.3M22 12.5a10 10 0 0 1-18.8 4.2" />
+                    </svg>
+                </button>
+            </div>
+            <span id="timer-sec"
+                style="font-size: 0.9rem; font-weight: 800; color: #2D1A54; display: block; text-align: center;">03:00</span>
         </div>
-        <div class="timer-text"><span id="timer-sec">03:00</span> 후 자동 갱신</div>
 
         <div class="warning">
             ※ 캡처된 화면은 사용할 수 없습니다.<br>
