@@ -40,8 +40,13 @@ window.goToTicketingFromReact = function (zoneName, seatsArray) {
     rateId: defaultRateId
   }));
 
-  sessionStorage.setItem('pendingTicketingSeats', JSON.stringify(pendingSeats));
-  window.location.href = '/features/payment/staff/ticket-desk.html';
+  if (window.opener && !window.opener.closed) {
+    window.opener.postMessage({ type: 'SEATS_SELECTED', seats: pendingSeats }, '*');
+    window.close();
+  } else {
+    sessionStorage.setItem('pendingTicketingSeats', JSON.stringify(pendingSeats));
+    window.location.href = '/features/payment/staff/ticket-desk.html';
+  }
 };
 
 // Apply theme from localStorage or default to light-theme
@@ -406,36 +411,18 @@ function renderLoginScreen() {
           </div>
         </div>
         <div style="display: flex; gap: 10px; margin-top: 15px;">
-          <button type="submit" class="btn btn-rigid btn-green" style="flex: 1; font-weight:bold;">
-            시스템 액세스 인증
-          </button>
-          <button type="button" class="btn btn-rigid btn-red" id="btn-secondary-login" style="flex: 1; font-weight:bold;">
+          <button type="submit" class="btn btn-rigid btn-green" id="btn-primary-login" style="flex: 1; font-weight:bold;">
             로그인
           </button>
         </div>
         <div class="login-helper-text">
-          <p>* 시스템 액세스 인증은 임시 계정으로 로그인이 가능합니다.</p>
           <p>* 로그인은 supabase에서 app_user table 계정으로 로그인이 가능합니다.</p>
         </div>
       </form>
-
-      <div class="temp-accounts-box">
-        <h4>임시 생성된 계정 목록 (테스트용)</h4>
-        <ul id="temp-accounts-list"></ul>
-        <button id="btn-gen-temp-acc" class="btn btn-rigid btn-blue" style="width:100%; margin-top:10px; padding: 12px 15px; font-size: 14px;">
-          + 테스트용 신규 임시 계정 즉시 발급
-        </button>
-      </div>
     </div>
   `;
 
-  // Render temporary list
-  renderTempAccountsInLogin();
-
-  document.getElementById("btn-gen-temp-acc").onclick = () => {
-    generateTemporaryAccount();
-    renderTempAccountsInLogin();
-  };
+  // Removed temporary list rendering logic
 
   // Theme Toggle logic
   const themeSwitch = document.getElementById("theme-toggle-switch");
@@ -463,17 +450,44 @@ function renderLoginScreen() {
     };
   }
 
-  document.getElementById("login-form").onsubmit = (e) => {
+  document.getElementById("login-form").onsubmit = async (e) => {
     e.preventDefault();
     const id = document.getElementById("login-id").value.trim();
     const pw = document.getElementById("login-pw").value.trim();
 
-    const res = login(id, pw);
-    if (res.success) {
-      checkAuthSession();
-    } else {
+    if (!id || !pw) {
       const errorBox = document.getElementById("login-error-alert");
-      errorBox.innerText = res.error;
+      errorBox.innerText = "이메일과 비밀번호를 모두 입력해주세요.";
+      errorBox.style.display = "block";
+      return;
+    }
+
+    try {
+      const response = await fetch('/api/payment/staff/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: id, password: pw })
+      });
+
+      const res = await response.json();
+      if (response.ok && res.success) {
+        // sessionStorage 기반 기존 로직 호환 (auth.js의 구조)
+        sessionStorage.setItem("STAFF_CURRENT_USER", JSON.stringify(res.user));
+        sessionStorage.setItem("festio_staff_token", res.token);
+
+        import('./store.js').then(module => {
+          module.addNotification("AUTH", `[실제 DB 로그인 성공] ${res.user.name} 계정`);
+        });
+        checkAuthSession();
+      } else {
+        const errorBox = document.getElementById("login-error-alert");
+        errorBox.innerText = res.error || "이메일 또는 비밀번호가 올바르지 않습니다.";
+        errorBox.style.display = "block";
+      }
+    } catch (err) {
+      console.error(err);
+      const errorBox = document.getElementById("login-error-alert");
+      errorBox.innerText = "서버와의 통신 오류가 발생했습니다.";
       errorBox.style.display = "block";
     }
   };
@@ -493,50 +507,6 @@ function renderLoginScreen() {
         pwInput.type = "password";
         eyeOn.style.display = "block";
         eyeOff.style.display = "none";
-      }
-    };
-  }
-
-  const secondaryLoginBtn = document.getElementById("btn-secondary-login");
-  if (secondaryLoginBtn) {
-    secondaryLoginBtn.onclick = async (e) => {
-      e.preventDefault();
-      const id = document.getElementById("login-id").value.trim();
-      const pw = document.getElementById("login-pw").value.trim();
-
-      if (!id || !pw) {
-        const errorBox = document.getElementById("login-error-alert");
-        errorBox.innerText = "이메일과 비밀번호를 모두 입력해주세요.";
-        errorBox.style.display = "block";
-        return;
-      }
-
-      try {
-        const response = await fetch('/api/payment/staff/login', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ email: id, password: pw })
-        });
-
-        const res = await response.json();
-        if (response.ok && res.success) {
-          // sessionStorage 기반 기존 로직 호환 (auth.js의 구조)
-          sessionStorage.setItem("STAFF_CURRENT_USER", JSON.stringify(res.user));
-          sessionStorage.setItem("festio_staff_token", res.token);
-
-          import('./store.js').then(module => {
-            module.addNotification("AUTH", `[실제 DB 로그인 성공] ${res.user.name} 계정`);
-          });
-          checkAuthSession();
-        } else {
-          const errorBox = document.getElementById("login-error-alert");
-          errorBox.innerText = res.error || "이메일 또는 비밀번호가 올바르지 않습니다.";
-          errorBox.style.display = "block";
-        }
-      } catch (err) {
-        const errorBox = document.getElementById("login-error-alert");
-        errorBox.innerText = "서버 통신 중 오류가 발생했습니다.";
-        errorBox.style.display = "block";
       }
     };
   }
@@ -572,7 +542,7 @@ async function renderDashboard() {
     const [fnbRes, goodsRes, seatsRes, scanLogsRes] = await Promise.all([
       fetch('/api/order/fnb'),
       fetch('/api/order/goods'),
-      fetch('/api/order/seats?zones=A,B,C'),
+      fetch('/api/order/seats'),
       fetch('/api/order/scan-logs')
     ]);
     if (fnbRes.ok) fnbOrders = await fnbRes.json();
@@ -645,7 +615,7 @@ async function renderDashboard() {
           </span>
           <span style="font-family: var(--font-mono); color: var(--color-green); font-size: 11px;">GATE SYNC: ON</span>
         </div>
-        <div class="panel-body-rigid" style="padding: 10px; max-height: 180px; overflow-y: auto;">
+        <div class="panel-body-rigid" style="padding: 10px; max-height: 350px; overflow-y: auto;">
           <table class="table-rigid" style="font-size: 11px;">
             <thead>
               <tr>
@@ -676,7 +646,7 @@ async function renderDashboard() {
           </span>
         </div>
         <div class="panel-body-rigid" style="padding: 0;">
-          <div class="telemetry-terminal" id="dash-telemetry-logs" style="height: 180px; max-height: 180px; overflow-y: auto;">
+          <div class="telemetry-terminal" id="dash-telemetry-logs" style="height: 350px; max-height: 350px; overflow-y: auto;">
             <!-- Telemetry logs are rendered here -->
           </div>
         </div>
@@ -1150,7 +1120,15 @@ async function renderTicketingScreen() {
   try {
     const festRes = await fetch('/api/festival');
     if (festRes.ok) {
-      festivals = await festRes.json();
+      const allFestivals = await festRes.json();
+      
+      // 관리자 승인이 완료되었고(APPROVED), 활성화(isActive=true)되어 있으며,
+      // 행사가 아직 종료되지 않은(UPCOMING 또는 ONGOING) 것만 필터링
+      festivals = allFestivals.filter(f => 
+        f.isActive === true && 
+        f.reviewStatus === 'APPROVED' && 
+        (f.operationalStatus === 'UPCOMING' || f.operationalStatus === 'ONGOING')
+      );
     }
   } catch (e) {
     console.error("Failed to fetch festivals", e);
@@ -1204,6 +1182,9 @@ async function renderTicketingScreen() {
               <select id="ticketing-festival-select" class="input-rigid" style="width: 100%; padding: 15px; font-size: 18px;">
                 ${festivals.map(f => `<option value="${f.id}" ${f.id === currentFestivalId ? 'selected' : ''}>${f.name} (${f.startDate} ~ ${f.endDate})</option>`).join('')}
               </select>
+              <button type="button" id="btn-open-seat-map" class="btn btn-rigid btn-blue" style="width: 100%; font-weight:bold; margin-top:10px; padding: 15px; font-size: 18px;">
+                좌석선택하기
+              </button>
             </div>
             
             <div class="form-group-rigid" style="display: flex; flex-direction: column; flex: 1; min-height: 250px; margin-bottom: 15px;">
@@ -1231,7 +1212,7 @@ async function renderTicketingScreen() {
 
             <div style="flex-shrink: 0;">
               <div class="price-display-box-rigid" style="margin-top: 20px; background: rgba(16, 185, 129, 0.1); border: 2px solid var(--color-green); padding: 20px 25px; display: flex; justify-content: space-between; align-items: center; border-radius: 6px;">
-                <span style="color: #fff; font-weight: 800; font-size: 18px;">최종 합산 결제 금액</span>
+                <span style="color: #000; font-weight: 800; font-size: 18px;">최종 합산 결제 금액</span>
                 <strong id="ticket-final-price-lbl" style="color: var(--color-green); font-size: 32px; font-family: var(--font-mono);">0원</strong>
               </div>
 
@@ -1332,6 +1313,18 @@ async function renderTicketingScreen() {
     updateSelectedSeatsUI();
   });
 
+  // Handle Open Seat Map Button
+  const _btnOpenMap = document.getElementById("btn-open-seat-map");
+  if (_btnOpenMap) {
+    _btnOpenMap.addEventListener("click", () => {
+      if (currentFestivalId) {
+        window.location.href = `seats.html?festivalId=${currentFestivalId}`;
+      } else {
+        alert("진행 행사를 먼저 선택해 주세요.");
+      }
+    });
+  }
+
   // Pay trigger
   document.getElementById("btn-request-ticket-pay").onclick = () => {
     const holder = "현장발권자";
@@ -1381,21 +1374,24 @@ async function renderTicketingScreen() {
           const ticketUrl = `${window.location.origin}/features/user/ticket/view.html?orderId=${result.orderId}&secret=${secretStr}`;
           const qrImgSrc = `https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(ticketUrl)}`;
 
-          const printWindow = window.open('', '_blank', 'width=400,height=700');
+          const printWindow = window.open('', '_blank', 'width=450,height=800');
           const receiptHtml = `
             <html>
             <head>
               <title>영수증 티켓 출력</title>
               <style>
-                body { font-family: 'Malgun Gothic', 'Courier New', monospace; width: 300px; margin: 0 auto; padding: 20px; text-align: center; color: black; background: white; }
+                body { font-family: 'Malgun Gothic', 'Courier New', monospace; width: 350px; margin: 0 auto; padding: 20px; text-align: center; color: black; background: white; display: flex; flex-direction: column; min-height: 90vh; }
                 .divider { border-bottom: 1px dashed black; margin: 15px 0; }
-                .title { font-size: 22px; font-weight: bold; margin-bottom: 5px; }
+                .title { font-size: 24px; font-weight: bold; margin-bottom: 5px; }
                 .qrcode { margin: 20px 0; }
-                .info { font-size: 14px; text-align: left; line-height: 1.6; }
-                .footer { font-size: 12px; margin-top: 20px; }
+                .info { font-size: 16px; text-align: left; line-height: 1.6; }
+                .footer { font-size: 14px; margin-top: 20px; flex-grow: 1; }
+                .print-btn-container { position: sticky; bottom: 0; padding-top: 20px; padding-bottom: 20px; background: white; margin-top: auto; }
+                .print-btn { width: 100%; padding: 15px; font-size: 20px; font-weight: bold; background-color: #10b981; color: white; border: none; border-radius: 8px; cursor: pointer; }
                 @media print {
                   @page { margin: 0; }
-                  body { width: 100%; margin: 0; padding: 0; }
+                  body { width: 100%; margin: 0; padding: 0; display: block; }
+                  .print-btn-container { display: none !important; }
                 }
               </style>
             </head>
@@ -1411,15 +1407,29 @@ async function renderTicketingScreen() {
               </div>
               <div class="divider"></div>
               <div class="qrcode">
-                <img src="${qrImgSrc}" width="160" height="160" onload="window.print();" />
+                <img src="${qrImgSrc}" width="180" height="180" />
               </div>
-              <div style="font-weight: bold; font-size: 16px; margin-bottom: 10px;">스마트폰으로 스캔하세요!</div>
+              <div style="font-weight: bold; font-size: 18px; margin-bottom: 10px;">스마트폰으로 스캔하세요!</div>
               <div class="footer">
                 카메라 앱으로 위 QR코드를 스캔하시면<br>입장용 움직이는 모바일 티켓이 열립니다.<br><br>
                 입장 게이트 스태프에게<br>폰 화면을 보여주세요.
               </div>
               <div class="divider"></div>
-              <div>감사합니다</div>
+              <div style="margin-bottom: 30px;">감사합니다</div>
+              
+              <div class="print-btn-container">
+                <button class="print-btn" onclick="handlePrint()">발권하기 (인쇄)</button>
+              </div>
+
+              <script>
+                function handlePrint() {
+                  window.print();
+                  setTimeout(() => {
+                    alert("발권이 완료되었습니다. 티켓을 수령해 주세요.");
+                    window.close();
+                  }, 500);
+                }
+              </script>
             </body>
             </html>
           `;
@@ -1453,6 +1463,27 @@ async function renderTicketingScreen() {
   const confirmBtn = document.getElementById('btn-confirm-seat-modal');
   if (closeBtn) closeBtn.addEventListener('click', closeModal);
   if (confirmBtn) confirmBtn.addEventListener('click', closeModal);
+
+  // 좌석 선택하기 버튼 이벤트
+  const btnOpenSeatMap = document.getElementById("btn-open-seat-map");
+  if (btnOpenSeatMap) {
+    btnOpenSeatMap.addEventListener("click", () => {
+      window.open('/features/payment/staff/seats.html', 'seatMapWindow', 'width=1200,height=800,scrollbars=yes');
+    });
+  }
+
+  // 팝업으로부터 선택된 좌석 데이터 수신
+  window.addEventListener('message', (event) => {
+    if (event.data && event.data.type === 'SEATS_SELECTED') {
+      const newSeats = event.data.seats;
+      newSeats.forEach(ns => {
+        if (!selectedSeats.find(ss => ss.seatId === ns.seatId)) {
+          selectedSeats.push(ns);
+        }
+      });
+      updateSelectedSeatsUI();
+    }
+  });
 }
 
 function renderRecentTicketsTable() {

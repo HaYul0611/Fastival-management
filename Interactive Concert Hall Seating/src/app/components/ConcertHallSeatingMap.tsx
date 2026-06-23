@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { motion } from 'motion/react';
 
 interface SeatSection {
@@ -95,17 +95,17 @@ export function ConcertHallSeatingMap() {
   };
 
   return (
-    <div className="w-full h-full flex flex-col items-center justify-center gap-8 p-8 bg-gray-50">
-      <div className="text-center">
-        <h1 className="text-3xl mb-2">콘서트홀 좌석 배치도</h1>
-        <p className="text-gray-600">구역을 클릭하여 선택하세요</p>
+    <div className="w-full min-h-screen flex flex-col items-center justify-center gap-4 md:gap-8 p-2 md:p-8 bg-gray-50">
+      <div className="text-center mt-2 md:mt-0">
+        <h1 className="text-2xl md:text-3xl font-black mb-1 md:mb-2 text-gray-800">콘서트홀 좌석 배치도</h1>
+        <p className="text-sm md:text-base text-gray-600">구역을 클릭하여 선택하세요</p>
       </div>
 
-      <div className="relative bg-white rounded-2xl shadow-2xl p-8 w-full max-w-7xl flex justify-center">
+      <div className="relative bg-white rounded-2xl shadow-xl px-1 py-4 md:px-2 md:py-6 w-full max-w-5xl flex justify-center">
         <svg
           viewBox="0 0 800 660"
           className="w-full h-auto"
-          style={{ minHeight: '600px', maxHeight: '80vh' }}
+          style={{ maxHeight: '75vh' }}
         >
           <defs>
             {/* 그림자 필터 */}
@@ -245,14 +245,35 @@ function DetailedSeatGrid({ section, onClose }: { section: SeatSection, onClose:
   // "100석" 등에서 숫자만 추출
   const numSeats = parseInt(section.capacity?.replace(/[^0-9]/g, '') || '0', 10);
 
-  // 목업용 예매 완료 좌석 (고정된 난수로 한 번만 생성되도록 useMemo 사용)
-  const reservedSeats = useMemo(() => {
-    const reserved = new Set<number>();
-    for (let i = 1; i <= numSeats; i++) {
-      if (Math.random() < 0.1) reserved.add(i); // 10% 확률로 예매 완료
-    }
-    return reserved;
-  }, [numSeats]);
+  // 서버에서 실제 예매된 좌석 데이터를 가져옵니다.
+  const [reservedSeats, setReservedSeats] = useState<Set<number>>(new Set());
+
+  useEffect(() => {
+    let dbZone = section.name.replace('존', '').replace(/\s*\(.*?\)/g, '').trim();
+    
+    // API 호출하여 해당 구역의 예약된 좌석 필터링
+    fetch(`/api/order/seats`)
+      .then(res => {
+        if (!res.ok) throw new Error("Network response was not ok");
+        return res.json();
+      })
+      .then((data: any[]) => {
+        const reserved = new Set<number>();
+        data.forEach(seat => {
+          // dbZone 매칭 ("A-1", "VIP-1" 등)
+          if ((seat.isReserved || seat.isEntered) && seat.id && seat.id.startsWith(dbZone + '-')) {
+            const numStr = seat.id.split('-')[1];
+            if (numStr) {
+               reserved.add(parseInt(numStr, 10));
+            }
+          }
+        });
+        setReservedSeats(reserved);
+      })
+      .catch(err => {
+        console.error("Failed to fetch real seat data:", err);
+      });
+  }, [section.name]);
 
   const toggleSeat = (seat: number) => {
     setSelectedSeats(prev => 

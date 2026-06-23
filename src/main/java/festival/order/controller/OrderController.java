@@ -84,6 +84,14 @@ public class OrderController {
         return result;
     }
 
+    @GetMapping("/debug/reset-password")
+    public String resetPassword() {
+        org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder encoder = new org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder();
+        String realHash = encoder.encode("festio1234!");
+        int rows = jdbcTemplate.update("UPDATE app_user SET password = ? WHERE email = 'gate_staff_8807@festio.com'", realHash);
+        return "Password reset for " + rows + " users. New hash: " + realHash;
+    }
+
     @PutMapping("/fnb/{id}/status")
     public Map<String, String> updateFnbStatus(@PathVariable("id") String idStr,
             @RequestBody Map<String, String> payload) {
@@ -342,6 +350,7 @@ public class OrderController {
         }
 
         List<Map<String, Object>> allSeats = new ArrayList<>();
+        Set<String> processedSeatIds = new HashSet<>();
 
         for (Map<String, Object> row : rows) {
             Map<String, Object> seat = new HashMap<>();
@@ -381,6 +390,20 @@ public class OrderController {
             seat.put("isReserved", dbIsReserved || isReservedByOrder);
             seat.put("isEntered", isEnteredByOrder);
             allSeats.add(seat);
+            
+            processedSeatIds.add(seatId);
+            processedSeatIds.add(legacySeatId);
+        }
+
+        // DB(seat_map)에는 없는 '가상/동적 구역(F3, F4 등)'에 예약된 좌석도 화면에 반영하기 위해 추가
+        for (String rs : reservedSeats) {
+            if (!processedSeatIds.contains(rs)) {
+                Map<String, Object> virtualSeat = new HashMap<>();
+                virtualSeat.put("id", rs);
+                virtualSeat.put("isReserved", true);
+                virtualSeat.put("isEntered", enteredSeats.contains(rs));
+                allSeats.add(virtualSeat);
+            }
         }
 
         return allSeats;

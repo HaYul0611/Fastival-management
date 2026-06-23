@@ -3,7 +3,7 @@ import { DB, publish, saveDB, subscribe } from './store.js';
 
 export function getSeatStats() {
   const stats = {
-    total: 36,
+    total: 830,
     available: 0,
     reserved: 0,
     entered: 0,
@@ -18,6 +18,7 @@ export function getSeatStats() {
     const zone = seatId.split("-")[0];
     if (data.status === "AVAILABLE") {
       stats.available++;
+      if (!stats.byZone[zone]) stats.byZone[zone] = { available: 0, total: 0 };
       stats.byZone[zone].available++;
     } else if (data.status === "RESERVED") {
       stats.reserved++;
