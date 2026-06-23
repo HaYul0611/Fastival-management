@@ -125,11 +125,11 @@
           alt="QR"
           onerror="this.src='https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=FESTIO_PICKUP_SAMPLE&margin=0&format=svg'">
       </div>
-      <p style="font-size:16px; font-weight:800; color:var(--blue);" id="qrOrderNo">주문번호: -</p>
+      <p style="font-size:16px; font-weight:800; color:var(--blue);" id="qrOrderNo" class="barcode-text">주문번호: -</p>
       <div id="totpWrap" style="margin-top: 24px; padding-top: 16px; border-top: 1px dashed var(--g200);">
         <div
           style="font-size:24px; letter-spacing:8px; font-family:monospace; font-weight:900; color:#0284c7; margin-bottom:12px;"
-          id="totpCode">------</div>
+          id="totpCode" class="barcode-text">------</div>
         <div style="width:100%; height:6px; background:var(--g200); border-radius:4px; overflow:hidden;">
           <div id="totpTimerBar" style="height:100%; background:#0ea5e9; width:100%; transition:width 1s linear;">
           </div>
@@ -255,8 +255,8 @@
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="js/supabase_client.js?v=2"></script>
-  <script src="js/common.js?v=2"></script>
-  <script src="js/orders.js?v=3"></script>
+  <script src="js/common.js?v=4"></script>
+  <script src="js/orders.js?v=4"></script>
 </body>
 
 </html>

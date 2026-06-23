@@ -57,62 +57,74 @@ document.addEventListener('DOMContentLoaded', async () => {
     let secret = order?.totp_secret || 'dummysecret12345';
     manualOffset = 0; // 모달 열때 초기화
 
-    document.getElementById('qrOrderNo').textContent = '주문번호: ' + orderNo;
-    qrModal.classList.add('show');
-
-    const refreshTotp = async (isManual = false) => {
+    const updateQr = async (isManual = false) => {
       if (isManual) manualOffset++;
       const timeWindow = Math.floor(Date.now() / 180000) + manualOffset; // 3분 단위 + 수동오프셋
-      const code = await generateMockTotp(secret, timeWindow);
+      const totpCode = await generateMockTotp(secret, timeWindow);
 
-      document.getElementById('totpCode').textContent = code;
+      let displayOrderNo = orderNo;
+      const match = orderNo.match(/0+(\d+)$/);
+      if (match) displayOrderNo = match[1];
 
-      const qrData = 'TOTP:' + orderNo + ':' + code;
-      const qrImage = document.getElementById('qrImage');
+      let prefix = orderNo.startsWith('F') ? 'F' : (orderNo.startsWith('G') ? 'G' : 'O');
+      let numericId = parseInt(displayOrderNo, 10);
+      let orderIdBase36 = (isNaN(numericId) ? 0 : numericId).toString(36).toUpperCase();
+      while (orderIdBase36.length < 5) orderIdBase36 = '0' + orderIdBase36;
+
+      const barcodeData = prefix + orderIdBase36 + totpCode;
+      document.getElementById('totpCode').textContent = barcodeData;
+      document.getElementById('qrOrderNo').textContent = '주문번호: ' + (prefix + orderIdBase36 + "000000");
+
+      const qrData = 'TOTP:' + orderNo + ':' + totpCode;
+      let qrImage = document.getElementById('qrImage');
       const container = qrImage.parentElement;
 
-      qrImage.src = 'https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=' + encodeURIComponent(qrData) + '&margin=0&format=svg';
-      qrImage.style.transform = 'translateY(11px) rotate(45deg) scale(0.5)';
-      qrImage.style.zIndex = '1';
-      qrImage.style.position = 'relative';
-
-      const heartSvgDataUrl = "data:image/svg+xml;utf8,<svg viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'><path d='M50 88 C 50 88 5 60 5 30 C 5 5 45 5 50 25 C 55 5 95 5 95 30 C 95 60 50 88 50 88 Z' fill='black' /></svg>";
-      container.style.maskImage = `url("${heartSvgDataUrl.replace(/#/g, '%23')}")`;
-      container.style.maskSize = "contain";
-      container.style.maskRepeat = "no-repeat";
-      container.style.maskPosition = "center";
-      container.style.webkitMaskImage = `url("${heartSvgDataUrl.replace(/#/g, '%23')}")`;
-      container.style.webkitMaskSize = "contain";
-      container.style.webkitMaskRepeat = "no-repeat";
-      container.style.webkitMaskPosition = "center";
       container.style.position = 'relative';
-      container.style.overflow = 'hidden';
 
-      if (!document.getElementById('heartQrBg_' + orderNo)) {
-        const bg = document.createElement('div');
-        bg.id = 'heartQrBg_' + orderNo;
-        bg.style.position = 'absolute';
-        bg.style.width = '300%';
-        bg.style.height = '300%';
-        bg.style.top = '-100%';
-        bg.style.left = '-100%';
-        bg.style.transform = 'translateY(11px) rotate(45deg) scale(0.5)';
-        bg.style.zIndex = '0';
-        bg.style.imageRendering = 'pixelated';
-        let svg = "<svg xmlns='http://www.w3.org/2000/svg' width='45.71' height='45.71'><rect width='45.71' height='45.71' fill='#fff'/>";
-        for (let y = 0; y < 6; y++) {
-          for (let x = 0; x < 6; x++) {
-            if (Math.random() > 0.4) {
-              svg += `<rect x='${x * 7.619}' y='${y * 7.619}' width='7.62' height='7.62' fill='#000'/>`;
-            }
+      let bgElem = document.getElementById('heartQrBg_' + orderNo);
+      if (!bgElem) {
+        bgElem = document.createElement('div');
+        bgElem.id = 'heartQrBg_' + orderNo;
+        bgElem.style.position = 'absolute';
+        bgElem.style.width = '300%';
+        bgElem.style.height = '300%';
+        bgElem.style.top = '-100%'; // -200px (multiple of 40px)
+        bgElem.style.left = '-100%';
+        // QR 이미지와 완벽하게 동일한 각도 및 스케일 적용 (격자선 일치)
+        bgElem.style.transform = 'translateY(11px) rotate(45deg) scale(0.5)';
+        bgElem.style.zIndex = '0';
+        bgElem.style.imageRendering = 'pixelated';
+        bgElem.style.backgroundRepeat = 'repeat';
+        // 40px 타일 (8px 모듈 5개) -> 200px에 정확히 맞아떨어짐
+        bgElem.style.backgroundSize = '40px 40px';
+        container.insertBefore(bgElem, qrImage);
+      }
+
+      // QR 마커(Finder Pattern)가 중복해서 나타나는 것을 방지하기 위해,
+      // 순수하게 8px 네모들로만 이루어진 가짜 패턴을 생성하여 배경에 타일링함.
+      let svg = "<svg xmlns='http://www.w3.org/2000/svg' width='40' height='40'><rect width='40' height='40' fill='#fff'/>";
+      for (let y = 0; y < 5; y++) {
+        for (let x = 0; x < 5; x++) {
+          if (Math.random() > 0.5) {
+            svg += `<rect x='${x * 8}' y='${y * 8}' width='8' height='8' fill='#000'/>`;
           }
         }
-        svg += "</svg>";
-        bg.style.backgroundImage = `url("data:image/svg+xml;utf8,${encodeURIComponent(svg)}")`;
-        bg.style.backgroundRepeat = 'repeat';
-        bg.style.backgroundPosition = 'calc(50% + 3.81px) calc(50% + 3.81px)';
-        container.insertBefore(bg, qrImage);
       }
+      svg += "</svg>";
+      bgElem.style.backgroundImage = `url("data:image/svg+xml;utf8,${encodeURIComponent(svg)}")`;
+
+      // 시간차 없이 동시에 나타나도록 처리
+      qrImage.style.transition = 'opacity 0.3s ease';
+      bgElem.style.transition = 'opacity 0.3s ease';
+      qrImage.style.opacity = '0';
+      bgElem.style.opacity = '0';
+
+      qrImage.onload = () => {
+        qrImage.style.opacity = '1';
+        bgElem.style.opacity = '1';
+      };
+
+      qrImage.src = 'https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=' + encodeURIComponent(qrData) + '&margin=0&format=svg';
 
       // 남은 시간 초기화 (수동 리셋 시 180초 풀로 시작)
       let timeLeft = isManual ? 180 : 180 - Math.floor((Date.now() % 180000) / 1000);
@@ -133,7 +145,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         timeLeft--;
         if (timeLeft <= 0) {
           clearInterval(totpTimer);
-          refreshTotp();
+          updateQr();
         } else {
           updateUI();
         }
@@ -143,39 +155,62 @@ document.addEventListener('DOMContentLoaded', async () => {
     const btnReset = document.getElementById('btnResetTotp');
     if (btnReset) {
       btnReset.onclick = () => {
-        // SVG 회전 애니메이션 효과 (선택사항)
         btnReset.style.transition = 'transform 0.3s';
         btnReset.style.transform = `rotate(${manualOffset * 180 + 180}deg)`;
-        refreshTotp(true);
+        updateQr(true);
       };
     }
 
-    refreshTotp();
+    updateQr();
+    const qrModal = document.getElementById('qrModal');
+    qrModal.style.zIndex = '2147483647';
+    qrModal.classList.add('show');
   };
 
   // 상세 모달 열기
-  window.openDetailModal = function (orderNo) {
+  window.openDetailModal = async function (orderNo) {
     const order = window.currentOrders.find(o => o.order_number === orderNo);
     if (!order) return;
 
-    const itemsHtml = (order.shop_order_items || []).map(item => `
-      <div style="display:flex; justify-content:space-between; padding: 12px 0; border-bottom:1px solid var(--g100);">
-        <div>
-          <div style="font-weight:700; color:var(--g900);">${item.product_name || '상품명'}</div>
-          <div style="font-size:13px; color:var(--g500); margin-top:4px;">수량: ${item.quantity || 1}개</div>
-        </div>
-        <div style="text-align:right">
-          <div style="font-weight:700;">${((item.price_at_purchase || 0) * (item.quantity || 1)).toLocaleString()}원</div>
-          ${order.status === 'READY_FOR_PICKUP' || order.status === 'COMPLETED' ? `<button onclick="openReviewModal('${item.product_id}')" style="margin-top:8px; padding:4px 8px; font-size:12px; font-weight:700; border:1px solid var(--black); background:var(--white); color:var(--black); border-radius:4px; cursor:pointer;">리뷰 작성</button>` : ''}
+    let displayOrderNo = orderNo;
+    const match = orderNo.match(/0+(\d+)$/);
+    if (match) displayOrderNo = match[1];
+
+    let prefix = orderNo.startsWith('F') ? 'F' : (orderNo.startsWith('G') ? 'G' : 'O');
+    let numericId = parseInt(displayOrderNo, 10);
+    let orderIdBase36 = (isNaN(numericId) ? 0 : numericId).toString(36).toUpperCase();
+    while (orderIdBase36.length < 5) orderIdBase36 = '0' + orderIdBase36;
+
+    const fullBarcode = prefix + orderIdBase36 + "000000";
+
+    const itemsHtml = (order.shop_order_items || []).map(item => {
+      const isFood = item.shop_products && item.shop_products.type === 'FOOD';
+      const imageUrl = (item.shop_products && item.shop_products.thumbnail_image_url)
+        ? item.shop_products.thumbnail_image_url
+        : (isFood ? '/Festio/images/food1.jpg' : '/Festio/images/goods1.jpg');
+
+      return `
+      <div style="display:flex; gap:12px; padding: 12px 0; border-bottom:1px solid var(--g100);">
+        <div style="width:60px; height:60px; border-radius:8px; background: url('${imageUrl}') center/cover no-repeat; flex-shrink:0;"></div>
+        <div style="flex:1; display:flex; justify-content:space-between;">
+          <div>
+            <div style="font-weight:700; color:var(--g900); font-size:15px; margin-bottom:4px;">${item.product_name || '상품명'}</div>
+            <div style="font-size:13px; color:var(--g500);">수량: ${item.quantity || 1}개</div>
+          </div>
+          <div style="text-align:right">
+            <div style="font-weight:700;">${((item.price_at_purchase || 0) * (item.quantity || 1)).toLocaleString()}원</div>
+            ${order.status === 'READY_FOR_PICKUP' || order.status === 'COMPLETED' ? `<button onclick="openReviewModal('${item.product_id}')" style="margin-top:8px; padding:4px 8px; font-size:12px; font-weight:700; border:1px solid var(--black); background:var(--white); color:var(--black); border-radius:4px; cursor:pointer;">리뷰 작성</button>` : ''}
+          </div>
         </div>
       </div>
-    `).join('');
+      `;
+    }).join('');
 
     const html = `
       <div style="margin-bottom:24px;">
         <div style="display:flex; justify-content:space-between; margin-bottom:8px;">
           <span style="color:var(--g500);">주문번호</span>
-          <span style="font-weight:700;">${order.order_number}</span>
+          <span class="barcode-text" style="font-weight:700;">${fullBarcode}</span>
         </div>
         <div style="display:flex; justify-content:space-between; margin-bottom:8px;">
           <span style="color:var(--g500);">결제일시</span>
@@ -206,6 +241,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     `;
 
     document.getElementById('odContent').innerHTML = html;
+    odModal.style.zIndex = '2147483647'; // 챗봇/NPC 등 외부 플러그인 위로 노출되도록 최댓값 설정
     odModal.classList.add('show');
   };
 
@@ -215,33 +251,35 @@ document.addEventListener('DOMContentLoaded', async () => {
       const token = localStorage.getItem('userToken') || sessionStorage.getItem('userToken');
       const headers = token ? { 'Authorization': 'Bearer ' + token } : {};
       const res = await fetch('/api/order/shop/my', { headers });
-      
+
       let orders = [];
       if (res.ok) {
-        orders = await res.json();
+        let rawOrders = await res.json();
+        // 실제 상품 내역이 있는 유효한 주문만 필터링 (빈 테스트 주문 방지)
+        orders = rawOrders.filter(o => o.shop_order_items && o.shop_order_items.length > 0);
       }
 
-    if (!orders || orders.length === 0) {
-      // 미리보기용 더미 데이터
-      const dummyOrder = {
-        order_number: 'F1X9K2M4P5T8',
-        created_at: new Date().toISOString(),
-        delivery_type: 'PICKUP',
-        status: 'READY_FOR_PICKUP',
-        payment_method: 'FESTIO_PAY',
-        total_amount: 12500,
-        totp_secret: 'dummysecret12345',
-        shop_order_items: [
-          { product_name: '스모크 바베큐 버거 + 콜라 세트', quantity: 1, price_at_purchase: 12500, shop_products: { type: 'FOOD' } }
-        ]
-      };
-      window.currentOrders = [dummyOrder];
-      listEl.innerHTML = renderOrderCard(dummyOrder);
-      return;
-    }
+      if (!orders || orders.length === 0) {
+        // 미리보기용 더미 데이터
+        const dummyOrder = {
+          order_number: 'F1X9K2M4P5T8',
+          created_at: new Date().toISOString(),
+          delivery_type: 'PICKUP',
+          status: 'READY_FOR_PICKUP',
+          payment_method: 'FESTIO_PAY',
+          total_amount: 12500,
+          totp_secret: 'dummysecret12345',
+          shop_order_items: [
+            { product_name: '스모크 바베큐 버거 + 콜라 세트', quantity: 1, price_at_purchase: 12500, shop_products: { type: 'FOOD' } }
+          ]
+        };
+        window.currentOrders = [dummyOrder];
+        listEl.innerHTML = renderOrderCard(dummyOrder);
+        return;
+      }
 
-    window.currentOrders = orders;
-    listEl.innerHTML = orders.map(renderOrderCard).join('');
+      window.currentOrders = orders;
+      listEl.innerHTML = orders.map(renderOrderCard).join('');
     } catch (e) {
       console.error(e);
       listEl.innerHTML = '<p>주문 내역을 불러오지 못했습니다.</p>';
@@ -255,7 +293,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 function renderOrderCard(order) {
   const isPickup = order.delivery_type === 'PICKUP';
   let steps = '';
-  
+
   let isFood = true;
   if (order.shop_order_items && order.shop_order_items.length > 0) {
     const sp = order.shop_order_items[0].shop_products;
@@ -279,7 +317,7 @@ function renderOrderCard(order) {
     if (isDone3) { movingEmoji = '🛍️'; }
     else if (isDone2) { movingEmoji = '🏃'; flipClass = 'flip'; }
     else if (isDone1) { movingEmoji = isFood ? '🍳' : '🎁'; }
-    
+
     const prepLabel = isFood ? '조리 준비' : '상품 준비';
 
     steps = `
@@ -322,12 +360,21 @@ function renderOrderCard(order) {
     </div>
   `).join('');
 
+  let displayOrderNo = order.order_number;
+  const match = order.order_number.match(/0+(\d+)$/);
+  if (match) displayOrderNo = match[1];
+  let prefix = order.order_number.startsWith('F') ? 'F' : (order.order_number.startsWith('G') ? 'G' : 'O');
+  let numericId = parseInt(displayOrderNo, 10);
+  let orderIdBase36 = (isNaN(numericId) ? 0 : numericId).toString(36).toUpperCase();
+  while (orderIdBase36.length < 5) orderIdBase36 = '0' + orderIdBase36;
+  const fullBarcode = prefix + orderIdBase36 + "000000";
+
   return `
     <div class="order-card">
       <div class="order-header">
         <div>
           <span class="order-date">${new Date(order.created_at).toLocaleDateString()}</span>
-          <span class="order-no">주문번호 ${order.order_number}</span>
+          <span class="order-no barcode-text">주문번호 ${fullBarcode}</span>
         </div>
         <a href="javascript:void(0)" onclick="openDetailModal('${order.order_number}')" class="order-detail-btn">주문상세 보기 &gt;</a>
       </div>
@@ -462,9 +509,9 @@ window.submitReview = function () {
     alert('리뷰 내용을 입력해주세요.');
     return;
   }
-  
+
   const reviews = JSON.parse(localStorage.getItem('shopReviews') || '[]');
-  
+
   // 현재 로그인 사용자 정보 조회
   const email = localStorage.getItem('email');
   const sessionUser = window.FS && window.FS.Session ? window.FS.Session.get() : null;
@@ -479,10 +526,10 @@ window.submitReview = function () {
     author: authorName,
     date: new Date().toLocaleDateString('ko-KR')
   };
-  
+
   reviews.unshift(newReview);
   localStorage.setItem('shopReviews', JSON.stringify(reviews));
-  
+
   alert('리뷰가 등록되었습니다!');
   closeReviewModal();
 };
