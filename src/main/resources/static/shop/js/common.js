@@ -168,8 +168,42 @@ async function fetchNotifications() {
     const res = await fetch('/api/order/notifications', {
       headers: { 'Authorization': 'Bearer ' + token }
     });
-    if (!res.ok) return;
-    const notifs = await res.json();
+    let notifs = [];
+    if (res.ok) {
+      notifs = await res.json();
+    }
+
+    // [Mock] 추가된 알림 상태(WISH, ORDERED, CANCELLED 등) 시뮬레이션용 데이터 결합
+    let mockNotifs = JSON.parse(localStorage.getItem('shopMockNotifications') || '[]');
+
+    // [Mock] 현장 픽업 미수령 독촉 알림 타이머 로직 (테스트 편의상 1분 단위 동작)
+    const now = Date.now();
+    let hasRemindChanges = false;
+    mockNotifs = mockNotifs.map(n => {
+      if (n.status === 'READY' && n.pickupTime) {
+        const diffMinutes = (now - n.pickupTime) / 60000;
+        if (diffMinutes >= 2 && !n.remind2Sent) {
+          n.status = 'REMIND_2';
+          n.remind2Sent = true;
+          hasRemindChanges = true;
+          // 토스트로 즉각 알림
+          Toast.show({ title: '픽업 리마인드', msg: '따뜻하고 맛있을 때 드실 수 있도록 지금 확인 후 수령 부탁드립니다.', type: 'warning' });
+        } else if (diffMinutes >= 1 && diffMinutes < 2 && !n.remind1Sent) {
+          n.status = 'REMIND_1';
+          n.remind1Sent = true;
+          hasRemindChanges = true;
+          Toast.show({ title: '픽업 리마인드', msg: '준비된 음식을 아직 기다리고 있어요.', type: 'warning' });
+        }
+      }
+      return n;
+    });
+
+    if (hasRemindChanges) {
+      localStorage.setItem('shopMockNotifications', JSON.stringify(mockNotifs));
+    }
+
+    // API 알림과 Mock 알림 병합
+    notifs = [...mockNotifs, ...notifs];
 
     const badge = document.getElementById('notiBadgeCount');
     const headCount = document.getElementById('notiHeadCount');
@@ -181,21 +215,38 @@ async function fetchNotifications() {
         badge.textContent = notifs.length;
         headCount.textContent = notifs.length;
 
+        const userName = Session.get()?.name || '고객';
+
         listContainer.innerHTML = notifs.map(n => {
           let title = '';
           let msg = '';
-          if (n.status === 'COOKING') { title = '상품 준비 중'; msg = `[${n.name}] 조리/포장이 시작되었습니다.`; }
-          else if (n.status === 'READY') { title = '준비 완료'; msg = `[${n.name}] 준비 완료! 픽업해주세요.`; }
-          else if (n.status === 'SERVED') { title = '수령 완료'; msg = `[${n.name}] 정상 수령 처리되었습니다.`; }
-          else if (n.status === 'SHIPPED') { title = '배송 출발'; msg = `[${n.name}] 배송이 시작되었습니다.`; }
-          else { title = '알림'; msg = `[${n.name}] 상태가 변경되었습니다.`; }
+          let iconSvg = '';
+
+          if (n.status === 'WISH') { title = '관심 상품'; msg = `[${n.name}] 관심 상품/가게에 추가되었습니다.`; iconSvg = '💖'; }
+          else if (n.status === 'ORDERED') { title = '주문 완료'; msg = `[${n.name}] 상품의 주문/결제가 완료되었습니다.`; iconSvg = '💳'; }
+          else if (n.status === 'CANCELLED' || n.status === 'REFUNDED') {
+            title = '취소/환불';
+            msg = `[${n.name}] 상품 주문이 정상적으로 취소 및 환불 처리되었습니다.`;
+            iconSvg = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:16px;height:16px;"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>`;
+          }
+          else if (n.status === 'COOKING') { title = '조리 시작'; msg = `[${n.name}] 조리/포장이 시작되었습니다.`; iconSvg = '👨‍🍳'; }
+          else if (n.status === 'PREPARING') { title = '상품 준비 중'; msg = `[${n.name}] 주문하신 상품을 준비하고 있습니다.`; iconSvg = '📦'; }
+          else if (n.status === 'READY') { title = '픽업 안내'; msg = `[${n.name}] 주문하신 상품이 준비되었습니다. 수령처에서 픽업해 주세요.`; iconSvg = '🎁'; }
+          else if (n.status === 'REMIND_1') { title = '픽업 리마인드'; msg = `${userName}님, 준비된 음식을 아직 기다리고 있어요.`; iconSvg = '⏰'; }
+          else if (n.status === 'REMIND_2') { title = '픽업 리마인드'; msg = `${userName}님, 따뜻하고 맛있을 때 드실 수 있도록 지금 확인 후 수령 부탁드립니다.`; iconSvg = '🔥'; }
+          else if (n.status === 'SERVED') { title = '수령 완료'; msg = `[${n.name}] 정상 수령 처리되었습니다.`; iconSvg = '✅'; }
+          else if (n.status === 'SHIPPING') { title = '배송 시작'; msg = `[${n.name}] 주문하신 상품이 택배사로 인계되었습니다.`; iconSvg = '🚚'; }
+          else if (n.status === 'DELIVERED') { title = '배송 완료'; msg = `[${n.name}] 상품 배송이 완료되었습니다.`; iconSvg = '📫'; }
+          else { title = '알림'; msg = `[${n.name}] 상태가 변경되었습니다.`; iconSvg = '🔔'; }
+
+          const svgContainer = iconSvg.startsWith('<svg') ? iconSvg : `<span style="font-size:16px;line-height:1;">${iconSvg}</span>`;
 
           return `
-            <a href="orders.html" class="noti-item unread">
-              <div class="noti-dot"></div>
-              <div class="noti-text">
-                <strong>${title}</strong><br/>
-                ${msg}
+            <a href="orders.html" class="noti-item unread" style="display:flex; gap:10px; align-items:flex-start;">
+              <div style="flex-shrink:0; display:flex; align-items:center; justify-content:center; width:28px; height:28px; background:var(--g100); border-radius:50%;">${svgContainer}</div>
+              <div class="noti-text" style="flex:1;">
+                <strong style="display:block; font-size:13px; margin-bottom:2px;">${title}</strong>
+                <span style="font-size:12px; color:var(--g500); line-height:1.4;">${msg}</span>
               </div>
             </a>
           `;
@@ -206,7 +257,7 @@ async function fetchNotifications() {
         listContainer.innerHTML = '<div style="padding: 16px; text-align: center; color: #888;">새로운 알림이 없습니다.</div>';
       }
     }
-  } catch (e) { }
+  } catch (e) { console.error(e); }
 }
 
 function refreshCartBadge() {
