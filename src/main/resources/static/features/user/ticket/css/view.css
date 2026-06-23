@@ -96,7 +96,7 @@ body.dark-theme .timer-container {
 }
 
 .timer-bar {
-    background: linear-gradient(90deg, #00d2ff, #8930F8);
+    background: #8930F8;
     height: 100%;
     width: 100%;
     transition: width 1s linear;

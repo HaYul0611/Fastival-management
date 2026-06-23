@@ -309,10 +309,19 @@ function renderProfile() {
       svg.removeAttribute('class');
       svg.setAttribute('width', '28');
       svg.setAttribute('height', '28');
+      
+      let iconColor = '#cd7f32'; // BRONZE
+      const g = (_member.grade || 'BRONZE').toUpperCase();
+      if (g === 'SILVER') iconColor = '#94a3b8';
+      else if (g === 'GOLD') iconColor = '#fbbf24';
+      else if (g === 'EMERALD') iconColor = '#10b981';
+      else if (g === 'DIAMOND') iconColor = '#3b82f6';
+      else if (['VIP', 'SVIP', 'SSVIP'].includes(g)) iconColor = '#8b5cf6';
+
       if (svg.getAttribute('fill') === 'currentColor') {
-        svg.setAttribute('fill', 'var(--blue)');
+        svg.setAttribute('fill', iconColor);
       } else {
-        svg.setAttribute('stroke', 'var(--blue)');
+        svg.setAttribute('stroke', iconColor);
       }
     }
   }
@@ -2776,7 +2785,6 @@ async function openQrModalView(token, type = 'TICKET') {
                 <div style="font-family: 'Roboto Mono', 'Courier New', monospace; font-size: 1.15rem; font-weight: 800; letter-spacing: 2px; color: #555;" id="dynamicQrCode"></div>
                 <div style="font-size: 0.85rem; color: #444; margin-top: 6px; font-weight: 600; display: flex; align-items: center; justify-content: center;" id="dynamicQrUserName">
                   <span class="badge badge-${(window._member ? window._member.grade : 'BRONZE').toLowerCase()}" style="margin-right: 6px;">
-                    ${getGradeSvgIcon(window._member ? window._member.grade : 'BRONZE')}
                     ${window._member ? window._member.grade : 'BRONZE'}
                   </span>
                   ${masked}
@@ -2787,7 +2795,7 @@ async function openQrModalView(token, type = 'TICKET') {
             <div style="width: 100%; display: flex; flex-direction: column; align-items: center; gap: 8px; max-width: 180px; margin: 4px auto 0;">
               <div style="width: 100%; display: flex; align-items: center; justify-content: space-between; gap: 8px;">
                 <div style="flex: 1; height: 6px; background: #EFEFEF; border-radius: 6px; overflow: hidden; position: relative;">
-                  <div id="dynamicQrTimerBar" style="position: absolute; left: 0; top: 0; height: 100%; width: 100%; background: linear-gradient(90deg, #00d2ff, #8930F8); transform-origin: left; transition: transform 1s linear, background 0.3s ease;"></div>
+                  <div id="dynamicQrTimerBar" style="position: absolute; left: 0; top: 0; height: 100%; width: 100%; background: #8930F8; transform-origin: left; transition: transform 1s linear, background 0.3s ease;"></div>
                 </div>
                 <button id="dynamicQrRefresh" style="background: none; border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; padding: 4px; color: #8930F8; transition: transform 0.2s; flex-shrink: 0;" title="새로고침">
                   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21.5 2v6h-6M2.5 22v-6h6M2 11.5a10 10 0 0 1 18.8-4.3M22 12.5a10 10 0 0 1-18.8 4.2"/></svg>
