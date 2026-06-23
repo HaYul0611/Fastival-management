@@ -1407,6 +1407,58 @@ input[type="search"]::-webkit-search-cancel-button:hover {
   align-items: center;
   justify-content: center;
   cursor: pointer;
+  position: relative !important;
+  top: auto !important;
+  right: auto !important;
+  margin-left: 8px;
+}
+
+/* 다크모드 우선순위 버그 픽스 */
+.modal-overlay.modal-center .noti-modal-sheet.dark-mode {
+  background: #1f2937;
+  color: #f9fafb;
+}
+
+/* FESTIO Dropdown 스타일 및 다크모드 */
+.noti-dropdown.dark-mode {
+  background: #1f2937 !important;
+  color: #f9fafb !important;
+  border-color: #4b5563 !important;
+}
+
+.noti-dropdown.dark-mode .noti-head span,
+.noti-dropdown.dark-mode .noti-foot {
+  color: #f9fafb !important;
+}
+
+.noti-dropdown.dark-mode .noti-content strong {
+  color: #f9fafb !important;
+}
+
+.noti-dropdown.dark-mode .noti-content p {
+  color: #9ca3af !important;
+}
+
+.noti-dropdown.dark-mode .noti-foot {
+  background: #374151 !important;
+  border-color: #4b5563 !important;
+}
+
+.noti-dropdown.dark-mode .noti-list div {
+  color: #d1d5db !important;
+}
+
+.noti-dropdown.dark-mode .noti-head,
+.noti-dropdown.dark-mode .noti-item {
+  border-bottom-color: #4b5563 !important;
+}
+
+.noti-dropdown.dark-mode .noti-foot {
+  border-top-color: #4b5563 !important;
+}
+
+.noti-dropdown.dark-mode .noti-icon-wrap {
+  background: #374151 !important;
 }
 
 /* 테마 스위치 (Sun / Moon) */
@@ -1473,6 +1525,27 @@ input[type="search"]::-webkit-search-cancel-button:hover {
   flex: 1;
   overflow-y: auto;
   padding: 0;
+}
+
+@keyframes slideInUp {
+  0% {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.noti-item {
+  animation: slideInUp 0.3s ease forwards;
+  opacity: 0;
+}
+
+.noti-item:hover .noti-icon-wrap {
+  transform: scale(1.1);
 }
 
 .noti-modal-footer {

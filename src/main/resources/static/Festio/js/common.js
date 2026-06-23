@@ -567,22 +567,27 @@ document.addEventListener('DOMContentLoaded', () => {
 /* ── FESTIO 알림 시스템 ─────────────────────────────────────── */
 function initFestioNotifications() {
   const btnHeaderNotification = document.getElementById('btnHeaderNotification');
-  if (btnHeaderNotification) {
-    on(btnHeaderNotification, 'click', () => {
-      Modal.open('modal-festio-notifications');
+  const festioNotiDropdown = document.getElementById('festioNotiDropdown');
+  if (btnHeaderNotification && festioNotiDropdown) {
+    on(btnHeaderNotification, 'click', (e) => {
+      e.stopPropagation();
+      festioNotiDropdown.style.display = festioNotiDropdown.style.display === 'flex' ? 'none' : 'flex';
+    });
+    document.addEventListener('click', (e) => {
+      if (!e.target.closest('.hdr-noti-menu')) {
+        festioNotiDropdown.style.display = 'none';
+      }
     });
   }
 
   const notiThemeToggle = document.getElementById('notiThemeToggle');
-  const notiModalSheet = document.querySelector('.noti-modal-sheet');
+  const notiModalSheet = document.getElementById('festioNotiDropdown');
   if (notiThemeToggle && notiModalSheet) {
     notiThemeToggle.addEventListener('change', (e) => {
       if (e.target.checked) {
-        notiModalSheet.classList.remove('light-mode');
         notiModalSheet.classList.add('dark-mode');
       } else {
         notiModalSheet.classList.remove('dark-mode');
-        notiModalSheet.classList.add('light-mode');
       }
     });
   }
@@ -599,15 +604,42 @@ function initFestioNotifications() {
         badge.style.display = 'none';
         badge.textContent = '0';
       }
+      const headCount = document.getElementById('notiHeadCount');
+      if (headCount) headCount.textContent = '0';
+
       localStorage.removeItem('festioMockNotifications');
       Toast.success('모든 알림을 읽음 처리했습니다.');
-      Modal.close('modal-festio-notifications');
+
+      const festioNotiDropdown = document.getElementById('festioNotiDropdown');
+      if (festioNotiDropdown) festioNotiDropdown.style.display = 'none';
     });
   }
 
   if (Auth.isLoggedIn()) {
     fetchFestioNotifications();
     setInterval(fetchFestioNotifications, 10000);
+
+    // 알림 활성화 초기 토스트 및 목업 시뮬레이션
+    const isNotiEnabled = localStorage.getItem('notiEnabled') === 'true';
+    if (isNotiEnabled) {
+      const toastShown = sessionStorage.getItem('notiEnabledToastShown_Festio');
+      if (!toastShown) {
+        setTimeout(() => Toast.info('알림이 활성화되어 있습니다.'), 500);
+        sessionStorage.setItem('notiEnabledToastShown_Festio', 'true');
+      }
+
+      // 알림 대기 테스트를 위한 가상 타이머 (15초마다 발생)
+      setInterval(() => {
+        if (localStorage.getItem('notiEnabled') === 'true') {
+          Toast.info('새로운 행사 소식이 도착했습니다!');
+          const badge = document.getElementById('notificationBadge');
+          if (badge) {
+            badge.style.display = 'block';
+            badge.textContent = parseInt(badge.textContent || '0') + 1;
+          }
+        }
+      }, 15000);
+    }
   }
 }
 
@@ -630,22 +662,25 @@ function fetchFestioNotifications() {
     localStorage.setItem('festioMockNotifications', JSON.stringify(notifs));
   }
 
+  const headCount = document.getElementById('notiHeadCount');
+
   if (notifs.length > 0) {
     badge.style.display = 'block';
     badge.textContent = notifs.length;
+    if (headCount) headCount.textContent = notifs.length;
 
-    listContainer.innerHTML = notifs.map(n => {
+    listContainer.innerHTML = notifs.map((n, idx) => {
       let iconSvg = '';
-      if (n.type === 'WISH') iconSvg = '<svg viewBox="0 0 24 24" fill="var(--blue)" style="width:20px;height:20px;"><path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/></svg>';
-      else if (n.type === 'PAID') iconSvg = '<svg viewBox="0 0 24 24" fill="none" stroke="var(--blue)" stroke-width="2" style="width:20px;height:20px;"><rect x="2" y="5" width="20" height="14" rx="2" ry="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg>';
-      else if (n.type === 'GRADE_UP') iconSvg = '<span style="font-size:18px;">🎉</span>';
-      else if (n.type === 'QNA_ANSWERED') iconSvg = '<svg viewBox="0 0 24 24" fill="none" stroke="var(--blue)" stroke-width="2" style="width:20px;height:20px;"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2v10z"/></svg>';
-      else if (n.type === 'CHECK_IN') iconSvg = '<svg viewBox="0 0 24 24" fill="none" stroke="var(--blue)" stroke-width="2" style="width:20px;height:20px;"><path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>';
+      if (n.type === 'WISH') iconSvg = '<svg viewBox="0 0 24 24" fill="#6a4dff" style="width:20px;height:20px;"><path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/></svg>';
+      else if (n.type === 'PAID' || n.type === 'ORDER') iconSvg = '<svg viewBox="0 0 24 24" fill="none" stroke="#6a4dff" stroke-width="2" style="width:20px;height:20px;"><rect x="2" y="5" width="20" height="14" rx="2" ry="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg>';
+      else if (n.type === 'GRADE_UP' || n.type === 'GRADE') iconSvg = '<span style="font-size:18px;">🎉</span>';
+      else if (n.type === 'QNA_ANSWERED') iconSvg = '<svg viewBox="0 0 24 24" fill="none" stroke="#6a4dff" stroke-width="2" style="width:20px;height:20px;"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2v10z"/></svg>';
+      else if (n.type === 'CHECK_IN') iconSvg = '<svg viewBox="0 0 24 24" fill="none" stroke="#6a4dff" stroke-width="2" style="width:20px;height:20px;"><path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>';
       else iconSvg = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:20px;height:20px;"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>';
 
       return `
-        <div class="noti-item" style="display:flex; gap:12px; padding:16px; border-bottom:1px solid var(--border-color); align-items:flex-start;">
-          <div class="noti-icon-wrap" style="flex-shrink:0; width:36px; height:36px; border-radius:50%; background:var(--bg-secondary); display:flex; align-items:center; justify-content:center;">
+        <div class="noti-item" style="display:flex; gap:12px; padding:16px; border-bottom:1px solid var(--border-color); align-items:flex-start; animation-delay:${idx * 0.08}s;">
+          <div class="noti-icon-wrap" style="flex-shrink:0; width:36px; height:36px; border-radius:50%; background:var(--bg-secondary); display:flex; align-items:center; justify-content:center; transition: transform 0.2s;">
             ${iconSvg}
           </div>
           <div class="noti-content">
@@ -661,6 +696,59 @@ function fetchFestioNotifications() {
     listContainer.innerHTML = '<div style="padding: 24px; text-align: center; color: var(--text-secondary);">새로운 알림이 없습니다.</div>';
   }
 }
+
+/* ── 12자리 암호화 바코드 유틸리티 ──────────────────────────── */
+const BarcodeUtils = {
+  MASK_FIXED: 80000000000000000n, // 11자리 난수 보장을 위한 53비트 마스크
+  MASK_DYNAMIC: 90000000000000000n,
+
+  // 고정 12자리 번호 생성 (분류코드 + 암호화된 orderId)
+  encodeFixedOrder(prefix, orderId) {
+    const obf = BigInt(orderId) ^ this.MASK_FIXED;
+    const base36 = obf.toString(36).toUpperCase();
+    return prefix + base36.padStart(11, '0');
+  },
+
+  decodeFixedOrder(fixedStr) {
+    const base36 = fixedStr.substring(1);
+    let obf = 0n;
+    for (let i = 0; i < base36.length; i++) {
+      const code = base36.charCodeAt(i);
+      let val = 0n;
+      if (code >= 48 && code <= 57) val = BigInt(code - 48);
+      else if (code >= 65 && code <= 90) val = BigInt(code - 65 + 10);
+      else if (code >= 97 && code <= 122) val = BigInt(code - 97 + 10);
+      obf = obf * 36n + val;
+    }
+    const orderId = obf ^ this.MASK_FIXED;
+    return Number(orderId);
+  },
+
+  // 동적 12자리 바코드 생성 (분류코드 + orderId와 TOTP가 결합된 암호)
+  encodeDynamicBarcode(prefix, orderId, totp) {
+    const combined = BigInt(orderId) * 1000000n + BigInt(totp);
+    const obf = combined ^ this.MASK_DYNAMIC;
+    const base36 = obf.toString(36).toUpperCase();
+    return prefix + base36.padStart(11, '0');
+  },
+
+  decodeDynamicBarcode(dynamicStr) {
+    const base36 = dynamicStr.substring(1);
+    let obf = 0n;
+    for (let i = 0; i < base36.length; i++) {
+      const code = base36.charCodeAt(i);
+      let val = 0n;
+      if (code >= 48 && code <= 57) val = BigInt(code - 48);
+      else if (code >= 65 && code <= 90) val = BigInt(code - 65 + 10);
+      else if (code >= 97 && code <= 122) val = BigInt(code - 97 + 10);
+      obf = obf * 36n + val;
+    }
+    const combined = obf ^ this.MASK_DYNAMIC;
+    const orderId = Number(combined / 1000000n);
+    const totp = Number(combined % 1000000n);
+    return { orderId, totp };
+  }
+};
 
 /* ── 전역 노출 ──────────────────────────────────────────────── */
 window.$ = $; window.$$ = $$; window.on = on; window.off = off;

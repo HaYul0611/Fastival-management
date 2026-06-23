@@ -756,7 +756,7 @@ public class OrderController {
     @PostMapping("/tickets/scan")
     public Map<String, Object> scanQrTicket(@RequestBody Map<String, String> payload) {
         Map<String, Object> res = new HashMap<>();
-        String qrText = payload.get("qrText"); // format: e.g. F0001OX4M9K2
+        String qrText = payload.get("qrText"); // format: e.g. TXXXXXX... (12 chars)
 
         if (qrText == null || qrText.length() != 12) {
             insertScanLog(-1L, 1L, false);
@@ -766,10 +766,14 @@ public class OrderController {
         }
 
         Long orderId;
-        String totpCode = qrText.substring(6, 12);
+        String totpCode;
         try {
-            String orderIdBase36 = qrText.substring(1, 6);
-            orderId = Long.parseLong(orderIdBase36, 36);
+            String base36 = qrText.substring(1);
+            long obf = Long.parseLong(base36, 36);
+            long combined = obf ^ 90000000000000000L; // MASK_DYNAMIC
+            orderId = combined / 1000000L;
+            long totpNum = combined % 1000000L;
+            totpCode = String.format("%06d", totpNum);
         } catch (Exception e) {
             insertScanLog(-1L, 1L, false);
             res.put("status", "INVALID");

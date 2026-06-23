@@ -91,33 +91,28 @@ document.addEventListener('DOMContentLoaded', async () => {
     const updateQr = async () => {
       const totpCode = await generateTotpCode(secret);
 
-      let displayOrderNo = orderNo;
-      const match = orderNo.match(/0+(\d+)$/);
-      if (match) displayOrderNo = match[1];
-
       let prefix = orderNo.startsWith('F') ? 'F' : (orderNo.startsWith('G') ? 'G' : 'O');
-      let numericId = parseInt(displayOrderNo, 10);
-      let orderIdBase36 = (isNaN(numericId) ? 0 : numericId).toString(36).toUpperCase();
-      while (orderIdBase36.length < 5) orderIdBase36 = '0' + orderIdBase36;
+      let numericId = parseInt(orderNo.replace(/[^0-9]/g, ''), 10);
+      if (isNaN(numericId)) numericId = 1;
 
-      const barcodeData = prefix + orderIdBase36 + totpCode;
-
-      const isFood = order.shop_order_items?.some(item => item.shop_products?.type === 'FOOD');
+      const dynamicBarcode = window.FS.BarcodeUtils.encodeDynamicBarcode(prefix, numericId, totpCode);
 
       const totpCodeEl = document.getElementById('totpCode');
-      totpCodeEl.style.letterSpacing = 'normal';
-      totpCodeEl.style.fontFamily = 'inherit';
-      totpCodeEl.style.fontSize = '26px';
+      totpCodeEl.style.letterSpacing = '2px';
+      totpCodeEl.style.fontFamily = "'Roboto Mono', 'Courier New', monospace";
+      totpCodeEl.style.fontSize = '22px';
+      totpCodeEl.innerHTML = `${dynamicBarcode}`;
 
-      if (isFood) {
-        totpCodeEl.textContent = `대기번호: ${numericId}번`;
-      } else {
-        totpCodeEl.textContent = `수령번호: ${numericId}번`;
+      const displayOrderNo = window.FS.BarcodeUtils.encodeFixedOrder(prefix, numericId);
+      document.getElementById('qrOrderNo').textContent = '주문번호: ' + displayOrderNo;
+
+      const waitingTextEl = document.getElementById('waitingNumberText');
+      if (waitingTextEl) {
+        const waitingNum = order.waiting_number || order.waitingNumber || String(numericId).slice(-3).padStart(3, '0');
+        waitingTextEl.innerHTML = `${waitingNum}<span style="font-size: 18px; font-weight: 700; margin-left: 2px;">번</span>`;
       }
 
-      document.getElementById('qrOrderNo').textContent = '주문번호: ' + orderNo;
-
-      const qrData = 'TOTP:' + orderNo + ':' + totpCode;
+      const qrData = dynamicBarcode;
       let qrImage = document.getElementById('qrImage');
       const container = qrImage.parentElement;
 
@@ -209,6 +204,15 @@ document.addEventListener('DOMContentLoaded', async () => {
         const m = String(Math.floor(timeLeft / 60)).padStart(2, '0');
         const s = String(timeLeft % 60).padStart(2, '0');
         txt.textContent = m + ':' + s;
+        if (timeLeft < 30) {
+          bar.style.background = 'linear-gradient(90deg, #ef4444, #f87171)';
+          txt.style.color = '#ef4444';
+          txt.classList.add('text-shake');
+        } else {
+          bar.style.background = 'linear-gradient(90deg, #00f2fe, #4facfe)';
+          txt.style.color = '#0ea5e9';
+          txt.classList.remove('text-shake');
+        }
       };
       updateUI(); // 초기 렌더
 
@@ -282,7 +286,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       <div style="margin-bottom:24px;">
         <div style="display:flex; justify-content:space-between; margin-bottom:8px;">
           <span style="color:var(--g500);">주문번호</span>
-          <span class="barcode-text" style="font-weight:700;">${orderNo}</span>
+          <span class="barcode-text" style="font-weight:700;">${window.FS.BarcodeUtils.encodeFixedOrder(orderNo.charAt(0), parseInt(orderNo.replace(/[^0-9]/g, '') || 1, 10))}</span>
         </div>
         <div style="display:flex; justify-content:space-between; margin-bottom:8px;">
           <span style="color:var(--g500);">결제일시</span>
@@ -461,7 +465,7 @@ function renderOrderCard(order) {
       <div class="order-header">
         <div>
           <span class="order-date">${new Date(order.created_at).toLocaleDateString()}</span>
-          <span class="order-no barcode-text">주문번호 ${order.order_number}</span>
+          <span class="order-no barcode-text">주문번호 ${window.FS.BarcodeUtils.encodeFixedOrder(order.order_number.charAt(0), parseInt(order.order_number.replace(/[^0-9]/g, '') || 1, 10))}</span>
         </div>
         <a href="javascript:void(0)" onclick="openDetailModal('${order.order_number}')" class="order-detail-btn">주문상세 보기 &gt;</a>
       </div>
