@@ -137,3 +137,111 @@
   background: rgba(105, 108, 255, 0.5);
 }
 
+/* ==========================================
+ * [1단계] 글로벌 관리자 프리미엄 비주얼 통일 테마
+ * ========================================== */
+
+/* 1. 프리미엄 폰트 정의 및 전역 강제 상속 */
+@import url("https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard-dynamic-subset.css");
+@import url("https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;600;700&display=swap");
+
+body, html, input, button, select, textarea, .menu-inner, .navbar, .card-title, .modal-title {
+  font-family: "Pretendard Variable", "Pretendard", -apple-system, BlinkMacSystemFont, system-ui, Roboto, sans-serif !important;
+  letter-spacing: -0.015em;
+}
+
+/* 금액 및 숫자 가독성 향상 전용 클래스 */
+.font-numeric {
+  font-family: "Space Grotesk", sans-serif !important;
+  letter-spacing: -0.02em;
+}
+
+/* 2. 전역 카드(Card) 스타일 현대화 및 마이크로 트랜지션 */
+.card {
+  border: 1px solid rgba(105, 108, 255, 0.06) !important;
+  box-shadow: 0 4px 18px 0 rgba(0, 0, 0, 0.02) !important;
+  border-radius: 12px !important;
+  transition: all 0.35s cubic-bezier(0.25, 0.8, 0.25, 1) !important;
+}
+
+/* 통계 및 주요 리액티브 카드 인터랙션 */
+.card.stat-card, .card.chart-card, .card.hover-card {
+  border-color: rgba(105, 108, 255, 0.08) !important;
+}
+
+.card.stat-card:hover, .card.chart-card:hover, .card.hover-card:hover {
+  transform: translateY(-6px);
+  box-shadow: 0 10px 24px 0 rgba(105, 108, 255, 0.08) !important;
+  border-color: rgba(105, 108, 255, 0.2) !important;
+}
+
+/* 3. 테이블(Table) 디자인 전역 최적화 */
+.table:not(.table-bordered) thead th {
+  text-transform: none !important;
+  font-size: 0.78rem !important;
+  font-weight: 700 !important;
+  color: #697a8d !important;
+  background-color: #f8f9fa !important;
+  border-bottom: 2px solid #e4e6e8 !important;
+  padding-top: 12px !important;
+  padding-bottom: 12px !important;
+}
+
+.table tbody td {
+  border-bottom: 1px solid #f0f2f4 !important;
+  vertical-align: middle !important;
+  padding-top: 14px !important;
+  padding-bottom: 14px !important;
+}
+
+/* 행(Row) 호버 시 부드러운 스태틱 색상 반전 */
+.table-hover tbody tr {
+  transition: background-color 0.2s ease-in-out;
+}
+
+.table-hover tbody tr:hover td {
+  background-color: rgba(105, 108, 255, 0.02) !important;
+}
+
+/* 4. 상태 배지(Badge) 전역 파스텔톤화 및 가독성 업그레이드 */
+.badge {
+  padding: 5px 10px !important;
+  font-weight: 700 !important;
+  border-radius: 6px !important;
+  font-size: 0.75rem !important;
+  letter-spacing: -0.01em;
+  box-shadow: none !important;
+  text-transform: none !important;
+}
+
+.badge.bg-success, .badge.bg-label-success {
+  background-color: rgba(113, 221, 55, 0.15) !important;
+  color: #71dd37 !important;
+}
+
+.badge.bg-warning, .badge.bg-label-warning {
+  background-color: rgba(255, 180, 0, 0.15) !important;
+  color: #ffb400 !important;
+}
+
+.badge.bg-danger, .badge.bg-label-danger {
+  background-color: rgba(255, 62, 29, 0.15) !important;
+  color: #ff3e1d !important;
+}
+
+.badge.bg-info, .badge.bg-label-info {
+  background-color: rgba(3, 195, 236, 0.15) !important;
+  color: #03c3ec !important;
+}
+
+.badge.bg-primary, .badge.bg-label-primary {
+  background-color: rgba(105, 108, 255, 0.15) !important;
+  color: #696cff !important;
+}
+
+.badge.bg-secondary, .badge.bg-label-secondary {
+  background-color: rgba(133, 146, 163, 0.15) !important;
+  color: #8592a3 !important;
+}
+
+

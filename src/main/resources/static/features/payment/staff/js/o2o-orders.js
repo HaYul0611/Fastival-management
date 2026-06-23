@@ -16,42 +16,7 @@ const userSpecificRole = localStorage.getItem('userSpecificRole') || sessionStor
             }
 
             // 1. DING-DONG! Baemin style notification popup simulation after 3 seconds
-            document.addEventListener('DOMContentLoaded', () => {
-              setTimeout(() => {
-                // Create and show a beautiful Baemin-like popup overlay
-                const popup = document.createElement('div');
-                popup.style.position = 'fixed';
-                popup.style.top = '24px';
-                popup.style.right = '24px';
-                popup.style.zIndex = '9999';
-                popup.style.width = '360px';
-                popup.className = 'card border border-primary shadow-lg animate__animated animate__bounceInRight';
-                popup.innerHTML = `
-        <div class="card-body p-4 text-white" style="background-color: #2ac1bc; border-radius: 6px;">
-          <div class="d-flex justify-content-between align-items-center mb-2">
-            <h5 class="m-0 fw-bold text-white"><i class="bx bx-volume-full me-2"></i>배민 주문 접수!</h5>
-            <button type="button" class="btn-close btn-close-white" onclick="this.closest('.card').remove()"></button>
-          </div>
-          <p class="mb-2 fs-6 fw-bold">📢 딩동! 신규 배달/포장 주문 1건이 접수되었습니다.</p>
-          <div class="bg-white text-dark p-2 rounded small fw-bold">
-            [배달] 원조 매운 떡볶이 1개 - 6,500원
-          </div>
-        </div>
-      `;
-                document.body.appendChild(popup);
-
-                // Play a short synth beep if browser allows
-                try {
-                  const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-                  const osc = audioCtx.createOscillator();
-                  osc.type = 'sine';
-                  osc.frequency.setValueAtTime(880, audioCtx.currentTime); // A5
-                  osc.connect(audioCtx.destination);
-                  osc.start();
-                  osc.stop(audioCtx.currentTime + 0.15);
-                } catch (e) { }
-              }, 3000);
-            });
+            // 데모용 1회성 하드코딩 팝업은 혼선을 주므로 비활성화 처리합니다.
 
             // Token Getter
             function getAuthHeader() {
@@ -101,25 +66,30 @@ const userSpecificRole = localStorage.getItem('userSpecificRole') || sessionStor
             }
 
             function playDingDongAlert(count) {
-              // 팝업 알림 생성
+              // 팝업 알림 생성 (오른쪽 하단 고정형 및 확인 버튼 포함)
               const popup = document.createElement('div');
               popup.style.position = 'fixed';
-              popup.style.top = '24px';
+              popup.style.bottom = '24px';
               popup.style.right = '24px';
               popup.style.zIndex = '9999';
               popup.style.width = '360px';
-              popup.className = 'card border border-primary shadow-lg animate__animated animate__bounceInRight';
+              popup.className = 'card border border-primary shadow-lg animate__animated animate__bounceInUp';
               popup.innerHTML = `
-      <div class="card-body p-4 text-white" style="background-color: #2ac1bc; border-radius: 6px;">
+      <div class="card-body p-4 text-white" style="background-color: #696cff; border-radius: 8px; box-shadow: 0 8px 30px rgba(105, 108, 255, 0.25);">
         <div class="d-flex justify-content-between align-items-center mb-2">
           <h5 class="m-0 fw-bold text-white"><i class="bx bx-volume-full me-2"></i>신규 스마트 오더</h5>
           <button type="button" class="btn-close btn-close-white" onclick="this.closest('.card').remove()"></button>
         </div>
-        <p class="mb-0 fs-6 fw-bold">📢 딩동! 실시간 신규 주문 ${count}건이 들어왔습니다!</p>
+        <p class="mb-3 fs-6 fw-bold">📢 딩동! 실시간 신규 주문 ${count}건이 들어왔습니다!</p>
+        <div class="d-flex justify-content-end">
+          <button type="button" class="btn btn-sm btn-white text-primary fw-bold px-3 py-1.5" onclick="this.closest('.card').remove();" style="background-color: #ffffff; border: none; border-radius: 4px;">
+            확인 및 닫기
+          </button>
+        </div>
       </div>
     `;
               document.body.appendChild(popup);
-              setTimeout(() => popup.remove(), 5000);
+              // 자동으로 사라지는 타이머를 완전히 제거하여 가맹주가 [확인] 버튼을 클릭해 닫을 때까지 유지
 
               // 사운드 알림
               try {

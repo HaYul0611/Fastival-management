@@ -61,4 +61,33 @@ public class AdminMemberController {
             return ResponseEntity.badRequest().build();
         }
     }
+
+    /**
+     * 신규 게이트 스탭 또는 가맹점 스탭 계정을 생성합니다.
+     * POST /api/admin/members/staff
+     */
+    @PostMapping("/staff")
+    public ResponseEntity<?> registerStaff(@RequestBody StaffRegisterRequest request) {
+        try {
+            UserVo staff = UserVo.builder()
+                    .email(request.getEmail())
+                    .name(request.getName())
+                    .password(request.getPassword())
+                    .phone(request.getPhone())
+                    .build();
+            UserVo created = userService.registerStaff(staff, request.getRole());
+            return ResponseEntity.ok(created);
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
+
+    @lombok.Data
+    public static class StaffRegisterRequest {
+        private String email;
+        private String password;
+        private String name;
+        private String phone;
+        private String role; // "ROLE_GATE_STAFF" or "ROLE_STAFF"
+    }
 }
