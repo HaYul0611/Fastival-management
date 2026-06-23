@@ -32,6 +32,26 @@ public class UserService {
         return userRepository.save(user);
     }
 
+    @Transactional
+    public UserVo registerStaff(UserVo user, String role) {
+        if (userRepository.existsByEmail(user.getEmail())) {
+            throw new IllegalArgumentException("이미 존재하는 이메일입니다.");
+        }
+        user.setPassword(passwordEncoder.encode(user.getPassword()));
+        user.setRole(role);
+        user.setStatus("ACTIVE");
+        user.setBalance(0);
+        
+        if ("ROLE_ADMIN".equals(role)) {
+            user.setMembershipGrade("VIP");
+        } else if ("ROLE_STAFF".equals(role) || "ROLE_GATE_STAFF".equals(role)) {
+            user.setMembershipGrade("SVIP");
+        } else {
+            user.setMembershipGrade("BRONZE");
+        }
+        return userRepository.save(user);
+    }
+
     public UserVo login(String email, String password) {
         UserVo user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new IllegalArgumentException("이메일 또는 비밀번호가 올바르지 않습니다."));

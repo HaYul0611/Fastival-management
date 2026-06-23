@@ -1,0 +1,296 @@
+<!doctype html>
+<html lang="ko" class="layout-menu-fixed layout-compact" data-assets-path="/assets/"
+  data-template="vertical-menu-template-free">
+
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport"
+    content="width=device-width, initial-scale=1.0, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0" />
+  <title>게이트 스탭 권한 관리 및 계정 생성 | FESTIO</title>
+
+  <link rel="icon" type="image/x-icon" href="/assets/img/favicon/favicon.ico" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Noto+Sans+KR:wght@300;400;500;700&display=swap"
+    rel="stylesheet" />
+  <link rel="stylesheet" href="/assets/vendor/fonts/iconify-icons.css" />
+  <link rel="stylesheet" href="/assets/vendor/css/core.css" />
+  <link rel="stylesheet" href="/assets/css/demo.css" />
+  <link rel="stylesheet" href="/assets/vendor/libs/perfect-scrollbar/perfect-scrollbar.css" />
+
+  <!-- SweetAlert2 for beautiful alerts -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
+  
+  <script src="/assets/vendor/js/helpers.js"></script>
+  <script src="/assets/js/config.js"></script>
+
+  <style>
+    body {
+      font-family: 'Outfit', 'Noto Sans KR', sans-serif;
+      background-color: #f5f5f9;
+    }
+    .card {
+      border: none;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+      border-radius: 12px;
+      transition: all 0.3s ease;
+    }
+    .card:hover {
+      box-shadow: 0 8px 30px rgba(0, 0, 0, 0.08);
+    }
+    .badge {
+      padding: 0.55em 0.8em;
+      font-weight: 600;
+      border-radius: 6px;
+    }
+    .bg-label-gate-staff {
+      background-color: rgba(3, 195, 236, 0.12) !important;
+      color: #03c3ec !important;
+    }
+    .bg-label-staff {
+      background-color: rgba(105, 108, 255, 0.12) !important;
+      color: #696cff !important;
+    }
+    .bg-label-admin {
+      background-color: rgba(255, 171, 0, 0.12) !important;
+      color: #ffab00 !important;
+    }
+    .bg-label-user {
+      background-color: rgba(133, 146, 163, 0.12) !important;
+      color: #8592a3 !important;
+    }
+    .table-hover tbody tr:hover {
+      background-color: rgba(105, 108, 255, 0.03);
+    }
+    .form-switch .form-check-input {
+      width: 2.5em;
+      height: 1.25em;
+      cursor: pointer;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="layout-wrapper layout-content-navbar">
+    <div class="layout-container">
+
+      <!-- Sidebar Menu -->
+      <aside id="layout-menu" class="layout-menu menu-vertical menu bg-menu-theme">
+        <!-- sidebar.js 가 런타임에 동적으로 삽입됨 -->
+      </aside>
+
+      <div class="layout-page">
+        <!-- Navbar -->
+        <nav
+          class="layout-navbar container-xxl navbar navbar-expand-xl navbar-detached align-items-center bg-navbar-theme"
+          id="layout-navbar">
+          <div class="layout-menu-toggle navbar-nav align-items-xl-center me-4 me-xl-0 d-xl-none">
+            <a class="nav-item nav-link px-0 me-xl-6" href="javascript:void(0)">
+              <i class="bx bx-menu bx-sm"></i>
+            </a>
+          </div>
+          <div class="navbar-nav-right d-flex align-items-center" id="navbar-collapse">
+            <h5 class="mb-0 fw-bold"><i class="bx bx-shield-quarter me-2 text-primary"></i>게이트 스탭 및 사용자 권한 제어 센터</h5>
+            <ul class="navbar-nav flex-row align-items-center ms-auto">
+              <li class="nav-item dropdown-user dropdown">
+                <a class="nav-link dropdown-toggle hide-arrow" href="javascript:void(0);" data-bs-toggle="dropdown">
+                  <div class="avatar avatar-online">
+                    <img src="/assets/img/avatars/chibi_admin.png" class="w-px-40 h-auto rounded-circle" />
+                  </div>
+                </a>
+              </li>
+            </ul>
+          </div>
+        </nav>
+
+        <!-- Content wrapper -->
+        <div class="content-wrapper">
+          <div class="container-xxl flex-grow-1 container-p-y">
+
+            <!-- 1. 통계 요약 카드 영역 -->
+            <div class="row g-4 mb-6">
+              <div class="col-md-3 col-sm-6">
+                <div class="card p-4 border-start border-primary border-4 bg-white">
+                  <div class="d-flex align-items-center justify-content-between">
+                    <div>
+                      <small class="text-muted d-block mb-1">전체 가입자 수</small>
+                      <h4 class="mb-0 fw-bold text-dark" id="statTotalUsers">0명</h4>
+                    </div>
+                    <div class="avatar bg-label-primary rounded p-2">
+                      <i class="bx bx-group fs-3"></i>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div class="col-md-3 col-sm-6">
+                <div class="card p-4 border-start border-info border-4 bg-white">
+                  <div class="d-flex align-items-center justify-content-between">
+                    <div>
+                      <small class="text-muted d-block mb-1">게이트 스탭</small>
+                      <h4 class="mb-0 fw-bold text-dark" id="statGateStaff">0명</h4>
+                    </div>
+                    <div class="avatar bg-label-info rounded p-2">
+                      <i class="bx bx-scan fs-3"></i>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div class="col-md-3 col-sm-6">
+                <div class="card p-4 border-start border-success border-4 bg-white">
+                  <div class="d-flex align-items-center justify-content-between">
+                    <div>
+                      <small class="text-muted d-block mb-1">활성 계정</small>
+                      <h4 class="mb-0 fw-bold text-dark" id="statActiveUsers">0명</h4>
+                    </div>
+                    <div class="avatar bg-label-success rounded p-2">
+                      <i class="bx bx-check-circle fs-3"></i>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div class="col-md-3 col-sm-6">
+                <div class="card p-4 border-start border-danger border-4 bg-white">
+                  <div class="d-flex align-items-center justify-content-between">
+                    <div>
+                      <small class="text-muted d-block mb-1">정지(BANNED) 계정</small>
+                      <h4 class="mb-0 fw-bold text-dark" id="statBannedUsers">0명</h4>
+                    </div>
+                    <div class="avatar bg-label-danger rounded p-2">
+                      <i class="bx bx-block fs-3"></i>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- 2. 메인 관리 패널 -->
+            <div class="card">
+              <div class="card-header d-flex align-items-center justify-content-between border-bottom py-3">
+                <h5 class="card-title m-0 fw-bold"><i class="bx bx-list-check me-2 text-primary"></i>스탭 및 회원 권한 관리</h5>
+                <button class="btn btn-primary btn-md fw-bold" data-bs-toggle="modal" data-bs-target="#registerStaffModal">
+                  <i class="bx bx-plus-circle me-1.5"></i>신규 스탭 계정 생성
+                </button>
+              </div>
+
+              <!-- 검색 및 필터 컨트롤 -->
+              <div class="card-body pt-4 border-bottom bg-light bg-opacity-10">
+                <div class="row g-3">
+                  <div class="col-md-4">
+                    <div class="input-group input-group-merge">
+                      <span class="input-group-text"><i class="bx bx-search"></i></span>
+                      <input type="text" id="searchInput" class="form-control" placeholder="이름, 이메일, 전화번호로 검색..." />
+                    </div>
+                  </div>
+                  <div class="col-md-3">
+                    <select id="roleFilter" class="form-select">
+                      <option value="ALL">전체 권한 (게이트 & 일반)</option>
+                      <option value="ROLE_GATE_STAFF">게이트 스탭 (ROLE_GATE_STAFF)</option>
+                      <option value="ROLE_USER">일반 사용자 (ROLE_USER)</option>
+                    </select>
+                  </div>
+                  <div class="col-md-3">
+                    <select id="statusFilter" class="form-select">
+                      <option value="ALL">전체 상태</option>
+                      <option value="ACTIVE">활성 (ACTIVE)</option>
+                      <option value="BANNED">정지 (BANNED)</option>
+                    </select>
+                  </div>
+                  <div class="col-md-2 d-grid">
+                    <button class="btn btn-outline-secondary" id="btnResetFilters">
+                      <i class="bx bx-refresh me-1"></i>필터 초기화
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              <!-- 테이블 데이터 -->
+              <div class="table-responsive text-nowrap">
+                <table class="table table-hover align-middle mb-0">
+                  <thead class="table-light">
+                    <tr>
+                      <th class="ps-4">이름</th>
+                      <th>이메일</th>
+                      <th>전화번호</th>
+                      <th class="text-center">권한 역할</th>
+                      <th class="text-center">계정 상태</th>
+                      <th class="text-center">권한 부여/강등</th>
+                    </tr>
+                  </thead>
+                  <tbody id="memberTableBody">
+                    <tr>
+                      <td colspan="6" class="text-center py-5 text-muted">사용자 목록을 불러오는 중...</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+          </div>
+        </div>
+
+        <!-- 3. 신규 스탭 생성 모달 -->
+        <div class="modal fade" id="registerStaffModal" tabindex="-1" aria-hidden="true">
+          <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+              <div class="modal-header border-bottom">
+                <h5 class="modal-title fw-bold" id="exampleModalLabel1">
+                  <i class="bx bx-user-plus me-1.5 text-primary"></i>신규 현장 스탭 계정 생성
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+              </div>
+              <form id="registerStaffForm">
+                <div class="modal-body">
+                  <div class="mb-3">
+                    <label class="form-label" for="staffEmail">이메일 계정 <span class="text-danger">*</span></label>
+                    <input type="email" id="staffEmail" class="form-control" placeholder="staff@festio.com" required />
+                  </div>
+                  <div class="mb-3">
+                    <label class="form-label" for="staffPassword">초기 비밀번호 <span class="text-danger">*</span></label>
+                    <input type="password" id="staffPassword" class="form-control" placeholder="••••••••" required />
+                  </div>
+                  <div class="mb-3">
+                    <label class="form-label" for="staffName">이름 <span class="text-danger">*</span></label>
+                    <input type="text" id="staffName" class="form-control" placeholder="홍길동" required />
+                  </div>
+                  <div class="mb-3">
+                    <label class="form-label" for="staffPhone">연락처</label>
+                    <input type="text" id="staffPhone" class="form-control" placeholder="010-1234-5678" />
+                  </div>
+                  <div class="mb-3">
+                    <label class="form-label" for="staffRoleDisplay">부여할 스탭 역할</label>
+                    <input type="text" id="staffRoleDisplay" class="form-control" value="입장 게이트 스탭 (ROLE_GATE_STAFF)" readonly />
+                    <input type="hidden" id="staffRole" value="ROLE_GATE_STAFF" />
+                  </div>
+                </div>
+                <div class="modal-footer border-top pt-3">
+                  <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">닫기</button>
+                  <button type="submit" class="btn btn-primary fw-bold">계정 생성 및 활성화</button>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- Core Scripts -->
+  <script src="/assets/vendor/libs/jquery/jquery.js"></script>
+  <script src="/assets/vendor/libs/popper/popper.js"></script>
+  <script src="/assets/vendor/js/bootstrap.js"></script>
+  <script src="/assets/vendor/libs/perfect-scrollbar/perfect-scrollbar.js"></script>
+  <script src="/assets/vendor/js/menu.js"></script>
+
+  <!-- SweetAlert2 -->
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+  <!-- Sidebar JS Dynamic binding -->
+  <script src="/assets/js/sidebar.js"></script>
+
+  <!-- Page Custom JS -->
+  <script src="js/staff-management.js"></script>
+</body>
+
+</html>

@@ -1,10 +1,12 @@
 .premium-gradient {
-        background: linear-gradient(135deg, #696cff 0%, #a2a4ff 100%);
-        color: white;
-      }
-      .stat-card {
-        transition: transform 0.2s;
-      }
-      .stat-card:hover {
-        transform: translateY(-5px);
-      }
+    background: linear-gradient(135deg, #696cff 0%, #a2a4ff 100%);
+    color: white;
+}
+
+.stat-card {
+    transition: transform 0.2s;
+}
+
+.stat-card:hover {
+    transform: translateY(-5px);
+}

@@ -1,12 +1,188 @@
+/* 프리미엄 폰트 정의 (한글: Pretendard, 영문/숫자: Space Grotesk) */
+@import url("https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard-dynamic-subset.css");
+@import url("https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;600;700&display=swap");
+
+body {
+  font-family: "Pretendard Variable", "Pretendard", -apple-system, BlinkMacSystemFont, system-ui, Roboto, sans-serif !important;
+  background-color: #f5f5f9;
+}
+
+/* 프리미엄 그라디언트 카드 스타일 */
 .premium-gradient {
-      background: linear-gradient(135deg, #696cff 0%, #a2a4ff 100%);
-      color: white;
-    }
+  background: linear-gradient(135deg, #696cff 0%, #a2a4ff 100%);
+  color: white;
+}
 
-    .stat-card {
-      transition: transform 0.2s;
-    }
+/* 통계 카드 (Stat Card) 글래스모피즘 및 마이크로 인터랙션 */
+.stat-card {
+  background: #ffffff;
+  border: 1px solid rgba(105, 108, 255, 0.08);
+  border-radius: 12px;
+  box-shadow: 0 4px 20px 0 rgba(0, 0, 0, 0.03);
+  transition: all 0.35s cubic-bezier(0.25, 0.8, 0.25, 1);
+}
 
-    .stat-card:hover {
-      transform: translateY(-5px);
-    }
+.stat-card:hover {
+  transform: translateY(-8px);
+  box-shadow: 0 12px 30px 0 rgba(105, 108, 255, 0.12);
+  border-color: rgba(105, 108, 255, 0.25);
+}
+
+.stat-card .card-title {
+  color: #566a7f;
+  font-size: 0.9rem;
+  letter-spacing: -0.02em;
+}
+
+/* 금액 및 숫자 전용 폰트 스타일 (하이엔드 핀테크 느낌) */
+.font-numeric {
+  font-family: "Space Grotesk", sans-serif;
+  letter-spacing: -0.03em;
+}
+
+h3.font-numeric {
+  font-weight: 700;
+  font-size: 1.85rem;
+}
+
+/* 테이블(Table) 디자인 프리미엄화 */
+.table-responsive {
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+#settlementTable {
+  font-size: 0.88rem;
+  border-collapse: separate;
+  border-spacing: 0;
+}
+
+#settlementTable thead th {
+  background-color: #f8f9fa;
+  color: #697a8d;
+  font-weight: 700;
+  text-transform: none;
+  font-size: 0.8rem;
+  letter-spacing: -0.01em;
+  padding: 14px 20px;
+  border-bottom: 2px solid #e4e6e8;
+}
+
+#settlementTable tbody td {
+  padding: 15px 20px;
+  vertical-align: middle;
+  border-bottom: 1px solid #f0f2f4;
+  transition: background-color 0.2s ease;
+}
+
+#settlementTable tbody tr:hover td {
+  background-color: rgba(105, 108, 255, 0.03) !important;
+}
+
+/* 테이블의 금액 텍스트 특수강조 */
+#settlementTable tbody td:nth-child(2),
+#settlementTable tbody td:nth-child(3),
+#settlementTable tbody td:nth-child(4),
+#settlementTable tbody td:nth-child(5) {
+  font-family: "Space Grotesk", sans-serif;
+  font-weight: 600;
+}
+
+/* 상태 배지(Badge) 리디자인 (파스텔톤 & 반투명) */
+.badge {
+  padding: 6px 12px !important;
+  font-weight: 700 !important;
+  border-radius: 6px !important;
+  font-size: 0.78rem !important;
+  letter-spacing: -0.01em;
+  box-shadow: none !important;
+}
+
+.badge.bg-success {
+  background-color: rgba(113, 221, 55, 0.16) !important;
+  color: #71dd37 !important;
+}
+
+.badge.bg-warning {
+  background-color: rgba(255, 180, 0, 0.16) !important;
+  color: #ffb400 !important;
+}
+
+.badge.bg-secondary {
+  background-color: rgba(133, 146, 163, 0.16) !important;
+  color: #8592a3 !important;
+}
+
+/* 행사 필터 섹션 세련화 */
+.filter-card {
+  border-left: 4px solid #696cff;
+  border-radius: 12px;
+  box-shadow: 0 4px 15px 0 rgba(0, 0, 0, 0.02);
+}
+
+.filter-card .form-select {
+  border-radius: 8px;
+  border: 1px solid #d9dee3;
+  padding: 10px 16px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #435971;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.filter-card .form-select:focus {
+  border-color: #696cff;
+  box-shadow: 0 0 0 3px rgba(105, 108, 255, 0.15);
+}
+
+/* ================= 2단계: 스케클톤 로더 및 차트 추가 ================= */
+
+/* 은은하게 깜빡이는 애니메이션 */
+@keyframes skeleton-shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+.skeleton-loader {
+  display: inline-block;
+  height: 1.25rem;
+  width: 100%;
+  background: linear-gradient(90deg, #e9ecef 25%, #f8f9fa 50%, #e9ecef 75%);
+  background-size: 200% 100%;
+  animation: skeleton-shimmer 1.5s infinite linear;
+  border-radius: 4px;
+}
+
+.skeleton-loader.height-large {
+  height: 2.2rem;
+  border-radius: 6px;
+}
+
+.skeleton-row td {
+  padding: 18px 20px !important;
+}
+
+/* 차트 카드 디자인 */
+.chart-card {
+  border-radius: 12px;
+  box-shadow: 0 4px 20px 0 rgba(0, 0, 0, 0.02);
+  border: 1px solid rgba(105, 108, 255, 0.05);
+  background: #ffffff;
+}
+
+.chart-card .card-header {
+  border-bottom: 1px solid #f0f2f4;
+  background: transparent;
+  padding: 18px 24px;
+}
+
+.chart-container {
+  min-height: 320px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}

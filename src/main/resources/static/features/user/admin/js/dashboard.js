@@ -36,8 +36,38 @@
     chart.render();
 
     // ==========================================
-    // [실시간 DB 통계 연동 함수 3종]
+    // [실시간 롤링 카운터 및 실시간 갱신 저장소]
     // ==========================================
+    let currentStats = {
+      totalRevenue: 0,
+      ticketRevenue: 0,
+      o2oRevenue: 0,
+      totalEntered: 0,
+      storeRevenue: 0
+    };
+
+    /** 수치 증가 롤링 애니메이션 (Ease-Out 적용) */
+    function animateValue(obj, start, end, duration, formatFn) {
+      if (!obj) return;
+      if (start === end) {
+        obj.innerHTML = formatFn ? formatFn(end) : end.toLocaleString('ko-KR');
+        return;
+      }
+      let startTimestamp = null;
+      const step = (timestamp) => {
+        if (!startTimestamp) startTimestamp = timestamp;
+        const progress = Math.min((timestamp - startTimestamp) / duration, 1);
+        const easeProgress = progress * (2 - progress); // easeOutQuad
+        const val = Math.floor(easeProgress * (end - start) + start);
+        obj.innerHTML = formatFn ? formatFn(val) : val.toLocaleString('ko-KR');
+        if (progress < 1) {
+          window.requestAnimationFrame(step);
+        } else {
+          obj.innerHTML = formatFn ? formatFn(end) : end.toLocaleString('ko-KR');
+        }
+      };
+      window.requestAnimationFrame(step);
+    }
 
     /** 금액 포맷 헬퍼 (₩ 1,234,000 형식) */
     function fmtMoney(n) {
@@ -52,9 +82,8 @@
       });
     }
 
-
     /**
-     * 1. 금일 누적 매출 총액 (O2O + 예매) 로드
+     * 1. 금일 누적 매출 총액 (O2O + 예매) 로드 (롤링 적용)
      */
     async function loadTodayRevenue() {
       try {
@@ -67,9 +96,23 @@
         const o2oEl = document.getElementById('o2oRevenueStat');
         const updatedEl = document.getElementById('todayRevenueUpdatedAt');
 
-        if (totalEl) totalEl.textContent = fmtMoney(data.totalRevenue || 0);
-        if (ticketEl) ticketEl.textContent = fmtMoney(data.ticketRevenue || 0);
-        if (o2oEl) o2oEl.textContent = fmtMoney(data.o2oRevenue || 0);
+        const newTotal = data.totalRevenue || 0;
+        const newTicket = data.ticketRevenue || 0;
+        const newO2o = data.o2oRevenue || 0;
+
+        if (totalEl) {
+          animateValue(totalEl, currentStats.totalRevenue, newTotal, 1200, fmtMoney);
+          currentStats.totalRevenue = newTotal;
+        }
+        if (ticketEl) {
+          animateValue(ticketEl, currentStats.ticketRevenue, newTicket, 1200, fmtMoney);
+          currentStats.ticketRevenue = newTicket;
+        }
+        if (o2oEl) {
+          animateValue(o2oEl, currentStats.o2oRevenue, newO2o, 1200, fmtMoney);
+          currentStats.o2oRevenue = newO2o;
+        }
+
         if (updatedEl) {
           const now = new Date();
           updatedEl.textContent = `${now.getHours()}:${String(now.getMinutes()).padStart(2,'0')} 기준 집계 완료`;
@@ -81,9 +124,8 @@
       }
     }
 
-
     /**
-     * 2. 진행중 페스티벌별 입장 인원 로드
+     * 2. 진행중 페스티벌별 입장 인원 로드 (롤링 적용)
      */
     async function loadAttendance() {
       try {
@@ -96,7 +138,10 @@
         const progressEl = document.getElementById('attendanceProgressBar');
 
         const total = data.totalEntered || 0;
-        if (totalEl) totalEl.textContent = total.toLocaleString('ko-KR') + ' 명';
+        if (totalEl) {
+          animateValue(totalEl, currentStats.totalEntered, total, 1200, (v) => v.toLocaleString('ko-KR') + ' 명');
+          currentStats.totalEntered = total;
+        }
 
         const festivals = data.festivals || [];
         if (listEl) {
@@ -112,8 +157,6 @@
           }
         }
 
-        // 프로그레스바: 전체 예매(총 티켓) 대비 입장 비율 (간단히 entered / (entered+100) 로 시각화)
-        // 실제 좌석 수가 있으면 더 정확하게 계산 가능
         if (progressEl) {
           const pct = total > 0 ? Math.min(100, (total / Math.max(total + 100, 1000)) * 100) : 0;
           progressEl.style.width = pct.toFixed(1) + '%';
@@ -128,7 +171,7 @@
     }
 
     /**
-     * 3. 입점사 누적 정산액 로드
+     * 3. 입점사 누적 정산액 로드 (롤링 적용)
      */
     async function loadStoreRevenue() {
       try {
@@ -139,7 +182,12 @@
         const revenueEl = document.getElementById('storeRevenueStat');
         const descEl = document.getElementById('storeCountDesc');
 
-        if (revenueEl) revenueEl.textContent = fmtMoney(data.totalRevenue || 0);
+        const newStoreRevenue = data.totalRevenue || 0;
+        if (revenueEl) {
+          animateValue(revenueEl, currentStats.storeRevenue, newStoreRevenue, 1200, fmtMoney);
+          currentStats.storeRevenue = newStoreRevenue;
+        }
+
         if (descEl) {
           const cnt = data.storeCount || 0;
           descEl.textContent = `총 ${cnt}개 입점 가맹점 진행중 행사 매출 합산`;
@@ -1083,6 +1131,12 @@
       loadFestivalsFromDB(); // 실시간 데이터 로드
       checkTabRouting();
       refreshDashboardStats(); // DB 통계 카드 최초 로드
+      
+      // [3단계] 실시간 시뮬레이션 엔진 2초 후에 무작위 지연 구동 시작
+      setTimeout(() => {
+        triggerRealtimeOrderSim();
+        triggerRealtimeEntranceSim();
+      }, 2000);
     });
 
     // 60초마다 통계 카드 자동 갱신
@@ -1101,4 +1155,172 @@
         }
       }
     }, 150);
+
+    // ==========================================
+    // [3단계] 실시간 주문 및 입장 시뮬레이션 엔진
+    // ==========================================
+    function triggerRealtimeOrderSim() {
+      const dashboardEl = document.getElementById("tab-content-dashboard");
+      if (dashboardEl && dashboardEl.classList.contains("d-none")) {
+        setTimeout(triggerRealtimeOrderSim, 5000);
+        return;
+      }
+
+      const storeNames = ['푸드트럭 B-3 (버거)', '스테이크 팩토리 A-2', '코코 닭강정 C-1', '츄러스 하우스 D-4', '살얼음 맥주광장'];
+      const menuNames = ['수제 비프 더블버거 세트', '참숯 큐브스테이크(대)', '달콤 양념 닭강정', '정통 롱 츄러스 3pcs', '드라이아이스 크림 생맥주'];
+      
+      const isTicketSale = Math.random() < 0.25;
+      
+      let eventTitle = '';
+      let eventText = '';
+      let price = 0;
+      let badgeBg = 'bg-label-success';
+      let iconClass = 'bx bx-cart';
+
+      if (isTicketSale) {
+        const ticketGrades = ['VVIP 지정석', 'VIP 커플석', '스탠딩 가구역', '일반 입장 패스'];
+        const randomGrade = ticketGrades[Math.floor(Math.random() * ticketGrades.length)];
+        price = (Math.floor(Math.random() * 6) + 4) * 15000;
+        eventTitle = '🎟️ 신규 티켓 예매 성공';
+        eventText = `예매 등급: <b>${randomGrade} 1매</b><br>결제 금액: <strong class="text-primary">₩ ${price.toLocaleString()}</strong>`;
+        badgeBg = 'bg-label-primary';
+        iconClass = 'bx bx-receipt';
+      } else {
+        const randomStore = storeNames[Math.floor(Math.random() * storeNames.length)];
+        const randomMenu = menuNames[Math.floor(Math.random() * menuNames.length)];
+        price = (Math.floor(Math.random() * 4) + 1) * 6500;
+        eventTitle = '🍔 O2O 푸드 주문 접수';
+        eventText = `상점: <b>${randomStore}</b><br>메뉴: <b>${randomMenu}</b><br>결제 금액: <strong class="text-success">₩ ${price.toLocaleString()}</strong>`;
+      }
+
+      // Swal 알림 팝업은 관리자 대시보드에서 필요 없으므로 주석 처리
+      /*
+      if (window.Swal) {
+        Swal.mixin({
+          toast: true,
+          position: 'top-end',
+          showConfirmButton: false,
+          timer: 3500,
+          timerProgressBar: true,
+          showCloseButton: true
+        }).fire({
+          icon: isTicketSale ? 'info' : 'success',
+          title: `<span style="font-size:0.85rem; font-weight:700; color:#333;">${eventTitle}</span>`,
+          html: `<span style="font-size:0.75rem; color:#666;">${eventText}</span>`
+        });
+      }
+      */
+
+      const logContainer = document.querySelector("#tab-content-dashboard .card h-100 ul");
+      if (logContainer) {
+        const li = document.createElement("li");
+        li.className = "d-flex mb-4 pb-1";
+        const now = new Date();
+        const timeStr = `${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}:${String(now.getSeconds()).padStart(2,'0')}`;
+        
+        const shortStore = isTicketSale ? "티켓 예매처" : storeNames[Math.floor(Math.random() * storeNames.length)].split(' ')[0];
+        const shortMenu = isTicketSale ? "FESTIO 예매 완료" : menuNames[Math.floor(Math.random() * menuNames.length)];
+
+        li.innerHTML = `
+          <div class="avatar flex-shrink-0 me-3">
+            <span class="avatar-initial rounded ${badgeBg}"><i class="${iconClass}"></i></span>
+          </div>
+          <div class="d-flex w-100 flex-wrap align-items-center justify-content-between gap-2">
+            <div class="me-2">
+              <h6 class="mb-0">${shortStore} - ${isTicketSale ? '예매' : '주문'}</h6>
+              <small class="text-muted">${shortMenu} / ₩ ${price.toLocaleString()}</small>
+            </div>
+            <div class="user-progress-sm text-muted">${timeStr}</div>
+          </div>
+        `;
+        if (logContainer.firstChild) {
+          logContainer.insertBefore(li, logContainer.firstChild);
+        } else {
+          logContainer.appendChild(li);
+        }
+
+        if (logContainer.children.length > 5) {
+          logContainer.removeChild(logContainer.lastChild);
+        }
+      }
+
+      const totalEl = document.getElementById('todayRevenueStat');
+      const ticketEl = document.getElementById('ticketRevenueStat');
+      const o2oEl = document.getElementById('o2oRevenueStat');
+      const storeRevenueEl = document.getElementById('storeRevenueStat');
+
+      if (totalEl) {
+        const prevTotal = currentStats.totalRevenue;
+        currentStats.totalRevenue += price;
+        animateValue(totalEl, prevTotal, currentStats.totalRevenue, 900, fmtMoney);
+      }
+
+      if (isTicketSale && ticketEl) {
+        const prevTicket = currentStats.ticketRevenue;
+        currentStats.ticketRevenue += price;
+        animateValue(ticketEl, prevTicket, currentStats.ticketRevenue, 900, fmtMoney);
+      } else if (!isTicketSale && o2oEl) {
+        const prevO2o = currentStats.o2oRevenue;
+        currentStats.o2oRevenue += price;
+        animateValue(o2oEl, prevO2o, currentStats.o2oRevenue, 900, fmtMoney);
+
+        if (storeRevenueEl) {
+          const prevStore = currentStats.storeRevenue;
+          currentStats.storeRevenue += price;
+          animateValue(storeRevenueEl, prevStore, currentStats.storeRevenue, 900, fmtMoney);
+        }
+      }
+
+      const nextDelay = Math.floor(Math.random() * 12000) + 12000;
+      setTimeout(triggerRealtimeOrderSim, nextDelay);
+    }
+
+    function triggerRealtimeEntranceSim() {
+      const dashboardEl = document.getElementById("tab-content-dashboard");
+      if (dashboardEl && dashboardEl.classList.contains("d-none")) {
+        setTimeout(triggerRealtimeEntranceSim, 4000);
+        return;
+      }
+
+      const enteredEl = document.getElementById('totalEnteredStat');
+      if (enteredEl && currentStats.totalEntered > 0) {
+        const randomCount = Math.floor(Math.random() * 4) + 1;
+        const prevEntered = currentStats.totalEntered;
+        currentStats.totalEntered += randomCount;
+        animateValue(enteredEl, prevEntered, currentStats.totalEntered, 800, (v) => v.toLocaleString('ko-KR') + ' 명');
+
+        const logContainer = document.querySelector("#tab-content-dashboard .card h-100 ul");
+        if (logContainer) {
+          const li = document.createElement("li");
+          li.className = "d-flex mb-4 pb-1";
+          const now = new Date();
+          const timeStr = `${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}:${String(now.getSeconds()).padStart(2,'0')}`;
+          const gateNo = Math.floor(Math.random() * 4) + 1;
+          
+          li.innerHTML = `
+            <div class="avatar flex-shrink-0 me-3">
+              <span class="avatar-initial rounded bg-label-warning"><i class="bx bx-run"></i></span>
+            </div>
+            <div class="d-flex w-100 flex-wrap align-items-center justify-content-between gap-2">
+              <div class="me-2">
+                <h6 class="mb-0">QR Gate #${gateNo} 스캔 통과</h6>
+                <small class="text-muted">입장 완료: 관람객 ${randomCount}명 입장</small>
+              </div>
+              <div class="user-progress-sm text-muted">${timeStr}</div>
+            </div>
+          `;
+          if (logContainer.firstChild) {
+            logContainer.insertBefore(li, logContainer.firstChild);
+          } else {
+            logContainer.appendChild(li);
+          }
+
+          if (logContainer.children.length > 5) {
+            logContainer.removeChild(logContainer.lastChild);
+          }
+        }
+      }
+      const nextDelay = Math.floor(Math.random() * 8000) + 8000;
+      setTimeout(triggerRealtimeEntranceSim, nextDelay);
+    }
 });

@@ -1,3 +1,43 @@
+// SweetAlert2 라이브러리 동적 주입 및 글로벌 alert 몽키 패치
+(function () {
+    if (!window.Swal) {
+        const swalScript = document.createElement("script");
+        swalScript.src = "https://cdn.jsdelivr.net/npm/sweetalert2@11";
+        document.head.appendChild(swalScript);
+
+        const swalStyle = document.createElement("style");
+        swalStyle.innerHTML = `
+            .swal2-popup {
+                font-family: "Pretendard Variable", "Pretendard", sans-serif !important;
+                border-radius: 12px !important;
+                box-shadow: 0 8px 30px rgba(0, 0, 0, 0.08) !important;
+            }
+            .swal2-confirm {
+                font-weight: 600 !important;
+            }
+        `;
+        document.head.appendChild(swalStyle);
+    }
+
+    const _nativeAlert = window.alert;
+    window.alert = function (message) {
+        if (window.Swal) {
+            Swal.fire({
+                text: message,
+                icon: 'info',
+                confirmButtonText: '확인',
+                customClass: {
+                    confirmButton: 'btn btn-primary px-4 py-2'
+                },
+                buttonsStyling: false
+            });
+        } else {
+            console.warn("[Swal fallback] Swal not ready. Message: " + message);
+            _nativeAlert(message);
+        }
+    };
+})();
+
 document.addEventListener("DOMContentLoaded", function () {
     const layoutMenu = document.getElementById("layout-menu");
     if (!layoutMenu) return;
@@ -79,43 +119,25 @@ document.addEventListener("DOMContentLoaded", function () {
         },
         {
             type: "item",
-            text: "긴급 재난 방송",
-            icon: "bx bx-error-alt",
-            url: "/features/festival/admin/emergency-broadcast.html"
-        },
-        {
-            type: "item",
             text: "GPS 기반 혼잡도 히트맵",
             icon: "bx bx-map-pin",
             url: "/features/festival/admin/crowd-heatmap.html"
         },
         {
+            type: "item",
+            text: "[관리자] 좌석 배치 편집기",
+            icon: "bx bx-cog",
+            url: "/features/payment/admin/seat-editor.html"
+        },
+        {
+            type: "item",
+            text: "[관리자] 게이트 스탭 권한 관리",
+            icon: "bx bx-shield-quarter",
+            url: "/features/payment/admin/staff-management.html"
+        },
+        {
             type: "header",
             text: "소비자 클라이언트 (Client)"
-        },
-        {
-            type: "item",
-            text: "[티켓] 실시간 좌석 예매",
-            icon: "bx bx-grid-alt",
-            url: "/features/payment/client/seat-map.html"
-        },
-        {
-            type: "item",
-            text: "[주문] F&B 모바일 주문",
-            icon: "bx bx-phone",
-            url: "/features/order/client/order-food.html"
-        },
-        {
-            type: "item",
-            text: "[인증] 로그인 및 본인인증",
-            icon: "bx bx-lock-open-alt",
-            url: "/features/user/client/auth.html"
-        },
-        {
-            type: "item",
-            text: "[보관] 장바구니 및 관심",
-            icon: "bx bx-cart",
-            url: "/features/user/client/cart-wishlist.html"
         },
         {
             type: "item",
@@ -149,30 +171,6 @@ document.addEventListener("DOMContentLoaded", function () {
             text: "QR 게이트 출입 관제",
             icon: "bx bx-log-in-circle",
             url: "/features/payment/staff/qr-gate-log.html"
-        },
-        {
-            type: "item",
-            text: "점포 설정 및 영업 관리",
-            icon: "bx bx-store-alt",
-            url: "/features/payment/staff/store-management.html"
-        },
-        {
-            type: "item",
-            text: "메뉴 및 옵션 마스터 등록",
-            icon: "bx bx-list-plus",
-            url: "/features/payment/staff/menu-registration.html"
-        },
-        {
-            type: "item",
-            text: "실시간 재고 및 품절 제어",
-            icon: "bx bx-package",
-            url: "/features/payment/staff/inventory-control.html"
-        },
-        {
-            type: "item",
-            text: "O2O 실시간 주문 수락",
-            icon: "bx bx-receipt",
-            url: "/features/payment/staff/o2o-orders.html"
         }
     ];
 
@@ -282,6 +280,29 @@ document.addEventListener("DOMContentLoaded", function () {
         }
     } else {
         fallbackScroll(layoutMenu);
+    }
+
+    // 모든 관리자 페이지의 navbar에 'FESTIO 메인' 바로가기 버튼 동적 삽입
+    const navbarNav = document.querySelector("#navbar-collapse .navbar-nav");
+    if (navbarNav) {
+        const hasMainBtn = navbarNav.querySelector('a[href="/Festio/index.html"]');
+        if (!hasMainBtn) {
+            const dropdownUser = navbarNav.querySelector('.dropdown-user');
+            if (dropdownUser) {
+                const li = document.createElement('li');
+                li.className = 'nav-item me-2';
+                li.innerHTML = `
+                    <a href="/Festio/index.html" target="_blank"
+                      class="btn btn-sm btn-outline-primary d-flex align-items-center gap-1"
+                      style="font-size:0.82rem; font-weight:600; border-radius:20px; padding:5px 14px;"
+                      title="FESTIO 사용자 메인 페이지로 이동">
+                      <i class="bx bx-home-smile" style="font-size:1rem;"></i>
+                      FESTIO 메인
+                    </a>
+                `;
+                navbarNav.insertBefore(li, dropdownUser);
+            }
+        }
     }
 });
 
