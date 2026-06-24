@@ -20,22 +20,6 @@ if (userGrade) {
 
 let qrCodeInstance = null;
 
-const BarcodeUtils = {
-    MASK_FIXED: 80000000000000000n,
-    MASK_DYNAMIC: 90000000000000000n,
-    encodeFixedOrder(prefix, orderId) {
-        const obf = BigInt(orderId) ^ this.MASK_FIXED;
-        const base36 = obf.toString(36).toUpperCase();
-        return prefix + base36.padStart(11, '0');
-    },
-    encodeDynamicBarcode(prefix, orderId, totp) {
-        const combined = BigInt(orderId) * 1000000n + BigInt(totp);
-        const obf = combined ^ this.MASK_DYNAMIC;
-        const base36 = obf.toString(36).toUpperCase();
-        return prefix + base36.padStart(11, '0');
-    }
-};
-
 async function generateTotp(hexSecret) {
     const keyBytes = new Uint8Array(hexSecret.match(/.{1,2}/g).map(byte => parseInt(byte, 16)));
     const cryptoKey = await crypto.subtle.importKey(
@@ -71,37 +55,12 @@ async function refreshTotp() {
     try {
         const code = await generateTotp(hexSecret);
 
-        let fixedOrderId = parseInt(orderId, 10);
-        if (isNaN(fixedOrderId)) fixedOrderId = 1;
+        // Format: T + orderId Base36 5 chars + 6 chars OTP
+        const orderIdNum = parseInt(orderId, 10);
+        const orderIdBase36 = isNaN(orderIdNum) ? "00000" : orderIdNum.toString(36).padStart(5, '0').toUpperCase();
+        const payload = `T${orderIdBase36}${code}`;
 
-        const dynamicBarcode = BarcodeUtils.encodeDynamicBarcode('T', fixedOrderId, code);
-        const staticBarcode = BarcodeUtils.encodeFixedOrder('T', fixedOrderId);
-
-        const titleEl = document.querySelector('.title');
-        if (titleEl) {
-            titleEl.innerHTML = `FESTIO TICKET`;
-            let orderNoEl = document.getElementById('static-order-no');
-            if (!orderNoEl) {
-                orderNoEl = document.createElement('div');
-                orderNoEl.id = 'static-order-no';
-                orderNoEl.style.fontSize = '14px';
-                orderNoEl.style.marginTop = '4px';
-                orderNoEl.style.marginBottom = '6px';
-                orderNoEl.style.fontWeight = 'bold';
-                orderNoEl.style.color = '#000000';
-                titleEl.insertAdjacentElement('afterend', orderNoEl);
-            }
-            orderNoEl.textContent = `예매번호: ${staticBarcode}`;
-        }
-
-        const codeDisplay = document.getElementById('code-display');
-        codeDisplay.style.fontSize = '18px';
-        codeDisplay.style.letterSpacing = '3px';
-        codeDisplay.style.color = '#888';
-        codeDisplay.style.fontWeight = '700';
-        codeDisplay.innerHTML = `${dynamicBarcode}`;
-
-        const payload = dynamicBarcode;
+        document.getElementById('code-display').innerText = payload;
 
         const qrContainer = document.getElementById('qr-code');
         qrContainer.innerHTML = ''; // clear old
@@ -113,15 +72,12 @@ async function refreshTotp() {
             colorLight: "#ffffff",
             correctLevel: QRCode.CorrectLevel.H
         });
-<<<<<<< HEAD
-=======
 
         setTimeout(() => {
             const qrEls = qrContainer.querySelectorAll('canvas, img');
             qrEls.forEach(el => el.removeAttribute('title'));
             qrContainer.removeAttribute('title');
         }, 50);
->>>>>>> e8a1112b93310ad09f5e536736db1d35babdbbfa
     } catch (e) {
         console.error(e);
     }
@@ -133,11 +89,6 @@ function updateTimer() {
 
     const m = Math.floor(remaining / 60);
     const s = remaining % 60;
-<<<<<<< HEAD
-    document.getElementById('timer-sec').innerText = `0${m}:${s.toString().padStart(2, '0')}`;
-    const percentage = (remaining / 180) * 100;
-    document.getElementById('timer-bar').style.width = percentage + '%';
-=======
     const timerSecEl = document.getElementById('timer-sec');
     const timerBarEl = document.getElementById('timer-bar');
 
@@ -154,7 +105,6 @@ function updateTimer() {
         timerSecEl.style.color = '#2D1A54';
         timerBarEl.style.background = 'linear-gradient(90deg, #00d2ff, #8930F8)';
     }
->>>>>>> e8a1112b93310ad09f5e536736db1d35babdbbfa
 
     if (remaining === 180 || remaining === 179 && currentSeconds === 1) { // Redraw when window resets
         refreshTotp();

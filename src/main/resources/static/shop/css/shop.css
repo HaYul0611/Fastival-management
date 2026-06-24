@@ -438,11 +438,7 @@
 .pcard-img {
   width: 100%;
   height: 100%;
-<<<<<<< HEAD
-  object-fit: contain;
-=======
   object-fit: cover;
->>>>>>> e8a1112b93310ad09f5e536736db1d35babdbbfa
   background-color: var(--white);
   /* ì´ë¯¸ì§€ê°€ ë”± ë§ì§€ ì•Šì„ ë•Œë¥¼ ëŒ€ë¹„í•´ í°ìƒ‰ ë°°ê²½ ì¶”ê°€ */
   transition: transform .35s ease;
@@ -696,11 +692,7 @@
   }
 }
 
-<<<<<<< HEAD
-/* Àü¿ª ¹ÙÄÚµå ÆùÆ® (°¡µ¶¼º °³¼±) */
-=======
 /* ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½Úµï¿½ ï¿½ï¿½Æ® (ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½) */
->>>>>>> e8a1112b93310ad09f5e536736db1d35babdbbfa
 .barcode-text {
     font-family: 'Consolas', 'Courier New', Courier, monospace !important;
     letter-spacing: 2px !important;
@@ -746,8 +738,6 @@
   border-color: var(--blue);
   outline: none;
 }
-<<<<<<< HEAD
-=======
 :root {
   --blue: #1864f9;
   --blue-light: #e6f0ff;
@@ -852,4 +842,3 @@
   opacity: 0.3;
   cursor: not-allowed;
 }
->>>>>>> e8a1112b93310ad09f5e536736db1d35babdbbfa

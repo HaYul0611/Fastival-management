@@ -303,14 +303,11 @@ function render() {
   renderPagination(totalPages, isDesktop);
 }
 
-<<<<<<< HEAD
-=======
 /**
  * @description 하단 페이지네이션 숫자 버튼 및 이전/다음 이동 버튼을 렌더링합니다.
  * @param {number} totalPages - 계산된 전체 페이지 개수
  * @param {boolean} isDesktop - 데스크톱 모드 여부
  */
->>>>>>> e8a1112b93310ad09f5e536736db1d35babdbbfa
 function renderPagination(totalPages, isDesktop) {
   let wrapper = document.getElementById('shopPaginationWrapper');
   if (!wrapper) {
@@ -335,11 +332,7 @@ function renderPagination(totalPages, isDesktop) {
   let html = `
     <div style="display: flex; gap: 8px; justify-content: center;">
       <button class="btn btn-outline-primary page-btn" ${prevDisabled} onclick="window.FS_goToPage(${S.currentPage - 1})">
-<<<<<<< HEAD
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg>
-=======
         &lt;
->>>>>>> e8a1112b93310ad09f5e536736db1d35babdbbfa
       </button>
   `;
 
@@ -352,11 +345,7 @@ function renderPagination(totalPages, isDesktop) {
   const nextDisabled = S.currentPage === totalPages ? 'disabled' : '';
   html += `
       <button class="btn btn-outline-primary page-btn" ${nextDisabled} onclick="window.FS_goToPage(${S.currentPage + 1})">
-<<<<<<< HEAD
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
-=======
         &gt;
->>>>>>> e8a1112b93310ad09f5e536736db1d35babdbbfa
       </button>
     </div>
     
@@ -370,10 +359,6 @@ function renderPagination(totalPages, isDesktop) {
   `;
 
   wrapper.innerHTML = html;
-<<<<<<< HEAD
-}
-
-=======
   if (window.FS_convertSelectToCustom) window.FS_convertSelectToCustom();
 }
 
@@ -385,7 +370,6 @@ function renderPagination(totalPages, isDesktop) {
  * @description 지정된 페이지 번호로 이동하고 화면을 맨 위로 올립니다.
  * @param {number} page - 이동할 페이지 숫자
  */
->>>>>>> e8a1112b93310ad09f5e536736db1d35babdbbfa
 window.FS_goToPage = function (page) {
   S.currentPage = page;
   render();

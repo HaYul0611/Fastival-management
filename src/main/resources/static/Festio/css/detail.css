@@ -3015,13 +3015,7 @@ body.edit-mode .detail-tabs-section .detail-tab-content.active {
 .zone-polygon:hover tspan,
 .zone-polygon.selected text,
 .zone-polygon.selected tspan {
-<<<<<<< HEAD
-  transform: scale(1.1);
-  transform-origin: center;
-  transform-box: fill-box;
-=======
   font-size: 1.15em !important;
->>>>>>> e8a1112b93310ad09f5e536736db1d35babdbbfa
 }
 
 .zone-polygon.sold-out {

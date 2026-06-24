@@ -372,18 +372,14 @@ const MOCK_TICKETS = [];
 
 // --- FORMAT BARCODE ---
 function formatBarcode(rawCode, prefix) {
-  if (!rawCode) return BarcodeUtils.encodeFixedOrder(prefix, 0);
-  let numStr = String(rawCode).replace(/[^0-9]/g, '');
-  let numId = parseInt(numStr, 10);
-  if (isNaN(numId) || numId === 0) {
-    let hash = 0;
-    for (let i = 0; i < String(rawCode).length; i++) {
-      hash = ((hash << 5) - hash) + String(rawCode).charCodeAt(i);
-      hash |= 0;
-    }
-    numId = Math.abs(hash);
+  if (!rawCode) return prefix + '00000000000';
+  let clean = String(rawCode).replace(/[^A-Za-z0-9]/g, '').toUpperCase();
+  if (/^[A-Z]/.test(clean)) {
+    clean = clean.substring(1);
   }
-  return BarcodeUtils.encodeFixedOrder(prefix, numId);
+  clean = prefix + clean;
+  if (clean.length > 12) return clean.substring(0, 12);
+  return clean.padEnd(12, '0');
 }
 
 let MOCK_FOOD_ORDERS = [];
@@ -795,15 +791,12 @@ async function generateHeroQR(token) {
     colorLight: "#ffffff",
     correctLevel: QRCode.CorrectLevel.H
   });
-<<<<<<< HEAD
-=======
 
   setTimeout(() => {
     const qrEls = container.querySelectorAll('canvas, img');
     qrEls.forEach(el => el.removeAttribute('title'));
     container.removeAttribute('title');
   }, 50);
->>>>>>> e8a1112b93310ad09f5e536736db1d35babdbbfa
 }
 
 async function generateModalQR(token, type = 'TICKET') {
@@ -833,15 +826,12 @@ async function generateModalQR(token, type = 'TICKET') {
     colorLight: "#ffffff",
     correctLevel: QRCode.CorrectLevel.H
   });
-<<<<<<< HEAD
-=======
 
   setTimeout(() => {
     const qrEls = container.querySelectorAll('canvas, img');
     qrEls.forEach(el => el.removeAttribute('title'));
     container.removeAttribute('title');
   }, 50);
->>>>>>> e8a1112b93310ad09f5e536736db1d35babdbbfa
 }
 
 /* 히어로 QR + 모달 QR 피해 토큰 공유 */
@@ -2787,13 +2777,12 @@ async function openQrModalView(token, type = 'TICKET') {
           </div>
           <div style="background: #fff;">
             <div style="display: flex; flex-direction: column; align-items: center; padding: 28px 24px 24px; gap: 16px;">
-              <div style="font-size: 0.9rem; font-weight: 700; color: #000; margin-bottom: -4px;">예매번호: <span id="dynamicQrStaticId" style="color: #000;"></span></div>
               <div class="qr-canvas-container" style="border-radius: 12px; border: 2px solid #e0d8ff; background: #fff; padding: 8px; position: relative; overflow: hidden; display: flex; justify-content: center; align-items: center; width: 160px; height: 160px; box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);">
               <div id="dynamicQrCanvas" style="width: 100%; height: 100%; z-index: 1; position: relative; overflow: hidden; display: flex; align-items: center; justify-content: center;"></div>
             </div>
             
             <div style="text-align: center;">
-                <div style="font-family: 'Roboto Mono', 'Courier New', monospace; font-size: 0.95rem; font-weight: 700; letter-spacing: 3px; color: #888; margin-bottom: 8px;" id="dynamicQrCode"></div>
+                <div style="font-family: 'Roboto Mono', 'Courier New', monospace; font-size: 1.15rem; font-weight: 800; letter-spacing: 2px; color: #555;" id="dynamicQrCode"></div>
                 <div style="font-size: 0.85rem; color: #444; margin-top: 6px; font-weight: 600; display: flex; align-items: center; justify-content: center;" id="dynamicQrUserName">
                   <span class="badge badge-${(window._member ? window._member.grade : 'BRONZE').toLowerCase()}" style="margin-right: 6px;">
                     ${window._member ? window._member.grade : 'BRONZE'}
@@ -2803,16 +2792,6 @@ async function openQrModalView(token, type = 'TICKET') {
                 <div style="font-size: 0.8rem; color: #888; margin-top: 2px;" id="dynamicQrPurchaseDate">${dateStr} 구매</div>
             </div>
             
-<<<<<<< HEAD
-            <div style="width: 100%; display: flex; align-items: center; justify-content: center; gap: 8px; max-width: 180px; margin: 4px auto 0;">
-              <div style="flex: 1; height: 6px; background: #EFEFEF; border-radius: 6px; overflow: hidden; position: relative;">
-                <div id="dynamicQrTimerBar" style="position: absolute; left: 0; top: 0; height: 100%; width: 100%; background: linear-gradient(90deg, #00d2ff, #8930F8); transform-origin: left; transition: transform 1s linear, background 0.3s ease;"></div>
-              </div>
-              <span id="dynamicQrTimerText" style="font-size: 0.9rem; font-weight: 800; color: #2D1A54; display: inline-block; min-width: 42px; text-align: center;">03:00</span>
-              <button id="dynamicQrRefresh" style="background: none; border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; padding: 4px; color: #8930F8; transition: transform 0.2s;" title="새로고침">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21.5 2v6h-6M2.5 22v-6h6M2 11.5a10 10 0 0 1 18.8-4.3M22 12.5a10 10 0 0 1-18.8 4.2"/></svg>
-              </button>
-=======
             <div style="width: 100%; display: flex; flex-direction: column; align-items: center; gap: 8px; max-width: 180px; margin: 4px auto 0;">
               <div style="width: 100%; display: flex; align-items: center; justify-content: space-between; gap: 8px;">
                 <div style="flex: 1; height: 6px; background: #EFEFEF; border-radius: 6px; overflow: hidden; position: relative;">
@@ -2823,7 +2802,6 @@ async function openQrModalView(token, type = 'TICKET') {
                 </button>
               </div>
               <span id="dynamicQrTimerText" style="font-size: 0.9rem; font-weight: 800; color: #2D1A54; display: block; text-align: center;">03:00</span>
->>>>>>> e8a1112b93310ad09f5e536736db1d35babdbbfa
             </div>
 
             <div class="qr-accordion">
@@ -2855,36 +2833,33 @@ async function openQrModalView(token, type = 'TICKET') {
   }
 
   modal.style.display = 'flex';
-  let initialTokenForQR = token; // Dynamic QR token
-  let fixedOrderId = parseInt(_currentActiveOrderId, 10);
-  if (isNaN(fixedOrderId)) fixedOrderId = 1;
-  let staticCodeText = '';
-  const prefix = type === 'FOOD' ? 'F' : (type === 'GOODS' ? 'G' : 'T');
+  let initialTokenForQR = token;
+  let pureTotpCode = token;
+  if (type === 'TICKET' && _currentActiveSecret) {
+    pureTotpCode = await generateTotpCode(_currentActiveSecret);
+    const orderIdNum = parseInt(_currentActiveOrderId, 10);
+    const orderIdBase36 = isNaN(orderIdNum) ? "00000" : orderIdNum.toString(36).padStart(5, '0').toUpperCase();
+    initialTokenForQR = `T${orderIdBase36}${pureTotpCode}`;
+  }
+  generateDynamicQR('dynamicQrCanvas', initialTokenForQR, 140, type); // FIXED: pass 'type' to trigger 45deg tilt!
 
-  if (type === 'TICKET') {
-    staticCodeText = BarcodeUtils.encodeFixedOrder(prefix, fixedOrderId);
-    if (_currentActiveSecret) {
-      let pureTotpCode = await generateTotpCode(_currentActiveSecret);
-      initialTokenForQR = BarcodeUtils.encodeDynamicBarcode(prefix, fixedOrderId, pureTotpCode);
-    } else {
-      initialTokenForQR = BarcodeUtils.encodeDynamicBarcode(prefix, fixedOrderId, Math.floor(100000 + Math.random() * 900000));
-    }
-  } else if (type === 'FOOD') {
+  let displayCode = initialTokenForQR;
+  if (type === 'FOOD') {
     const foodOrder = typeof MOCK_FOOD_ORDERS !== 'undefined' ? MOCK_FOOD_ORDERS.find(f => f.qrToken === token) : null;
-    if (foodOrder) fixedOrderId = parseInt(String(foodOrder.id || foodOrder.orderItemId).replace(/[^0-9]/g, '')) || 1;
-    staticCodeText = BarcodeUtils.encodeFixedOrder(prefix, fixedOrderId);
-    initialTokenForQR = BarcodeUtils.encodeDynamicBarcode(prefix, fixedOrderId, Math.floor(100000 + Math.random() * 900000));
+    if (foodOrder) displayCode = foodOrder.orderItemId;
   } else if (type === 'GOODS') {
     const goodsOrder = typeof MOCK_GOODS_ORDERS !== 'undefined' ? MOCK_GOODS_ORDERS.find(g => g.qrToken === token) : null;
-    if (goodsOrder) fixedOrderId = parseInt(String(goodsOrder.id || goodsOrder.orderItemId).replace(/[^0-9]/g, '')) || 1;
-    staticCodeText = BarcodeUtils.encodeFixedOrder(prefix, fixedOrderId);
-    initialTokenForQR = BarcodeUtils.encodeDynamicBarcode(prefix, fixedOrderId, Math.floor(100000 + Math.random() * 900000));
+    if (goodsOrder) displayCode = goodsOrder.orderItemId;
+  } else {
+    const dbTicket = typeof _dbTickets !== 'undefined' ? _dbTickets.find(t => t.secret === token) : null;
+    if (dbTicket) {
+      displayCode = initialTokenForQR;
+    } else {
+      const mockTicket = typeof MOCK_TICKETS !== 'undefined' ? MOCK_TICKETS.find(t => t.qrToken === token) : null;
+      if (mockTicket) displayCode = mockTicket.reservationId;
+    }
   }
-
-  generateDynamicQR('dynamicQrCanvas', initialTokenForQR, 140, type);
-
-  document.getElementById('dynamicQrStaticId').textContent = staticCodeText;
-  document.getElementById('dynamicQrCode').textContent = initialTokenForQR;
+  document.getElementById('dynamicQrCode').textContent = displayCode;
 
   const qrCanvas = document.getElementById('dynamicQrCanvas');
   if (qrCanvas) {
@@ -2893,7 +2868,7 @@ async function openQrModalView(token, type = 'TICKET') {
       qrCanvas.onclick = () => {
         const tkt = typeof _dbTickets !== 'undefined' ? _dbTickets.find(t => t.secret === token) : null;
         const orderId = tkt ? tkt.orderId : 1;
-        window.location.href = `/features/user/ticket/view.html?orderId=${orderId}&secret=${token}&displayCode=${staticCodeText}&userName=${encodeURIComponent(masked)}&grade=${encodeURIComponent(_member ? _member.grade : 'BRONZE')}`;
+        window.location.href = `/features/user/ticket/view.html?orderId=${orderId}&secret=${token}&displayCode=${displayCode}&userName=${encodeURIComponent(masked)}&grade=${encodeURIComponent(_member ? _member.grade : 'BRONZE')}`;
       };
     } else {
       qrCanvas.style.cursor = 'default';
@@ -2995,18 +2970,6 @@ function generateDynamicQR(containerId, token, size, type = 'TICKET') {
   });
 
   setTimeout(() => {
-<<<<<<< HEAD
-    const qrEl = qrContainer.querySelector('canvas') || qrContainer.querySelector('img');
-    if (qrEl) {
-      qrEl.style.width = '100%';
-      qrEl.style.height = '100%';
-      qrEl.style.objectFit = 'cover';
-      qrEl.style.imageRendering = 'pixelated';
-      if (isHeart) {
-        qrEl.style.transform = 'translateY(9px) rotate(45deg) scale(0.5)';
-      }
-    }
-=======
     const qrEls = qrContainer.querySelectorAll('canvas, img');
     qrEls.forEach(el => {
       el.style.width = '100%';
@@ -3020,7 +2983,6 @@ function generateDynamicQR(containerId, token, size, type = 'TICKET') {
     });
     qrContainer.removeAttribute('title');
     container.removeAttribute('title');
->>>>>>> e8a1112b93310ad09f5e536736db1d35babdbbfa
   }, 10);
 
   if (isHeart) {
@@ -3071,16 +3033,14 @@ function generateHeroQR(token) {
 async function triggerQrRefresh() {
   const prefix = _currentQrType === 'FOOD' ? 'F' : (_currentQrType === 'GOODS' ? 'G' : 'T');
   let newToken = '';
-  let fixedOrderId = parseInt(_currentActiveOrderId, 10);
-  if (isNaN(fixedOrderId)) fixedOrderId = 1;
-
-  if (_currentActiveSecret) {
+  if (_currentQrType === 'TICKET' && _currentActiveSecret) {
     const totpCode = await generateTotpCode(_currentActiveSecret);
-    newToken = BarcodeUtils.encodeDynamicBarcode(prefix, fixedOrderId, totpCode);
+    const orderIdNum = parseInt(_currentActiveOrderId, 10);
+    const orderIdBase36 = isNaN(orderIdNum) ? "00000" : orderIdNum.toString(36).padStart(5, '0').toUpperCase();
+    newToken = `T${orderIdBase36}${totpCode}`;
   } else {
-    // mock fallback
-    newToken = BarcodeUtils.encodeDynamicBarcode(prefix, fixedOrderId, Math.floor(100000 + Math.random() * 900000));
-    _currentQrToken = newToken;
+    newToken = generateQrToken(prefix);
+    _currentQrToken = newToken; // Only overwrite for non-TOTP tokens
   }
 
   generateHeroQR(newToken);
@@ -3116,15 +3076,6 @@ function startQRRefreshCycle() {
     _qrCountdown = remaining;
     updateQRTimerDisplay(remaining);
 
-<<<<<<< HEAD
-    const bg = remaining < 10 ? 'linear-gradient(90deg, #ff4d4f, #ff7875)' : 'linear-gradient(90deg, #00d2ff, #8930F8)';
-    const pct = (remaining / 180) * 100;
-
-    const bars = [document.getElementById('dynamicQrTimerBar'), document.getElementById('heroQrTimerBar')];
-    bars.forEach(bar => { 
-      if (bar) {
-        bar.style.background = bg; 
-=======
     const bg = remaining < 60 ? '#ff4d4f' : 'linear-gradient(90deg, #00d2ff, #8930F8)';
     const pct = (remaining / 180) * 100;
 
@@ -3132,7 +3083,6 @@ function startQRRefreshCycle() {
     bars.forEach(bar => {
       if (bar) {
         bar.style.background = bg;
->>>>>>> e8a1112b93310ad09f5e536736db1d35babdbbfa
         bar.style.width = `${pct}%`;
       }
     });

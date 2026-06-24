@@ -58,8 +58,7 @@ body.dark-theme .back-btn {
     background-clip: text;
     -webkit-text-fill-color: transparent;
     font-weight: 900;
-    font-size: 28px;
-    letter-spacing: 1px;
+    font-size: 24px;
     margin-bottom: 5px;
 }
 
@@ -97,11 +96,7 @@ body.dark-theme .timer-container {
 }
 
 .timer-bar {
-<<<<<<< HEAD
-    background: linear-gradient(90deg, #00d2ff, #8930F8);
-=======
     background: #8930F8;
->>>>>>> e8a1112b93310ad09f5e536736db1d35babdbbfa
     height: 100%;
     width: 100%;
     transition: width 1s linear;
@@ -363,13 +358,6 @@ body.dark-theme .totp-code {
     left: 0;
     right: 0;
     height: 4px;
-<<<<<<< HEAD
-    background: rgba(0, 210, 255, 0.5);
-    box-shadow: 0 0 10px rgba(0, 210, 255, 0.8);
-    animation: scanLineAnim 2.5s linear infinite;
-    pointer-events: none;
-    z-index: 10;
-=======
     background: rgba(137, 48, 248, 0.5);
     box-shadow: 0 0 10px rgba(137, 48, 248, 0.8);
     animation: scanLineAnim 2.5s linear infinite;
@@ -408,5 +396,4 @@ body.dark-theme .totp-code {
     color: #ff4d4f !important;
     display: inline-block !important;
     animation: gentleShake 1.5s ease-in-out infinite !important;
->>>>>>> e8a1112b93310ad09f5e536736db1d35babdbbfa
 }

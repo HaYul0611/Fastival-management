@@ -9,10 +9,7 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-<<<<<<< HEAD
 import java.time.LocalDate;
-=======
->>>>>>> e8a1112b93310ad09f5e536736db1d35babdbbfa
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -58,7 +55,6 @@ public class SettlementService {
         Map<String, Object> diag = new HashMap<>();
         try {
             List<Map<String, Object>> columns = jdbcTemplate.queryForList(
-<<<<<<< HEAD
                 "SELECT column_name, data_type FROM information_schema.columns WHERE table_name = 'store'"
             );
             diag.put("storeTableColumns", columns);
@@ -72,18 +68,6 @@ public class SettlementService {
                 "SELECT z.festival_id, COUNT(s.id) AS cnt FROM store s " +
                 "JOIN festival_zone z ON s.zone_id = z.id GROUP BY z.festival_id"
             );
-=======
-                    "SELECT column_name, data_type FROM information_schema.columns WHERE table_name = 'store'");
-            diag.put("storeTableColumns", columns);
-
-            List<Map<String, Object>> storeStats = jdbcTemplate.queryForList(
-                    "SELECT festival_id, COUNT(*) AS cnt FROM store GROUP BY festival_id");
-            diag.put("storeFestivalIdGroupStats", storeStats);
-
-            List<Map<String, Object>> zoneStats = jdbcTemplate.queryForList(
-                    "SELECT z.festival_id, COUNT(s.id) AS cnt FROM store s " +
-                            "JOIN festival_zone z ON s.zone_id = z.id GROUP BY z.festival_id");
->>>>>>> e8a1112b93310ad09f5e536736db1d35babdbbfa
             diag.put("storeZoneFestivalIdGroupStats", zoneStats);
         } catch (Exception e) {
             diag.put("error", e.getMessage());
@@ -105,31 +89,17 @@ public class SettlementService {
             boolean hasBoothNumberColumn = false;
 
             List<Map<String, Object>> columns = jdbcTemplate.queryForList(
-<<<<<<< HEAD
                 "SELECT column_name FROM information_schema.columns WHERE table_name = 'store'"
             );
             for (Map<String, Object> col : columns) {
                 String name = (String) col.get("column_name");
                 if ("festival_id".equalsIgnoreCase(name)) hasFestivalIdColumn = true;
                 if ("booth_number".equalsIgnoreCase(name)) hasBoothNumberColumn = true;
-=======
-                    "SELECT column_name FROM information_schema.columns WHERE table_name = 'store'");
-            for (Map<String, Object> col : columns) {
-                String name = (String) col.get("column_name");
-                if ("festival_id".equalsIgnoreCase(name))
-                    hasFestivalIdColumn = true;
-                if ("booth_number".equalsIgnoreCase(name))
-                    hasBoothNumberColumn = true;
->>>>>>> e8a1112b93310ad09f5e536736db1d35babdbbfa
             }
 
             String sql;
             String settlementMonthStr = "FEST_" + festivalId;
-<<<<<<< HEAD
             Object[] params = new Object[]{ settlementMonthStr, festivalId };
-=======
-            Object[] params = new Object[] { settlementMonthStr, festivalId };
->>>>>>> e8a1112b93310ad09f5e536736db1d35babdbbfa
 
             String storeSelectField = "s.id AS store_id, s.name AS store_name";
             if (hasBoothNumberColumn) {
@@ -141,7 +111,6 @@ public class SettlementService {
             // settlement 테이블을 LEFT JOIN하여 실제 지급 여부와 지급 승인일자를 취득합니다.
             if (hasFestivalIdColumn) {
                 sql = "SELECT " + storeSelectField + ", COALESCE(SUM(oi.quantity * p.price), 0) AS total_sales, " +
-<<<<<<< HEAD
                       "       st.status AS settlement_status, st.updated_at AS settlement_date " +
                       "FROM store s " +
                       "LEFT JOIN settlement st ON st.store_id = s.id AND st.settlement_month = ? " +
@@ -163,44 +132,14 @@ public class SettlementService {
                       "WHERE z.festival_id = ? " +
                       "GROUP BY s.id, s.name, st.status, st.updated_at" + (hasBoothNumberColumn ? ", s.booth_number" : "") + " " +
                       "ORDER BY total_sales DESC";
-=======
-                        "       st.status AS settlement_status, st.updated_at AS settlement_date " +
-                        "FROM store s " +
-                        "LEFT JOIN settlement st ON st.store_id = s.id AND st.settlement_month = ? " +
-                        "LEFT JOIN product p ON p.store_id = s.id " +
-                        "LEFT JOIN order_item oi ON oi.product_id = p.id " +
-                        "LEFT JOIN orders o ON oi.order_id = o.id AND o.payment_status = 'PAID' " +
-                        "WHERE s.festival_id = ? " +
-                        "GROUP BY s.id, s.name, st.status, st.updated_at"
-                        + (hasBoothNumberColumn ? ", s.booth_number" : "") + " " +
-                        "ORDER BY total_sales DESC";
-            } else {
-                sql = "SELECT " + storeSelectField + ", COALESCE(SUM(oi.quantity * p.price), 0) AS total_sales, " +
-                        "       st.status AS settlement_status, st.updated_at AS settlement_date " +
-                        "FROM store s " +
-                        "JOIN festival_zone z ON s.zone_id = z.id " +
-                        "LEFT JOIN settlement st ON st.store_id = s.id AND st.settlement_month = ? " +
-                        "LEFT JOIN product p ON p.store_id = s.id " +
-                        "LEFT JOIN order_item oi ON oi.product_id = p.id " +
-                        "LEFT JOIN orders o ON oi.order_id = o.id AND o.payment_status = 'PAID' " +
-                        "WHERE z.festival_id = ? " +
-                        "GROUP BY s.id, s.name, st.status, st.updated_at"
-                        + (hasBoothNumberColumn ? ", s.booth_number" : "") + " " +
-                        "ORDER BY total_sales DESC";
->>>>>>> e8a1112b93310ad09f5e536736db1d35babdbbfa
             }
 
             List<Map<String, Object>> rows = jdbcTemplate.queryForList(sql, params);
 
             for (Map<String, Object> row : rows) {
                 long totalSales = row.get("total_sales") != null ? ((Number) row.get("total_sales")).longValue() : 0L;
-<<<<<<< HEAD
                 long pgFee = (long) (totalSales * 0.03); 
-                long platformFee = (long) (totalSales * 0.05); 
-=======
-                long pgFee = (long) (totalSales * 0.03);
                 long platformFee = (long) (totalSales * 0.05);
->>>>>>> e8a1112b93310ad09f5e536736db1d35babdbbfa
                 long settlementAmount = totalSales - pgFee - platformFee;
 
                 // DB에 기록된 상태가 있으면 해당 값을 쓰고, 없으면 매출액이 0보다 큰 경우에만 '지급대기', 0원이면 '-'로 표시합니다.
@@ -279,7 +218,6 @@ public class SettlementService {
 
             if (count != null && count > 0) {
                 String updateSql = "UPDATE settlement SET total_sales_amount = ?, commission_fee = ?, " +
-<<<<<<< HEAD
                                    "final_payout_amount = ?, status = '지급완료', updated_at = NOW() " +
                                    "WHERE store_id = ? AND settlement_month = ?";
                 jdbcTemplate.update(updateSql, totalSales, commissionFee, finalPayout, storeId, settlementMonth);
@@ -287,15 +225,6 @@ public class SettlementService {
                 String insertSql = "INSERT INTO settlement (store_id, settlement_month, total_sales_amount, " +
                                    "commission_fee, final_payout_amount, status, updated_at) " +
                                    "VALUES (?, ?, ?, ?, ?, '지급완료', NOW())";
-=======
-                        "final_payout_amount = ?, status = '지급완료', updated_at = NOW() " +
-                        "WHERE store_id = ? AND settlement_month = ?";
-                jdbcTemplate.update(updateSql, totalSales, commissionFee, finalPayout, storeId, settlementMonth);
-            } else {
-                String insertSql = "INSERT INTO settlement (store_id, settlement_month, total_sales_amount, " +
-                        "commission_fee, final_payout_amount, status, updated_at) " +
-                        "VALUES (?, ?, ?, ?, ?, '지급완료', NOW())";
->>>>>>> e8a1112b93310ad09f5e536736db1d35babdbbfa
                 jdbcTemplate.update(insertSql, storeId, settlementMonth, totalSales, commissionFee, finalPayout);
             }
             return true;
@@ -313,7 +242,6 @@ public class SettlementService {
         List<StoreProductSalesDto> list = new ArrayList<>();
         try {
             String sql = "SELECT p.name AS product_name, p.price AS price, " +
-<<<<<<< HEAD
                          "       COALESCE(SUM(oi.quantity), 0) AS total_quantity, " +
                          "       COALESCE(SUM(oi.quantity * p.price), 0) AS total_amount " +
                          "FROM order_item oi " +
@@ -323,17 +251,6 @@ public class SettlementService {
                          "GROUP BY p.id, p.name, p.price " +
                          "ORDER BY total_quantity DESC";
             
-=======
-                    "       COALESCE(SUM(oi.quantity), 0) AS total_quantity, " +
-                    "       COALESCE(SUM(oi.quantity * p.price), 0) AS total_amount " +
-                    "FROM order_item oi " +
-                    "JOIN product p ON oi.product_id = p.id " +
-                    "JOIN orders o ON oi.order_id = o.id " +
-                    "WHERE p.store_id = ? AND o.festival_id = ? AND o.payment_status = 'PAID' " +
-                    "GROUP BY p.id, p.name, p.price " +
-                    "ORDER BY total_quantity DESC";
-
->>>>>>> e8a1112b93310ad09f5e536736db1d35babdbbfa
             List<Map<String, Object>> rows = jdbcTemplate.queryForList(sql, storeId, festivalId);
             for (Map<String, Object> row : rows) {
                 list.add(StoreProductSalesDto.builder()
