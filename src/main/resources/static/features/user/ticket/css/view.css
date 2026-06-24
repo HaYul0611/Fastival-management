@@ -58,7 +58,8 @@ body.dark-theme .back-btn {
     background-clip: text;
     -webkit-text-fill-color: transparent;
     font-weight: 900;
-    font-size: 24px;
+    font-size: 28px;
+    letter-spacing: 1px;
     margin-bottom: 5px;
 }
 

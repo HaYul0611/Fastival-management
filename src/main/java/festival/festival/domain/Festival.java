@@ -119,8 +119,35 @@ public class Festival {
         if (this.reviewStatus == null) {
             this.reviewStatus = "APPROVED"; // 기존의 데이터베이스 축제 데이터는 검수 완료된 Live(APPROVED) 상태로 처리
         }
-        if (this.operationalStatus == null) {
-            this.operationalStatus = "UPCOMING"; // 기존 데이터는 기본적으로 UPCOMING 상태로 초기화
+        
+        // [실시간 런타임 상태 비교 연산]
+        if (this.startDate != null && this.endDate != null) {
+            LocalDateTime now = LocalDateTime.now();
+            String startT = (this.startTime == null || this.startTime.trim().isEmpty()) ? "00:00:00" : this.startTime.trim();
+            String endT = (this.endTime == null || this.endTime.trim().isEmpty()) ? "23:59:59" : this.endTime.trim();
+            
+            try {
+                if (startT.length() == 5) startT += ":00";
+                if (endT.length() == 5) endT += ":00";
+                
+                java.time.LocalTime parsedStartTime = java.time.LocalTime.parse(startT);
+                java.time.LocalTime parsedEndTime = java.time.LocalTime.parse(endT);
+                
+                LocalDateTime startDateTime = LocalDateTime.of(this.startDate, parsedStartTime);
+                LocalDateTime endDateTime = LocalDateTime.of(this.endDate, parsedEndTime);
+                
+                if (now.isAfter(endDateTime)) {
+                    this.operationalStatus = "COMPLETED";
+                } else if (now.isAfter(startDateTime) || now.isEqual(startDateTime)) {
+                    this.operationalStatus = "ONGOING";
+                } else {
+                    this.operationalStatus = "UPCOMING";
+                }
+            } catch (Exception e) {
+                this.operationalStatus = "UPCOMING";
+            }
+        } else {
+            this.operationalStatus = "UPCOMING";
         }
 
         // 1. 신규 여부 계산 (등록일 기준 7일 이내)

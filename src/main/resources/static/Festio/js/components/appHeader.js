@@ -225,16 +225,33 @@
         ${detailExtraActions}
         <a href="mypage.html" class="header-text-btn ${detailHideClass}" aria-label="MY티켓">${ticketSvg}MY티켓</a>
         <div class="header-search-bar ${detailHideClass}" role="search">${searchSvg}<input type="search" class="header-search-input" id="headerSearch" placeholder="행사명, 아티스트 검색" autocomplete="off" aria-label="검색"></div>
-        <button class="header-icon-btn mobile-search-btn ${detailHideClass}" data-open-modal="modal-mobile-search" aria-label="검색">${searchSvg}</button>
-        <button class="header-icon-btn ${detailHideClass}" id="btnHeaderNotification" aria-label="알림" style="position:relative;">
-          ${alarmSvg}
-          <span id="notificationBadge" style="display:none; position:absolute; top:2px; right:2px; background:#ef4444; color:white; font-size:10px; font-weight:bold; border-radius:10px; padding:2px 5px; line-height:1; min-width:14px; text-align:center; transform:scale(0.9);">0</span>
-        </button>
+        <div class="hdr-noti-menu" style="position:relative; display:inline-block;">
+          <button class="header-icon-btn ${detailHideClass}" id="btnHeaderNotification" aria-label="알림" style="position:relative;">
+            ${alarmSvg}
+            <span id="notificationBadge" style="display:none; position:absolute; top:2px; right:2px; background:#ef4444; color:white; font-size:10px; font-weight:bold; border-radius:10px; padding:2px 5px; line-height:1; min-width:14px; text-align:center; transform:scale(0.9);">0</span>
+          </button>
+          <div class="noti-dropdown" id="festioNotiDropdown" style="position:absolute; top:calc(100% + 8px); right:-10px; width:340px; background:var(--bg-card, #fff); border:1px solid var(--border-color, #eee); border-radius:12px; box-shadow:0 4px 20px rgba(0,0,0,0.15); display:none; flex-direction:column; z-index:9999; overflow:hidden;">
+            <div class="noti-head" style="padding:16px; border-bottom:1px solid var(--border-color, #eee); display:flex; justify-content:space-between; align-items:center;">
+              <span style="font-weight:bold; font-size:16px; color:var(--text-primary, #000);">알림 <span id="notiHeadCount" style="color:#ef4444; margin-left:4px;">0</span></span>
+              <label class="noti-theme-toggle" aria-label="다크 모드 토글">
+                <input type="checkbox" id="notiThemeToggle">
+                <span class="noti-theme-slider">
+                   <svg class="sun-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+                   <svg class="moon-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/></svg>
+                </span>
+              </label>
+            </div>
+            <div class="noti-list" id="festioNotiListContainer" style="max-height:300px; overflow-y:auto; padding:0;">
+              <!-- 동적 알림 로드 -->
+              <div style="padding: 32px 24px; text-align: center; color: var(--text-secondary, #666);">새로운 알림이 없습니다.</div>
+            </div>
+            <a href="mypage.html" class="noti-foot" style="padding:14px; text-align:center; display:block; background:var(--bg-secondary, #f9fafb); font-size:14px; color:var(--text-primary, #000); text-decoration:none; border-top:1px solid var(--border-color, #eee); font-weight:600;">알림 설정 및 전체보기</a>
+          </div>
+        </div>
         ${rightAction}
       </div>
     </header>
   `;
-
 
   const searchModalHtml = `
   <div class="modal-overlay modal-center" id="modal-mobile-search" role="dialog" aria-modal="true">
@@ -265,37 +282,7 @@
   </div>
   `;
 
-  const notificationModalHtml = `
-  <div class="modal-overlay modal-center" id="modal-festio-notifications" role="dialog" aria-modal="true">
-    <div class="modal-sheet noti-modal-sheet light-mode">
-      <div class="modal-header noti-modal-header">
-        <h3 class="noti-modal-title">알림</h3>
-        <div class="noti-header-actions">
-          <label class="noti-theme-toggle" aria-label="다크 모드 토글">
-            <input type="checkbox" id="notiThemeToggle">
-            <span class="noti-theme-slider">
-               <svg class="sun-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
-               <svg class="moon-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/></svg>
-            </span>
-          </label>
-          <button class="modal-close-btn noti-close-btn" data-close-modal="modal-festio-notifications" aria-label="닫기">
-            <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-              <line x1="18" y1="6" x2="6" y2="18" />
-              <line x1="6" y1="6" x2="18" y2="18" />
-            </svg>
-          </button>
-        </div>
-      </div>
-      <div class="modal-body noti-modal-body" id="festioNotiListContainer">
-        <!-- 알림 리스트 동적 렌더링 -->
-        <div style="padding: 24px; text-align: center; color: var(--g500);">새로운 알림이 없습니다.</div>
-      </div>
-      <div class="noti-modal-footer">
-        <button id="btnNotiReadAll" class="noti-read-all-btn">모두 읽음 처리</button>
-      </div>
-    </div>
-  </div>
-  `;
+  const notificationModalHtml = ``;
 
   // 6. 생성된 헤더 마크업을 현재 페이지의 DOM에 직접 삽입
   document.write(headerHtml + searchModalHtml + notificationModalHtml);

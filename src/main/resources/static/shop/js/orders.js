@@ -88,106 +88,31 @@ document.addEventListener('DOMContentLoaded', async () => {
     const order = window.currentOrders.find(o => o.order_number === orderNo);
     let secret = order?.totp_secret || 'dummysecret12345';
 
-<<<<<<< HEAD
-    const updateQr = async (isManual = false) => {
-      if (isManual) manualOffset++;
-      const timeWindow = Math.floor(Date.now() / 180000) + manualOffset; // 3분 단위 + 수동오프셋
-      const totpCode = await generateMockTotp(secret, timeWindow);
-
-      let displayOrderNo = orderNo;
-      const match = orderNo.match(/0+(\d+)$/);
-      if (match) displayOrderNo = match[1];
-
-      let prefix = orderNo.startsWith('F') ? 'F' : (orderNo.startsWith('G') ? 'G' : 'O');
-      let numericId = parseInt(displayOrderNo, 10);
-      let orderIdBase36 = (isNaN(numericId) ? 0 : numericId).toString(36).toUpperCase();
-      while (orderIdBase36.length < 5) orderIdBase36 = '0' + orderIdBase36;
-
-      const barcodeData = prefix + orderIdBase36 + totpCode;
-      document.getElementById('totpCode').textContent = barcodeData;
-      document.getElementById('qrOrderNo').textContent = '주문번호: ' + (prefix + orderIdBase36 + "000000");
-
-      const qrData = 'TOTP:' + orderNo + ':' + totpCode;
-      let qrImage = document.getElementById('qrImage');
-      const container = qrImage.parentElement;
-
-      container.style.position = 'relative';
-
-      let bgElem = document.getElementById('heartQrBg_' + orderNo);
-      if (!bgElem) {
-        bgElem = document.createElement('div');
-        bgElem.id = 'heartQrBg_' + orderNo;
-        bgElem.style.position = 'absolute';
-        bgElem.style.width = '300%';
-        bgElem.style.height = '300%';
-        bgElem.style.top = '-100%'; // -200px (multiple of 40px)
-        bgElem.style.left = '-100%';
-        // QR 이미지와 완벽하게 동일한 각도 및 스케일 적용 (격자선 일치)
-        bgElem.style.transform = 'translateY(11px) rotate(45deg) scale(0.5)';
-        bgElem.style.zIndex = '0';
-        bgElem.style.imageRendering = 'pixelated';
-        bgElem.style.backgroundRepeat = 'repeat';
-        // 40px 타일 (8px 모듈 5개) -> 200px에 정확히 맞아떨어짐
-        bgElem.style.backgroundSize = '40px 40px';
-        container.insertBefore(bgElem, qrImage);
-      }
-
-      // QR 마커(Finder Pattern)가 중복해서 나타나는 것을 방지하기 위해,
-      // 순수하게 8px 네모들로만 이루어진 가짜 패턴을 생성하여 배경에 타일링함.
-      let svg = "<svg xmlns='http://www.w3.org/2000/svg' width='40' height='40'><rect width='40' height='40' fill='#fff'/>";
-      for (let y = 0; y < 5; y++) {
-        for (let x = 0; x < 5; x++) {
-          if (Math.random() > 0.5) {
-            svg += `<rect x='${x * 8}' y='${y * 8}' width='8' height='8' fill='#000'/>`;
-          }
-        }
-=======
     const updateQr = async () => {
       const totpCode = await generateTotpCode(secret);
 
-      let displayOrderNo = orderNo;
-      const match = orderNo.match(/0+(\d+)$/);
-      if (match) displayOrderNo = match[1];
-
       let prefix = orderNo.startsWith('F') ? 'F' : (orderNo.startsWith('G') ? 'G' : 'O');
-      let numericId = parseInt(displayOrderNo, 10);
-      let orderIdBase36 = (isNaN(numericId) ? 0 : numericId).toString(36).toUpperCase();
-      while (orderIdBase36.length < 5) orderIdBase36 = '0' + orderIdBase36;
+      let numericId = parseInt(orderNo.replace(/[^0-9]/g, ''), 10);
+      if (isNaN(numericId)) numericId = 1;
 
-      const barcodeData = prefix + orderIdBase36 + totpCode;
-
-      const isFood = order.shop_order_items?.some(item => item.shop_products?.type === 'FOOD');
+      const dynamicBarcode = window.FS.BarcodeUtils.encodeDynamicBarcode(prefix, numericId, totpCode);
 
       const totpCodeEl = document.getElementById('totpCode');
-      totpCodeEl.style.letterSpacing = 'normal';
-      totpCodeEl.style.fontFamily = 'inherit';
-      totpCodeEl.style.fontSize = '26px';
+      totpCodeEl.style.letterSpacing = '2px';
+      totpCodeEl.style.fontFamily = "'Roboto Mono', 'Courier New', monospace";
+      totpCodeEl.style.fontSize = '22px';
+      totpCodeEl.innerHTML = `${dynamicBarcode}`;
 
-      if (isFood) {
-        totpCodeEl.textContent = `대기번호: ${numericId}번`;
-      } else {
-        totpCodeEl.textContent = `수령번호: ${numericId}번`;
->>>>>>> e8a1112b93310ad09f5e536736db1d35babdbbfa
+      const displayOrderNo = window.FS.BarcodeUtils.encodeFixedOrder(prefix, numericId);
+      document.getElementById('qrOrderNo').textContent = '주문번호: ' + displayOrderNo;
+
+      const waitingTextEl = document.getElementById('waitingNumberText');
+      if (waitingTextEl) {
+        const waitingNum = order.waiting_number || order.waitingNumber || String(numericId).slice(-3).padStart(3, '0');
+        waitingTextEl.innerHTML = `${waitingNum}<span style="font-size: 18px; font-weight: 700; margin-left: 2px;">번</span>`;
       }
-      svg += "</svg>";
-      bgElem.style.backgroundImage = `url("data:image/svg+xml;utf8,${encodeURIComponent(svg)}")`;
 
-      // 시간차 없이 동시에 나타나도록 처리
-      qrImage.style.transition = 'opacity 0.3s ease';
-      bgElem.style.transition = 'opacity 0.3s ease';
-      qrImage.style.opacity = '0';
-      bgElem.style.opacity = '0';
-
-      qrImage.onload = () => {
-        qrImage.style.opacity = '1';
-        bgElem.style.opacity = '1';
-      };
-
-      qrImage.src = 'https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=' + encodeURIComponent(qrData) + '&margin=0&format=svg';
-
-      document.getElementById('qrOrderNo').textContent = '주문번호: ' + orderNo;
-
-      const qrData = 'TOTP:' + orderNo + ':' + totpCode;
+      const qrData = dynamicBarcode;
       let qrImage = document.getElementById('qrImage');
       const container = qrImage.parentElement;
 
@@ -279,6 +204,15 @@ document.addEventListener('DOMContentLoaded', async () => {
         const m = String(Math.floor(timeLeft / 60)).padStart(2, '0');
         const s = String(timeLeft % 60).padStart(2, '0');
         txt.textContent = m + ':' + s;
+        if (timeLeft < 30) {
+          bar.style.background = 'linear-gradient(90deg, #ef4444, #f87171)';
+          txt.style.color = '#ef4444';
+          txt.classList.add('text-shake');
+        } else {
+          bar.style.background = 'linear-gradient(90deg, #00f2fe, #4facfe)';
+          txt.style.color = '#0ea5e9';
+          txt.classList.remove('text-shake');
+        }
       };
       updateUI(); // 초기 렌더
 
@@ -297,14 +231,9 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (btnReset) {
       btnReset.onclick = () => {
         btnReset.style.transition = 'transform 0.3s';
-<<<<<<< HEAD
-        btnReset.style.transform = `rotate(${manualOffset * 180 + 180}deg)`;
-        updateQr(true);
-=======
         btnReset.style.transform = `rotate(180deg)`;
         updateQr();
         setTimeout(() => btnReset.style.transform = `rotate(0deg)`, 300);
->>>>>>> e8a1112b93310ad09f5e536736db1d35babdbbfa
       };
     }
 
@@ -315,39 +244,14 @@ document.addEventListener('DOMContentLoaded', async () => {
   };
 
   // 상세 모달 열기
-<<<<<<< HEAD
-=======
   /**
    * @description 특정 주문의 상세 내역 모달을 열어 구매 상품 및 영수증 정보를 표시합니다.
    * @param {string} orderNo - 주문 번호
    */
->>>>>>> e8a1112b93310ad09f5e536736db1d35babdbbfa
   window.openDetailModal = async function (orderNo) {
     const order = window.currentOrders.find(o => o.order_number === orderNo);
     if (!order) return;
 
-<<<<<<< HEAD
-    let displayOrderNo = orderNo;
-    const match = orderNo.match(/0+(\d+)$/);
-    if (match) displayOrderNo = match[1];
-
-    let prefix = orderNo.startsWith('F') ? 'F' : (orderNo.startsWith('G') ? 'G' : 'O');
-    let numericId = parseInt(displayOrderNo, 10);
-    let orderIdBase36 = (isNaN(numericId) ? 0 : numericId).toString(36).toUpperCase();
-    while (orderIdBase36.length < 5) orderIdBase36 = '0' + orderIdBase36;
-
-    const fullBarcode = prefix + orderIdBase36 + "000000";
-
-    const itemsHtml = (order.shop_order_items || []).map(item => {
-      const isFood = item.shop_products && item.shop_products.type === 'FOOD';
-      const imageUrl = (item.shop_products && item.shop_products.thumbnail_image_url)
-        ? item.shop_products.thumbnail_image_url
-        : (isFood ? '/Festio/images/food1.jpg' : '/Festio/images/goods1.jpg');
-
-      return `
-      <div style="display:flex; gap:12px; padding: 12px 0; border-bottom:1px solid var(--g100);">
-        <div style="width:60px; height:60px; border-radius:8px; background: url('${imageUrl}') center/cover no-repeat; flex-shrink:0;"></div>
-=======
 
 
     const itemsHtml = (order.shop_order_items || []).map(item => {
@@ -364,7 +268,6 @@ document.addEventListener('DOMContentLoaded', async () => {
           ? `<div style="width:60px; height:60px; border-radius:8px; background: url('${imageUrl}') center/cover no-repeat; flex-shrink:0;"></div>`
           : `<div style="width:60px; height:60px; border-radius:8px; background:var(--g100); display:flex; align-items:center; justify-content:center; flex-shrink:0;">${isFood ? svgFood : svgGoods}</div>`
         }
->>>>>>> e8a1112b93310ad09f5e536736db1d35babdbbfa
         <div style="flex:1; display:flex; justify-content:space-between;">
           <div>
             <div style="font-weight:700; color:var(--g900); font-size:15px; margin-bottom:4px;">${item.product_name || '상품명'}</div>
@@ -383,11 +286,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       <div style="margin-bottom:24px;">
         <div style="display:flex; justify-content:space-between; margin-bottom:8px;">
           <span style="color:var(--g500);">주문번호</span>
-<<<<<<< HEAD
-          <span class="barcode-text" style="font-weight:700;">${fullBarcode}</span>
-=======
-          <span class="barcode-text" style="font-weight:700;">${orderNo}</span>
->>>>>>> e8a1112b93310ad09f5e536736db1d35babdbbfa
+          <span class="barcode-text" style="font-weight:700;">${window.FS.BarcodeUtils.encodeFixedOrder(orderNo.charAt(0), parseInt(orderNo.replace(/[^0-9]/g, '') || 1, 10))}</span>
         </div>
         <div style="display:flex; justify-content:space-between; margin-bottom:8px;">
           <span style="color:var(--g500);">결제일시</span>
@@ -561,25 +460,12 @@ function renderOrderCard(order) {
     `;
   }).join('');
 
-  let displayOrderNo = order.order_number;
-  const match = order.order_number.match(/0+(\d+)$/);
-  if (match) displayOrderNo = match[1];
-  let prefix = order.order_number.startsWith('F') ? 'F' : (order.order_number.startsWith('G') ? 'G' : 'O');
-  let numericId = parseInt(displayOrderNo, 10);
-  let orderIdBase36 = (isNaN(numericId) ? 0 : numericId).toString(36).toUpperCase();
-  while (orderIdBase36.length < 5) orderIdBase36 = '0' + orderIdBase36;
-  const fullBarcode = prefix + orderIdBase36 + "000000";
-
   return `
     <div class="order-card">
       <div class="order-header">
         <div>
           <span class="order-date">${new Date(order.created_at).toLocaleDateString()}</span>
-<<<<<<< HEAD
-          <span class="order-no barcode-text">주문번호 ${fullBarcode}</span>
-=======
-          <span class="order-no barcode-text">주문번호 ${order.order_number}</span>
->>>>>>> e8a1112b93310ad09f5e536736db1d35babdbbfa
+          <span class="order-no barcode-text">주문번호 ${window.FS.BarcodeUtils.encodeFixedOrder(order.order_number.charAt(0), parseInt(order.order_number.replace(/[^0-9]/g, '') || 1, 10))}</span>
         </div>
         <a href="javascript:void(0)" onclick="openDetailModal('${order.order_number}')" class="order-detail-btn">주문상세 보기 &gt;</a>
       </div>

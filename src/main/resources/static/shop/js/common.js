@@ -155,7 +155,31 @@ function renderHeader() {
 
   if (logged) {
     fetchNotifications();
-    setInterval(fetchNotifications, 10000); // 10초마다 알림 폴링 (DB 반영 실시간 폴링)
+    const isNotiEnabled = localStorage.getItem('notiEnabled') === 'true';
+    if (isNotiEnabled) {
+      setInterval(fetchNotifications, 10000); // 10초마다 알림 폴링
+      const toastShown = sessionStorage.getItem('notiEnabledToastShown_Shop2');
+      if (!toastShown) {
+        if (typeof Toast !== 'undefined') {
+          Toast.show({ title: '알림', msg: '알림이 활성화되어 있습니다.', type: 'info' });
+        }
+        sessionStorage.setItem('notiEnabledToastShown_Shop2', 'true');
+      }
+
+      // 알림 대기 테스트를 위한 가상 타이머 (15초마다 발생)
+      setInterval(() => {
+        if (localStorage.getItem('notiEnabled') === 'true' && typeof Toast !== 'undefined') {
+          Toast.show({ title: '현장 수령', msg: '준비된 굿즈를 수령해주세요!', type: 'success' });
+          const cntSpan = document.getElementById('notiHeadCount');
+          if (cntSpan) cntSpan.textContent = parseInt(cntSpan.textContent || '0') + 1;
+          const badge = document.getElementById('notiBadgeCount');
+          if (badge) {
+            badge.style.display = 'flex';
+            badge.textContent = parseInt(badge.textContent || '0') + 1;
+          }
+        }
+      }, 15000);
+    }
   }
 }
 
@@ -455,8 +479,59 @@ function startMockAlerts() {
   // DB 연동으로 변경되어 Mock 기능 제거
 }
 
+/* ── 12자리 암호화 바코드 유틸리티 ──────────────────────────── */
+const BarcodeUtils = {
+  MASK_FIXED: 80000000000000000n, // 11자리 난수 보장을 위한 53비트 마스크
+  MASK_DYNAMIC: 90000000000000000n,
+
+  encodeFixedOrder(prefix, orderId) {
+    const obf = BigInt(orderId) ^ this.MASK_FIXED;
+    const base36 = obf.toString(36).toUpperCase();
+    return prefix + base36.padStart(11, '0');
+  },
+
+  decodeFixedOrder(fixedStr) {
+    const base36 = fixedStr.substring(1);
+    let obf = 0n;
+    for (let i = 0; i < base36.length; i++) {
+      const code = base36.charCodeAt(i);
+      let val = 0n;
+      if (code >= 48 && code <= 57) val = BigInt(code - 48);
+      else if (code >= 65 && code <= 90) val = BigInt(code - 65 + 10);
+      else if (code >= 97 && code <= 122) val = BigInt(code - 97 + 10);
+      obf = obf * 36n + val;
+    }
+    const orderId = obf ^ this.MASK_FIXED;
+    return Number(orderId);
+  },
+
+  encodeDynamicBarcode(prefix, orderId, totp) {
+    const combined = BigInt(orderId) * 1000000n + BigInt(totp);
+    const obf = combined ^ this.MASK_DYNAMIC;
+    const base36 = obf.toString(36).toUpperCase();
+    return prefix + base36.padStart(11, '0');
+  },
+
+  decodeDynamicBarcode(dynamicStr) {
+    const base36 = dynamicStr.substring(1);
+    let obf = 0n;
+    for (let i = 0; i < base36.length; i++) {
+      const code = base36.charCodeAt(i);
+      let val = 0n;
+      if (code >= 48 && code <= 57) val = BigInt(code - 48);
+      else if (code >= 65 && code <= 90) val = BigInt(code - 65 + 10);
+      else if (code >= 97 && code <= 122) val = BigInt(code - 97 + 10);
+      obf = obf * 36n + val;
+    }
+    const combined = obf ^ this.MASK_DYNAMIC;
+    const orderId = Number(combined / 1000000n);
+    const totp = Number(combined % 1000000n);
+    return { orderId, totp };
+  }
+};
+
 /* ── 전역 노출 ──────────────────────────────────────────────── */
-window.FS = { Session, Toast, LoginModal, renderHeader, refreshCartBadge, requireLogin, startMockAlerts, fetchNotifications };
+window.FS = { Session, Toast, LoginModal, BarcodeUtils, renderHeader, refreshCartBadge, requireLogin, startMockAlerts, fetchNotifications };
 
 /* Floating NPC Chatbot */
 document.addEventListener('DOMContentLoaded', () => {

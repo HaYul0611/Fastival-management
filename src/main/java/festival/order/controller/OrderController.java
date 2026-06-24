@@ -527,6 +527,35 @@ public class OrderController {
                 /* 무시 */ }
         }
 
+        // [실시간 런타임 축제 시작 시각 비교 및 예매 차단 검증]
+        try {
+            Map<String, Object> festivalInfo = jdbcTemplate.queryForMap(
+                "SELECT start_date, start_time, name FROM festival WHERE id = ?", festivalId);
+            if (festivalInfo != null) {
+                java.sql.Date startDateSql = (java.sql.Date) festivalInfo.get("start_date");
+                String startTimeSql = (String) festivalInfo.get("start_time");
+                String festivalName = (String) festivalInfo.get("name");
+                
+                if (startDateSql != null) {
+                    java.time.LocalDate startDate = startDateSql.toLocalDate();
+                    String timeStr = (startTimeSql == null || startTimeSql.trim().isEmpty()) ? "00:00:00" : startTimeSql.trim();
+                    if (timeStr.length() == 5) timeStr += ":00";
+                    
+                    java.time.LocalTime startTime = java.time.LocalTime.parse(timeStr);
+                    java.time.LocalDateTime festivalStartDateTime = java.time.LocalDateTime.of(startDate, startTime);
+                    
+                    if (java.time.LocalDateTime.now().isAfter(festivalStartDateTime) || java.time.LocalDateTime.now().isEqual(festivalStartDateTime)) {
+                        Map<String, Object> errRes = new HashMap<>();
+                        errRes.put("status", "fail");
+                        errRes.put("message", "'" + festivalName + "' 행사가 이미 시작되어 더 이상 예매를 진행할 수 없습니다.");
+                        return errRes;
+                    }
+                }
+            }
+        } catch (Exception e) {
+            System.err.println("Festival time check validation skipped or failed: " + e.getMessage());
+        }
+
         // QR 텍스트 데이터 및 고유 난수 생성
         String ticketNum = generateRandomTicketNumber();
 
@@ -779,7 +808,7 @@ public class OrderController {
     @PostMapping("/tickets/scan")
     public Map<String, Object> scanQrTicket(@RequestBody Map<String, String> payload) {
         Map<String, Object> res = new HashMap<>();
-        String qrText = payload.get("qrText"); // format: e.g. F0001OX4M9K2
+        String qrText = payload.get("qrText"); // format: e.g. TXXXXXX... (12 chars)
 
         if (qrText == null || qrText.length() != 12) {
             insertScanLog(-1L, 1L, false);
@@ -789,10 +818,14 @@ public class OrderController {
         }
 
         Long orderId;
-        String totpCode = qrText.substring(6, 12);
+        String totpCode;
         try {
-            String orderIdBase36 = qrText.substring(1, 6);
-            orderId = Long.parseLong(orderIdBase36, 36);
+            String base36 = qrText.substring(1);
+            long obf = Long.parseLong(base36, 36);
+            long combined = obf ^ 90000000000000000L; // MASK_DYNAMIC
+            orderId = combined / 1000000L;
+            long totpNum = combined % 1000000L;
+            totpCode = String.format("%06d", totpNum);
         } catch (Exception e) {
             insertScanLog(-1L, 1L, false);
             res.put("status", "INVALID");
