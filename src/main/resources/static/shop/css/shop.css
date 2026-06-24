@@ -1,4 +1,4 @@
-﻿/* ================================================================
+/* ================================================================
    FESTIO SHOP — shop.css
    굿즈·F&B 판매 사이트인 메인 페이지 디자인
    ================================================================ */
@@ -694,8 +694,8 @@
 
 /* ���� ���ڵ� ��Ʈ (������ ����) */
 .barcode-text {
-    font-family: 'Consolas', 'Courier New', Courier, monospace !important;
-    letter-spacing: 2px !important;
+  font-family: 'Consolas', 'Courier New', Courier, monospace !important;
+  letter-spacing: 2px !important;
 }
 
 
@@ -734,10 +734,12 @@
   transition: border-color 0.2s;
 }
 
-.page-size-select:hover, .page-size-select:focus {
+.page-size-select:hover,
+.page-size-select:focus {
   border-color: var(--blue);
   outline: none;
 }
+
 :root {
   --blue: #1864f9;
   --blue-light: #e6f0ff;
@@ -750,6 +752,7 @@
   display: inline-block;
   user-select: none;
 }
+
 .custom-select-trigger {
   border-radius: 6px;
   border: 1px solid var(--g300);
@@ -764,6 +767,7 @@
   justify-content: space-between;
   min-width: 130px;
 }
+
 .custom-select-trigger:after {
   content: '';
   position: absolute;
@@ -773,9 +777,11 @@
   border: 4px solid transparent;
   border-top-color: var(--g600);
 }
+
 .custom-select-trigger.open {
   border-color: var(--blue);
 }
+
 .custom-select-options {
   position: absolute;
   display: block;
@@ -785,7 +791,7 @@
   background: #fff;
   border: 1px solid var(--g200);
   border-radius: 6px;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
   z-index: 100;
   opacity: 0;
   visibility: hidden;
@@ -796,11 +802,13 @@
   padding: 0;
   list-style: none;
 }
+
 .custom-select-wrapper.open .custom-select-options {
   opacity: 1;
   visibility: visible;
   pointer-events: all;
 }
+
 .custom-option {
   padding: 10px 12px;
   font-size: 14px;
@@ -808,7 +816,9 @@
   cursor: pointer;
   transition: all 0.2s;
 }
-.custom-option:hover, .custom-option.selected {
+
+.custom-option:hover,
+.custom-option.selected {
   background-color: var(--blue);
   color: #fff;
 }
@@ -828,17 +838,71 @@
   border: 1px solid transparent;
   color: var(--g800);
 }
+
 #shopPaginationWrapper .page-btn:hover:not(:disabled) {
   background-color: var(--g100);
   color: var(--g900);
 }
+
 #shopPaginationWrapper .page-btn.btn-primary {
   background-color: var(--blue) !important;
   color: #fff !important;
   border-color: var(--blue) !important;
   font-weight: 600;
 }
+
 #shopPaginationWrapper .page-btn:disabled {
   opacity: 0.3;
   cursor: not-allowed;
+}
+
+/* ================================================================
+   Skeleton UI
+   ================================================================ */
+@keyframes skeleton-loading {
+  0% {
+    background-color: var(--g100);
+  }
+
+  50% {
+    background-color: var(--g200);
+  }
+
+  100% {
+    background-color: var(--g100);
+  }
+}
+
+.skeleton-card {
+  pointer-events: none;
+  background: #fff;
+}
+
+.skeleton-img {
+  animation: skeleton-loading 1.5s infinite ease-in-out;
+}
+
+.skeleton-text {
+  height: 14px;
+  border-radius: 4px;
+  animation: skeleton-loading 1.5s infinite ease-in-out;
+  margin-bottom: 8px;
+}
+
+.skeleton-brand {
+  width: 40%;
+  height: 12px;
+  margin-bottom: 12px;
+}
+
+.skeleton-title {
+  width: 80%;
+  height: 16px;
+  margin-bottom: 20px;
+}
+
+.skeleton-price {
+  width: 60%;
+  height: 18px;
+  margin-top: 10px;
 }

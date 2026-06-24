@@ -38,6 +38,91 @@ document.addEventListener('DOMContentLoaded', async () => {
   // 주문 전역 변수
   window.currentOrders = [];
 
+  // ====================================================================
+  // [6차 고도화] Service Worker 등록 및 Push Notification 알림 권한 획득
+  // ====================================================================
+  if ('serviceWorker' in navigator && 'Notification' in window) {
+    navigator.serviceWorker.register('/sw.js').then(reg => {
+      console.log('[SW] Service Worker Registered');
+    }).catch(err => console.log('[SW] Registration failed', err));
+
+    if (Notification.permission !== 'granted' && Notification.permission !== 'denied') {
+      Notification.requestPermission();
+    }
+  }
+
+  function triggerPushNotification(title, body, url) {
+    // 1. Service Worker 활용 (백그라운드 지원)
+    if ('serviceWorker' in navigator && 'Notification' in window && Notification.permission === 'granted') {
+      navigator.serviceWorker.ready.then(reg => {
+        reg.showNotification(title, {
+          body: body,
+          icon: '/assets/img/festio_logo.png',
+          badge: '/assets/img/festio_logo.png',
+          vibrate: [200, 100, 200, 100, 200, 100, 400],
+          data: url || '/'
+        });
+      });
+    }
+    // 2. 일반 브라우저 노티 (폴백)
+    else if ('Notification' in window && Notification.permission === 'granted') {
+      if (navigator.vibrate) navigator.vibrate([200, 100, 200, 100, 200, 100, 400]);
+      new Notification(title, { body: body, icon: '/assets/img/festio_logo.png' });
+    }
+    // 3. 앱 내 Toast
+    if (window.FS && window.FS.Toast) {
+      window.FS.Toast.show({ title: title, desc: body, type: 'info', dur: 5000 });
+    }
+  }
+
+  // ====================================================================
+  // [6차 고도화] Supabase Realtime 구독 (내 주문 상태 변경 감지)
+  // ====================================================================
+  const sb = window.ShopDB.getClient();
+  if (sb) {
+    sb.channel('my_orders_push')
+      .on('postgres_changes', {
+        event: 'UPDATE',
+        schema: 'public',
+        table: 'shop_orders',
+        filter: `user_email=eq.${email}`
+      }, async payload => {
+        const newRecord = payload.new;
+        const oldRecord = payload.old;
+
+        // 상태가 바뀐 경우에만 알림 처리
+        if (newRecord.status !== oldRecord.status) {
+
+          // [A안: 준비 완료 시 강력한 알림 - Fallback 역할]
+          if (newRecord.status === 'READY') {
+            triggerPushNotification('주문하신 음식이 준비되었습니다!', '픽업대로 와주세요. 주문번호: ' + newRecord.order_number, '/shop/orders.html');
+          }
+        }
+
+        // [B안: 내 앞 3명 남았을 때 사전 알림]
+        // 상태가 PENDING이나 PREPARING일 때, 나보다 먼저 주문한 사람들의 수를 카운트
+        if (newRecord.status === 'PREPARING' || newRecord.status === 'PENDING') {
+          try {
+            // 같은 가게라는 정확한 조건은 shop_order_items 조인이 필요하므로, 여기서는 전체 축제 내 앞 대기열로 추정 (mock)
+            const { count, error } = await sb.from('shop_orders')
+              .select('*', { count: 'exact', head: true })
+              .in('status', ['PENDING', 'PREPARING'])
+              .lt('created_at', newRecord.created_at);
+
+            // 앞에 3팀 이하(0,1,2,3) 남았을 때 1회 한정으로 사전 알림 발송
+            if (!error && count !== null && count <= 3) {
+              const notiKey = `noti_pre_${newRecord.id}`;
+              if (!localStorage.getItem(notiKey)) {
+                triggerPushNotification('곧 내 차례가 다가옵니다!', `앞에 ${count}팀 남았습니다. 픽업 준비를 해주세요.`, '/shop/orders.html');
+                localStorage.setItem(notiKey, 'true'); // 중복 발송 방지
+              }
+            }
+          } catch (e) { console.error('Push Notice Error', e); }
+        }
+      })
+      .subscribe();
+  }
+
   // TOTP 로직
   let totpTimer = null;
   /* ================================================================
@@ -330,17 +415,19 @@ document.addEventListener('DOMContentLoaded', async () => {
     odModal.classList.add('show');
   };
 
-  // 주문 내역 가져오기
+  // 주문 내역 가져오기 (Supabase 연동)
   const fetchOrders = async () => {
     try {
-      const token = localStorage.getItem('userToken') || sessionStorage.getItem('userToken');
-      const headers = token ? { 'Authorization': 'Bearer ' + token } : {};
-      const res = await fetch('/api/order/shop/my', { headers });
+      const sb = window.ShopDB.getClient();
+      const userEmail = (profile && profile.email) || localStorage.getItem('email') || 'guest@festio.com';
+
+      const { data: rawOrders, error } = await sb.from('shop_orders')
+        .select('*, shop_order_items(*)')
+        .eq('user_email', userEmail)
+        .order('created_at', { ascending: false });
 
       let orders = [];
-      if (res.ok) {
-        let rawOrders = await res.json();
-        // 실제 상품 내역이 있는 유효한 주문만 필터링 (빈 테스트 주문 방지)
+      if (!error && rawOrders) {
         orders = rawOrders.filter(o => o.shop_order_items && o.shop_order_items.length > 0);
       }
 

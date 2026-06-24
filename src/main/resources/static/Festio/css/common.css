@@ -1,4 +1,4 @@
-/* ============================================================
+﻿/* ============================================================
    Festival O2O — common.css
    모바일(<1024px): Queens Smile 다크 앱 스타일
    데스크톱(≥1024px): festio 라이트 포탈 스타일
@@ -1331,9 +1331,9 @@ input[type="search"]::-webkit-search-cancel-button:hover {
 /* ── TOAST ─────────────────────────────────────────────────── */
 .toast-container {
   position: fixed;
-  bottom: 80px;
-  left: 50%;
-  transform: translateX(-50%);
+  top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
   display: flex;
   flex-direction: column;
   gap: 10px;
@@ -2594,3 +2594,4 @@ input[type="search"]::-webkit-search-cancel-button:hover {
   color: #ddd;
   font-size: 10px;
 }
+

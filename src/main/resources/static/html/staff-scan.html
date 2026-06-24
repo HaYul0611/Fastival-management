@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="ko">
 
 <head>
@@ -12,7 +12,7 @@
   <!-- custom.css 복구 -->
   <link rel="stylesheet" href="/assets/css/custom.css?v=5">
   <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
-  <link rel="stylesheet" href="css/staff-scan.css" />
+  <link rel="stylesheet" href="/assets/css/staff-scan.css" />
 </head>
 
 <body>
@@ -58,16 +58,103 @@
       </header>
 
       <div id="main-content">
-        <section id="view-scanner" class="content-view active">
-          <!-- Rendered by js/ui.js -->
+                <section id="view-scanner" class="content-view active">
+          <div class="scanner-layout" style="display: flex; gap: 20px; padding: 20px; flex-wrap: wrap;">
+            <div class="camera-section" style="flex: 1; min-width: 300px; max-width: 600px;">
+              <video id="ssVideo" autoplay playsinline style="width: 100%; aspect-ratio: 4/3; object-fit: cover; border-radius: 8px; background: #000;"></video>
+              <canvas id="ssScanCanvas" hidden></canvas>
+              <div id="ssCameraError" style="color: #ef4444; margin-top: 10px;"></div>
+              <button id="ssRetryBtn" class="btn btn-rigid" style="display:none; margin-top: 10px;">카메라 재시작</button>
+              
+              <div class="scan-type-toggle" style="margin-top: 15px; display: flex; gap: 10px;">
+                  <button id="btnEntrance" class="btn btn-rigid active" style="flex:1;">입장 스캔</button>
+                  <button id="btnPickup" class="btn btn-rigid" style="flex:1;">수령 스캔</button>
+              </div>
+              
+              <button id="ssManualBtn" class="btn btn-rigid" style="margin-top: 15px; width: 100%;">수동 입력 토글</button>
+              <div id="ssManualPanel" hidden style="margin-top: 10px; display: flex; gap: 10px;">
+                  <input type="text" id="ssManualInput" placeholder="바코드 번호 입력" class="input-rigid" style="flex: 1;" />
+                  <button id="ssManualSubmit" class="btn btn-rigid btn-green">확인</button>
+              </div>
+              
+              <div id="ssResultCard" style="margin-top: 20px;"></div>
+              <button id="ssExceptionBtnInCard" class="btn btn-rigid btn-red" style="display:none; margin-top: 10px; width: 100%;">예외 처리 진행</button>
+            </div>
+            
+            <div class="admin-section" style="flex: 1; min-width: 300px;">
+              <div class="user-info" style="background: #1e293b; padding: 15px; border-radius: 8px; margin-bottom: 20px;">
+                  <span id="ssRoleBadge" style="background: #38bdf8; color: #fff; padding: 2px 6px; border-radius: 4px; font-size: 12px;"></span>
+                  <span id="ssRoleLabel" style="color: #cbd5e1; margin-left: 10px;"></span>
+                  <span id="ssUserName" style="color: #fff; font-weight: bold; margin-left: 10px;"></span>
+              </div>
+              
+              <div id="ssAdminPanel" style="background: #1e293b; padding: 15px; border-radius: 8px; margin-bottom: 20px;">
+                  <h3 style="color: #fff; margin-top: 0;">관리자 잠금 해제</h3>
+                  <div style="display: flex; gap: 10px; margin-top: 10px;">
+                    <input type="text" id="ssUnlockInput" placeholder="티켓 번호 입력" class="input-rigid" style="flex: 1;" />
+                    <button id="ssUnlockBtn" class="btn btn-rigid btn-blue">해제</button>
+                  </div>
+                  <div id="ssUnlockResult" style="margin-top: 10px; color: #10b981;"></div>
+              </div>
+              
+              <div class="scan-logs" style="background: #1e293b; padding: 15px; border-radius: 8px;">
+                  <h3 style="color: #fff; margin-top: 0; display: flex; justify-content: space-between;">
+                    <span>스캔 기록</span>
+                    <span style="background: #334155; padding: 2px 8px; border-radius: 10px; font-size: 14px;" id="ssLogCount">0</span>
+                  </h3>
+                  <div id="ssLogList" style="margin-top: 10px; max-height: 300px; overflow-y: auto; color: #cbd5e1;"></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Modals -->
+          <div id="ssWristbandModal" hidden style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 1000;">
+              <div id="ssWristbandBackdrop" class="modal-backdrop" style="position: absolute; width: 100%; height: 100%; background: rgba(0,0,0,0.5);"></div>
+              <div class="modal-content" style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); background: #1e293b; padding: 20px; border-radius: 8px; z-index: 1001; min-width: 300px;">
+                  <div id="ssWristbandBody" style="color: #fff; margin-bottom: 20px;"></div>
+                  <div style="display: flex; justify-content: flex-end; gap: 10px;">
+                    <button id="ssWristbandIssueBtn" class="btn btn-rigid btn-green">팔찌 발급</button>
+                    <button id="ssWristbandCloseBtn" class="btn btn-rigid">닫기</button>
+                  </div>
+              </div>
+          </div>
+
+          <div id="ssExceptionModal" hidden style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 1000;">
+              <div id="ssExceptionBackdrop" class="modal-backdrop" style="position: absolute; width: 100%; height: 100%; background: rgba(0,0,0,0.5);"></div>
+              <div class="modal-content" style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); background: #1e293b; padding: 20px; border-radius: 8px; z-index: 1001; min-width: 300px;">
+                  <div id="ssExceptionBody" style="color: #fff; margin-bottom: 20px;"></div>
+                  <div style="display: flex; justify-content: flex-end; gap: 10px;">
+                    <button id="ssExceptionApproveBtn" class="btn btn-rigid btn-green">예외 승인</button>
+                    <button id="ssExceptionCancelBtn" class="btn btn-rigid">취소</button>
+                  </div>
+              </div>
+          </div>
         </section>
       </div>
     </main>
 
   </div>
 
-  <script type="module" src="js/staff-scan-v2.js?v=totp-fix-5"></script>
-
+    <script type="module" src="/js/staff-scan-v2.js?v=totp-fix-12"></script>
+  <script type="module">
+    import { initUI } from '/assets/js/ui.js';
+    document.addEventListener('DOMContentLoaded', () => {
+      initUI();
+    });
+  </script>
 </body>
 
 </html>
+
+
+
+
+
+
+
+
+
+
+
+
+

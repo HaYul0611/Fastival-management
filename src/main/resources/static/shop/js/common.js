@@ -454,8 +454,61 @@ function startMockAlerts() {
   // DB 연동으로 변경되어 Mock 기능 제거
 }
 
+/* ── 12자리 암호화 바코드 유틸리티 ──────────────────────────── */
+const BarcodeUtils = {
+  MASK_FIXED: 80000000000000000n, // 11자리 난수 보장을 위한 53비트 마스크
+  MASK_DYNAMIC: 90000000000000000n,
+
+  // 고정 12자리 번호 생성 (분류코드 + 암호화된 orderId)
+  encodeFixedOrder(prefix, orderId) {
+    const obf = BigInt(orderId) ^ this.MASK_FIXED;
+    const base36 = obf.toString(36).toUpperCase();
+    return prefix + base36.padStart(11, '0');
+  },
+
+  decodeFixedOrder(fixedStr) {
+    const base36 = fixedStr.substring(1);
+    let obf = 0n;
+    for (let i = 0; i < base36.length; i++) {
+      const code = base36.charCodeAt(i);
+      let val = 0n;
+      if (code >= 48 && code <= 57) val = BigInt(code - 48);
+      else if (code >= 65 && code <= 90) val = BigInt(code - 65 + 10);
+      else if (code >= 97 && code <= 122) val = BigInt(code - 97 + 10);
+      obf = obf * 36n + val;
+    }
+    const orderId = obf ^ this.MASK_FIXED;
+    return Number(orderId);
+  },
+
+  // 동적 12자리 바코드 생성 (분류코드 + orderId와 TOTP가 결합된 암호)
+  encodeDynamicBarcode(prefix, orderId, totp) {
+    const combined = BigInt(orderId) * 1000000n + BigInt(totp);
+    const obf = combined ^ this.MASK_DYNAMIC;
+    const base36 = obf.toString(36).toUpperCase();
+    return prefix + base36.padStart(11, '0');
+  },
+
+  decodeDynamicBarcode(dynamicStr) {
+    const base36 = dynamicStr.substring(1);
+    let obf = 0n;
+    for (let i = 0; i < base36.length; i++) {
+      const code = base36.charCodeAt(i);
+      let val = 0n;
+      if (code >= 48 && code <= 57) val = BigInt(code - 48);
+      else if (code >= 65 && code <= 90) val = BigInt(code - 65 + 10);
+      else if (code >= 97 && code <= 122) val = BigInt(code - 97 + 10);
+      obf = obf * 36n + val;
+    }
+    const combined = obf ^ this.MASK_DYNAMIC;
+    const orderId = Number(combined / 1000000n);
+    const totp = Number(combined % 1000000n);
+    return { orderId, totp };
+  }
+};
+
 /* ── 전역 노출 ──────────────────────────────────────────────── */
-window.FS = { Session, Toast, LoginModal, renderHeader, refreshCartBadge, requireLogin, startMockAlerts, fetchNotifications };
+window.FS = { Session, Toast, LoginModal, renderHeader, refreshCartBadge, requireLogin, startMockAlerts, fetchNotifications, BarcodeUtils };
 
 /* Floating NPC Chatbot */
 document.addEventListener('DOMContentLoaded', () => {

@@ -1,8 +1,8 @@
 'use strict';
 
-// FESTIO SHOP 전용 Supabase 클라이언트
-const SHOP_SUPABASE_URL = 'https://omqrarpixrcyzhmjgkuv.supabase.co';
-const SHOP_SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9tcXJhcnBpeHJjeXpobWpna3V2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODE2NjAwOTYsImV4cCI6MjA5NzIzNjA5Nn0.CXh6JzXeezDcwRasIZvfsNWjX4dcJSaUM85Qygv90pE';
+// FESTIO SHOP 전용 Supabase 클라이언트 (FESTIO 대표 계정으로 통합)
+const SHOP_SUPABASE_URL = 'https://loqsekbplftdjphzewmx.supabase.co';
+const SHOP_SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxvcXNla2JwbGZ0ZGpwaHpld214Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzk3NzM5NDYsImV4cCI6MjA5NTM0OTk0Nn0.l6i4VUx6fU0ePN_3RxNb9CJQkpWC-X2HeXb2yGBqDnM';
 
 window.ShopDB = (function () {
   let _client = null;
@@ -97,6 +97,44 @@ window.ShopDB = (function () {
         return historyObj;
       }
       return data;
+    },
+    async subscribeToNotifications(profileId) {
+      const sb = getClient();
+      if (!sb || !profileId) return;
+
+      // 브라우저 Notification 권한 요청 (브라우저 푸시)
+      if ('Notification' in window && Notification.permission !== 'granted' && Notification.permission !== 'denied') {
+        Notification.requestPermission();
+      }
+
+      sb.channel('realtime_notifications')
+        .on('postgres_changes', {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'shop_notifications',
+          filter: `profile_id=eq.${profileId}`
+        }, payload => {
+          const noti = payload.new;
+          console.log('New Notification Received:', noti);
+
+          // 1. FESTIO 내부 Toast 알림
+          if (window.FS && window.FS.Toast) {
+            window.FS.Toast.show({ title: noti.title, desc: noti.message, type: 'info', dur: 5000 });
+          } else if (window.Toast) {
+            window.Toast.info(noti.title + ' - ' + noti.message);
+          } else {
+            alert(noti.title + '\\n' + noti.message);
+          }
+
+          // 2. 브라우저 OS 레벨 알림
+          if ('Notification' in window && Notification.permission === 'granted') {
+            new Notification(noti.title, {
+              body: noti.message,
+              icon: '/assets/img/festio_logo.png' // 로고 경로
+            });
+          }
+        })
+        .subscribe();
     }
   };
 })();

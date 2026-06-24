@@ -51,7 +51,8 @@ CREATE TABLE public.shop_orders (
   payment_method text NOT NULL, -- 'TOSS_CARD', 'FESTIO_PAY', 'TOSS_VIRTUAL' 등
   delivery_type text NOT NULL, -- 'PICKUP' (현장수령) 또는 'SHIPPING' (일반배송)
   status text NOT NULL DEFAULT 'PAYMENT_COMPLETED', -- PAYMENT_COMPLETED, PREPARING, READY_FOR_PICKUP, COMPLETED, SHIPPING, DELIVERED
-  qr_code_url text, -- 픽업용 QR 코드 이미지
+  qr_code_url text, -- 픽업용 정적 QR 코드 이미지
+  totp_secret VARCHAR(255), -- 동적 QR(TOTP) 스캔을 위한 시크릿 키
   created_at timestamp with time zone DEFAULT now()
 );
 

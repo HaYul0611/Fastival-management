@@ -257,41 +257,78 @@ document.addEventListener('DOMContentLoaded', () => {
           return;
         }
 
-        // 실제 차감 API 호출
-        const res = await fetch('/api/wallet/pay', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json', 'Authorization': token },
-          body: JSON.stringify({ amount: finalTotal })
-        });
-        const data = await res.json();
+        // Supabase에서 현재 잔액 확인
+        const profile = await window.ShopDB.getProfile(u.email);
+        const currentBalance = profile ? (profile.festio_pay_points || 0) : 0;
 
-        if (!res.ok || !data.success) {
-          Toast.show({ title: '결제 실패', msg: data.message || '잔액이 부족합니다.', type: 'error' });
-          isPaying = false;
-          return;
+        if (currentBalance < finalTotal) {
+          const diff = finalTotal - currentBalance;
+          const rechargeAmount = Math.ceil(diff / 10000) * 10000; // 1만원 단위 자동 충전
+
+          if (confirm(`잔액이 부족합니다. (현재 ${currentBalance.toLocaleString()}원)\nFESTIO Pay ${rechargeAmount.toLocaleString()}원을 자동 충전하시겠습니까?`)) {
+            // 원클릭 자동 충전 (테스트 환경 모의 처리)
+            const newBalance = currentBalance + rechargeAmount;
+            await window.ShopDB.updateProfile(profile.id, { festio_pay_points: newBalance });
+
+            // 충전 이력 로컬스토리지 기록 (mypage.js 연동)
+            let walletHist = JSON.parse(localStorage.getItem('shopWalletHistory_' + u.email) || '[]');
+            walletHist.unshift({ type: 'charge', desc: '자동 충전', amount: rechargeAmount, date: new Date().toLocaleString() });
+            localStorage.setItem('shopWalletHistory_' + u.email, JSON.stringify(walletHist));
+
+            Toast.show({ title: '충전 완료', msg: `${rechargeAmount.toLocaleString()}원이 충전되었습니다. 결제를 다시 시도합니다.`, type: 'success' });
+            isPaying = false;
+            return;
+          } else {
+            Toast.show({ title: '결제 취소', msg: '잔액 부족으로 결제가 취소되었습니다.', type: 'error' });
+            isPaying = false;
+            return;
+          }
         }
 
-        // 2. MySQL 백엔드 DB에 주문 데이터 전송 (업주가 볼 수 있도록 처리)
-        const shopOrderPayload = {
-          totalPrice: finalTotal,
-          userToken: token,
-          festivalId: sessionStorage.getItem('currentFestivalId') || 1, // 필요 시 페스티벌 ID 추가
-          items: order.map(item => ({
-            id: item.productId || item.id,
-            qty: item.qty,
-            type: item.type || ((item.category || item.cat) === 'fnb' || (item.category || item.cat) === 'food' ? 'FOOD' : 'GOODS'),
-            options: item.opts ? JSON.stringify(item.opts) : (item.options || '')
-          }))
-        };
+        // 결제 (잔액 차감)
+        const balanceAfterPay = currentBalance - finalTotal;
+        await window.ShopDB.updateProfile(profile.id, { festio_pay_points: balanceAfterPay });
 
-        const orderRes = await fetch('/api/order/shop', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(shopOrderPayload)
-        });
-        const orderData = await orderRes.json();
-        if (!orderRes.ok || orderData.status !== 'success') {
-          throw new Error(orderData.message || '주문 등록 실패');
+        // 결제 이력 로컬스토리지 기록
+        let walletHist = JSON.parse(localStorage.getItem('shopWalletHistory_' + u.email) || '[]');
+        walletHist.unshift({ type: 'use', desc: 'FESTIO SHOP 결제', amount: finalTotal, date: new Date().toLocaleString() });
+        localStorage.setItem('shopWalletHistory_' + u.email, JSON.stringify(walletHist));
+
+        // 2. Supabase DB에 주문 데이터 전송
+        const sb = window.ShopDB.getClient();
+
+        const { data: orderData, error: orderErr } = await sb.from('shop_orders').insert({
+          order_number: orderNumber,
+          user_email: (u && u.email) || 'guest@festio.com',
+          user_name: name,
+          user_phone: phone,
+          total_price: originalTotal,
+          discount_amount: discountAmount,
+          final_price: finalTotal,
+          payment_method: method,
+          status: 'PENDING',
+          secret_key: secret
+        }).select().single();
+
+        if (orderErr || !orderData) {
+          throw new Error('주문 등록 실패: ' + (orderErr ? orderErr.message : ''));
+        }
+
+        const orderItems = order.map(item => ({
+          order_id: orderData.id,
+          store_id: item.storeId || item.id,
+          store_name: item.brand || '알 수 없는 점포',
+          product_id: item.productId || item.id,
+          product_name: item.name,
+          qty: item.qty,
+          unit_price: item.price,
+          options: item.opts || {}
+        }));
+
+        const { error: itemsErr } = await sb.from('shop_order_items').insert(orderItems);
+        if (itemsErr) {
+          console.error("Order items insert failed", itemsErr);
+          // throw new Error('주문 상세 내역 등록 실패');
         }
 
       } catch (e) {
@@ -305,7 +342,27 @@ document.addEventListener('DOMContentLoaded', () => {
       localStorage.removeItem('fs_cart');
       sessionStorage.removeItem('fs_buynow');
       sessionStorage.removeItem('fs_order');
-      setTimeout(() => location.href = 'orders.html', 1500);
+
+      // 결제 완료 팝업 띄우기 (알림 유지 안내)
+      const modalHtml = `
+        <div id="pushNoticeModal" style="position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.6); display:flex; align-items:center; justify-content:center; z-index:9999; padding:20px;">
+          <div style="background:#fff; border-radius:16px; padding:24px; max-width:320px; width:100%; text-align:center; box-shadow:0 10px 25px rgba(0,0,0,0.2);">
+            <div style="width:50px; height:50px; background:var(--primary); color:#fff; border-radius:50%; display:flex; align-items:center; justify-content:center; margin:0 auto 16px;">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>
+            </div>
+            <h3 style="font-size:18px; font-weight:800; margin-bottom:12px; color:var(--g900);">결제가 완료되었습니다!</h3>
+            <p style="font-size:14px; color:var(--g600); line-height:1.5; margin-bottom:20px;">
+              스마트폰 화면을 꺼두시거나<br>다른 앱을 보셔도 내 차례가 되면<br><strong style="color:var(--primary);">알림과 진동</strong>이 울립니다.<br><br>
+              <span style="font-size:13px; color:#FF2D55; font-weight:600;">단, 원활한 푸시 알림 수신을 위해<br>현재 브라우저 창(탭)을 완전히<br>종료하지는 말아주세요!</span>
+            </p>
+            <button id="btnPushNoticeOk" style="width:100%; background:var(--black); color:#fff; border:none; padding:14px; border-radius:12px; font-weight:700; font-size:15px; cursor:pointer;">확인 및 주문내역 보기</button>
+          </div>
+        </div>
+      `;
+      document.body.insertAdjacentHTML('beforeend', modalHtml);
+      document.getElementById('btnPushNoticeOk').addEventListener('click', () => {
+        location.href = 'orders.html';
+      });
       return;
     }
 

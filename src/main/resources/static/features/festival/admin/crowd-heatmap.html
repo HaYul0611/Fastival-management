@@ -14,6 +14,7 @@
     <link rel="stylesheet" href="/assets/css/demo.css" />
     <link rel="stylesheet" href="/assets/vendor/libs/perfect-scrollbar/perfect-scrollbar.css" />
     <link rel="stylesheet" href="/assets/vendor/libs/apex-charts/apex-charts.css" />
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="/assets/vendor/js/helpers.js"></script>
     <script src="/assets/js/config.js"></script>
     <link rel="stylesheet" href="./css/crowd-heatmap.css" />
@@ -84,22 +85,7 @@
       </div>
       <div class="card-body">
         <div class="border rounded p-2 text-center bg-light position-relative" style="min-height: 450px;">
-          <!-- Heatmap Canvas SVG Mockup -->
-          <svg width="100%" height="430" style="background: url('/assets/img/elements/18.jpg') center/cover; border-radius: 4px;">
-            <!-- Zone A (Stage) - Highly Congested -->
-            <circle cx="150" cy="180" r="100" fill="rgba(255, 62, 29, 0.45)" stroke="#ff3e1d" stroke-width="2" />
-            <circle cx="140" cy="170" r="60" fill="rgba(255, 62, 29, 0.6)" />
-            <circle cx="130" cy="160" r="30" fill="rgba(255, 62, 29, 0.85)" />
-            <text x="150" y="185" fill="white" font-weight="bold" text-anchor="middle">A구역: 극심한 혼잡 (92%)</text>
-            
-            <!-- Zone B (FoodTrucks) - Normal -->
-            <circle cx="480" cy="200" r="120" fill="rgba(255, 171, 0, 0.35)" stroke="#ffab00" stroke-width="2" />
-            <circle cx="470" cy="190" r="60" fill="rgba(255, 171, 0, 0.55)" />
-            <text x="480" y="205" fill="white" font-weight="bold" text-anchor="middle">B구역: 보통 (55%)</text>
-            
-            <!-- Zone C (Entrance/MD) - Safe -->
-            <circle cx="320" cy="350" r="70" fill="rgba(113, 221, 55, 0.3)" stroke="#71dd37" stroke-width="2" />
-            <text x="320" y="355" fill="white" font-weight="bold" text-anchor="middle">C구역: 원활 (24%)</text>
+          <svg id="heatmapSvg" width="100%" height="430" style="background: url('/assets/img/elements/18.jpg') center/cover; border-radius: 4px;">
           </svg>
           <div class="position-absolute bottom-0 start-0 m-3 badge bg-danger">GPS 오차범위: ±3m</div>
         </div>

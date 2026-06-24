@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="ko">
 
 <head>
@@ -65,7 +65,11 @@
             <div class="animate-pulse" style="font-size: 14px;">대시보드 로딩 중...</div>
           </div>
         </section>
-
+        <!-- Store Dashboard view (iframe 연동) -->
+        <section id="view-store-dashboard" class="content-view" style="padding:0;">
+          <iframe src="/features/user/staff/staff-store-dashboard.html"
+            style="width: 100%; height: calc(100vh - 60px); border: none;"></iframe>
+        </section>
       </div>
     </main>
 
@@ -76,3 +80,4 @@
 </body>
 
 </html>
+

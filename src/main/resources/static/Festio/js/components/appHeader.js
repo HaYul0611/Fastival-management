@@ -86,7 +86,7 @@
       </a>`;
   } else if (isLoggedIn && userRole === 'STAFF') {
     const userSpecificRole = localStorage.getItem('userSpecificRole') || sessionStorage.getItem('userSpecificRole');
-    
+
     if (userSpecificRole === 'ROLE_GATE_STAFF') {
       modeSwitchBtnHtml = `
       <a href="/html/staff-scan.html" id="modeSwitchBtn" class="header-mode-switch-btn header-mode-switch-gate" aria-label="게이트 모드로 전환">
@@ -94,9 +94,7 @@
         <span class="mode-btn-label">게이트 모드</span>
       </a>`;
     } else {
-      const targetUrl = userSpecificRole === 'ROLE_GOODS_STAFF'
-        ? '/features/payment/staff/goods-store.html'
-        : '/features/payment/staff/store-management.html';
+      const targetUrl = '/features/user/staff/staffindex.html'; // 스태프 통합 시스템
       modeSwitchBtnHtml = `
       <a href="${targetUrl}" id="modeSwitchBtn" class="header-mode-switch-btn header-mode-switch-staff" aria-label="업주 모드로 전환">
         ${staffModeBtnSvg}

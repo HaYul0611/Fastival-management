@@ -34,8 +34,8 @@
 'use strict';
 
 /* ── Supabase 설정 ─────────────────────────────────────────── */
-const SUPABASE_URL = 'https://cddfyvkilmfrbtcruklw.supabase.co';   // TODO: 실제 URL로 교체
-const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNkZGZ5dmtpbG1mcmJ0Y3J1a2x3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzk3NzM5MzksImV4cCI6MjA5NTM1MTkzOX0.YPkPc7wDBWE3NwE_SrUnhQIOofJjTA-N9iPzxdiEFXs';                          // TODO: 실제 anon key로 교체
+const SUPABASE_URL = 'https://loqsekbplftdjphzewmx.supabase.co';   // 실제 URL로 교체 완료
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxvcXNla2JwbGZ0ZGpwaHpld214Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzk3NzM5NDYsImV4cCI6MjA5NTM0OTk0Nn0.l6i4VUx6fU0ePN_3RxNb9CJQkpWC-X2HeXb2yGBqDnM'; // 실제 anon key로 교체 완료
 
 let _supabase = null;
 let _isSupabaseUnreachable = false;

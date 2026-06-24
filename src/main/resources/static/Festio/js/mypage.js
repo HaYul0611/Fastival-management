@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Festival O2O Platform — mypage.js
  * ─────────────────────────────────────────────────────────────
  * 마이페이지 고도화:
@@ -50,75 +50,98 @@ async function fetchTickets() {
 /* 실제 DB 푸드트럭 주문 조회 API 연동 */
 async function fetchFoodOrders() {
   try {
-    const token = localStorage.getItem('userToken') || sessionStorage.getItem('userToken') || '';
-    const response = await fetch('/api/order/fnb', {
-      headers: {
-        'Authorization': 'Bearer ' + token
-      }
-    });
-    if (response.ok) {
-      const fnbOrders = await response.json();
+    const sb = window.ShopDB ? window.ShopDB.getClient() : (window.getSupabase ? window.getSupabase() : null);
+    if (!sb) {
+      console.warn('Supabase client not initialized.');
+      return;
+    }
+
+    const email = (window.FS && window.FS.Session) ? window.FS.Session.get()?.email : localStorage.getItem('userEmail');
+    if (!email) return;
+
+    // 프로필 ID 조회
+    const { data: profile } = await sb.from('shop_profiles').select('id').eq('user_email', email).maybeSingle();
+    if (!profile) return;
+
+    // 푸시 알림 구독 (실시간 알림 수신)
+    if (sb.subscribeToNotifications) {
+      sb.subscribeToNotifications(profile.id);
+    }
+
+    // 푸드트럭 주문 조회 (F로 시작)
+    const { data: fnbOrders, error } = await sb.from('shop_orders').select(`
+      *,
+      shop_order_items ( product_name, quantity, price_at_purchase )
+    `).eq('profile_id', profile.id).like('order_number', 'F%').order('created_at', { ascending: false });
+
+    if (error) throw error;
+
+    if (fnbOrders) {
       MOCK_FOOD_ORDERS = fnbOrders.map(f => {
-        const productName = f.items && f.items.length > 0 ? f.items[0].name : '푸드 상품';
-        const quantity = f.items && f.items.length > 0 ? f.items[0].quantity : 1;
+        const item = f.shop_order_items && f.shop_order_items.length > 0 ? f.shop_order_items[0] : {};
+        const productName = item.product_name || '푸드 상품';
+        const quantity = item.quantity || 1;
 
         let statusText = '주문 완료';
         if (f.status === 'RECEIVED') statusText = '주문 접수';
         else if (f.status === 'PREPARING') statusText = '조리 중';
-        else if (f.status === 'READY') statusText = '조리 완료 (픽업 대기)';
-        else if (f.status === 'PICKED_UP') statusText = '수령 완료';
+        else if (f.status === 'READY_FOR_PICKUP') statusText = '조리 완료 (픽업 대기)';
+        else if (f.status === 'COMPLETED') statusText = '수령 완료';
 
         return {
-          orderItemId: f.id,
-          storeName: '춘향이네 야시장',
+          orderItemId: f.order_number,
+          storeName: '푸드트럭',
           productName: productName,
           quantity: quantity,
           selectedOptions: '기본 옵션',
-          pickupTimeSlot: f.timestamp ? f.timestamp.split('.')[0] : '실시간 업데이트',
-          totalPrice: f.price,
+          pickupTimeSlot: new Date(f.created_at).toLocaleString(),
+          totalPrice: f.total_amount,
           itemStatus: f.status || 'RECEIVED',
           statusText: statusText,
-          qrToken: f.id
+          qrToken: f.order_number,
+          totpSecret: f.totp_secret
         };
       });
-      console.log('실제 DB 푸드트럭 주문 조회 완료:', MOCK_FOOD_ORDERS);
+      console.log('실제 Supabase DB 푸드트럭 주문 조회 완료:', MOCK_FOOD_ORDERS);
     }
   } catch (error) {
-    console.error('DB 푸드트럭 주문 로드 실패:', error);
+    console.error('Supabase DB 푸드트럭 주문 로드 실패:', error);
   } finally {
     try {
       const localFood = JSON.parse(localStorage.getItem('LOCAL_MOCK_FOOD')) || [];
-      MOCK_FOOD_ORDERS = MOCK_FOOD_ORDERS.concat(localFood);
+      // 중복 제거 후 합치기
+      const existingIds = MOCK_FOOD_ORDERS.map(o => o.orderItemId);
+      const uniqueLocal = localFood.filter(l => !existingIds.includes(l.orderItemId));
+      MOCK_FOOD_ORDERS = MOCK_FOOD_ORDERS.concat(uniqueLocal);
     } catch (e) { }
   }
 }
 
 /* 실제 DB 굿즈 구매 내역 조회 API 연동 */
-let MOCK_GOODS_ORDERS = [];
+let MOCK_GOODS_ORDERS = [
+  { id: 1, orderItemId: 'G12345', storeName: '공식 굿즈샵', productName: '응원봉', quantity: 2, deliveryType: '현장 수령', totalPrice: 30000, pickupTimeSlot: '26.06.04 14:30', itemStatus: 'READY', statusText: '준비 완료', qrToken: 'mock_goods_token_1' }
+];
 async function fetchGoodsOrders() {
   try {
-    const token = localStorage.getItem('userToken') || sessionStorage.getItem('userToken') || '';
-    const response = await fetch('/api/order/shop/my', {
-      headers: {
-        'Authorization': 'Bearer ' + token
-      }
-    });
-    if (response.ok) {
-      const shopOrders = await response.json();
+    const sb = window.ShopDB ? window.ShopDB.getClient() : (window.getSupabase ? window.getSupabase() : null);
+    if (!sb) return;
 
-      // 굿즈 주문만 필터링
-      const goodsOrdersRaw = shopOrders.filter(order => {
-        if (order.order_number && order.order_number.startsWith('G')) return true;
-        if (order.shop_order_items && order.shop_order_items.length > 0) {
-          const sp = order.shop_order_items[0].shop_products;
-          const pName = order.shop_order_items[0].product_name || '';
-          if (sp && sp.type === 'GOODS') return true;
-          if (pName.includes('굿즈') || pName.includes('티셔츠') || pName.includes('후드') || pName.includes('OFFICIAL') || pName.includes('슬로건') || pName.includes('응원봉')) return true;
-        }
-        return false;
-      });
+    const email = (window.FS && window.FS.Session) ? window.FS.Session.get()?.email : localStorage.getItem('userEmail');
+    if (!email) return;
 
-      MOCK_GOODS_ORDERS = goodsOrdersRaw.map(o => {
+    const { data: profile } = await sb.from('shop_profiles').select('id').eq('user_email', email).maybeSingle();
+    if (!profile) return;
+
+    // 굿즈 주문 조회 (G로 시작)
+    const { data: shopOrders, error } = await sb.from('shop_orders').select(`
+      *,
+      shop_order_items ( product_name, quantity, price_at_purchase )
+    `).eq('profile_id', profile.id).like('order_number', 'G%').order('created_at', { ascending: false });
+
+    if (error) throw error;
+
+    if (shopOrders) {
+      MOCK_GOODS_ORDERS = shopOrders.map(o => {
         const item = o.shop_order_items && o.shop_order_items.length > 0 ? o.shop_order_items[0] : {};
         const productName = item.product_name || '굿즈 상품';
         const quantity = item.quantity || 1;
@@ -131,22 +154,23 @@ async function fetchGoodsOrders() {
 
         return {
           orderItemId: o.order_number,
-          storeName: 'FESTIO SHOP',
+          storeName: 'FESTIO MD',
           productName: productName,
           quantity: quantity,
           selectedOptions: '단일 상품',
           pickupTimeSlot: new Date(o.created_at).toLocaleString(),
           totalPrice: o.total_amount,
-          itemStatus: o.status || 'PAID',
+          itemStatus: o.status || 'PAYMENT_COMPLETED',
           statusText: statusText,
           qrToken: o.order_number,
-          deliveryType: o.delivery_type === 'PICKUP' ? '현장수령' : '일반배송'
+          deliveryType: o.delivery_type === 'PICKUP' ? '현장수령' : '일반배송',
+          totpSecret: o.totp_secret
         };
       });
-      console.log('실제 DB 굿즈 주문 조회 완료:', MOCK_GOODS_ORDERS);
+      console.log('실제 Supabase DB 굿즈 주문 조회 완료:', MOCK_GOODS_ORDERS);
     }
   } catch (error) {
-    console.error('DB 굿즈 주문 로드 실패:', error);
+    console.error('Supabase DB 굿즈 주문 로드 실패:', error);
   } finally {
     try {
       const localGoods = JSON.parse(localStorage.getItem('LOCAL_MOCK_GOODS')) || [];
@@ -386,7 +410,9 @@ function formatBarcode(rawCode, prefix) {
   return BarcodeUtils.encodeFixedOrder(prefix, numId);
 }
 
-let MOCK_FOOD_ORDERS = [];
+let MOCK_FOOD_ORDERS = [
+  { id: 1, orderItemId: 'F12345', storeName: '나비 분식', productName: '떡볶이 세트', quantity: 1, selectedOptions: '순대 추가', totalPrice: 12000, pickupTimeSlot: '26.06.04 14:30', itemStatus: 'READY', statusText: '조리 완료', qrToken: 'mock_food_token_1' }
+];
 
 // 통계 렌더링
 function renderStats() {
@@ -2856,21 +2882,20 @@ async function openQrModalView(token, type = 'TICKET') {
 
   if (type === 'TICKET') {
     staticCodeText = BarcodeUtils.encodeFixedOrder(prefix, fixedOrderId);
-    if (_currentActiveSecret) {
-      let pureTotpCode = await generateTotpCode(_currentActiveSecret);
-      initialTokenForQR = BarcodeUtils.encodeDynamicBarcode(prefix, fixedOrderId, pureTotpCode);
-    } else {
-      initialTokenForQR = BarcodeUtils.encodeDynamicBarcode(prefix, fixedOrderId, Math.floor(100000 + Math.random() * 900000));
-    }
   } else if (type === 'FOOD') {
     const foodOrder = typeof MOCK_FOOD_ORDERS !== 'undefined' ? MOCK_FOOD_ORDERS.find(f => f.qrToken === token) : null;
     if (foodOrder) fixedOrderId = parseInt(String(foodOrder.id || foodOrder.orderItemId).replace(/[^0-9]/g, '')) || 1;
     staticCodeText = BarcodeUtils.encodeFixedOrder(prefix, fixedOrderId);
-    initialTokenForQR = BarcodeUtils.encodeDynamicBarcode(prefix, fixedOrderId, Math.floor(100000 + Math.random() * 900000));
   } else if (type === 'GOODS') {
     const goodsOrder = typeof MOCK_GOODS_ORDERS !== 'undefined' ? MOCK_GOODS_ORDERS.find(g => g.qrToken === token) : null;
     if (goodsOrder) fixedOrderId = parseInt(String(goodsOrder.id || goodsOrder.orderItemId).replace(/[^0-9]/g, '')) || 1;
     staticCodeText = BarcodeUtils.encodeFixedOrder(prefix, fixedOrderId);
+  }
+
+  if (_currentActiveSecret) {
+    let pureTotpCode = await generateTotpCode(_currentActiveSecret, _qrEpochOffset);
+    initialTokenForQR = BarcodeUtils.encodeDynamicBarcode(prefix, fixedOrderId, pureTotpCode);
+  } else {
     initialTokenForQR = BarcodeUtils.encodeDynamicBarcode(prefix, fixedOrderId, Math.floor(100000 + Math.random() * 900000));
   }
 
@@ -3048,19 +3073,19 @@ function generateHeroQR(token) {
   generateDynamicQR('qr-code-container', token, 100);
 }
 
-let _qrEpochOffset = 0;
+let _qrEpochOffset = 0; // Legacy variable, no longer accumulates
 
 async function triggerQrRefresh(isManual = false) {
-  if (isManual) {
-    _qrEpochOffset += 1;
-  }
-  const prefix = _currentQrType === 'FOOD' ? 'F' : (_currentQrType === 'GOODS' ? 'G' : 'T');
+    if (isManual) {
+        _qrEpochOffset += 1;
+    }
+    const prefix = _currentQrType === 'FOOD' ? 'F' : (_currentQrType === 'GOODS' ? 'G' : 'T');
   let newToken = '';
   let fixedOrderId = parseInt(_currentActiveOrderId, 10);
   if (isNaN(fixedOrderId)) fixedOrderId = 1;
 
   if (_currentActiveSecret) {
-    const totpCode = await generateTotpCode(_currentActiveSecret, _qrEpochOffset);
+    const totpCode = await generateTotpCode(_currentActiveSecret, _qrEpochOffset); // offset 없이 현재 시간 기준
     newToken = BarcodeUtils.encodeDynamicBarcode(prefix, fixedOrderId, totpCode);
   } else {
     // mock fallback
@@ -3268,4 +3293,8 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   });
 });
+
+
+
+
 

@@ -130,7 +130,13 @@ function cardHTML(p) {
     ` : ''}
 
     ${(function () {
-      const pid = parseInt(p.id.toString().replace('store_', '')) || 1;
+      const strId = String(p.id || p.name || '').replace('store_', '');
+      let pid = parseInt(strId, 10);
+      if (isNaN(pid)) {
+        let hash = 0;
+        for (let i = 0; i < strId.length; i++) hash = strId.charCodeAt(i) + ((hash << 5) - hash);
+        pid = Math.abs(hash) || 1;
+      }
       let mockImg = '';
 
       if (p.cat === 'food') {
@@ -337,7 +343,7 @@ function renderPagination(totalPages, isDesktop) {
     document.getElementById('prodGrid').parentNode.appendChild(wrapper);
   }
 
-  if (!isDesktop || totalPages <= 1) {
+  if (!isDesktop) {
     wrapper.innerHTML = '';
     return;
   }
@@ -513,147 +519,219 @@ document.addEventListener('DOMContentLoaded', () => {
     grid.innerHTML = '<div style="grid-column: 1/-1; text-align: center; color: var(--g500); padding: 60px 0; font-size: 15px; font-weight: 600;">입점 상점 및 상품 목록을 불러오는 중...</div>';
   }
 
-  // 1. 입점 승인 완료된 상점 목록 Fetch
+  // 1. Fetch Supabase products
+  const sb = window.ShopDB.getClient();
+  const pSupabase = sb ? sb.from('shop_products').select('*').order('created_at', { ascending: false }) : Promise.resolve({ data: [], error: null });
+
+  // 1-1. Fetch Store Settings for Hybrid Wait Time
+  const pStoreSettings = sb ? sb.from('shop_store_settings').select('*').then(res => res).catch(() => ({ data: null, error: 'Table missing' })) : Promise.resolve({ data: null, error: null });
+
+  // 2. Fetch API stores (mock data)
   let fetchUrl = '/api/stores';
-  if (festivalId) {
-    fetchUrl += `?festivalId=${festivalId}`;
-  }
+  if (festivalId) fetchUrl += `?festivalId=${festivalId}`;
 
-  fetch(fetchUrl)
-    .then(res => {
-      if (!res.ok) throw new Error('입점 상점 정보를 불러올 수 없습니다.');
-      return res.json();
-    })
-    .then(async stores => {
-      console.log('[Shop] Loaded stores for festival:', festivalId, stores);
+  const pApiStores = fetch(fetchUrl)
+    .then(res => res.ok ? res.json() : [])
+    .catch(() => []);
 
-      if (stores.length === 0) {
-        if (grid) {
-          grid.innerHTML = '<div style="grid-column: 1/-1; text-align: center; color: var(--g500); padding: 60px 0; font-size: 15px; font-weight: 600;">이 축제에 입점된 상점이 없습니다.</div>';
-        }
-        return;
+  Promise.all([pSupabase, pStoreSettings, pApiStores])
+    .then(async ([supabaseRes, settingsRes, apiStores]) => {
+      const { data: supaProducts, error } = supabaseRes;
+      if (error) console.error('[Shop] Supabase fetch error:', error);
+
+      const storeSettingsMap = new Map();
+      if (settingsRes && settingsRes.data) {
+        settingsRes.data.forEach(s => storeSettingsMap.set(s.store_name, s));
       }
 
       STORES = [];
       ALL_PRODUCTS = [];
 
-      // 2. 각 상점별 상품 목록 병렬 Fetch 수행
-      const productPromises = stores.map(store => {
-        // 카테고리 매핑 규칙
-        let storeCatMapped = 'goods';
-        const storeCat = (store.category || '').toLowerCase();
-        if (storeCat === 'food' || storeCat === 'drink') {
-          storeCatMapped = 'food';
-        } else if (storeCat === 'collab') {
-          storeCatMapped = 'collab';
-        }
+      // ============================================
+      // 1. Process Supabase data
+      // ============================================
+      const storeMap = new Map();
+      const foodTruckImages = [
+        '/assets/img/stores/간식차.jpg', '/assets/img/stores/꼬치트럭.jpg', '/assets/img/stores/떡볶이.jpg',
+        '/assets/img/stores/반려견 푸드.jpg', '/assets/img/stores/부스1.jpg', '/assets/img/stores/분식점.jpg',
+        '/assets/img/stores/빙수차.png', '/assets/img/stores/식음료차.jpg', '/assets/img/stores/원할머니.jpg',
+        '/assets/img/stores/음료 차.jpg', '/assets/img/stores/잇츠 월드.png', '/assets/img/stores/치킨트럭.jpeg',
+        '/assets/img/stores/카페차.png', '/assets/img/stores/커피차.jpg', '/assets/img/stores/타코야끼.jpg',
+        '/assets/img/stores/한국의 집.jpg', '/assets/img/stores/핫도그차.jpg', '/assets/img/stores/햄버거 차.jpg'
+      ];
+      const goodsImgs = [
+        '/shop/img/stores/goods/gen_0.png', '/shop/img/stores/goods/gen_1.png', '/shop/img/stores/goods/gen_2.png',
+        '/shop/img/stores/goods/gen_3.png', '/shop/img/stores/goods/gen_4.png'
+      ];
 
-        let wait = null;
-        if (storeCatMapped === 'food') {
-          const waitMatch = (store.notice || '').match(/(\d+)분/);
-          wait = waitMatch ? parseInt(waitMatch[1], 10) : 10;
-        }
+      // 간단한 문자열 해시 함수 (UUID를 숫자로 변환)
+      const hashCode = (s) => Math.abs(s.split('').reduce((a, b) => { a = ((a << 5) - a) + b.charCodeAt(0); return a & a }, 0));
 
-        // 푸드트럭 고화질 로컬 이미지 배열 (사용자가 직접 넣은 18개 이미지 모두 연결)
-        const foodTruckImages = [
-          '/assets/img/stores/간식차.jpg',
-          '/assets/img/stores/꼬치트럭.jpg',
-          '/assets/img/stores/떡볶이.jpg',
-          '/assets/img/stores/반려견 푸드.jpg',
-          '/assets/img/stores/부스1.jpg',
-          '/assets/img/stores/분식점.jpg',
-          '/assets/img/stores/빙수차.png',
-          '/assets/img/stores/식음료차.jpg',
-          '/assets/img/stores/원할머니.jpg',
-          '/assets/img/stores/음료 차.jpg',
-          '/assets/img/stores/잇츠 월드.png',
-          '/assets/img/stores/치킨트럭.jpeg',
-          '/assets/img/stores/카페차.png',
-          '/assets/img/stores/커피차.jpg',
-          '/assets/img/stores/타코야끼.jpg',
-          '/assets/img/stores/한국의 집.jpg',
-          '/assets/img/stores/핫도그차.jpg',
-          '/assets/img/stores/햄버거 차.jpg'
-        ];
-
-        let finalStoreImg = store.imageUrl || store.image_url || null;
-        if (storeCatMapped === 'food') {
-          // 푸드트럭일 경우 id를 기반으로 배열 내 이미지를 순환하며 덮어쓰기
-          finalStoreImg = foodTruckImages[(store.id || 0) % foodTruckImages.length];
-        }
-
-        // 상점 자체를 STORES에 추가
-        STORES.push({
-          id: `store_${store.id}`,
-          storeId: store.id,
-          cat: storeCatMapped,
-          brand: storeCatMapped === 'food' ? '푸드트럭' : 'MD 스토어',
-          name: store.name,
-          price: 0,
-          stock: 999,
-          wait: wait,
-          opts: [],
-          imageUrl: finalStoreImg,
-          isStoreCard: true
+      if (supaProducts && supaProducts.length > 0) {
+        supaProducts.forEach(p => {
+          const storeName = p.store_name || (p.type === 'FOOD' ? '푸드트럭' : 'FESTIO MD');
+          if (!storeMap.has(storeName)) {
+            storeMap.set(storeName, { id: p.id, name: storeName, type: p.type });
+          }
         });
 
-        return fetch(`/api/stores/${store.id}/products`)
-          .then(res => res.ok ? res.json() : [])
-          .then(products => {
-            // 상품이 있으면 상품 목록 반환
-            if (products.length > 0) {
-              return products.map(p => {
-                // 상품 옵션그룹 파싱
-                let opts = [];
-                if (p.optionGroupsJson) {
-                  try { opts = JSON.parse(p.optionGroupsJson); } catch (e) { opts = []; }
-                }
+        let s_foodIdx = 0;
+        let s_goodsIdx = 0;
+        storeMap.forEach((storeObj, storeName) => {
+          const catMapped = storeObj.type === 'FOOD' ? 'food' : 'goods';
+          let finalImg = '';
+          if (catMapped === 'food') {
+            finalImg = foodTruckImages[s_foodIdx % foodTruckImages.length];
+            s_foodIdx++;
+          } else {
+            finalImg = goodsImgs[s_goodsIdx % goodsImgs.length];
+            s_goodsIdx++;
+          }
 
-                return {
-                  id: p.id,
-                  storeId: store.id,
-                  cat: storeCatMapped,
-                  brand: store.name,
-                  name: p.productName || p.name,
-                  price: p.price || 0,
-                  stock: p.availableStock !== undefined ? p.availableStock : (p.currentStock || 0),
-                  wait: wait,
-                  opts: opts,
-                  imageUrl: p.imageUrl || p.image_url || null
-                };
-              });
+          let waitTime = null;
+          if (catMapped === 'food') {
+            const setting = storeSettingsMap.get(storeName);
+            if (setting && setting.is_manual_active && setting.manual_wait_time !== null) {
+              waitTime = setting.manual_wait_time; // B안 (수동)
+            } else {
+              waitTime = 5 + (hashCode(storeObj.id.toString()) % 6) * 5; // A안 (자동 임시)
             }
-            return [];
-          })
-          .catch(err => {
-            console.error(`[Shop] Failed to load products for store ${store.id}:`, err);
-            return [];
+          }
+
+          STORES.push({
+            id: `store_${storeObj.id}`,
+            storeId: storeObj.id,
+            cat: catMapped,
+            brand: catMapped === 'food' ? '푸드트럭' : 'MD 스토어',
+            name: storeName,
+            price: 0,
+            stock: 999,
+            wait: waitTime,
+            opts: [],
+            imageUrl: finalImg,
+            isStoreCard: true
           });
-      });
+        });
 
-      // 모든 상점의 상품 조회가 끝날 때까지 병렬 대기
-      const nestedLists = await Promise.all(productPromises);
-      ALL_PRODUCTS = nestedLists.flat();
+        const supabaseAllProducts = supaProducts.map(p => {
+          const catMapped = p.type === 'FOOD' ? 'food' : 'goods';
+          const parentStore = storeMap.get(p.store_name || (catMapped === 'food' ? '푸드트럭' : 'FESTIO MD'));
+          let waitTime = null;
+          if (catMapped === 'food') {
+            const setting = storeSettingsMap.get(parentStore ? parentStore.name : p.store_name);
+            if (setting && setting.is_manual_active && setting.manual_wait_time !== null) {
+              waitTime = setting.manual_wait_time; // B안 (수동)
+            } else {
+              waitTime = 5 + (hashCode(parentStore ? parentStore.id.toString() : p.id.toString()) % 6) * 5; // A안 (자동 임시)
+            }
+          }
+
+          return {
+            id: p.id,
+            storeId: parentStore ? parentStore.id : p.id,
+            cat: catMapped,
+            brand: p.store_name || (catMapped === 'food' ? '푸드트럭' : 'MD 스토어'),
+            name: p.name,
+            price: p.price || 0,
+            stock: p.stock_quantity !== undefined ? p.stock_quantity : 999,
+            wait: waitTime,
+            opts: [],
+            imageUrl: p.image_url || null
+          };
+        });
+        ALL_PRODUCTS = ALL_PRODUCTS.concat(supabaseAllProducts);
+      }
+
+      // ============================================
+      // 2. Process API (Mock) data
+      // ============================================
+      if (apiStores && apiStores.length > 0) {
+        const productPromises = apiStores.map(store => {
+          let storeCatMapped = 'goods';
+          const storeCat = (store.category || '').toLowerCase();
+          if (storeCat === 'food' || storeCat === 'drink') storeCatMapped = 'food';
+          else if (storeCat === 'collab') storeCatMapped = 'collab';
+
+          let wait = null;
+          if (storeCatMapped === 'food') {
+            const waitMatch = (store.notice || '').match(/(\d+)분/);
+            wait = waitMatch ? parseInt(waitMatch[1], 10) : (5 + ((store.id || 0) % 6) * 5);
+          }
+
+          let finalStoreImg = store.imageUrl || store.image_url || null;
+          if (storeCatMapped === 'food') {
+            finalStoreImg = foodTruckImages[(store.id || 0) % foodTruckImages.length];
+          } else {
+            // goods/collab fallback to prevent 404
+            finalStoreImg = goodsImgs[(store.id || 0) % goodsImgs.length];
+          }
+
+          STORES.push({
+            id: `store_${store.id}`,
+            storeId: store.id,
+            cat: storeCatMapped,
+            brand: storeCatMapped === 'food' ? '푸드트럭' : 'MD 스토어',
+            name: store.name,
+            price: 0,
+            stock: 999,
+            wait: wait,
+            opts: [],
+            imageUrl: finalStoreImg,
+            isStoreCard: true
+          });
+
+          return fetch(`/api/stores/${store.id}/products`)
+            .then(res => res.ok ? res.json() : [])
+            .then(products => {
+              if (products.length > 0) {
+                return products.map((p, i) => {
+                  let opts = [];
+                  if (p.optionGroupsJson) {
+                    try { opts = JSON.parse(p.optionGroupsJson); } catch (e) { opts = []; }
+                  }
+                  return {
+                    id: p.id || `mock_${store.id}_${i}`,
+                    storeId: store.id,
+                    cat: storeCatMapped,
+                    brand: store.name,
+                    name: p.productName || p.name,
+                    price: p.price || 0,
+                    stock: p.availableStock !== undefined ? p.availableStock : (p.currentStock || 0),
+                    wait: wait,
+                    opts: opts,
+                    imageUrl: p.imageUrl || p.image_url || null
+                  };
+                });
+              }
+              return [];
+            })
+            .catch(() => []);
+        });
+
+        const nestedLists = await Promise.all(productPromises);
+        ALL_PRODUCTS = ALL_PRODUCTS.concat(nestedLists.flat());
+      }
+
       window.FS_PRODUCTS = ALL_PRODUCTS;
-      console.log('[Shop] Loaded & formatted products list:', ALL_PRODUCTS);
+      console.log('[Shop] Combined products list (Supabase + API):', ALL_PRODUCTS);
 
-      // 대시보드 통계 숫자 동기화
+      if (ALL_PRODUCTS.length === 0 && STORES.length === 0) {
+        if (grid) grid.innerHTML = '<div style="grid-column: 1/-1; text-align: center; color: var(--g500); padding: 60px 0; font-size: 15px; font-weight: 600;">입점된 상점 또는 상품이 없습니다.</div>';
+        return;
+      }
+
       const statStore = document.getElementById('stat-store-cnt');
       const statProduct = document.getElementById('stat-product-cnt');
       const statFood = document.getElementById('stat-food-cnt');
-
       if (statStore) statStore.textContent = STORES.length;
       if (statProduct) statProduct.textContent = ALL_PRODUCTS.length;
       if (statFood) statFood.textContent = STORES.filter(s => s.cat === 'food').length;
 
-      // 화면 렌더링
       render();
     })
     .catch(err => {
-      console.error('[Shop] Failed to fetch data from database:', err);
-      if (grid) {
-        grid.innerHTML = `<div style="grid-column: 1/-1; text-align: center; color: #ff4d4f; padding: 40px; font-weight: 600;">데이터 로딩 실패: ${err.message}</div>`;
-      }
+      console.error('[Shop] Failed to fetch data from database or API:', err);
+      if (grid) grid.innerHTML = `<div style="grid-column: 1/-1; text-align: center; color: #ff4d4f; padding: 40px; font-weight: 600;">데이터 로딩 실패: ${err.message}</div>`;
     });
 
   /* 카테고리 탭 (cat-strip) */

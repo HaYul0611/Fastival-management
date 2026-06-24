@@ -120,6 +120,9 @@
       <p style="font-size:13px; color:var(--g500); margin-bottom:20px; line-height:1.4;">
         푸드트럭 또는 부스 직원에게<br>아래 QR코드를 보여주세요.
       </p>
+      <!-- 주문번호: 하트 위로 이동 -->
+      <p style="font-size:16px; font-weight:800; color:var(--black);" id="qrOrderNo" class="barcode-text">주문번호: -</p>
+
       <div class="qr-img"
         style="position:relative; overflow:hidden; mask-image:url('data:image/svg+xml;utf8,<svg viewBox=\'0 0 100 100\' xmlns=\'http://www.w3.org/2000/svg\'><path d=\'M50 88 C 50 88 5 60 5 30 C 5 5 45 5 50 25 C 55 5 95 5 95 30 C 95 60 50 88 50 88 Z\' fill=\'black\' /></svg>'); mask-size:contain; mask-position:center; mask-repeat:no-repeat; -webkit-mask-image:url('data:image/svg+xml;utf8,<svg viewBox=\'0 0 100 100\' xmlns=\'http://www.w3.org/2000/svg\'><path d=\'M50 88 C 50 88 5 60 5 30 C 5 5 45 5 50 25 C 55 5 95 5 95 30 C 95 60 50 88 50 88 Z\' fill=\'black\' /></svg>'); -webkit-mask-size:contain; -webkit-mask-position:center; -webkit-mask-repeat:no-repeat;">
         <img src="data:image/gif;base64,R0lGODlhAQABAAD/ACwAAAAAAQABAAACADs=" id="qrImage"
@@ -127,11 +130,16 @@
           alt="QR"
           onerror="this.src='https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=FESTIO_PICKUP_SAMPLE&margin=0&format=svg'">
       </div>
-      <p style="font-size:16px; font-weight:800; color:var(--blue);" id="qrOrderNo" class="barcode-text">주문번호: -</p>
-      <div id="totpWrap" style="margin-top: 24px; padding-top: 16px; border-top: 1px dashed var(--g200);">
-        <div
-          style="font-size:24px; letter-spacing:8px; font-family:monospace; font-weight:900; color:#0284c7; margin-bottom:12px;"
-          id="totpCode" class="barcode-text">------</div>
+
+      <!-- QR 바코드 -->
+      <div
+        style="font-size:18px; letter-spacing:4px; font-family:monospace; font-weight:700; color:var(--g500); margin-top:12px; margin-bottom:12px;"
+        id="totpCode" class="barcode-text">------</div>
+
+      <div id="totpWrap" style="margin-top: 12px; padding-top: 16px; border-top: 1px dashed var(--g200);">
+        <!-- 파란색 자리에는 대기번호(000번) 노출 -->
+        <div style="font-size:32px; font-weight:900; color:#0284c7; margin-bottom:12px;" id="waitingNumberText">000<span
+            style="font-size: 18px; font-weight: 700; margin-left: 2px;">번</span></div>
         <div style="width:100%; height:6px; background:var(--g200); border-radius:4px; overflow:hidden;">
           <div id="totpTimerBar" style="height:100%; background:#0ea5e9; width:100%; transition:width 1s linear;">
           </div>

@@ -47,7 +47,7 @@ const DS = {
 
 /* ── 로드 ───────────────────────────────────────────────────── */
 function load() {
-  const id = parseInt(new URLSearchParams(location.search).get('id'));
+  const id = new URLSearchParams(location.search).get('id');
 
   if (!window.FS_PRODUCTS || window.FS_PRODUCTS.length === 0) {
     // shop.js에서 데이터 로딩이 끝날 때까지 100ms 대기
@@ -55,7 +55,7 @@ function load() {
     return;
   }
 
-  const p = window.FS_PRODUCTS.find(x => x.id === id);
+  const p = window.FS_PRODUCTS.find(x => String(x.id) === String(id));
   if (!p) {
     document.getElementById('detailWrap').innerHTML = `
       <div class="empty" style="grid-column:1/-1">

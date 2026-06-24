@@ -94,23 +94,19 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     try {
-      const res = await fetch('/api/stores');
-      const stores = await res.json();
-      const productPromises = stores.map(store =>
-        fetch(`/api/stores/${store.id}/products`).then(r => r.ok ? r.json() : [])
-      );
-      const nestedLists = await Promise.all(productPromises);
-      const allProducts = nestedLists.flat();
+      const sb = window.ShopDB.getClient();
+      const { data: supaProducts, error } = await sb.from('shop_products').select('*');
+      if (error || !supaProducts) throw new Error("DB Error");
 
-      const wishedProducts = allProducts.filter(p => wishIds.includes(p.id)).map(p => {
-        const store = stores.find(s => s.id === p.storeId);
+      const wishedProducts = supaProducts.filter(p => wishIds.includes(p.id)).map(p => {
         return {
           id: p.id,
-          brand: store ? store.name : '브랜드',
-          name: p.productName || p.name,
+          brand: p.store_name || (p.type === 'FOOD' ? '푸드트럭' : 'MD 스토어'),
+          name: p.name || p.productName,
           price: p.price || 0,
-          stock: p.availableStock !== undefined ? p.availableStock : (p.currentStock || 0),
-          imageUrl: p.imageUrl || p.image_url || null
+          stock: p.stock !== undefined ? p.stock : 999,
+          imageUrl: p.image_url || p.imageUrl || null,
+          cat: p.type === 'FOOD' ? 'food' : 'goods'
         };
       });
 

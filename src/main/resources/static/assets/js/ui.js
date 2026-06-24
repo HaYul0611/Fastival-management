@@ -1,4 +1,4 @@
-// UI rendering and core control panel module
+﻿// UI rendering and core control panel module
 import { DB, saveDB, publish, subscribe, addNotification } from './store.js';
 import { getCurrentUser, login, logout, getStaffList, generateTemporaryAccount } from './auth.js';
 import { initializeQRScanner, stopQRScanner, validateTicketState, validateExchangeQR } from './scanner.js?v=totp-fix-5';
@@ -305,8 +305,17 @@ export function initUI() {
   checkAuthSession("dashboard");
   _setupSharedUI();
   setupGlobalSubscriptions();
-  renderCurrentView();
-  loadSidebarMenu("dashboard");
+  
+  const urlParams = new URLSearchParams(window.location.search);
+  const targetView = urlParams.get('view');
+  
+  if (targetView) {
+      loadSidebarMenu(targetView);
+      setTimeout(() => { switchView(targetView); }, 100);
+  } else {
+      renderCurrentView();
+      loadSidebarMenu("dashboard");
+  }
 }
 
 // Per-page init — called by each standalone HTML page
@@ -1046,6 +1055,7 @@ async function renderDashboard() {
 // 3. QR TICKET SCANNER RENDERING
 // ==========================================
 function renderScannerScreen() {
+  return; // staff-scan-v2.js Custom UI 보호
   const view = document.getElementById("view-scanner");
   if (!view) return;
 
@@ -3154,3 +3164,7 @@ function renderManualEntryScreen() {
     }
   };
 }
+
+
+
+

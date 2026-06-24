@@ -63,7 +63,7 @@ async function generateTotp(hexSecret, epochOffset = 0) {
     return otp.toString().padStart(6, '0');
 }
 
-let _qrEpochOffset = 0;
+let _qrEpochOffset = 0; // Legacy variable, no longer accumulates
 let _qrStartTime = Date.now();
 let _isManualRefresh = false;
 
@@ -79,13 +79,13 @@ async function refreshTotp() {
     }
     try {
         if (_isManualRefresh) {
-            _qrEpochOffset += 1;
+            _qrEpochOffset += 1; // 사용자가 명시적으로 갱신을 요청했으므로 새로운 코드가 나오도록 오프셋 누적 복구
             _isManualRefresh = false;
             if (window.Toast) window.Toast.info('새로운 코드가 발급되었으며 타이머가 갱신되었습니다.');
         }
 
         _qrStartTime = Date.now(); // Reset the timer
-        const code = await generateTotp(hexSecret, _qrEpochOffset);
+        const code = await generateTotp(hexSecret, _qrEpochOffset); // 갱신 시 적용된 오프셋 전달
 
         let fixedOrderId = parseInt(orderId, 10);
         if (isNaN(fixedOrderId)) fixedOrderId = 1;
