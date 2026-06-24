@@ -372,14 +372,18 @@ const MOCK_TICKETS = [];
 
 // --- FORMAT BARCODE ---
 function formatBarcode(rawCode, prefix) {
-  if (!rawCode) return prefix + '00000000000';
-  let clean = String(rawCode).replace(/[^A-Za-z0-9]/g, '').toUpperCase();
-  if (/^[A-Z]/.test(clean)) {
-    clean = clean.substring(1);
+  if (!rawCode) return BarcodeUtils.encodeFixedOrder(prefix, 0);
+  let numStr = String(rawCode).replace(/[^0-9]/g, '');
+  let numId = parseInt(numStr, 10);
+  if (isNaN(numId) || numId === 0) {
+    let hash = 0;
+    for (let i = 0; i < String(rawCode).length; i++) {
+      hash = ((hash << 5) - hash) + String(rawCode).charCodeAt(i);
+      hash |= 0;
+    }
+    numId = Math.abs(hash);
   }
-  clean = prefix + clean;
-  if (clean.length > 12) return clean.substring(0, 12);
-  return clean.padEnd(12, '0');
+  return BarcodeUtils.encodeFixedOrder(prefix, numId);
 }
 
 let MOCK_FOOD_ORDERS = [];
@@ -542,7 +546,7 @@ function renderReservationList() {
           <span class="mp-badge ${statusLabelClass}">${f.statusText}</span>
         </div>
         <div class="mp-card-meta">
-          <div>주문 번호: <strong class="mp-color-success">${formatBarcode(f.orderItemId, 'F')}</strong></div>
+          <div>주문 번호: <strong class="mp-color-success barcode-text" style="font-weight: 700; font-family: 'Roboto Mono', monospace; letter-spacing: 1px;">${formatBarcode(f.orderItemId, 'F')}</strong></div>
           <div>상품명: ${f.productName} · 수량: ${f.quantity}개</div>
           <div>옵션: ${f.selectedOptions}</div>
           <div class="mp-color-success mp-weight-500" style="display: flex; align-items: center; gap: 6px;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mp-icon-sm" style="flex-shrink: 0;"><circle cx="12" cy="13" r="8"></circle><path d="M12 9v4l2 2"></path><path d="M12 2v2"></path><path d="M18 4l-1 1"></path></svg> <span>${f.pickupTimeSlot}</span></div>
@@ -582,7 +586,7 @@ function renderReservationList() {
           <span class="mp-badge ${statusLabelClass}">${g.statusText}</span>
         </div>
         <div class="mp-card-meta">
-          <div>주문 번호: <strong style="color:#F5A623;">${g.orderItemId}</strong></div>
+          <div>주문 번호: <strong style="color:#F5A623; font-weight: 700; font-family: 'Roboto Mono', monospace; letter-spacing: 1px;" class="barcode-text">${formatBarcode(g.orderItemId, 'G')}</strong></div>
           <div>상품명: ${g.productName} · 수량: ${g.quantity}개</div>
           <div>수령방법: ${g.deliveryType}</div>
           <div style="color:#8888a8; display: flex; align-items: center; gap: 6px;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mp-icon-sm" style="flex-shrink: 0;"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg> <span>${g.pickupTimeSlot}</span></div>
@@ -747,7 +751,7 @@ async function generateTotp(hexSecret) {
     const cryptoKey = await crypto.subtle.importKey(
       "raw", keyBytes, { name: "HMAC", hash: "SHA-1" }, false, ["sign"]
     );
-    const epoch = Math.floor(Date.now() / 30000);
+    const epoch = Math.floor(Date.now() / 180000);
     const counterBytes = new Uint8Array(8);
     let temp = epoch;
     for (let i = 7; i >= 0; i--) {
@@ -781,6 +785,12 @@ async function generateHeroQR(token) {
     const orderIdNum = parseInt(dbTicket.orderId, 10);
     const orderIdBase36 = isNaN(orderIdNum) ? "00000" : orderIdNum.toString(36).padStart(5, '0').toUpperCase();
     payload = `T${orderIdBase36}${otp}`;
+
+    // Update the hero QR text dynamically
+    const scanTextEl = document.querySelector('.hero-qr-scan-text');
+    if (scanTextEl) {
+      scanTextEl.textContent = payload;
+    }
   }
 
   new QRCode(container, {
@@ -810,8 +820,12 @@ async function generateModalQR(token, type = 'TICKET') {
     if (dbTicket) {
       const otp = await generateTotp(token);
       const orderIdNum = parseInt(dbTicket.orderId, 10);
-      const orderIdBase36 = isNaN(orderIdNum) ? "00000" : orderIdNum.toString(36).padStart(5, '0').toUpperCase();
-      payload = `T${orderIdBase36}${otp}`;
+      if (typeof BarcodeUtils !== 'undefined') {
+        payload = BarcodeUtils.encodeDynamicBarcode('T', isNaN(orderIdNum) ? 1 : orderIdNum, otp);
+      } else {
+        const orderIdBase36 = isNaN(orderIdNum) ? "00000" : orderIdNum.toString(36).padStart(5, '0').toUpperCase();
+        payload = `T${orderIdBase36}${otp}`;
+      }
 
       const codeEl = document.getElementById('qrModalCode');
       if (codeEl) codeEl.textContent = payload;
@@ -1113,8 +1127,8 @@ function maskUserName(name) {
 }
 
 function syncModalTimer() {
-  const currentSeconds = Math.floor(Date.now() / 1000) % 180;
-  const remaining = 180 - currentSeconds;
+  const elapsed = Math.floor((Date.now() - (_qrStartTime || Date.now())) / 1000);
+  const remaining = 180 - elapsed;
   updateModalTimerBar(remaining);
   updateModalTimerText(remaining);
 }
@@ -2703,7 +2717,7 @@ function generateQrToken() {
   return token;
 }
 
-async function generateTotpCode(hexSecret) {
+async function generateTotpCode(hexSecret, epochOffset = 0) {
   if (!hexSecret || hexSecret.length % 2 !== 0) return '000000';
   const keyBytes = new Uint8Array(hexSecret.length / 2);
   for (let i = 0; i < hexSecret.length; i += 2) {
@@ -2713,7 +2727,7 @@ async function generateTotpCode(hexSecret) {
     const cryptoKey = await crypto.subtle.importKey(
       'raw', keyBytes, { name: 'HMAC', hash: 'SHA-1' }, false, ['sign']
     );
-    let timeWindow = Math.floor(Date.now() / 180000);
+    let timeWindow = Math.floor(Date.now() / 180000) + epochOffset;
     const data = new Uint8Array(8);
     for (let i = 7; i >= 0; i--) {
       data[i] = timeWindow & 0xff;
@@ -2777,12 +2791,13 @@ async function openQrModalView(token, type = 'TICKET') {
           </div>
           <div style="background: #fff;">
             <div style="display: flex; flex-direction: column; align-items: center; padding: 28px 24px 24px; gap: 16px;">
+              <div style="font-size: 0.9rem; font-weight: 700; color: #000; margin-bottom: -4px;">예매번호: <span id="dynamicQrStaticId" style="color: #000;"></span></div>
               <div class="qr-canvas-container" style="border-radius: 12px; border: 2px solid #e0d8ff; background: #fff; padding: 8px; position: relative; overflow: hidden; display: flex; justify-content: center; align-items: center; width: 160px; height: 160px; box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);">
               <div id="dynamicQrCanvas" style="width: 100%; height: 100%; z-index: 1; position: relative; overflow: hidden; display: flex; align-items: center; justify-content: center;"></div>
             </div>
             
             <div style="text-align: center;">
-                <div style="font-family: 'Roboto Mono', 'Courier New', monospace; font-size: 1.15rem; font-weight: 800; letter-spacing: 2px; color: #555;" id="dynamicQrCode"></div>
+                <div style="font-family: 'Roboto Mono', 'Courier New', monospace; font-size: 0.95rem; font-weight: 700; letter-spacing: 3px; color: #888; margin-bottom: 8px;" id="dynamicQrCode"></div>
                 <div style="font-size: 0.85rem; color: #444; margin-top: 6px; font-weight: 600; display: flex; align-items: center; justify-content: center;" id="dynamicQrUserName">
                   <span class="badge badge-${(window._member ? window._member.grade : 'BRONZE').toLowerCase()}" style="margin-right: 6px;">
                     ${window._member ? window._member.grade : 'BRONZE'}
@@ -2828,38 +2843,41 @@ async function openQrModalView(token, type = 'TICKET') {
       modal.style.display = 'none';
     });
     document.getElementById('dynamicQrRefresh').addEventListener('click', () => {
-      triggerQrRefresh();
+      triggerQrRefresh(true);
     });
   }
 
   modal.style.display = 'flex';
-  let initialTokenForQR = token;
-  let pureTotpCode = token;
-  if (type === 'TICKET' && _currentActiveSecret) {
-    pureTotpCode = await generateTotpCode(_currentActiveSecret);
-    const orderIdNum = parseInt(_currentActiveOrderId, 10);
-    const orderIdBase36 = isNaN(orderIdNum) ? "00000" : orderIdNum.toString(36).padStart(5, '0').toUpperCase();
-    initialTokenForQR = `T${orderIdBase36}${pureTotpCode}`;
-  }
-  generateDynamicQR('dynamicQrCanvas', initialTokenForQR, 140, type); // FIXED: pass 'type' to trigger 45deg tilt!
+  let initialTokenForQR = token; // Dynamic QR token
+  let fixedOrderId = parseInt(_currentActiveOrderId, 10);
+  if (isNaN(fixedOrderId)) fixedOrderId = 1;
+  let staticCodeText = '';
+  const prefix = type === 'FOOD' ? 'F' : (type === 'GOODS' ? 'G' : 'T');
 
-  let displayCode = initialTokenForQR;
-  if (type === 'FOOD') {
+  if (type === 'TICKET') {
+    staticCodeText = BarcodeUtils.encodeFixedOrder(prefix, fixedOrderId);
+    if (_currentActiveSecret) {
+      let pureTotpCode = await generateTotpCode(_currentActiveSecret);
+      initialTokenForQR = BarcodeUtils.encodeDynamicBarcode(prefix, fixedOrderId, pureTotpCode);
+    } else {
+      initialTokenForQR = BarcodeUtils.encodeDynamicBarcode(prefix, fixedOrderId, Math.floor(100000 + Math.random() * 900000));
+    }
+  } else if (type === 'FOOD') {
     const foodOrder = typeof MOCK_FOOD_ORDERS !== 'undefined' ? MOCK_FOOD_ORDERS.find(f => f.qrToken === token) : null;
-    if (foodOrder) displayCode = foodOrder.orderItemId;
+    if (foodOrder) fixedOrderId = parseInt(String(foodOrder.id || foodOrder.orderItemId).replace(/[^0-9]/g, '')) || 1;
+    staticCodeText = BarcodeUtils.encodeFixedOrder(prefix, fixedOrderId);
+    initialTokenForQR = BarcodeUtils.encodeDynamicBarcode(prefix, fixedOrderId, Math.floor(100000 + Math.random() * 900000));
   } else if (type === 'GOODS') {
     const goodsOrder = typeof MOCK_GOODS_ORDERS !== 'undefined' ? MOCK_GOODS_ORDERS.find(g => g.qrToken === token) : null;
-    if (goodsOrder) displayCode = goodsOrder.orderItemId;
-  } else {
-    const dbTicket = typeof _dbTickets !== 'undefined' ? _dbTickets.find(t => t.secret === token) : null;
-    if (dbTicket) {
-      displayCode = initialTokenForQR;
-    } else {
-      const mockTicket = typeof MOCK_TICKETS !== 'undefined' ? MOCK_TICKETS.find(t => t.qrToken === token) : null;
-      if (mockTicket) displayCode = mockTicket.reservationId;
-    }
+    if (goodsOrder) fixedOrderId = parseInt(String(goodsOrder.id || goodsOrder.orderItemId).replace(/[^0-9]/g, '')) || 1;
+    staticCodeText = BarcodeUtils.encodeFixedOrder(prefix, fixedOrderId);
+    initialTokenForQR = BarcodeUtils.encodeDynamicBarcode(prefix, fixedOrderId, Math.floor(100000 + Math.random() * 900000));
   }
-  document.getElementById('dynamicQrCode').textContent = displayCode;
+
+  generateDynamicQR('dynamicQrCanvas', initialTokenForQR, 140, type);
+
+  document.getElementById('dynamicQrStaticId').textContent = staticCodeText;
+  document.getElementById('dynamicQrCode').textContent = initialTokenForQR;
 
   const qrCanvas = document.getElementById('dynamicQrCanvas');
   if (qrCanvas) {
@@ -2868,7 +2886,7 @@ async function openQrModalView(token, type = 'TICKET') {
       qrCanvas.onclick = () => {
         const tkt = typeof _dbTickets !== 'undefined' ? _dbTickets.find(t => t.secret === token) : null;
         const orderId = tkt ? tkt.orderId : 1;
-        window.location.href = `/features/user/ticket/view.html?orderId=${orderId}&secret=${token}&displayCode=${displayCode}&userName=${encodeURIComponent(masked)}&grade=${encodeURIComponent(_member ? _member.grade : 'BRONZE')}`;
+        window.location.href = `/features/user/ticket/view.html?orderId=${orderId}&secret=${token}&displayCode=${staticCodeText}&userName=${encodeURIComponent(masked)}&grade=${encodeURIComponent(_member ? _member.grade : 'BRONZE')}`;
       };
     } else {
       qrCanvas.style.cursor = 'default';
@@ -3030,17 +3048,24 @@ function generateHeroQR(token) {
   generateDynamicQR('qr-code-container', token, 100);
 }
 
-async function triggerQrRefresh() {
+let _qrEpochOffset = 0;
+
+async function triggerQrRefresh(isManual = false) {
+  if (isManual) {
+    _qrEpochOffset += 1;
+  }
   const prefix = _currentQrType === 'FOOD' ? 'F' : (_currentQrType === 'GOODS' ? 'G' : 'T');
   let newToken = '';
-  if (_currentQrType === 'TICKET' && _currentActiveSecret) {
-    const totpCode = await generateTotpCode(_currentActiveSecret);
-    const orderIdNum = parseInt(_currentActiveOrderId, 10);
-    const orderIdBase36 = isNaN(orderIdNum) ? "00000" : orderIdNum.toString(36).padStart(5, '0').toUpperCase();
-    newToken = `T${orderIdBase36}${totpCode}`;
+  let fixedOrderId = parseInt(_currentActiveOrderId, 10);
+  if (isNaN(fixedOrderId)) fixedOrderId = 1;
+
+  if (_currentActiveSecret) {
+    const totpCode = await generateTotpCode(_currentActiveSecret, _qrEpochOffset);
+    newToken = BarcodeUtils.encodeDynamicBarcode(prefix, fixedOrderId, totpCode);
   } else {
-    newToken = generateQrToken(prefix);
-    _currentQrToken = newToken; // Only overwrite for non-TOTP tokens
+    // mock fallback
+    newToken = BarcodeUtils.encodeDynamicBarcode(prefix, fixedOrderId, Math.floor(100000 + Math.random() * 900000));
+    _currentQrToken = newToken;
   }
 
   generateHeroQR(newToken);
@@ -3059,20 +3084,22 @@ let _qrRafId = null;
 
 function startQRRefreshCycle() {
   _qrCountdown = 180;
-  clearInterval(_qrTimer);
-  clearInterval(_qrCountTimer);
+  if (typeof _qrTimer !== 'undefined') clearInterval(_qrTimer);
+  if (typeof _qrCountTimer !== 'undefined') clearInterval(_qrCountTimer);
   if (_qrRafId) cancelAnimationFrame(_qrRafId);
 
   _qrStartTime = Date.now();
 
-  _qrTimer = setInterval(() => {
-    triggerQrRefresh();
-    if (window.Toast) window.Toast.info('보안을 위해 QR이 자동 갱신되었습니다');
-  }, 180000);
+  const tick = () => {
+    const elapsed = Math.floor((Date.now() - _qrStartTime) / 1000);
+    const remaining = 180 - elapsed;
 
-  _qrCountTimer = setInterval(() => {
-    const currentSeconds = Math.floor(Date.now() / 1000) % 180;
-    const remaining = 180 - currentSeconds;
+    if (remaining <= 0) {
+      triggerQrRefresh(false);
+      if (window.Toast) window.Toast.info('보안을 위해 QR이 자동 갱신되었습니다');
+      return;
+    }
+
     _qrCountdown = remaining;
     updateQRTimerDisplay(remaining);
 
@@ -3086,7 +3113,10 @@ function startQRRefreshCycle() {
         bar.style.width = `${pct}%`;
       }
     });
-  }, 1000);
+  };
+
+  tick();
+  _qrCountTimer = setInterval(tick, 1000);
 }
 
 function updateModalTimerText(sec) {
@@ -3120,7 +3150,8 @@ document.addEventListener('DOMContentLoaded', () => {
     if (heroRefresh) {
       heroRefresh.addEventListener('click', (e) => {
         e.stopPropagation();
-        triggerQrRefresh();
+        triggerQrRefresh(true);
+        if (window.Toast) window.Toast.info('새로운 코드가 발급되었으며 타이머가 갱신되었습니다.');
       });
     }
     if (typeof _currentQrToken !== 'undefined') {

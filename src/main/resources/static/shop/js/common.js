@@ -204,6 +204,8 @@ async function fetchNotifications() {
 
     // API 알림과 Mock 알림 병합
     notifs = [...mockNotifs, ...notifs];
+    // 카운트는 안읽은 알림 기준
+    let unreadCount = notifs.filter(n => !n.is_read).length;
 
     const badge = document.getElementById('notiBadgeCount');
     const headCount = document.getElementById('notiHeadCount');
@@ -211,9 +213,14 @@ async function fetchNotifications() {
 
     if (badge && headCount && listContainer) {
       if (notifs.length > 0) {
-        badge.style.display = 'flex';
-        badge.textContent = notifs.length;
-        headCount.textContent = notifs.length;
+        if (unreadCount > 0) {
+          badge.style.display = 'flex';
+          badge.textContent = unreadCount;
+        } else {
+          badge.style.display = 'none';
+          badge.textContent = '0';
+        }
+        headCount.textContent = unreadCount;
 
         const userName = Session.get()?.name || '고객';
 
@@ -240,9 +247,11 @@ async function fetchNotifications() {
           else { title = '알림'; msg = `[${n.name}] 상태가 변경되었습니다.`; iconSvg = '🔔'; }
 
           const svgContainer = iconSvg.startsWith('<svg') ? iconSvg : `<span style="font-size:16px;line-height:1;">${iconSvg}</span>`;
+          const nId = n.id || n.status;
+          const bgColor = n.is_read ? 'transparent' : 'rgba(42, 193, 188, 0.05)';
 
           return `
-            <a href="orders.html" class="noti-item unread" style="display:flex; gap:10px; align-items:flex-start;">
+            <a href="orders.html" class="noti-item unread" data-id="${nId}" onclick="markShopNotifRead(event, '${nId}')" style="display:flex; gap:10px; align-items:flex-start; background-color:${bgColor};">
               <div style="flex-shrink:0; display:flex; align-items:center; justify-content:center; width:28px; height:28px; background:var(--g100); border-radius:50%;">${svgContainer}</div>
               <div class="noti-text" style="flex:1;">
                 <strong style="display:block; font-size:13px; margin-bottom:2px;">${title}</strong>
@@ -268,6 +277,16 @@ function refreshCartBadge() {
   b.textContent = n > 99 ? '99+' : n;
   b.style.display = n > 0 ? 'flex' : 'none';
 }
+
+window.markShopNotifRead = function (e, id) {
+  let mockNotifs = JSON.parse(localStorage.getItem('shopMockNotifications') || '[]');
+  let target = mockNotifs.find(n => String(n.id) === String(id) || String(n.status) === String(id));
+  if (target) {
+    target.is_read = true;
+    localStorage.setItem('shopMockNotifications', JSON.stringify(mockNotifs));
+  }
+  // API 알림도 처리해야 한다면 fetch(/api/order/notifications/markAsRead) 구현 가능
+};
 
 /* ── 토스트 ─────────────────────────────────────────────────── */
 const Toast = (() => {
@@ -450,8 +469,8 @@ document.addEventListener('DOMContentLoaded', () => {
     <div class="floating-npc-bubble">
       축제 메인으로 돌아갈까요?
     </div>
-    <div class="floating-npc-avatar">
-      <img src="/assets/img/avatars/chibi_admin.png" alt="FESTIO Admin NPC">
+    <div class="floating-npc-avatar" style="user-select: none;">
+      <img src="/assets/img/avatars/chibi_admin.png" alt="FESTIO Admin NPC" draggable="false" style="pointer-events: none; user-select: none;">
     </div>
   `;
 

@@ -20,13 +20,29 @@ if (userGrade) {
 
 let qrCodeInstance = null;
 
-async function generateTotp(hexSecret) {
+const BarcodeUtils = {
+    MASK_FIXED: 80000000000000000n,
+    MASK_DYNAMIC: 90000000000000000n,
+    encodeFixedOrder(prefix, orderId) {
+        const obf = BigInt(orderId) ^ this.MASK_FIXED;
+        const base36 = obf.toString(36).toUpperCase();
+        return prefix + base36.padStart(11, '0');
+    },
+    encodeDynamicBarcode(prefix, orderId, totp) {
+        const combined = BigInt(orderId) * 1000000n + BigInt(totp);
+        const obf = combined ^ this.MASK_DYNAMIC;
+        const base36 = obf.toString(36).toUpperCase();
+        return prefix + base36.padStart(11, '0');
+    }
+};
+
+async function generateTotp(hexSecret, epochOffset = 0) {
     const keyBytes = new Uint8Array(hexSecret.match(/.{1,2}/g).map(byte => parseInt(byte, 16)));
     const cryptoKey = await crypto.subtle.importKey(
         "raw", keyBytes, { name: "HMAC", hash: "SHA-1" }, false, ["sign"]
     );
 
-    const epoch = Math.floor(Date.now() / 180000);
+    const epoch = Math.floor(Date.now() / 180000) + epochOffset;
     const counterBytes = new Uint8Array(8);
     let temp = epoch;
     for (let i = 7; i >= 0; i--) {
@@ -47,20 +63,61 @@ async function generateTotp(hexSecret) {
     return otp.toString().padStart(6, '0');
 }
 
+let _qrEpochOffset = 0;
+let _qrStartTime = Date.now();
+let _isManualRefresh = false;
+
+window.refreshTotpManual = function () {
+    _isManualRefresh = true;
+    refreshTotp();
+};
+
 async function refreshTotp() {
     if (!orderId || !hexSecret) {
         document.getElementById('code-display').innerText = "ERROR";
         return;
     }
     try {
-        const code = await generateTotp(hexSecret);
+        if (_isManualRefresh) {
+            _qrEpochOffset += 1;
+            _isManualRefresh = false;
+            if (window.Toast) window.Toast.info('새로운 코드가 발급되었으며 타이머가 갱신되었습니다.');
+        }
 
-        // Format: T + orderId Base36 5 chars + 6 chars OTP
-        const orderIdNum = parseInt(orderId, 10);
-        const orderIdBase36 = isNaN(orderIdNum) ? "00000" : orderIdNum.toString(36).padStart(5, '0').toUpperCase();
-        const payload = `T${orderIdBase36}${code}`;
+        _qrStartTime = Date.now(); // Reset the timer
+        const code = await generateTotp(hexSecret, _qrEpochOffset);
 
-        document.getElementById('code-display').innerText = payload;
+        let fixedOrderId = parseInt(orderId, 10);
+        if (isNaN(fixedOrderId)) fixedOrderId = 1;
+
+        const dynamicBarcode = BarcodeUtils.encodeDynamicBarcode('T', fixedOrderId, code);
+        const staticBarcode = BarcodeUtils.encodeFixedOrder('T', fixedOrderId);
+
+        const titleEl = document.querySelector('.title');
+        if (titleEl) {
+            titleEl.innerHTML = `FESTIO TICKET`;
+            let orderNoEl = document.getElementById('ticket-order-no');
+            if (!orderNoEl) {
+                orderNoEl = document.createElement('div');
+                orderNoEl.id = 'ticket-order-no';
+                orderNoEl.className = 'ticket-order-no';
+                orderNoEl.style.fontSize = '1.05rem';
+                orderNoEl.style.fontWeight = '700';
+                orderNoEl.style.marginBottom = '8px';
+                const subtitle = document.querySelector('.subtitle');
+                if (subtitle) subtitle.parentNode.insertBefore(orderNoEl, subtitle);
+            }
+            orderNoEl.textContent = `예매번호: ${staticBarcode}`;
+        }
+
+        const codeDisplay = document.getElementById('code-display');
+        codeDisplay.style.fontSize = '18px';
+        codeDisplay.style.letterSpacing = '3px';
+        codeDisplay.style.color = '#888';
+        codeDisplay.style.fontWeight = '700';
+        codeDisplay.innerHTML = `${dynamicBarcode}`;
+
+        const payload = dynamicBarcode;
 
         const qrContainer = document.getElementById('qr-code');
         qrContainer.innerHTML = ''; // clear old
@@ -78,14 +135,21 @@ async function refreshTotp() {
             qrEls.forEach(el => el.removeAttribute('title'));
             qrContainer.removeAttribute('title');
         }, 50);
+
+        updateTimer();
     } catch (e) {
         console.error(e);
     }
 }
 
 function updateTimer() {
-    const currentSeconds = Math.floor(Date.now() / 1000) % 180;
-    const remaining = 180 - currentSeconds;
+    const elapsed = Math.floor((Date.now() - _qrStartTime) / 1000);
+    const remaining = 180 - elapsed;
+
+    if (remaining <= 0) {
+        refreshTotp();
+        return;
+    }
 
     const m = Math.floor(remaining / 60);
     const s = remaining % 60;
@@ -102,13 +166,11 @@ function updateTimer() {
         timerBarEl.style.background = '#ff4d4f';
     } else {
         timerSecEl.classList.remove('qr-danger-text');
-        timerSecEl.style.color = '#2D1A54';
+        timerSecEl.style.color = '';
         timerBarEl.style.background = 'linear-gradient(90deg, #00d2ff, #8930F8)';
     }
 
-    if (remaining === 180 || remaining === 179 && currentSeconds === 1) { // Redraw when window resets
-        refreshTotp();
-    }
+    // removed old absolute logic
 }
 
 // Init

@@ -10,6 +10,22 @@ let ALL_PRODUCTS = [];
 
 window.FS_PRODUCTS = ALL_PRODUCTS;
 
+function getShopPlaceholder(cat) {
+  let color = '#ccc';
+  let icon = '<circle cx="50" cy="50" r="20" fill="none" stroke="currentColor" stroke-width="4"/><path d="M50 30 L50 20 M50 70 L50 80 M30 50 L20 50 M70 50 L80 50" stroke="currentColor" stroke-width="4"/>';
+  if (cat === 'food') {
+    color = '#ff9800';
+    icon = '<path d="M35 60 A15 15 0 0 1 65 60 Z" fill="currentColor"/><path d="M40 45 Q50 30 60 45" fill="none" stroke="currentColor" stroke-width="4"/>';
+  } else if (cat === 'collab') {
+    color = '#9c27b0';
+    icon = '<polygon points="50,30 60,70 30,45 70,45 40,70" fill="currentColor"/>';
+  } else {
+    color = '#4caf50';
+    icon = '<rect x="35" y="35" width="30" height="30" rx="4" fill="none" stroke="currentColor" stroke-width="4"/><circle cx="50" cy="50" r="5" fill="currentColor"/>';
+  }
+  return `<svg viewBox="0 0 100 100" width="40%" height="40%" style="color:${color}; opacity:0.5; max-width:64px;">${icon}</svg>`;
+}
+
 /* ── 상태 ───────────────────────────────────────────────────── */
 const S = {
   cat: 'all', sort: 'popular', q: '',
@@ -221,13 +237,12 @@ function cardHTML(p) {
         }
       }
 
-      const fallbackUrl = p.cat === 'food' 
-        ? (p.isStoreCard ? '/shop/img/stores/food/gen_0.jpg' : 'https://www.themealdb.com/images/media/meals/8rfd4q1764112993.jpg')
-        : (p.isStoreCard ? '/shop/img/stores/goods/gen_0.png' : '/shop/img/poster1.png');
+      const phSvg = getShopPlaceholder(p.cat);
+      const fallbackHtml = `<div class="pcard-placeholder" style="display:none; width:100%; height:100%; align-items:center; justify-content:center; background:#f8f9fa;">${phSvg}</div>`;
 
       return p.imageUrl
-        ? `<img src="${p.imageUrl}" alt="${p.name}" class="pcard-img" onerror="if(!this.dataset.failed){this.dataset.failed=true;this.src='${mockImg}';}else{this.src='${fallbackUrl}';}">`
-        : `<img src="${mockImg}" alt="${p.name}" class="pcard-img" onerror="if(!this.dataset.failed){this.dataset.failed=true;this.src='${fallbackUrl}';}">`;
+        ? `<img src="${p.imageUrl}" alt="${p.name}" class="pcard-img" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">${fallbackHtml}`
+        : `<img src="${mockImg}" alt="${p.name}" class="pcard-img" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">${fallbackHtml}`;
     })()}
 
     ${sold ? `<div class="sold-cover" aria-hidden="true"><span class="sold-label">SOLD OUT</span></div>` : ''}
@@ -373,14 +388,26 @@ function renderPagination(totalPages, isDesktop) {
 window.FS_goToPage = function (page) {
   S.currentPage = page;
   render();
-  window.scrollTo({ top: 0, behavior: 'smooth' });
+  const filterBar = document.querySelector('.filter-bar');
+  if (filterBar) {
+    const y = filterBar.getBoundingClientRect().top + window.scrollY - 64; // 64 is the sticky header height
+    window.scrollTo({ top: Math.max(0, y), behavior: 'smooth' });
+  } else {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
 };
 
 window.FS_changePerPage = function (size) {
   S.itemsPerPage = parseInt(size, 10);
   S.currentPage = 1;
   render();
-  window.scrollTo({ top: 0, behavior: 'smooth' });
+  const filterBar = document.querySelector('.filter-bar');
+  if (filterBar) {
+    const y = filterBar.getBoundingClientRect().top + window.scrollY - 64;
+    window.scrollTo({ top: Math.max(0, y), behavior: 'smooth' });
+  } else {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
 };
 
 window.FS_goBackToStores = function () {
@@ -527,6 +554,34 @@ document.addEventListener('DOMContentLoaded', () => {
           wait = waitMatch ? parseInt(waitMatch[1], 10) : 10;
         }
 
+        // 푸드트럭 고화질 로컬 이미지 배열 (사용자가 직접 넣은 18개 이미지 모두 연결)
+        const foodTruckImages = [
+          '/assets/img/stores/간식차.jpg',
+          '/assets/img/stores/꼬치트럭.jpg',
+          '/assets/img/stores/떡볶이.jpg',
+          '/assets/img/stores/반려견 푸드.jpg',
+          '/assets/img/stores/부스1.jpg',
+          '/assets/img/stores/분식점.jpg',
+          '/assets/img/stores/빙수차.png',
+          '/assets/img/stores/식음료차.jpg',
+          '/assets/img/stores/원할머니.jpg',
+          '/assets/img/stores/음료 차.jpg',
+          '/assets/img/stores/잇츠 월드.png',
+          '/assets/img/stores/치킨트럭.jpeg',
+          '/assets/img/stores/카페차.png',
+          '/assets/img/stores/커피차.jpg',
+          '/assets/img/stores/타코야끼.jpg',
+          '/assets/img/stores/한국의 집.jpg',
+          '/assets/img/stores/핫도그차.jpg',
+          '/assets/img/stores/햄버거 차.jpg'
+        ];
+
+        let finalStoreImg = store.imageUrl || store.image_url || null;
+        if (storeCatMapped === 'food') {
+          // 푸드트럭일 경우 id를 기반으로 배열 내 이미지를 순환하며 덮어쓰기
+          finalStoreImg = foodTruckImages[(store.id || 0) % foodTruckImages.length];
+        }
+
         // 상점 자체를 STORES에 추가
         STORES.push({
           id: `store_${store.id}`,
@@ -538,7 +593,7 @@ document.addEventListener('DOMContentLoaded', () => {
           stock: 999,
           wait: wait,
           opts: [],
-          imageUrl: store.imageUrl || store.image_url || null,
+          imageUrl: finalStoreImg,
           isStoreCard: true
         });
 

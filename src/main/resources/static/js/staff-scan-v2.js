@@ -11,38 +11,38 @@ const supabase = {
         select: (columns) => ({
             eq: (column, value) => ({
                 or: (condition) => ({
-                    limit: (count) => Promise.resolve({ 
+                    limit: (count) => Promise.resolve({
                         data: table === 'scan_log' ? [
                             { id: 1, scan_type: 'ENTRANCE', scanned_at: new Date().toISOString(), ticket_id: 'T001' },
                             { id: 2, scan_type: 'PICKUP', scanned_at: new Date().toISOString(), ticket_id: 'T002' }
-                        ] : [], 
-                        error: null 
+                        ] : [],
+                        error: null
                     }),
                     order: (column, options) => ({
-                        limit: (count) => Promise.resolve({ 
+                        limit: (count) => Promise.resolve({
                             data: table === 'scan_log' ? [
                                 { id: 1, scan_type: 'ENTRANCE', scanned_at: new Date().toISOString(), ticket_id: 'T001' },
                                 { id: 2, scan_type: 'PICKUP', scanned_at: new Date().toISOString(), ticket_id: 'T002' }
-                            ] : [], 
-                            error: null 
+                            ] : [],
+                            error: null
                         })
                     }),
                     single: () => Promise.resolve({ data: null, error: null })
                 }),
-                limit: (count) => Promise.resolve({ 
+                limit: (count) => Promise.resolve({
                     data: table === 'scan_log' ? [
                         { id: 1, scan_type: 'ENTRANCE', scanned_at: new Date().toISOString(), ticket_id: 'T001' },
                         { id: 2, scan_type: 'PICKUP', scanned_at: new Date().toISOString(), ticket_id: 'T002' }
-                    ] : [], 
-                    error: null 
+                    ] : [],
+                    error: null
                 }),
                 order: (column, options) => ({
-                    limit: (count) => Promise.resolve({ 
+                    limit: (count) => Promise.resolve({
                         data: table === 'scan_log' ? [
                             { id: 1, scan_type: 'ENTRANCE', scanned_at: new Date().toISOString(), ticket_id: 'T001' },
                             { id: 2, scan_type: 'PICKUP', scanned_at: new Date().toISOString(), ticket_id: 'T002' }
-                        ] : [], 
-                        error: null 
+                        ] : [],
+                        error: null
                     }),
                     single: () => Promise.resolve({ data: null, error: null })
                 }),
@@ -66,7 +66,7 @@ const supabase = {
     }),
     channel: (name) => ({
         on: (event, callback) => ({
-            subscribe: () => ({ unsubscribe: () => {} })
+            subscribe: () => ({ unsubscribe: () => { } })
         })
     })
 };
@@ -77,54 +77,54 @@ const maskName = (name) => name;
 const isQRExpired = () => false;
 
 // ── DOM
-const ssVideo         = document.getElementById('ssVideo');
-const ssScanCanvas    = document.getElementById('ssScanCanvas');
-const ssCameraError   = document.getElementById('ssCameraError');
-const ssRetryBtn      = document.getElementById('ssRetryBtn');
-const ssManualBtn     = document.getElementById('ssManualBtn');
-const ssManualPanel   = document.getElementById('ssManualPanel');
-const ssManualInput   = document.getElementById('ssManualInput');
-const ssManualSubmit  = document.getElementById('ssManualSubmit');
-const ssResultCard    = document.getElementById('ssResultCard');
-const ssAdminPanel    = document.getElementById('ssAdminPanel');
-const ssUnlockInput   = document.getElementById('ssUnlockInput');
-const ssUnlockBtn     = document.getElementById('ssUnlockBtn');
-const ssUnlockResult  = document.getElementById('ssUnlockResult');
-const ssLogList       = document.getElementById('ssLogList');
-const ssLogCount      = document.getElementById('ssLogCount');
-const ssRoleBadge     = document.getElementById('ssRoleBadge');
-const ssRoleLabel     = document.getElementById('ssRoleLabel');
-const ssUserName      = document.getElementById('ssUserName');
-const btnEntrance     = document.getElementById('btnEntrance');
-const btnPickup       = document.getElementById('btnPickup');
-const ssWristbandModal    = document.getElementById('ssWristbandModal');
-const ssWristbandBody     = document.getElementById('ssWristbandBody');
+const ssVideo = document.getElementById('ssVideo');
+const ssScanCanvas = document.getElementById('ssScanCanvas');
+const ssCameraError = document.getElementById('ssCameraError');
+const ssRetryBtn = document.getElementById('ssRetryBtn');
+const ssManualBtn = document.getElementById('ssManualBtn');
+const ssManualPanel = document.getElementById('ssManualPanel');
+const ssManualInput = document.getElementById('ssManualInput');
+const ssManualSubmit = document.getElementById('ssManualSubmit');
+const ssResultCard = document.getElementById('ssResultCard');
+const ssAdminPanel = document.getElementById('ssAdminPanel');
+const ssUnlockInput = document.getElementById('ssUnlockInput');
+const ssUnlockBtn = document.getElementById('ssUnlockBtn');
+const ssUnlockResult = document.getElementById('ssUnlockResult');
+const ssLogList = document.getElementById('ssLogList');
+const ssLogCount = document.getElementById('ssLogCount');
+const ssRoleBadge = document.getElementById('ssRoleBadge');
+const ssRoleLabel = document.getElementById('ssRoleLabel');
+const ssUserName = document.getElementById('ssUserName');
+const btnEntrance = document.getElementById('btnEntrance');
+const btnPickup = document.getElementById('btnPickup');
+const ssWristbandModal = document.getElementById('ssWristbandModal');
+const ssWristbandBody = document.getElementById('ssWristbandBody');
 const ssWristbandIssueBtn = document.getElementById('ssWristbandIssueBtn');
 const ssWristbandCloseBtn = document.getElementById('ssWristbandCloseBtn');
-const ssExceptionModal    = document.getElementById('ssExceptionModal');
-const ssExceptionBody     = document.getElementById('ssExceptionBody');
+const ssExceptionModal = document.getElementById('ssExceptionModal');
+const ssExceptionBody = document.getElementById('ssExceptionBody');
 const ssExceptionApproveBtn = document.getElementById('ssExceptionApproveBtn');
-const ssExceptionCancelBtn  = document.getElementById('ssExceptionCancelBtn');
+const ssExceptionCancelBtn = document.getElementById('ssExceptionCancelBtn');
 
 // ── 상태
-let currentUser  = null;
-let userProfile  = null;
-let scanType     = 'ENTRANCE';
+let currentUser = null;
+let userProfile = null;
+let scanType = 'ENTRANCE';
 let scanCooldown = false;  // 연속 스캔 방지 (1초)
-let logRows      = [];
+let logRows = [];
 let pendingExceptionItem = null; // 예외 승인 대기 item
 
 // ──────────────────────────────────────
 // 스캔 결과 상수 (schema.sql result 컬럼)
 // ──────────────────────────────────────
 const RESULT = {
-    SUCCESS:           '성공',
+    SUCCESS: '성공',
     SUCCESS_EXCEPTION: '성공-스태프예외승인',
-    FAIL_DUPLICATE:    '실패-중복입장',
-    FAIL_EXPIRED:      '실패-시간만료',
-    FAIL_TOKEN_EXPIRED:'실패-토큰만료',
-    FAIL_INVALID:      '실패-유효하지않은QR',
-    FAIL_REFUNDED:     '실패-환불된티켓',
+    FAIL_DUPLICATE: '실패-중복입장',
+    FAIL_EXPIRED: '실패-시간만료',
+    FAIL_TOKEN_EXPIRED: '실패-토큰만료',
+    FAIL_INVALID: '실패-유효하지않은QR',
+    FAIL_REFUNDED: '실패-환불된티켓',
 };
 
 // ──────────────────────────────────────
@@ -195,7 +195,7 @@ async function scanFrame() {
 
     if (ssVideo.readyState === ssVideo.HAVE_ENOUGH_DATA) {
         const ctx = ssScanCanvas.getContext('2d');
-        ssScanCanvas.width  = ssVideo.videoWidth;
+        ssScanCanvas.width = ssVideo.videoWidth;
         ssScanCanvas.height = ssVideo.videoHeight;
         ctx.drawImage(ssVideo, 0, 0);
 
@@ -207,6 +207,37 @@ async function scanFrame() {
         }
     }
     requestAnimationFrame(scanFrame);
+}
+
+// ──────────────────────────────────────
+// TOTP 생성 로직 (검증용)
+// ──────────────────────────────────────
+async function generateTotpCode(hexSecret, epochOffset = 0) {
+    if (!hexSecret) hexSecret = 'dummysecret12345';
+    let keyBytes;
+    try {
+        keyBytes = new Uint8Array(hexSecret.match(/.{1,2}/g).map(byte => parseInt(byte, 16)));
+    } catch (e) {
+        keyBytes = new TextEncoder().encode(hexSecret);
+    }
+    const cryptoKey = await crypto.subtle.importKey(
+        "raw", keyBytes, { name: "HMAC", hash: "SHA-1" }, false, ["sign"]
+    );
+    const counterBytes = new Uint8Array(8);
+    let temp = Math.floor(Date.now() / 180000) + epochOffset;
+    for (let i = 7; i >= 0; i--) {
+        counterBytes[i] = temp & 0xFF;
+        temp = Math.floor(temp / 256);
+    }
+    const signature = await crypto.subtle.sign("HMAC", cryptoKey, counterBytes);
+    const hash = new Uint8Array(signature);
+    const offset = hash[hash.length - 1] & 0x0F;
+    const binary = ((hash[offset] & 0x7F) << 24) |
+        ((hash[offset + 1] & 0xFF) << 16) |
+        ((hash[offset + 2] & 0xFF) << 8) |
+        (hash[offset + 3] & 0xFF);
+    const otp = binary % 1000000;
+    return otp.toString().padStart(6, '0');
 }
 
 // ──────────────────────────────────────
@@ -223,23 +254,93 @@ async function processQR(qrCode) {
         return;
     }
 
-    // order_item 조회
-    const { data: item, error } = await supabase
-        .from('order_item')
-        .select(`
-            id, item_status, qr_code_uuid, qr_expired_at,
-            ticket_type, target_vulnerable_name, target_vulnerable_birth,
-            owner_user_id,
-            order:order_id ( festival_id, payment_status ),
-            seat:seat_id ( seat_row, seat_number )
-        `)
-        .eq('qr_code_uuid', qrCode.toUpperCase())
-        .maybeSingle();
+    const MASK_DYNAMIC = 90000000000000000n;
+    let orderIdNum = null;
+    let decodedTotp = null;
+    let prefix = qrCode.charAt(0).toUpperCase();
+
+    try {
+        const base36 = qrCode.trim().toUpperCase().substring(1);
+        let obf = 0n;
+        for (let i = 0; i < base36.length; i++) {
+            const code = base36.charCodeAt(i);
+            let val = 0n;
+            if (code >= 48 && code <= 57) val = BigInt(code - 48);
+            else if (code >= 65 && code <= 90) val = BigInt(code - 65 + 10);
+            else if (code >= 97 && code <= 122) val = BigInt(code - 97 + 10);
+            obf = obf * 36n + val;
+        }
+        const combined = obf ^ MASK_DYNAMIC;
+        orderIdNum = Number(combined / 1000000n);
+        decodedTotp = Number(combined % 1000000n);
+    } catch (e) {
+        await renderResult(null, RESULT.FAIL_INVALID, qrCode);
+        await insertScanLog(null, RESULT.FAIL_INVALID);
+        return;
+    }
+
+    let item = null;
+    let error = null;
+
+    if (prefix === 'T') {
+        // 티켓 조회
+        const res = await supabase
+            .from('order_item')
+            .select(`
+                id, item_status, qr_code_uuid, qr_expired_at, totp_secret,
+                ticket_type, target_vulnerable_name, target_vulnerable_birth,
+                owner_user_id,
+                order:order_id ( festival_id, payment_status ),
+                seat:seat_id ( seat_row, seat_number )
+            `)
+            .or(`qr_code_uuid.eq.${qrCode.toUpperCase()},id.eq.${orderIdNum}`)
+            .maybeSingle();
+        item = res.data;
+        error = res.error;
+    } else if (prefix === 'F' || prefix === 'G') {
+        // FESTIO SHOP 조회
+        const res = await supabase
+            .from('shop_orders')
+            .select(`
+                id, order_number, status, payment_method, delivery_type,
+                created_at, total_amount, totp_secret
+            `)
+            .like('order_number', prefix + '%' + orderIdNum + '%')
+            .maybeSingle();
+
+        if (res.data) {
+            item = res.data;
+            item.item_status = item.status;
+            item.ticket_type = 'SHOP';
+            item.order = { payment_status: 'COMPLETED' };
+        }
+        error = res.error;
+    } else {
+        await renderResult(null, RESULT.FAIL_INVALID, qrCode);
+        await insertScanLog(null, RESULT.FAIL_INVALID);
+        return;
+    }
 
     if (error || !item) {
         await renderResult(null, RESULT.FAIL_INVALID, qrCode);
         await insertScanLog(null, RESULT.FAIL_INVALID);
         return;
+    }
+
+    // TOTP 유효성 검증 (정적 QR 매칭 제외)
+    const isStaticMatch = item.qr_code_uuid && item.qr_code_uuid === qrCode.toUpperCase();
+    if (!isStaticMatch) {
+        const secret = item.totp_secret || 'dummysecret12345';
+        const currentTotp = await generateTotpCode(secret, 0);
+        const prevTotp = await generateTotpCode(secret, -1);
+        const nextTotp = await generateTotpCode(secret, 1);
+        const decodedTotpStr = String(decodedTotp).padStart(6, '0');
+
+        if (decodedTotpStr !== currentTotp && decodedTotpStr !== prevTotp && decodedTotpStr !== nextTotp) {
+            await renderResult(item, RESULT.FAIL_TOKEN_EXPIRED, qrCode);
+            await insertScanLog(item.id, RESULT.FAIL_TOKEN_EXPIRED);
+            return;
+        }
     }
 
     // 환불된 티켓
@@ -249,7 +350,7 @@ async function processQR(qrCode) {
         return;
     }
 
-    // QR 만료 확인
+    // QR 만료 확인 (정적 QR에 해당)
     if (item.qr_expired_at && isQRExpired(item.qr_expired_at)) {
         await renderResult(item, RESULT.FAIL_TOKEN_EXPIRED, qrCode);
         await insertScanLog(item.id, RESULT.FAIL_TOKEN_EXPIRED);
@@ -264,22 +365,20 @@ async function processQR(qrCode) {
             return;
         }
 
-        // SUSPENDED (양도 기한 초과)
         if (item.item_status === 'SUSPENDED') {
             showExceptionModal(item, qrCode);
             return;
         }
 
-        // 정상 입장 처리
-        await supabase
-            .from('order_item')
-            .update({ item_status: 'ENTERED', updated_at: new Date().toISOString() })
-            .eq('id', item.id);
-
+        if (prefix === 'T') {
+            await supabase
+                .from('order_item')
+                .update({ item_status: 'ENTERED', updated_at: new Date().toISOString() })
+                .eq('id', item.id);
+        }
         await renderResult(item, RESULT.SUCCESS, qrCode);
         await insertScanLog(item.id, RESULT.SUCCESS);
 
-        // VULNERABLE 팔찌 발급 모달
         if (item.ticket_type === 'VULNERABLE') {
             showWristbandModal(item);
         }
@@ -288,16 +387,23 @@ async function processQR(qrCode) {
 
     // 부스 수령 로직
     if (scanType === 'STORE_PICKUP') {
-        if (item.item_status === 'PICKED_UP') {
+        if (item.item_status === 'PICKED_UP' || item.item_status === 'COMPLETED') {
             await renderResult(item, RESULT.FAIL_DUPLICATE, qrCode);
             await insertScanLog(item.id, RESULT.FAIL_DUPLICATE);
             return;
         }
 
-        await supabase
-            .from('order_item')
-            .update({ item_status: 'PICKED_UP', updated_at: new Date().toISOString() })
-            .eq('id', item.id);
+        if (prefix === 'T') {
+            await supabase
+                .from('order_item')
+                .update({ item_status: 'PICKED_UP', updated_at: new Date().toISOString() })
+                .eq('id', item.id);
+        } else {
+            await supabase
+                .from('shop_orders')
+                .update({ status: 'COMPLETED' })
+                .eq('id', item.id);
+        }
 
         await renderResult(item, RESULT.SUCCESS, qrCode);
         await insertScanLog(item.id, RESULT.SUCCESS);
@@ -313,7 +419,7 @@ async function insertScanLog(orderItemId, result) {
         .insert({
             order_item_id: orderItemId,
             staff_user_id: currentUser.id,
-            scan_type:     scanType,
+            scan_type: scanType,
             result
         });
 }
@@ -322,17 +428,17 @@ async function insertScanLog(orderItemId, result) {
 // 결과 카드 렌더링
 // ──────────────────────────────────────
 async function renderResult(item, result, code) {
-    const isSuccess   = result === RESULT.SUCCESS;
+    const isSuccess = result === RESULT.SUCCESS;
     const isException = result === RESULT.SUCCESS_EXCEPTION;
-    const isFail      = !isSuccess && !isException;
+    const isFail = !isSuccess && !isException;
 
-    const cardClass = isSuccess   ? 'ss-result-card--success'
-                    : isException ? 'ss-result-card--success-exception'
-                    : 'ss-result-card--fail';
+    const cardClass = isSuccess ? 'ss-result-card--success'
+        : isException ? 'ss-result-card--success-exception'
+            : 'ss-result-card--fail';
 
-    const iconClass = isSuccess   ? 'ss-result-card__icon--success'
-                    : isException ? 'ss-result-card__icon--warning'
-                    : 'ss-result-card__icon--fail';
+    const iconClass = isSuccess ? 'ss-result-card__icon--success'
+        : isException ? 'ss-result-card__icon--warning'
+            : 'ss-result-card__icon--fail';
 
     const resultLabel = getResultLabel(result);
 
@@ -368,9 +474,9 @@ async function renderResult(item, result, code) {
     ssResultCard.innerHTML = `
         <div class="ss-result-card__top">
             <div class="ss-result-card__icon ${iconClass}">
-                ${isSuccess   ? successSVG() : ''}
+                ${isSuccess ? successSVG() : ''}
                 ${isException ? warningSVG() : ''}
-                ${isFail      ? failSVG()    : ''}
+                ${isFail ? failSVG() : ''}
             </div>
             <div>
                 <div class="ss-result-card__result-text">${resultLabel}</div>
@@ -393,13 +499,13 @@ async function renderResult(item, result, code) {
 
 function getResultLabel(result) {
     const map = {
-        [RESULT.SUCCESS]:           '입장 / 수령 완료',
+        [RESULT.SUCCESS]: '입장 / 수령 완료',
         [RESULT.SUCCESS_EXCEPTION]: '예외 승인 처리',
-        [RESULT.FAIL_DUPLICATE]:    '중복 입장 차단',
-        [RESULT.FAIL_EXPIRED]:      '유효 시간 만료',
-        [RESULT.FAIL_TOKEN_EXPIRED]:'QR 토큰 만료',
-        [RESULT.FAIL_INVALID]:      '유효하지 않은 QR',
-        [RESULT.FAIL_REFUNDED]:     '환불된 티켓',
+        [RESULT.FAIL_DUPLICATE]: '중복 입장 차단',
+        [RESULT.FAIL_EXPIRED]: '유효 시간 만료',
+        [RESULT.FAIL_TOKEN_EXPIRED]: 'QR 토큰 만료',
+        [RESULT.FAIL_INVALID]: '유효하지 않은 QR',
+        [RESULT.FAIL_REFUNDED]: '환불된 티켓',
     };
     return map[result] ?? result;
 }
@@ -495,14 +601,14 @@ function appendLogRow(data) {
 }
 
 function buildLogRow({ code, type, result, time }) {
-    const isSuccess   = result === RESULT.SUCCESS;
+    const isSuccess = result === RESULT.SUCCESS;
     const isException = result === RESULT.SUCCESS_EXCEPTION;
-    const modClass    = isSuccess ? 'ss-log-row--success'
-                      : isException ? 'ss-log-row--exception'
-                      : 'ss-log-row--fail';
-    const badgeClass  = isSuccess ? 'ss-log-row__result--success'
-                      : isException ? 'ss-log-row__result--exception'
-                      : 'ss-log-row__result--fail';
+    const modClass = isSuccess ? 'ss-log-row--success'
+        : isException ? 'ss-log-row--exception'
+            : 'ss-log-row--fail';
+    const badgeClass = isSuccess ? 'ss-log-row__result--success'
+        : isException ? 'ss-log-row__result--exception'
+            : 'ss-log-row__result--fail';
 
     const timeStr = time.toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
     const typeStr = type === 'ENTRANCE' ? '입장' : '수령';

@@ -68,7 +68,7 @@
                         style="position: absolute; left: 0; top: 0; height: 100%; width: 100%; background: linear-gradient(90deg, #00d2ff, #8930F8); transform-origin: left; transition: transform 1s linear, background 0.3s ease;">
                     </div>
                 </div>
-                <button id="timer-refresh-btn" onclick="refreshTotp();"
+                <button id="timer-refresh-btn" onclick="refreshTotpManual();"
                     style="background: none; border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; padding: 4px; color: #8930F8; transition: transform 0.2s; flex-shrink: 0;"
                     title="새로고침">
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
@@ -77,8 +77,8 @@
                     </svg>
                 </button>
             </div>
-            <span id="timer-sec"
-                style="font-size: 0.9rem; font-weight: 800; color: #2D1A54; display: block; text-align: center;">03:00</span>
+            <span id="timer-sec" class="timer-sec-text"
+                style="font-size: 0.9rem; font-weight: 800; display: block; text-align: center;">03:00</span>
         </div>
 
         <div class="warning">
