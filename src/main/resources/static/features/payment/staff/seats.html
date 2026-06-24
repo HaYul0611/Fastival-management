@@ -6,28 +6,15 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>스태프 통합 관제 시스템 | FESTIO</title>
   <link rel="stylesheet" href="/assets/css/custom.css">
-  <link rel="stylesheet" href="/assets/react-seats/index-Cnb8Xr7z.css">
   <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
   <script src="https://cdn.iamport.kr/v1/iamport.js"></script>
   <style>
-    /* React 좌석 배치도의 min-height-screen과 flex-center 강제 해제 및 상단 정렬 */
-    #root > div {
-      min-height: auto !important;
-      justify-content: flex-start !important;
-      padding-top: 10px !important;
-      padding-bottom: 30px !important;
-      background: transparent !important;
-    }
-    /* SVG 컨테이너의 고정 최소 높이 완화 및 비율 최적화 */
-    #root svg {
-      min-height: auto !important;
-      max-height: 65vh !important;
-      width: 100% !important;
-      height: auto !important;
-    }
-    /* 스크롤바 최적화 */
     #root {
       overflow-y: auto !important;
+    }
+    /* 좌석 hover 효과 */
+    [data-seat-id]:hover {
+      filter: brightness(1.2);
     }
   </style>
 </head>
@@ -71,16 +58,14 @@
       </header>
 
       <div id="main-content" style="display: flex; flex-direction: column; height: 100%;">
-        <section id="view-seats" class="content-view active" style="display: none !important;">
-          <!-- Rendered by js/ui.js -->
-        </section>
-        <div id="root" style="flex: 1; padding: 20px; box-sizing: border-box; overflow-y: auto;"></div>
+        <!-- ticketMode에 따라 seats-init.js가 #root에 동적 렌더링 -->
+        <div id="root" style="flex: 1; padding: 0; box-sizing: border-box; overflow-y: auto;"></div>
       </div>
     </main>
 
   </div>
 
-  <!-- 결제 진행 모달 레이어 -->
+  <!-- 결제 진행 모달 레이어 (SEAT 모드 기존 예매 모달 - 필요 시 사용) -->
   <div id="ticket-pay-modal" style="display:none; position:fixed; inset:0; z-index:9999; background:rgba(0,0,0,0.75); align-items:center; justify-content:center; padding: 20px;">
     <div class="panel-rigid" style="width: 100%; max-width: 700px; display: flex; flex-direction: column; overflow: hidden; background: #1a202c; border: 1px solid #2d3748; border-radius: 8px;">
       <div class="panel-header-rigid" style="display: flex; justify-content: space-between; align-items: center; padding: 15px 20px;">
@@ -133,8 +118,8 @@
     </div>
   </div>
 
-  <script type="module" src="js/seats.js"></script>
-  <script type="module" crossorigin src="/assets/react-seats/index-BSHGu9ZY.js"></script>
+  <!-- seats-init.js: ticketMode 분기 → FREE=자유입장권폼 / SEAT=순수JS 좌석맵 -->
+  <script type="module" src="js/seats-init.js"></script>
 
 </body>
 

@@ -731,9 +731,8 @@ public class OrderController {
         String membershipGrade = "BRONZE";
         if (userId != null) {
             try {
-                Long numericUserId = Long.parseLong(userId);
                 membershipGrade = jdbcTemplate.queryForObject(
-                        "SELECT membership_grade FROM app_user WHERE id = ?", String.class, numericUserId);
+                        "SELECT membership_grade FROM app_user WHERE id = ?", String.class, userId);
             } catch (Exception e) {
                 System.err.println("멤버십 등급 조회 실패 (UserId: " + userId + "): " + e.getMessage());
             }
@@ -786,16 +785,16 @@ public class OrderController {
 
         String orderSql = "INSERT INTO orders (user_id, festival_id, total_price, payment_status, created_at, is_entered, ticket_type, ticket_number, qr_code) VALUES (?, ?, ?, 'PAID', NOW(), false, 'SHOP', ?, ?)";
 
-        final Long finalUserId = (userId != null && !userId.trim().isEmpty()) ? Long.parseLong(userId) : null;
+        final String finalUserId = (userId != null && !userId.trim().isEmpty()) ? userId : null;
         final int finalFestivalId = festivalId;
 
         org.springframework.jdbc.support.KeyHolder keyHolder = new org.springframework.jdbc.support.GeneratedKeyHolder();
         jdbcTemplate.update(connection -> {
             java.sql.PreparedStatement ps = connection.prepareStatement(orderSql, new String[] { "id" });
             if (finalUserId != null) {
-                ps.setLong(1, finalUserId);
+                ps.setString(1, finalUserId);
             } else {
-                ps.setNull(1, java.sql.Types.BIGINT);
+                ps.setNull(1, java.sql.Types.VARCHAR);
             }
             ps.setInt(2, finalFestivalId);
             ps.setInt(3, totalPrice);
@@ -826,6 +825,7 @@ public class OrderController {
 
         Map<String, Object> res = new HashMap<>();
         res.put("success", true);
+        res.put("status", "success");
         res.put("orderId", orderId);
         res.put("qrPayload", qrPayload);
         return res;

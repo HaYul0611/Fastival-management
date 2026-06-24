@@ -786,14 +786,35 @@ async function renderDashboard() {
   const view = document.getElementById("view-dashboard");
   if (!view) return;
 
+  let currentFestivalId = sessionStorage.getItem("currentFestivalId");
+
   let fnbOrders = [];
   let goodsOrders = [];
   let scanLogsFromDB = [];
+  let festivals = [];
+  let currentFestivalTicketMode = 'SEAT';
   try {
+    const festRes = await fetch('/api/festival');
+    if (festRes.ok) {
+      festivals = await festRes.json();
+      if (!currentFestivalId && festivals.length > 0) {
+        currentFestivalId = festivals[0].id;
+        sessionStorage.setItem("currentFestivalId", currentFestivalId);
+      }
+      const activeFest = festivals.find(f => f.id.toString() === (currentFestivalId || '').toString());
+      if (activeFest && activeFest.ticketMode) {
+        currentFestivalTicketMode = activeFest.ticketMode;
+      }
+    }
+
+    const seatsUrl = currentFestivalId 
+      ? `/api/order/seats?festivalId=${currentFestivalId}` 
+      : '/api/order/seats?zones=A,B,C';
+
     const [fnbRes, goodsRes, seatsRes, scanLogsRes] = await Promise.all([
       fetch('/api/order/fnb'),
       fetch('/api/order/goods'),
-      fetch('/api/order/seats?zones=A,B,C'),
+      fetch(seatsUrl),
       fetch('/api/order/scan-logs')
     ]);
     if (fnbRes.ok) fnbOrders = await fnbRes.json();
@@ -826,6 +847,24 @@ async function renderDashboard() {
   const activeGoodsCount = goodsOrders.filter(o => o.status === "ORDERED" || o.status === "READY").length;
 
   view.innerHTML = `
+    <!-- 관제 행사 컨트롤러 -->
+    <div class="panel-rigid" style="margin-bottom: 25px; border: 1px solid rgba(56, 189, 248, 0.4); background: rgba(15, 23, 42, 0.6); backdrop-filter: blur(10px); border-radius: 12px;">
+      <div class="panel-body-rigid" style="padding: 15px; display: flex; align-items: center; justify-content: space-between; gap: 15px; flex-wrap: wrap;">
+        <div style="display: flex; align-items: center; gap: 12px;">
+          <span style="font-size: 24px;">🎪</span>
+          <div style="text-align: left;">
+            <div style="font-size: 15px; font-weight: bold; color: var(--color-blue);">관제 대상 행사 지정</div>
+            <div style="font-size: 11px; color: var(--text-muted);">현재 터미널이 검수/관리하고 있는 페스티벌을 선택하세요.</div>
+          </div>
+        </div>
+        <div style="display: flex; align-items: center; gap: 10px;">
+          <select id="dash-festival-select" class="input-rigid" style="min-width: 250px; background: #0d1117; border-color: rgba(56, 189, 248, 0.5); color: #fff; font-weight: bold; padding: 8px 12px; border-radius: 6px; cursor: pointer;">
+            <!-- API 옵션 렌더링 -->
+          </select>
+        </div>
+      </div>
+    </div>
+
     <!-- Top KPI Dashboard Cards -->
     <div class="dashboard-metrics" style="grid-template-columns: repeat(2, 1fr); margin-bottom: 25px;">
       <div class="metric-card metric-green">
@@ -842,14 +881,14 @@ async function renderDashboard() {
 
       <div class="metric-card metric-blue">
         <div class="metric-title" style="display: flex; justify-content: space-between; align-items: center;">
-          <span>🎟️ 좌석 예매 및 발권 완료</span>
-          <span class="badge badge-blue">${reservedPercent}% 예약</span>
+          <span>${currentFestivalTicketMode === 'FREE' ? '🎫 현장 발권 완료' : '🎟️ 좌석 예매 및 발권 완료'}</span>
+          <span class="badge badge-blue">${currentFestivalTicketMode === 'FREE' ? reservedTotal + '건 발권' : reservedPercent + '% 예약'}</span>
         </div>
-        <div class="metric-value" style="font-size: 28px;">${reservedTotal}석 <span style="font-size: 14px; color: var(--text-muted); font-weight: normal;">/ ${stats.total}석</span></div>
+        <div class="metric-value" style="font-size: 28px;">${reservedTotal}${currentFestivalTicketMode === 'FREE' ? '건' : '석'} <span style="font-size: 14px; color: var(--text-muted); font-weight: normal;">${currentFestivalTicketMode === 'FREE' ? '' : '/ ' + stats.total + '석'}</span></div>
         <div style="width: 100%; background: #0d1117; border: 1px solid var(--border-color); height: 6px; border-radius: 3px; overflow: hidden; margin-bottom: 8px;">
-          <div style="width: ${reservedPercent}%; background: var(--color-blue); height: 100%; box-shadow: 0 0 8px var(--color-blue); transition: width 0.5s ease;"></div>
+          <div style="width: ${currentFestivalTicketMode === 'FREE' ? Math.min(reservedTotal * 2, 100) : reservedPercent}%; background: var(--color-blue); height: 100%; box-shadow: 0 0 8px var(--color-blue); transition: width 0.5s ease;"></div>
         </div>
-        <div class="metric-footer">예매 완료 및 입장권 발매 전체 세그먼트</div>
+        <div class="metric-footer">${currentFestivalTicketMode === 'FREE' ? '자유입장권 현장 발권 누적 건수' : '예매 완료 및 입장권 발매 전체 세그먼트'}</div>
       </div>
     </div>
 
@@ -957,6 +996,49 @@ async function renderDashboard() {
     }, 50);
   }
 
+  // Bind Festival Selector
+  const festSelect = document.getElementById("dash-festival-select");
+  if (festSelect) {
+    if ((!DB.activeCheckpoint || !DB.activeCheckpoint.event) && festivals.length > 0) {
+      if (!DB.activeCheckpoint) DB.activeCheckpoint = {};
+      DB.activeCheckpoint.event = festivals[0].name;
+    }
+
+    festSelect.innerHTML = festivals.map(f => {
+      const isSelected = (DB.activeCheckpoint && f.name === DB.activeCheckpoint.event) ? 'selected' : '';
+      return `<option value="${f.id}" data-name="${f.name}" ${isSelected}>${f.name}</option>`;
+    }).join('');
+
+    festSelect.onchange = (e) => {
+      const selectedOption = e.target.options[e.target.selectedIndex];
+      const festId = e.target.value;
+      const festName = selectedOption.getAttribute('data-name');
+
+      if (!DB.activeCheckpoint) DB.activeCheckpoint = {};
+      DB.activeCheckpoint.event = festName;
+      import('./store.js').then(module => {
+        module.saveDB();
+        module.addNotification("SYSTEM", `[관제 행사 변경] -> ${festName}`);
+      });
+
+      sessionStorage.setItem("currentFestivalId", festId);
+
+      const headerCheckpoint = document.getElementById("header-checkpoint");
+      if (headerCheckpoint) {
+        headerCheckpoint.innerText = `[ ${festName} / ${DB.activeCheckpoint.tenant || ''} ]`;
+      }
+    };
+
+    // Sync on initial load
+    const initialFestId = festSelect.value;
+    if (initialFestId && !sessionStorage.getItem("currentFestivalId")) {
+      sessionStorage.setItem("currentFestivalId", initialFestId);
+    }
+    const headerCheckpoint = document.getElementById("header-checkpoint");
+    if (headerCheckpoint && DB.activeCheckpoint) {
+      headerCheckpoint.innerText = `[ ${DB.activeCheckpoint.event || ''} / ${DB.activeCheckpoint.tenant || ''} ]`;
+    }
+  }
 
 }
 
@@ -1294,11 +1376,220 @@ async function renderScanStatusScreen() {
   }
 }
 
+// Helper to fetch festival mode
+async function getFestivalMode(festivalId) {
+  if (!festivalId) return 'SEAT';
+  try {
+    const res = await fetch('/api/festival');
+    if (res.ok) {
+      const fests = await res.json();
+      const target = fests.find(f => f.id.toString() === festivalId.toString());
+      return target ? target.ticketMode : 'SEAT';
+    }
+  } catch (e) {
+    console.error("Failed to check festival mode", e);
+  }
+  return 'SEAT';
+}
+
+// Render Free Ticket Form for On-Site purchasing
+export async function renderFreeTicketForm(container, festivalId) {
+  let festival = null;
+  try {
+    const res = await fetch('/api/festival');
+    if (res.ok) {
+      const fests = await res.json();
+      festival = fests.find(f => f.id.toString() === festivalId.toString());
+    }
+  } catch (e) {
+    console.error("Failed to fetch festival for free form", e);
+  }
+
+  const basePrice = (festival && festival.minPrice) ? festival.minPrice : 15000;
+  const festName = festival ? festival.name : "자유입장권 행사";
+
+  let qtyAdult = 1;
+  let qtyChild = 0;
+  let qtyInfant = 0;
+
+  const getPrice = () => {
+    return (qtyAdult * basePrice) + (qtyChild * Math.round(basePrice * 0.7)) + (qtyInfant * Math.round(basePrice * 0.3));
+  };
+
+  const updateUI = () => {
+    const adultPrice = basePrice;
+    const childPrice = Math.round(basePrice * 0.7);
+    const infantPrice = Math.round(basePrice * 0.3);
+
+    document.getElementById("free-qty-adult").innerText = qtyAdult;
+    document.getElementById("free-qty-child").innerText = qtyChild;
+    document.getElementById("free-qty-infant").innerText = qtyInfant;
+
+    document.getElementById("free-price-adult").innerText = `${(qtyAdult * adultPrice).toLocaleString()}원`;
+    document.getElementById("free-price-child").innerText = `${(qtyChild * childPrice).toLocaleString()}원`;
+    document.getElementById("free-price-infant").innerText = `${(qtyInfant * infantPrice).toLocaleString()}원`;
+
+    document.getElementById("free-total-price").innerText = `${getPrice().toLocaleString()}원`;
+  };
+
+  container.innerHTML = `
+    <div class="panel-rigid" style="max-width: 600px; margin: 20px auto; border: 1px solid rgba(56, 189, 248, 0.4); border-radius: 12px; background: rgba(15, 23, 42, 0.6); backdrop-filter: blur(10px);">
+      <div class="panel-header-rigid" style="font-weight: bold; font-size: 16px; display: flex; align-items: center; gap: 8px;">
+        <span>🎪</span>
+        <span>${festName} - 자유입장권 매표소 (On-Site Ticketing)</span>
+      </div>
+      <div class="panel-body-rigid" style="padding: 25px; display: flex; flex-direction: column; gap: 20px;">
+        
+        <div style="display: flex; flex-direction: column; gap: 15px;">
+          <!-- 성인 -->
+          <div style="display: flex; justify-content: space-between; align-items: center; padding: 12px; background: #0f172a; border-radius: 8px; border: 1px solid #1e293b;">
+            <div>
+              <div style="font-weight: bold; font-size: 15px; color: #fff;">일반 (Adult)</div>
+              <div style="font-size: 12px; color: var(--text-muted);">${basePrice.toLocaleString()}원</div>
+            </div>
+            <div style="display: flex; align-items: center; gap: 12px;">
+              <button class="btn btn-rigid btn-red" id="btn-dec-adult" style="padding: 5px 12px; font-weight: bold;">-</button>
+              <span id="free-qty-adult" style="font-weight: bold; font-size: 16px; min-width: 20px; text-align: center;">1</span>
+              <button class="btn btn-rigid btn-green" id="btn-inc-adult" style="padding: 5px 12px; font-weight: bold;">+</button>
+              <span id="free-price-adult" style="font-weight: bold; color: var(--color-blue); min-width: 90px; text-align: right;">0원</span>
+            </div>
+          </div>
+
+          <!-- 소아 -->
+          <div style="display: flex; justify-content: space-between; align-items: center; padding: 12px; background: #0f172a; border-radius: 8px; border: 1px solid #1e293b;">
+            <div>
+              <div style="font-weight: bold; font-size: 15px; color: #fff;">소아 (Child - 만 12세 이하)</div>
+              <div style="font-size: 12px; color: var(--text-muted);">${Math.round(basePrice * 0.7).toLocaleString()}원 (30% 할인)</div>
+            </div>
+            <div style="display: flex; align-items: center; gap: 12px;">
+              <button class="btn btn-rigid btn-red" id="btn-dec-child" style="padding: 5px 12px; font-weight: bold;">-</button>
+              <span id="free-qty-child" style="font-weight: bold; font-size: 16px; min-width: 20px; text-align: center;">0</span>
+              <button class="btn btn-rigid btn-green" id="btn-inc-child" style="padding: 5px 12px; font-weight: bold;">+</button>
+              <span id="free-price-child" style="font-weight: bold; color: var(--color-blue); min-width: 90px; text-align: right;">0원</span>
+            </div>
+          </div>
+
+          <!-- 유아 -->
+          <div style="display: flex; justify-content: space-between; align-items: center; padding: 12px; background: #0f172a; border-radius: 8px; border: 1px solid #1e293b;">
+            <div>
+              <div style="font-weight: bold; font-size: 15px; color: #fff;">유아 (Infant - 만 36개월 이하)</div>
+              <div style="font-size: 12px; color: var(--text-muted);">${Math.round(basePrice * 0.3).toLocaleString()}원 (70% 할인)</div>
+            </div>
+            <div style="display: flex; align-items: center; gap: 12px;">
+              <button class="btn btn-rigid btn-red" id="btn-dec-infant" style="padding: 5px 12px; font-weight: bold;">-</button>
+              <span id="free-qty-infant" style="font-weight: bold; font-size: 16px; min-width: 20px; text-align: center;">0</span>
+              <button class="btn btn-rigid btn-green" id="btn-inc-infant" style="padding: 5px 12px; font-weight: bold;">+</button>
+              <span id="free-price-infant" style="font-weight: bold; color: var(--color-blue); min-width: 90px; text-align: right;">0원</span>
+            </div>
+          </div>
+        </div>
+
+        <div style="background: rgba(16, 185, 129, 0.1); border: 2px solid #10b981; padding: 15px; display: flex; justify-content: space-between; align-items: center; border-radius: 8px; margin-top: 10px;">
+          <span style="color: #fff; font-weight: bold; font-size: 15px;">최종 합산 결제 금액</span>
+          <strong id="free-total-price" style="color: #10b981; font-size: 26px; font-family: var(--font-mono);">0원</strong>
+        </div>
+
+        <button type="button" id="btn-free-pay" class="btn btn-rigid btn-green" style="padding: 15px; font-size: 18px; font-weight: bold;">
+          입장권 현장 결제하기
+        </button>
+
+      </div>
+    </div>
+  `;
+
+  document.getElementById("btn-dec-adult").onclick = () => { if (qtyAdult > 0) qtyAdult--; updateUI(); };
+  document.getElementById("btn-inc-adult").onclick = () => { qtyAdult++; updateUI(); };
+  document.getElementById("btn-dec-child").onclick = () => { if (qtyChild > 0) qtyChild--; updateUI(); };
+  document.getElementById("btn-inc-child").onclick = () => { qtyChild++; updateUI(); };
+  document.getElementById("btn-dec-infant").onclick = () => { if (qtyInfant > 0) qtyInfant--; updateUI(); };
+  document.getElementById("btn-inc-infant").onclick = () => { qtyInfant++; updateUI(); };
+
+  updateUI();
+
+  document.getElementById("btn-free-pay").onclick = async () => {
+    const total = getPrice();
+    if (total <= 0) {
+      alert("최소 1장 이상의 티켓을 선택해 주세요.");
+      return;
+    }
+
+    const seatsArr = [];
+    if (qtyAdult > 0) seatsArr.push(`성인 입장권 x${qtyAdult}`);
+    if (qtyChild > 0) seatsArr.push(`소아 입장권 x${qtyChild}`);
+    if (qtyInfant > 0) seatsArr.push(`유아 입장권 x${qtyInfant}`);
+
+    if (typeof IMP === 'undefined') {
+      alert("PortOne 결제 라이브러리가 로드되지 않았습니다.");
+      return;
+    }
+
+    const user = JSON.parse(sessionStorage.getItem("STAFF_CURRENT_USER") || "{}");
+    const userToken = sessionStorage.getItem("festio_staff_token") || 
+                      sessionStorage.getItem("userToken") || 
+                      localStorage.getItem("userToken") || 
+                      "festio-jwt-token-guest";
+
+    IMP.init('imp81384776');
+    IMP.request_pay({
+      pg: 'html5_inicis',
+      pay_method: 'card',
+      merchant_uid: 'merchant_' + new Date().getTime(),
+      name: festName + ' - 현장입장권',
+      amount: total,
+      buyer_email: user.id || 'staff@festio.com',
+      buyer_name: user.name || '현장구매자'
+    }, async function (rsp) {
+      if (rsp.success) {
+        try {
+          const orderRes = await fetch('/api/order/ticket', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              totalPrice: total,
+              seats: seatsArr,
+              seatIds: [],
+              eventNo: festivalId,
+              userToken: userToken
+            })
+          });
+
+          const resData = await orderRes.json();
+          if (orderRes.ok && (resData.status === 'success' || resData.id)) {
+            alert(`[결제 성공] 입장권 발권이 완료되었습니다.\n주문 번호: O${String(resData.id || '').padStart(11, '0')}`);
+            qtyAdult = 1;
+            qtyChild = 0;
+            qtyInfant = 0;
+            updateUI();
+          } else {
+            alert("주문 등록에 실패했습니다: " + (resData.message || "오류"));
+          }
+        } catch (e) {
+          alert("서버 전송 중 오류 발생: " + e.message);
+        }
+      } else {
+        alert("결제에 실패하였습니다. 에러 내용: " + rsp.error_msg);
+      }
+    });
+  };
+}
+
 // ==========================================
 // 4. REALTIME SEATING MAP RENDERING
 // ==========================================
 async function renderSeatMapScreen() {
   const view = document.getElementById("view-seats");
+
+  const currentFestivalId = sessionStorage.getItem("currentFestivalId");
+  const mode = await getFestivalMode(currentFestivalId);
+  if (mode === 'FREE') {
+    // seats.html 독립 페이지인 경우 #root에 렌더링, 아니면 view-seats에 렌더링
+    const targetContainer = view || document.getElementById("root");
+    if (targetContainer) {
+      await renderFreeTicketForm(targetContainer, currentFestivalId);
+    }
+    return;
+  }
+
   if (!view) return;
 
   try {
@@ -1355,6 +1646,13 @@ async function renderTicketingScreen() {
   const view = document.getElementById("view-ticketing");
   if (!view) return;
 
+  const currentFestivalId = sessionStorage.getItem("currentFestivalId");
+  const mode = await getFestivalMode(currentFestivalId);
+  if (mode === 'FREE') {
+    await renderFreeTicketForm(view, currentFestivalId);
+    return;
+  }
+
   // Restore pending seats from sessionStorage if arrived from React Seat Map
   const pending = sessionStorage.getItem('pendingTicketingSeats');
   if (pending) {
@@ -1377,8 +1675,9 @@ async function renderTicketingScreen() {
     console.error("Failed to fetch festivals", e);
   }
 
-  // Set default festival
-  let currentFestivalId = festivals.length > 0 ? festivals[0].id : null;
+  // Set default festival (이미 const currentFestivalId가 위에서 선언됨)
+  // sessionStorage에 없을 경우 첫 번째 축제를 기본값으로 사용
+  const activeFestivalId = currentFestivalId || (festivals.length > 0 ? festivals[0].id : null);
 
   // Function to load seats for a specific festival
   const loadSeatsForFestival = async (festivalId) => {
@@ -1403,8 +1702,8 @@ async function renderTicketingScreen() {
     }
   };
 
-  if (currentFestivalId) {
-    await loadSeatsForFestival(currentFestivalId);
+  if (activeFestivalId) {
+    await loadSeatsForFestival(activeFestivalId);
   }
 
   const seasons = DB.options.seasons;
@@ -1423,7 +1722,7 @@ async function renderTicketingScreen() {
             <div class="form-group-rigid" style="margin-bottom: 20px; flex-shrink: 0;">
               <label style="font-size: 18px; font-weight: bold; margin-bottom: 10px; display: block;">진행 행사 (Festival) 선택</label>
               <select id="ticketing-festival-select" class="input-rigid" style="width: 100%; padding: 15px; font-size: 18px;">
-                ${festivals.map(f => `<option value="${f.id}" ${f.id === currentFestivalId ? 'selected' : ''}>${f.name} (${f.startDate} ~ ${f.endDate})</option>`).join('')}
+                ${festivals.map(f => `<option value="${f.id}" ${f.id === activeFestivalId ? 'selected' : ''}>${f.name} (${f.startDate} ~ ${f.endDate})</option>`).join('')}
               </select>
             </div>
             
@@ -1546,10 +1845,12 @@ async function renderTicketingScreen() {
   updateSelectedSeatsUI();
 
   // Handle Festival Change
+  let mutableFestivalId = activeFestivalId;
   document.getElementById("ticketing-festival-select").addEventListener("change", async (e) => {
-    currentFestivalId = e.target.value;
+    mutableFestivalId = e.target.value;
+    sessionStorage.setItem("currentFestivalId", mutableFestivalId);
     selectedSeats = []; // Reset selections
-    await loadSeatsForFestival(currentFestivalId);
+    await loadSeatsForFestival(mutableFestivalId);
     updateSelectedSeatsUI();
   });
 
@@ -1586,7 +1887,7 @@ async function renderTicketingScreen() {
             body: JSON.stringify({
               totalPrice: totalPrice,
               seats: seatIds,
-              eventNo: currentFestivalId
+              eventNo: mutableFestivalId
             })
           });
 
@@ -1651,7 +1952,7 @@ async function renderTicketingScreen() {
           selectedSeats = [];
 
           // Re-render to fetch newly reserved seats from backend without resetting the entire screen
-          await loadSeatsForFestival(currentFestivalId);
+          await loadSeatsForFestival(mutableFestivalId);
           updateSelectedSeatsUI();
           renderDashboard(); // Update dashboard counts
 

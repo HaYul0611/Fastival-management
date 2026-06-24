@@ -3,19 +3,24 @@ import { DB, publish, saveDB, subscribe } from './store.js';
 
 export function getSeatStats() {
   const stats = {
-    total: 36,
+    total: 0,
     available: 0,
     reserved: 0,
     entered: 0,
-    byZone: {
-      A: { available: 0, total: 12 },
-      B: { available: 0, total: 12 },
-      C: { available: 0, total: 12 }
-    }
+    byZone: {}
   };
 
   Object.entries(DB.seats).forEach(([seatId, data]) => {
+    if (!data) return; // null/undefined guard
     const zone = seatId.split("-")[0];
+    stats.total++;
+
+    // byZone 동적 초기화 (A/B/C 외의 구역도 안전하게 처리)
+    if (!stats.byZone[zone]) {
+      stats.byZone[zone] = { available: 0, total: 0 };
+    }
+    stats.byZone[zone].total++;
+
     if (data.status === "AVAILABLE") {
       stats.available++;
       stats.byZone[zone].available++;
