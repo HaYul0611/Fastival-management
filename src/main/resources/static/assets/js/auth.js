@@ -2,8 +2,30 @@
 import { DB, addNotification } from './store.js';
 
 export function getCurrentUser() {
+  // 1. 기존 스태프 시스템 직접 로그인 세션 확인
   const userJson = sessionStorage.getItem("STAFF_CURRENT_USER");
-  return userJson ? JSON.parse(userJson) : null;
+  if (userJson) {
+    return JSON.parse(userJson);
+  }
+
+  // 2. 통합 인증 (SSO) 확인: 메인 페이지 로그인 여부 체크
+  const ssoToken = localStorage.getItem("userToken") || sessionStorage.getItem("userToken");
+  const userRole = localStorage.getItem("userRole") || sessionStorage.getItem("userRole");
+  const specificRole = localStorage.getItem("userSpecificRole") || sessionStorage.getItem("userSpecificRole");
+
+  // 관리자 권한이거나 게이트 스태프 권한인 경우 자동 로그인 승인
+  if (ssoToken && (userRole === "ADMIN" || specificRole === "ROLE_GATE_STAFF" || specificRole === "ROLE_ADMIN")) {
+    const userName = localStorage.getItem("userName") || sessionStorage.getItem("userName") || "통합인증 사용자";
+    const email = localStorage.getItem("email") || sessionStorage.getItem("email") || "sso@festio.com";
+    
+    return {
+      id: email,
+      name: userName,
+      isSso: true
+    };
+  }
+
+  return null;
 }
 
 export function login(id, pw) {

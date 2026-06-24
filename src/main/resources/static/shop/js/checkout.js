@@ -19,9 +19,66 @@ document.addEventListener('DOMContentLoaded', () => {
         <span class="co-item-price">${(i.price * i.qty).toLocaleString()}원</span>
       </div>`).join('');
   }
-  const total = order.reduce((s, i) => s + i.price * i.qty, 0);
-  document.getElementById('coGoods').textContent = total.toLocaleString() + '원';
-  document.getElementById('coTotal').textContent = total.toLocaleString() + '원';
+
+  const originalTotal = order.reduce((s, i) => s + i.price * i.qty, 0);
+  let finalTotal = originalTotal;
+  let discountAmount = 0;
+  let userGrade = 'BRONZE';
+
+  const discountRates = {
+    'VVIP': 0.10,
+    'SVIP': 0.07,
+    'VIP': 0.07,
+    'DIAMOND': 0.05,
+    'EMERALD': 0.04,
+    'GOLD': 0.03,
+    'SILVER': 0.01,
+    'BRONZE': 0.00
+  };
+
+  async function applyMembershipDiscount() {
+    const token = localStorage.getItem('userToken') || sessionStorage.getItem('userToken');
+    if (!token) return;
+
+    try {
+      const res = await fetch('/api/auth/me', {
+        headers: { 'Authorization': token }
+      });
+      if (res.ok) {
+        const user = await res.json();
+        userGrade = (user.membershipGrade || 'BRONZE').toUpperCase();
+        const rate = discountRates[userGrade] || 0.00;
+
+        if (rate > 0) {
+          discountAmount = Math.floor(originalTotal * rate);
+          finalTotal = originalTotal - discountAmount;
+
+          const discRow = document.getElementById('coDiscountRow');
+          const discGrade = document.getElementById('coDiscountGrade');
+          const discAmount = document.getElementById('coDiscountAmount');
+
+          if (discRow && discGrade && discAmount) {
+            discGrade.textContent = `${userGrade} (${Math.round(rate * 100)}%)`;
+            discAmount.textContent = `-${discountAmount.toLocaleString()}원`;
+            discRow.style.display = 'flex';
+          }
+        }
+      }
+    } catch (e) {
+      console.error("Failed to fetch user membership info", e);
+    }
+
+    document.getElementById('coGoods').textContent = originalTotal.toLocaleString() + '원';
+    document.getElementById('coTotal').textContent = finalTotal.toLocaleString() + '원';
+
+    if (document.querySelector('input[name="pay"]:checked')?.value === 'festiopay') {
+      await fetchFestioBalance();
+    }
+  }
+
+  document.getElementById('coGoods').textContent = originalTotal.toLocaleString() + '원';
+  document.getElementById('coTotal').textContent = finalTotal.toLocaleString() + '원';
+  applyMembershipDiscount();
 
   /* 회원 자동 채우기 */
   const u = Session.get();
@@ -43,7 +100,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const fpShortMsg = document.getElementById('festioPayShortageMsg');
   const fpShortAmountText = document.getElementById('shortageAmountText');
   let currentFestioBalance = 0;
-  
+
   async function fetchFestioBalance() {
     const token = localStorage.getItem('userToken');
     if (!token) {
@@ -53,16 +110,16 @@ document.addEventListener('DOMContentLoaded', () => {
     try {
       const res = await fetch('/api/wallet/balance', { headers: { 'Authorization': token } });
       const data = await res.json();
-          if (res.ok) {
+      if (res.ok) {
         currentFestioBalance = data.balance || 0;
         fpText.textContent = currentFestioBalance.toLocaleString() + '원';
-        
+
         // 부족 금액 계산
-        const shortage = total - currentFestioBalance;
+        const shortage = finalTotal - currentFestioBalance;
         if (shortage > 0) {
           fpShortAmountText.textContent = shortage.toLocaleString() + '원이';
           fpShortMsg.style.display = 'block';
-          
+
           // 초기 충전 권장 금액을 부족한 금액을 올림한 단위로 설정 (선택사항)
           const recAmt = Math.ceil(shortage / 10000) * 10000;
           document.getElementById('chargeInput').value = recAmt.toLocaleString();
@@ -110,19 +167,19 @@ document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('btnQuickCharge')?.addEventListener('click', () => {
     const amountStr = chargeInput ? chargeInput.value.replace(/,/g, '') : '0';
     const chargeAmount = parseInt(amountStr || '0', 10);
-    
+
     if (chargeAmount < 1000) {
       Toast.show({ title: '금액 오류', msg: '최소 1,000원 이상 입력해주세요.', type: 'warning' });
       return;
     }
-    
+
     if (!window.IMP) {
       Toast.show({ title: '오류', msg: '결제 모듈을 불러올 수 없습니다.', type: 'error' });
       return;
     }
-    
+
     const IMP = window.IMP;
-    IMP.init('imp81384776'); 
+    IMP.init('imp81384776');
     const orderUid = 'festio-wallet-' + Date.now();
 
     IMP.request_pay({
@@ -163,14 +220,21 @@ document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('btnPay').addEventListener('click', async () => {
     // 임의의 재고 확인 모달 연동 (품절 방어 로직)
     if (order.length > 0 && Math.random() < 0.05) { // 5% 확률로 품절 시뮬레이션
-      window.FS.Toast.error('죄송합니다. 방금 전 재고가 소진되었습니다.');
+      Toast.show({ title: '재고 부족', msg: '죄송합니다. 방금 전 재고가 소진되었습니다.', type: 'error' });
+      isPaying = false;
       return;
     }
     isPaying = true;
     const name = document.getElementById('rcvName').value.trim();
     const phone = document.getElementById('rcvPhone').value.trim();
     const method = document.querySelector('input[name="pay"]:checked')?.value;
-    if (!name || !phone) { Toast.show({ title: '수령 정보를 입력해주세요', type: 'warning' }); return }
+    if (!name || !phone) { Toast.show({ title: '수령 정보를 입력해주세요', type: 'warning' }); isPaying = false; return }
+    const phoneRegex = /^(01[016789])-?([0-9]{3,4})-?([0-9]{4})$/;
+    if (!phoneRegex.test(phone)) {
+      Toast.show({ title: '수령 정보 오류', msg: '전화번호를 잘못 입력했습니다. 올바른 휴대폰 번호를 입력해주세요.', type: 'warning' });
+      isPaying = false;
+      return;
+    }
     // FESTIO 12자리 규격 주문번호 생성 (푸드 F, 굿즈 G)
     const prefix = order.some(i => (i.type || i.cat || '').toUpperCase() === 'GOODS') ? 'G' : 'F';
     const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
@@ -197,7 +261,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const res = await fetch('/api/wallet/pay', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json', 'Authorization': token },
-          body: JSON.stringify({ amount: total })
+          body: JSON.stringify({ amount: finalTotal })
         });
         const data = await res.json();
 
@@ -209,7 +273,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // 2. MySQL 백엔드 DB에 주문 데이터 전송 (업주가 볼 수 있도록 처리)
         const shopOrderPayload = {
-          totalPrice: total,
+          totalPrice: finalTotal,
           userToken: token,
           festivalId: sessionStorage.getItem('currentFestivalId') || 1, // 필요 시 페스티벌 ID 추가
           items: order.map(item => ({
@@ -227,12 +291,12 @@ document.addEventListener('DOMContentLoaded', () => {
         });
         const orderData = await orderRes.json();
         if (!orderRes.ok || orderData.status !== 'success') {
-           throw new Error('주문 등록 실패');
+          throw new Error(orderData.message || '주문 등록 실패');
         }
 
       } catch (e) {
         console.error('Order save error:', e);
-        Toast.show({ title: '오류', msg: '주문 처리 중 문제가 발생했습니다.', type: 'error' });
+        Toast.show({ title: '오류', msg: e.message || '주문 처리 중 문제가 발생했습니다.', type: 'error' });
         isPaying = false;
         return;
       }
@@ -251,7 +315,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const methodMap = { card: '카드', toss: '토스결제' };
 
         await tossPayments.requestPayment(methodMap[method] || '카드', {
-          amount: total,
+          amount: finalTotal,
           orderId: 'SHOP_CART_' + Date.now(),
           orderName: order.length > 1 ? `${order[0].name} 외 ${order.length - 1}건` : order[0].name,
           customerName: name,

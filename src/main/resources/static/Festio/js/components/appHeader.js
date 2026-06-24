@@ -86,14 +86,23 @@
       </a>`;
   } else if (isLoggedIn && userRole === 'STAFF') {
     const userSpecificRole = localStorage.getItem('userSpecificRole') || sessionStorage.getItem('userSpecificRole');
-    const targetUrl = userSpecificRole === 'ROLE_GOODS_STAFF'
-      ? '/features/payment/staff/goods-store.html'
-      : '/features/payment/staff/store-management.html';
-    modeSwitchBtnHtml = `
+    
+    if (userSpecificRole === 'ROLE_GATE_STAFF') {
+      modeSwitchBtnHtml = `
+      <a href="/html/staff-scan.html" id="modeSwitchBtn" class="header-mode-switch-btn header-mode-switch-gate" aria-label="게이트 모드로 전환">
+        ${staffModeBtnSvg}
+        <span class="mode-btn-label">게이트 모드</span>
+      </a>`;
+    } else {
+      const targetUrl = userSpecificRole === 'ROLE_GOODS_STAFF'
+        ? '/features/payment/staff/goods-store.html'
+        : '/features/payment/staff/store-management.html';
+      modeSwitchBtnHtml = `
       <a href="${targetUrl}" id="modeSwitchBtn" class="header-mode-switch-btn header-mode-switch-staff" aria-label="업주 모드로 전환">
         ${staffModeBtnSvg}
         <span class="mode-btn-label">업주 모드</span>
       </a>`;
+    }
   }
 
   // 모드 전환 버튼 및 헤더 반응형 CSS 인라인 주입 (별도 CSS 파일 불필요)
@@ -134,6 +143,16 @@
         background: rgba(42, 193, 188, 0.22);
         transform: translateY(-1px);
         box-shadow: 0 3px 10px rgba(42,193,188,0.2);
+      }
+      .header-mode-switch-gate {
+        background: rgba(139, 92, 246, 0.12);
+        color: #8b5cf6;
+        border: 1.5px solid rgba(139, 92, 246, 0.35);
+      }
+      .header-mode-switch-gate:hover {
+        background: rgba(139, 92, 246, 0.22);
+        transform: translateY(-1px);
+        box-shadow: 0 3px 10px rgba(139,92,246,0.2);
       }
       @media (max-width: 768px) {
         .mode-btn-label { display: none; }

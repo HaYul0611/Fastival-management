@@ -34,15 +34,236 @@ window.goToTicketingFromReact = function (zoneName, seatsArray) {
 
   let dbZone = zoneName.replace('존', '').replace(/\s*\(.*?\)/g, '').trim();
 
-  const pendingSeats = seatsArray.map(seatNum => ({
+  selectedSeats = seatsArray.map(seatNum => ({
     seatId: `${dbZone}-${seatNum}`,
     seasonId: defaultSeasonId,
     rateId: defaultRateId
   }));
 
-  sessionStorage.setItem('pendingTicketingSeats', JSON.stringify(pendingSeats));
-  window.location.href = '/features/payment/staff/ticket-desk.html';
+  const modal = document.getElementById("ticket-pay-modal");
+  if (modal) {
+    modal.style.display = "flex";
+    initModalPayLogic(seasons, rates);
+  } else {
+    // Fallback: If modal element does not exist (e.g. on other pages), redirect to ticket-desk
+    sessionStorage.setItem('pendingTicketingSeats', JSON.stringify(selectedSeats));
+    window.location.href = '/features/payment/staff/ticket-desk.html';
+  }
 };
+
+async function initModalPayLogic(seasons, rates) {
+  const tbody = document.getElementById("modal-selected-seats-tbody");
+  const priceLbl = document.getElementById("modal-ticket-final-price-lbl");
+  const payBtn = document.getElementById("modal-btn-request-ticket-pay");
+  const closeBtn = document.getElementById("btn-close-pay-modal");
+  const festSelect = document.getElementById("modal-ticketing-festival-select");
+
+  if (!tbody || !priceLbl || !payBtn || !closeBtn || !festSelect) return;
+
+  // 1. Close modal handling
+  const closeModal = () => {
+    document.getElementById("ticket-pay-modal").style.display = "none";
+  };
+  closeBtn.onclick = closeModal;
+
+  // 2. Fetch festivals
+  let festivals = [];
+  try {
+    const festRes = await fetch('/api/festival');
+    if (festRes.ok) {
+      festivals = await festRes.json();
+    }
+  } catch (e) {
+    console.error("Failed to fetch festivals in modal", e);
+  }
+
+  festSelect.innerHTML = festivals.map(f => `<option value="${f.id}">${f.name}</option>`).join('');
+  let currentFestivalId = festivals.length > 0 ? festivals[0].id : null;
+
+  festSelect.onchange = (e) => {
+    currentFestivalId = e.target.value;
+  };
+
+  // 3. UI Update Helper
+  const updateModalSeatsUI = () => {
+    tbody.innerHTML = "";
+    let totalPrice = 0;
+
+    if (selectedSeats.length === 0) {
+      tbody.innerHTML = `<tr><td colspan="5" class="text-center" style="color:#a0aec0; padding:20px;">선택된 좌석이 없습니다.</td></tr>`;
+      priceLbl.innerText = "0원";
+      return;
+    }
+
+    selectedSeats.forEach((item, index) => {
+      const price = calculateTicketPrice(item.seatId, item.seasonId, item.rateId);
+      totalPrice += price;
+
+      const tr = document.createElement("tr");
+      tr.innerHTML = `
+        <td style="padding: 10px; font-weight: bold; color: #ffd65c; vertical-align: middle;">${item.seatId}</td>
+        <td style="padding: 10px; vertical-align: middle;">
+          <select class="modal-seat-season-select input-rigid input-small" style="padding: 5px; font-size:13px; width: 100%;" data-index="${index}">
+            ${seasons.map(s => `<option value="${s.id}" ${s.id === item.seasonId ? 'selected' : ''}>${s.name}</option>`).join("")}
+          </select>
+        </td>
+        <td style="padding: 10px; vertical-align: middle;">
+          <select class="modal-seat-rate-select input-rigid input-small" style="padding: 5px; font-size:13px; width: 100%;" data-index="${index}">
+            ${rates.map(r => `<option value="${r.id}" ${r.id === item.rateId ? 'selected' : ''}>${r.name}</option>`).join("")}
+          </select>
+        </td>
+        <td style="padding: 10px; text-align: right; font-weight: bold; font-family: var(--font-mono); vertical-align: middle;">${price.toLocaleString()}원</td>
+        <td style="padding: 10px; text-align: center; vertical-align: middle;">
+          <button type="button" class="modal-btn-remove-selected-seat" data-index="${index}" style="background: none; border: none; color: #ef4444; cursor: pointer; font-size: 18px; font-weight: bold;">&times;</button>
+        </td>
+      `;
+      tbody.appendChild(tr);
+    });
+
+    priceLbl.innerText = `${totalPrice.toLocaleString()}원`;
+
+    // Event bindings inside modal table
+    tbody.querySelectorAll(".modal-seat-season-select").forEach(sel => {
+      sel.onchange = (e) => {
+        const idx = parseInt(e.target.getAttribute("data-index"));
+        selectedSeats[idx].seasonId = e.target.value;
+        updateModalSeatsUI();
+      };
+    });
+
+    tbody.querySelectorAll(".modal-seat-rate-select").forEach(sel => {
+      sel.onchange = (e) => {
+        const idx = parseInt(e.target.getAttribute("data-index"));
+        selectedSeats[idx].rateId = e.target.value;
+        updateModalSeatsUI();
+      };
+    });
+
+    tbody.querySelectorAll(".modal-btn-remove-selected-seat").forEach(btn => {
+      btn.onclick = () => {
+        const idx = parseInt(btn.getAttribute("data-index"));
+        selectedSeats.splice(idx, 1);
+        updateModalSeatsUI();
+      };
+    });
+  };
+
+  updateModalSeatsUI();
+
+  // 4. Payment Trigger
+  payBtn.onclick = () => {
+    if (selectedSeats.length === 0) {
+      alert("예매할 좌석을 최소 1개 이상 선택해 주세요.");
+      return;
+    }
+
+    let totalPrice = 0;
+    selectedSeats.forEach(item => {
+      totalPrice += calculateTicketPrice(item.seatId, item.seasonId, item.rateId);
+    });
+
+    const seatIdsText = selectedSeats.map(item => item.seatId).join(", ");
+    const paymentTitle = `현장 일괄 예매 [좌석 ${seatIdsText}]`;
+
+    if (!window.IMP) {
+      alert("결제 모듈(PortOne)을 불러올 수 없습니다. HTML에 스크립트가 로드되었는지 확인해주세요.");
+      return;
+    }
+
+    const IMP = window.IMP;
+    IMP.init('imp81384776');
+
+    IMP.request_pay({
+      pg: 'html5_inicis.INIpayTest',
+      pay_method: 'card',
+      merchant_uid: 'TICKET_' + Date.now(),
+      name: paymentTitle,
+      amount: totalPrice,
+      buyer_name: '현장발권자',
+      buyer_tel: '010-0000-0000',
+    }, async (rsp) => {
+      if (rsp.success) {
+        const seatIds = selectedSeats.map(s => s.seatId);
+
+        try {
+          const res = await fetch('/api/order/ticket', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              totalPrice: totalPrice,
+              seats: seatIds,
+              eventNo: currentFestivalId
+            })
+          });
+
+          if (!res.ok) throw new Error("API Error");
+          const result = await res.json();
+
+          publish("payment-complete", { customer: "현장발권자", amount: totalPrice });
+          addNotification("TICKET", `현장 고객 일괄 예매 완료: 좌석 [${seatIdsText}]`);
+
+          // Print Receipt
+          const secretStr = result.qrPayload.replace('SECRET:', '');
+          const ticketUrl = `${window.location.origin}/features/user/ticket/view.html?orderId=${result.orderId}&secret=${secretStr}`;
+          const qrImgSrc = `https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(ticketUrl)}`;
+
+          const printWindow = window.open('', '_blank', 'width=400,height=700');
+          const receiptHtml = `
+            <html>
+            <head>
+              <title>영수증 티켓 출력</title>
+              <style>
+                body { font-family: 'Malgun Gothic', monospace; width: 300px; margin: 0 auto; padding: 20px; text-align: center; color: black; background: white; }
+                .divider { border-bottom: 1px dashed black; margin: 15px 0; }
+                .title { font-size: 22px; font-weight: bold; margin-bottom: 5px; }
+                .qrcode { margin: 20px 0; }
+                .info { font-size: 14px; text-align: left; line-height: 1.6; }
+                .footer { font-size: 12px; margin-top: 20px; }
+                @media print {
+                  @page { margin: 0; }
+                  body { width: 100%; margin: 0; padding: 0; }
+                }
+              </style>
+            </head>
+            <body>
+              <div class="title">FESTIO 영수증 티켓</div>
+              <div>[ 현장결제 완료 ]</div>
+              <div class="divider"></div>
+              <div class="info">
+                <strong>주문번호:</strong> ORD-${result.orderId}<br>
+                <strong>좌석정보:</strong> ${seatIdsText}<br>
+                <strong>티켓번호:</strong> ${result.ticketNumber}<br>
+                <strong>결제금액:</strong> ${totalPrice.toLocaleString()}원
+              </div>
+              <div class="divider"></div>
+              <div class="qrcode">
+                <img src="${qrImgSrc}" width="160" height="160" onload="window.print();" />
+              </div>
+              <div style="font-weight: bold; font-size: 16px; margin-bottom: 10px;">스마트폰으로 스캔하세요!</div>
+              <div class="footer">
+                카메라 앱으로 위 QR코드를 스캔하시면<br>입장용 모바일 티켓이 열립니다.
+              </div>
+              <div class="divider"></div>
+              <div>감사합니다</div>
+            </body>
+            </html>
+          `;
+          printWindow.document.write(receiptHtml);
+          printWindow.document.close();
+
+          selectedSeats = [];
+          closeModal();
+          location.reload(); // Refresh seat layout grid immediately
+        } catch (e) {
+          alert("서버 오류: 예매를 저장하지 못했습니다.");
+          console.error(e);
+        }
+      } else {
+        alert("결제 실패: " + (rsp.error_msg || "사용자가 결제를 취소했습니다."));
+      }
+    });
+  };
+}
 
 // Apply theme from localStorage or default to light-theme
 const savedTheme = localStorage.getItem("staff_theme") || "light";
