@@ -49,7 +49,7 @@ document.addEventListener('DOMContentLoaded', async () => {
    * @param {string} hexSecret - 16진수 시크릿 키
    * @returns {Promise<string>} 생성된 6자리 TOTP 코드
    */
-  async function generateTotpCode(hexSecret) {
+  async function generateTotpCode(hexSecret, timeOffset = 0) {
     if (!hexSecret) hexSecret = 'dummysecret12345';
     let keyBytes;
     try {
@@ -61,7 +61,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       "raw", keyBytes, { name: "HMAC", hash: "SHA-1" }, false, ["sign"]
     );
     const counterBytes = new Uint8Array(8);
-    let temp = Math.floor(Date.now() / 180000);
+    let temp = Math.floor(Date.now() / 180000) + timeOffset;
     for (let i = 7; i >= 0; i--) {
       counterBytes[i] = temp & 0xFF;
       temp = Math.floor(temp / 256);
@@ -88,8 +88,11 @@ document.addEventListener('DOMContentLoaded', async () => {
     const order = window.currentOrders.find(o => o.order_number === orderNo);
     let secret = order?.totp_secret || 'dummysecret12345';
 
+    let _qrEpochOffset = 0;
+    let _qrStartTime = 0;
+
     const updateQr = async () => {
-      const totpCode = await generateTotpCode(secret);
+      const totpCode = await generateTotpCode(secret, _qrEpochOffset);
 
       let prefix = orderNo.startsWith('F') ? 'F' : (orderNo.startsWith('G') ? 'G' : 'O');
       let numericId = parseInt(orderNo.replace(/[^0-9]/g, ''), 10);
@@ -193,13 +196,22 @@ document.addEventListener('DOMContentLoaded', async () => {
       }, 50);
 
       // 남은 시간 초기화
-      let timeLeft = 180 - Math.floor((Date.now() % 180000) / 1000);
+      _qrStartTime = Date.now();
 
       const bar = document.getElementById('totpTimerBar');
       const txt = document.getElementById('totpTimeTxt');
       if (totpTimer) clearInterval(totpTimer);
 
       const updateUI = () => {
+        let elapsed = Math.floor((Date.now() - _qrStartTime) / 1000);
+        let timeLeft = 180 - elapsed;
+
+        if (timeLeft <= 0) {
+          clearInterval(totpTimer);
+          updateQr();
+          return;
+        }
+
         bar.style.width = (timeLeft / 180 * 100) + '%';
         const m = String(Math.floor(timeLeft / 60)).padStart(2, '0');
         const s = String(timeLeft % 60).padStart(2, '0');
@@ -216,23 +228,19 @@ document.addEventListener('DOMContentLoaded', async () => {
       };
       updateUI(); // 초기 렌더
 
-      totpTimer = setInterval(() => {
-        timeLeft--;
-        if (timeLeft <= 0) {
-          clearInterval(totpTimer);
-          updateQr();
-        } else {
-          updateUI();
-        }
-      }, 1000);
+      totpTimer = setInterval(updateUI, 1000);
     };
 
     const btnReset = document.getElementById('btnResetTotp');
     if (btnReset) {
       btnReset.onclick = () => {
+        _qrEpochOffset += 1;
         btnReset.style.transition = 'transform 0.3s';
         btnReset.style.transform = `rotate(180deg)`;
         updateQr();
+        if (window.FS && window.FS.Toast) {
+          window.FS.Toast.info('현재 유효한 보안코드 및 남은 시간과 동기화되었습니다.');
+        }
         setTimeout(() => btnReset.style.transform = `rotate(0deg)`, 300);
       };
     }
@@ -271,6 +279,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         <div style="flex:1; display:flex; justify-content:space-between;">
           <div>
             <div style="font-weight:700; color:var(--g900); font-size:15px; margin-bottom:4px;">${item.product_name || '상품명'}</div>
+            ${(item.options || item.selectedOptions) ? `<div style="font-size:13px; color:var(--g600); margin-bottom:2px;">옵션: ${item.options || item.selectedOptions}</div>` : ''}
             <div style="font-size:13px; color:var(--g500);">수량: ${item.quantity || 1}개</div>
           </div>
           <div style="text-align:right">
@@ -410,7 +419,7 @@ function renderOrderCard(order) {
 
     steps = `
       <div class="st-line-bg"></div>
-      <div class="st-progress-bar"><div class="st-progress" style="width:${isDone3 ? 100 : (isDone2 ? 66 : 33)}%;"><span class="st-truck ${flipClass}">${movingEmoji}</span></div></div>
+      <div class="st-progress-bar"><div class="st-progress" style="width:${isDone3 ? 100 : (isDone2 ? 66.666 : 33.333)}%;"><span class="st-truck ${flipClass}">${movingEmoji}</span></div></div>
       <div class="st-step done"><div class="st-dot"></div><div class="st-label">결제완료</div></div>
       <div class="st-step ${isDone2 ? 'done' : 'active'}"><div class="st-dot"></div><div class="st-label">${prepLabel}</div></div>
       <div class="st-step ${isDone3 ? 'done' : (isDone2 ? 'active' : '')}"><div class="st-dot"></div><div class="st-label">수령전</div></div>
@@ -428,7 +437,7 @@ function renderOrderCard(order) {
 
     steps = `
       <div class="st-line-bg"></div>
-      <div class="st-progress-bar"><div class="st-progress" style="width:${isDone3 ? 100 : (isDone2 ? 66 : 33)}%;"><span class="st-truck ${flipClass}">${movingEmoji}</span></div></div>
+      <div class="st-progress-bar"><div class="st-progress" style="width:${isDone3 ? 100 : (isDone2 ? 66.666 : 33.333)}%;"><span class="st-truck ${flipClass}">${movingEmoji}</span></div></div>
       <div class="st-step done"><div class="st-dot"></div><div class="st-label">결제완료</div></div>
       <div class="st-step ${isDone2 ? 'done' : 'active'}"><div class="st-dot"></div><div class="st-label">배송준비</div></div>
       <div class="st-step ${isDone3 ? 'done' : (isDone2 ? 'active' : '')}"><div class="st-dot"></div><div class="st-label">배송중</div></div>
@@ -453,6 +462,7 @@ function renderOrderCard(order) {
       <div class="oi-info">
         <span class="oi-status ${isPickup ? 'pickup' : 'shipping'}">${isPickup ? (isFood ? '푸드트럭 현장수령' : '현장 픽업') : '일반 배송'}</span>
         <div class="oi-name">${item.product_name || '상품'}</div>
+        ${(item.options || item.selectedOptions) ? `<div class="oi-opt" style="margin-bottom:4px; color:var(--g600);">옵션: ${item.options || item.selectedOptions}</div>` : ''}
         <div class="oi-opt">수량: ${item.quantity || 1}개</div>
         <div class="oi-price">${(item.price_at_purchase || 0).toLocaleString()}원</div>
       </div>
@@ -462,12 +472,15 @@ function renderOrderCard(order) {
 
   return `
     <div class="order-card">
-      <div class="order-header">
-        <div>
+      <div class="order-header" style="align-items: flex-start;">
+        <div style="display: flex; flex-direction: column; gap: 8px;">
           <span class="order-date">${new Date(order.created_at).toLocaleDateString()}</span>
-          <span class="order-no barcode-text">주문번호 ${window.FS.BarcodeUtils.encodeFixedOrder(order.order_number.charAt(0), parseInt(order.order_number.replace(/[^0-9]/g, '') || 1, 10))}</span>
+          <div style="display: flex; align-items: center; gap: 6px;">
+            <span style="font-size: 13px; color: var(--g500);">주문번호</span>
+            <span class="order-no barcode-text" style="font-weight: 700; margin-left: 0;">${window.FS.BarcodeUtils.encodeFixedOrder(order.order_number.charAt(0), parseInt(order.order_number.replace(/[^0-9]/g, '') || 1, 10))}</span>
+          </div>
         </div>
-        <a href="javascript:void(0)" onclick="openDetailModal('${order.order_number}')" class="order-detail-btn">주문상세 보기 &gt;</a>
+        <a href="javascript:void(0)" onclick="openDetailModal('${order.order_number}')" class="order-detail-btn" style="white-space: nowrap; flex-shrink: 0; padding-top: 2px;">주문상세 보기 &gt;</a>
       </div>
       <div class="order-items">${itemsHtml}</div>
       <div class="status-tracker">${steps}</div>
@@ -477,7 +490,7 @@ function renderOrderCard(order) {
         <button class="btn-qr" onclick="openQrModal('${order.order_number}')" style="background:var(--black); color:var(--white); border:none; padding:10px 16px; border-radius:8px; font-weight:700; cursor:pointer; display:flex; align-items:center; gap:6px;">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <rect x="3" y="3" width="7" height="7" rx="1" /><rect x="14" y="3" width="7" height="7" rx="1" /><rect x="3" y="14" width="7" height="7" rx="1" /><rect x="14" y="14" width="3" height="3" /><rect x="18" y="18" width="3" height="3" /><rect x="14" y="18" width="3" height="3" /><rect x="18" y="14" width="3" height="3" />
-          </svg> QR 픽업증 보기
+          </svg> QR 확인
         </button>
         ` : ''}
       </div>

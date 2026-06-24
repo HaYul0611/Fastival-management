@@ -48,13 +48,13 @@ const DS = {
 /* ── 로드 ───────────────────────────────────────────────────── */
 function load() {
   const id = parseInt(new URLSearchParams(location.search).get('id'));
-  
+
   if (!window.FS_PRODUCTS || window.FS_PRODUCTS.length === 0) {
     // shop.js에서 데이터 로딩이 끝날 때까지 100ms 대기
     setTimeout(load, 100);
     return;
   }
-  
+
   const p = window.FS_PRODUCTS.find(x => x.id === id);
   if (!p) {
     document.getElementById('detailWrap').innerHTML = `
@@ -67,7 +67,7 @@ function load() {
   DS.product = p; DS.unitPrice = p.price; DS.qty = 1;
   document.title = `${p.name} — FESTIO SHOP`;
   renderDetail(p);
-  
+
   // 연관 상품 (이 상점의 다른 상품) 표시
   if (p.storeId) {
     renderRelatedProducts(p.storeId, p.id);
@@ -78,25 +78,26 @@ function renderRelatedProducts(storeId, currentProductId) {
   const related = window.FS_PRODUCTS.filter(x => x.storeId === storeId && x.id !== currentProductId).slice(0, 4);
   const grid = document.getElementById('relatedProductsGrid');
   if (!grid) return;
-  
+
   if (related.length === 0) {
     grid.parentElement.style.display = 'none';
     return;
   }
-  
+
   grid.innerHTML = related.map(rp => {
     const sold = rp.stock === 0;
     const badges = [];
     if (!sold && rp.cat === 'food' && rp.wait > 0) badges.push(`<span class="badge badge-wait">대기 ${rp.wait}분</span>`);
     if (!sold && rp.stock > 0 && rp.stock <= 5) badges.push(`<span class="badge badge-low">잔여 ${rp.stock}개</span>`);
-    
+
     return `
       <article class="pcard${sold ? ' sold' : ''}" data-id="${rp.id}" tabindex="0" onclick="location.href='shop-detail.html?id=${rp.id}'" style="cursor:pointer">
         <div class="pcard-img-area">
           ${badges.length ? `<div class="pcard-badges">${badges.join('')}</div>` : ''}
-          ${rp.imageUrl 
-            ? `<img src="${rp.imageUrl}" class="pcard-img" alt="${rp.name}">` 
-            : `<div class="pcard-placeholder">${smallPlaceholder(rp.cat)}</div>`}
+          ${rp.imageUrl
+        ? `<img src="${rp.imageUrl}" class="pcard-img" alt="${rp.name}" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+               <div class="pcard-placeholder" style="display:none; align-items:center; justify-content:center; width:100%; height:100%;">${smallPlaceholder(rp.cat)}</div>`
+        : `<div class="pcard-placeholder" style="display:flex; align-items:center; justify-content:center; width:100%; height:100%;">${smallPlaceholder(rp.cat)}</div>`}
           ${sold ? `<div class="sold-cover"><span class="sold-label">SOLD OUT</span></div>` : ''}
         </div>
         <div class="pcard-body">
@@ -132,7 +133,7 @@ function renderDetail(p) {
   /* 갤러리 */
   const main = document.getElementById('galMain');
   main.className = `gal-main gal-main-cat-${p.cat}`;
-  
+
   // 메인 이미지 렌더링
   if (p.imageUrl) {
     document.getElementById('galPlaceholder').style.display = 'none';
@@ -144,6 +145,15 @@ function renderDetail(p) {
     mainImg.style.objectFit = 'contain';
     mainImg.style.backgroundColor = 'var(--white)';
     mainImg.id = 'actualMainImg';
+
+    // 에러 발생 시 플레이스홀더 렌더링
+    mainImg.onerror = function () {
+      this.style.display = 'none';
+      const ph = document.getElementById('galPlaceholder');
+      ph.style.display = 'flex';
+      ph.innerHTML = bigPlaceholder(p.cat);
+    };
+
     main.appendChild(mainImg);
   } else {
     document.getElementById('galPlaceholder').innerHTML = bigPlaceholder(p.cat);
@@ -152,9 +162,10 @@ function renderDetail(p) {
   // 썸네일 렌더링 (실무에서는 p.images 배열을 순회하지만 현재는 단일 이미지만 있으므로 첫번째 칸에만 실제 이미지 적용)
   const thumbs = document.getElementById('galThumbs');
   thumbs.innerHTML = Array.from({ length: 4 }, (_, i) => {
-    let thumbContent = smallPlaceholder(p.cat);
+    let thumbContent = `<div style="display:flex; width:100%; height:100%; align-items:center; justify-content:center;">${smallPlaceholder(p.cat)}</div>`;
     if (i === 0 && p.imageUrl) {
-      thumbContent = `<img src="${p.imageUrl}" style="width:100%; height:100%; object-fit:contain; border-radius:4px; background-color:var(--white);">`;
+      thumbContent = `<img src="${p.imageUrl}" style="width:100%; height:100%; object-fit:contain; border-radius:4px; background-color:var(--white);" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+      <div style="display:none; width:100%; height:100%; align-items:center; justify-content:center;">${smallPlaceholder(p.cat)}</div>`;
     }
     return `
       <div class="gal-thumb${i === 0 ? ' on' : ''}" role="listitem" tabindex="0"
@@ -162,10 +173,10 @@ function renderDetail(p) {
         ${thumbContent}
       </div>`;
   }).join('');
-  
+
   thumbs.querySelectorAll('.gal-thumb').forEach((t, idx) => {
-    const act = () => { 
-      thumbs.querySelectorAll('.gal-thumb').forEach(x => x.classList.remove('on')); 
+    const act = () => {
+      thumbs.querySelectorAll('.gal-thumb').forEach(x => x.classList.remove('on'));
       t.classList.add('on');
       // 실제 여러 이미지 배열이 있다면 메인 이미지를 교체하는 로직 추가
     };

@@ -708,20 +708,9 @@ window.initCommentUI = function () {
 
   // 알림 배지 카운트 갱신
   async function updateNotificationBadge() {
-    if (!isLoggedIn) return;
-    try {
-      const notifs = await window.notificationApi.getMyNotifications();
-      const unreadCount = notifs.filter(n => !n.is_read).length;
-      const badge = document.getElementById('notificationBadge');
-      if (badge) {
-        if (unreadCount > 0) {
-          badge.style.display = 'block';
-          badge.innerText = unreadCount > 99 ? '99+' : unreadCount;
-        } else {
-          badge.style.display = 'none';
-        }
-      }
-    } catch (e) { console.error(e); }
+    if (typeof window.fetchFestioNotifications === 'function') {
+      window.fetchFestioNotifications();
+    }
   }
 
   // 유틸: XSS 방지
@@ -751,86 +740,7 @@ window.initCommentUI = function () {
 
 // 페이지 최초 로드 시 알림 버튼 클릭 이벤트 설정 및 배지 초기화
 document.addEventListener('DOMContentLoaded', () => {
-  const btnNotif = document.getElementById('btnHeaderNotification');
-  if (btnNotif) {
-    btnNotif.addEventListener('click', async () => {
-      // 이미 열려있으면 닫기
-      let dropdown = document.getElementById('notificationDropdown');
-      if (dropdown) {
-        dropdown.remove();
-        return;
-      }
-
-      // 알림 드롭다운 생성
-      dropdown = document.createElement('div');
-      dropdown.id = 'notificationDropdown';
-      dropdown.style.cssText = 'position:absolute; top:45px; right:0; width:300px; background:#fff; border-radius:12px; box-shadow:0 10px 25px rgba(0,0,0,0.1); border:1px solid #e5e7eb; z-index:9999; display:flex; flex-direction:column; overflow:hidden; max-height:400px;';
-
-      dropdown.innerHTML = `
-        <div style="padding:1rem; border-bottom:1px solid #e5e7eb; display:flex; justify-content:space-between; align-items:center;">
-          <h4 style="margin:0; font-weight:700; color:#111827;">알림</h4>
-        </div>
-        <div id="notificationList" style="overflow-y:auto; flex:1;">
-          <div style="padding:2rem; text-align:center; color:#9ca3af; font-size:0.9rem;">로딩 중...</div>
-        </div>
-      `;
-      btnNotif.appendChild(dropdown);
-
-      // 빈 공간 클릭 시 드롭다운 닫기
-      setTimeout(() => {
-        const closeDropdown = (e) => {
-          if (!btnNotif.contains(e.target)) {
-            dropdown.remove();
-            document.removeEventListener('click', closeDropdown);
-          }
-        };
-        document.addEventListener('click', closeDropdown);
-      }, 10);
-
-      // 데이터 패치
-      try {
-        const notifs = await window.notificationApi.getMyNotifications();
-        const listContainer = dropdown.querySelector('#notificationList');
-        listContainer.innerHTML = '';
-
-        if (!notifs || notifs.length === 0) {
-          listContainer.innerHTML = '<div style="padding:2rem; text-align:center; color:#9ca3af; font-size:0.9rem;">새로운 알림이 없습니다.</div>';
-          return;
-        }
-
-        for (const n of notifs) {
-          const item = document.createElement('div');
-          item.style.cssText = `padding:1rem; border-bottom:1px solid #f3f4f6; cursor:pointer; background:${n.is_read ? '#fff' : '#f0fdf4'}; transition:background 0.2s;`;
-
-          let msg = '';
-          if (n.type === 'REPLY') msg = `<b>${n.sender?.name || '누군가'}</b>님이 대댓글을 남겼습니다.`;
-          else if (n.type === 'LIKE') msg = `<b>${n.sender?.name || '누군가'}</b>님이 회원님의 댓글을 좋아합니다.`;
-
-          const dateStr = new Date(n.created_at).toLocaleDateString();
-          item.innerHTML = `
-            <div style="font-size:0.9rem; color:#374151; margin-bottom:0.3rem;">${msg}</div>
-            <div style="font-size:0.75rem; color:#9ca3af;">${dateStr}</div>
-          `;
-
-          item.addEventListener('click', async (e) => {
-            e.stopPropagation(); // 드롭다운 닫히지 않도록
-            if (!n.is_read) {
-              await window.notificationApi.markAsRead(n.id);
-              item.style.background = '#fff';
-              n.is_read = true;
-              if (typeof window.updateNotificationBadge === 'function') {
-                window.updateNotificationBadge();
-              }
-            }
-          });
-
-          listContainer.appendChild(item);
-        }
-      } catch (err) {
-        console.error(err);
-      }
-    });
-  }
+  // btnHeaderNotification 클릭 이벤트는 common.js에서 처리하므로 삭제
 
   // 페이지 로드 시 알림 초기화
   if (typeof window.updateNotificationBadge === 'function') {

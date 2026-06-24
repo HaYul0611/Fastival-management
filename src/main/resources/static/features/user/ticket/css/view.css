@@ -114,6 +114,24 @@ body.dark-theme .timer-text {
     color: #8b949e;
 }
 
+.ticket-order-no {
+    color: #333;
+    transition: color 0.3s;
+}
+
+body.dark-theme .ticket-order-no {
+    color: #ffffff;
+}
+
+.timer-sec-text {
+    color: #2D1A54;
+    transition: color 0.3s;
+}
+
+body.dark-theme .timer-sec-text {
+    color: #ffffff;
+}
+
 .warning {
     font-size: 11px;
     color: #ef4444;
