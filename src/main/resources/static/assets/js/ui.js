@@ -353,7 +353,7 @@ export async function initPage(viewId = 'dashboard') {
         <div id="qr-camera-reader" style="flex:1; width:100%; min-height:100%; border:none; background:#000;"></div>
         
         <!-- Confirm Scan Overlay -->
-        <div id="scan-confirm-screen" style="display:none; position:absolute; bottom:10%; left:50%; transform:translateX(-50%); z-index:10000; width:90%; max-width:350px; background:rgba(15,23,42,0.95); border-radius:16px; box-shadow:0 15px 35px rgba(0,0,0,0.8); padding:20px; text-align:center; border:2px solid #eab308;">
+        <div id="scan-confirm-screen" style="display:none; position:absolute; top:50%; left:50%; transform:translate(-50%, -50%); z-index:10000; width:90%; max-width:350px; background:rgba(15,23,42,0.95); border-radius:16px; box-shadow:0 15px 35px rgba(0,0,0,0.8); padding:20px; text-align:center; border:2px solid #eab308;">
           <h2 style="margin:0 0 10px 0; font-size:20px; font-weight:900; color:#eab308;">입장 처리 대기</h2>
           <div id="scan-confirm-ticket" style="font-family:var(--font-mono); color:#f8fafc; font-size:18px; margin-bottom:15px; font-weight:bold;"></div>
           <p style="margin:0 0 20px 0; font-size:15px; color:#cbd5e1;">이 티켓을 입장 처리하시겠습니까?</p>
@@ -364,11 +364,11 @@ export async function initPage(viewId = 'dashboard') {
         </div>
         
         <!-- Active Validation Overlay -->
-        <div id="scan-validation-screen" style="display:none; position:absolute; bottom:10%; left:50%; transform:translateX(-50%); z-index:9999; width:90%; max-width:350px; background:rgba(15,23,42,0.95); border-radius:16px; box-shadow:0 15px 35px rgba(0,0,0,0.8); padding:20px; text-align:center; border:2px solid #38bdf8;">
-          <h2 id="scan-result-title" style="margin:0 0 5px 0; font-size:24px; font-weight:900;">VALID</h2>
-          <div id="scan-result-ticket-number" style="font-family:var(--font-mono); color:#38bdf8; font-size:20px; margin-bottom:10px; font-weight:bold; letter-spacing:1px;"></div>
-          <p id="scan-result-msg" style="margin:0; font-size:14px; color:#cbd5e1; word-break:keep-all;"></p>
-          <button id="btn-close-scan-overlay" class="btn btn-rigid btn-green" style="margin-top:15px; width:100%; font-weight:bold; padding:12px;">닫기</button>
+        <div id="scan-validation-screen" style="display:none; position:absolute; top:50%; left:50%; transform:translate(-50%, -50%); z-index:9999; width:90%; max-width:350px; background:#ffffff; border-radius:16px; box-shadow:0 12px 36px rgba(0,0,0,0.15); padding:24px; text-align:center; border:3px solid #38bdf8; color:#1e293b;">
+          <h2 id="scan-result-title" style="margin:0 0 10px 0; font-size:24px; font-weight:900;">VALID</h2>
+          <div id="scan-result-ticket-number" style="font-family:var(--font-mono); color:#475569; font-size:18px; margin-bottom:15px; font-weight:600; letter-spacing:1px;"></div>
+          <p id="scan-result-msg" style="margin:0; font-size:16px; font-weight:bold; color:#334155; word-break:keep-all;"></p>
+          <button id="btn-close-scan-overlay" class="btn btn-rigid btn-green" style="margin-top:20px; width:100%; font-weight:bold; padding:15px; font-size:18px;">닫기</button>
         </div>
       </div>
     `;
@@ -455,7 +455,11 @@ export async function initPage(viewId = 'dashboard') {
   // 헤더에 사용자 정보 표시
   if (headerUser) headerUser.innerText = `스태프: ${user.name}`;
   if (headerCheckpoint && DB.activeCheckpoint) {
-    headerCheckpoint.innerText = `[ ${DB.activeCheckpoint.event || '} - ${DB.activeCheckpoint.tenant || '} ]`;
+    if (DB.activeCheckpoint.tenant) {
+      headerCheckpoint.innerText = `[ ${DB.activeCheckpoint.event} - ${DB.activeCheckpoint.tenant} ]`;
+    } else {
+      headerCheckpoint.innerText = `[ ${DB.activeCheckpoint.event} ]`;
+    }
   }
 
   _setupSharedUI();
@@ -539,7 +543,11 @@ function checkAuthSession(defaultView = "dashboard") {
     document.body.classList.remove("not-logged-in");
     if (headerUser) headerUser.innerText = `스태프: ${user.name}`;
     if (headerCheckpoint) {
-      headerCheckpoint.innerText = `[ ${DB.activeCheckpoint.event} / ${DB.activeCheckpoint.tenant} ]`;
+      if (DB.activeCheckpoint.tenant) {
+        headerCheckpoint.innerText = `[ ${DB.activeCheckpoint.event} - ${DB.activeCheckpoint.tenant} ]`;
+      } else {
+        headerCheckpoint.innerText = `[ ${DB.activeCheckpoint.event} ]`;
+      }
     }
     const activeView = document.querySelector(".content-view.active");
     if (!activeView || activeView.id === "view-login") {
@@ -1157,7 +1165,11 @@ async function renderDashboard() {
 
         const headerCheckpoint = document.getElementById("header-checkpoint");
         if (headerCheckpoint) {
-          headerCheckpoint.innerText = `[ ${festName} / ${DB.activeCheckpoint.tenant || ''} ]`;
+          if (DB.activeCheckpoint.tenant) {
+            headerCheckpoint.innerText = `[ ${festName} - ${DB.activeCheckpoint.tenant} ]`;
+          } else {
+            headerCheckpoint.innerText = `[ ${festName} ]`;
+          }
         }
 
         // 강제 새로고침
@@ -1172,7 +1184,11 @@ async function renderDashboard() {
     }
     const headerCheckpoint = document.getElementById("header-checkpoint");
     if (headerCheckpoint && DB.activeCheckpoint) {
-      headerCheckpoint.innerText = `[ ${DB.activeCheckpoint.event || '} - ${DB.activeCheckpoint.tenant || '} ]`;
+      if (DB.activeCheckpoint.tenant) {
+        headerCheckpoint.innerText = `[ ${DB.activeCheckpoint.event} - ${DB.activeCheckpoint.tenant} ]`;
+      } else {
+        headerCheckpoint.innerText = `[ ${DB.activeCheckpoint.event} ]`;
+      }
     }
   }
 

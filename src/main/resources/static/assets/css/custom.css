@@ -2295,18 +2295,19 @@ body.light-theme .temp-accounts-box li:hover {
 /* Scan Validation Popup */
 .scan-validation-popup {
   position: absolute;
-  bottom: 10%;
+  top: 50%;
   left: 50%;
-  transform: translateX(-50%);
+  transform: translate(-50%, -50%);
   z-index: 9999;
   width: 90%;
   max-width: 350px;
-  background: rgba(15, 23, 42, 0.95);
+  background: #ffffff;
   border-radius: 16px;
-  box-shadow: 0 15px 35px rgba(0, 0, 0, 0.8);
-  padding: 20px;
+  box-shadow: 0 12px 36px rgba(0, 0, 0, 0.15);
+  padding: 24px;
   text-align: center;
-  border: 2px solid #38bdf8;
+  border: 3px solid #38bdf8;
+  color: #1e293b;
 }
 
 .scan-validation-popup.status-valid {
@@ -2428,12 +2429,23 @@ body.light-theme .temp-accounts-box li:hover {
   z-index: 9999 !important;
 }
 
+.notif-popover-rigid.active,
 .notif-popover-rigid.show {
   display: flex;
 }
 
 .bell-container {
   position: relative;
+}
+
+@media (max-width: 480px) {
+  .notif-popover-rigid {
+    position: fixed;
+    top: 60px;
+    right: 10px;
+    width: calc(100vw - 20px);
+    max-width: 320px;
+  }
 }
 
 /* ──────────────────────────────────────────────
@@ -2683,4 +2695,73 @@ body.light-theme .temp-accounts-box li:hover {
 .btn-ticketing-pay:active {
   transform: translateY(0);
   box-shadow: 0 2px 8px rgba(99, 102, 241, 0.15);
+}
+
+/* ──────────────────────────────────────────────
+   모바일 반응형 스타일 (Mobile Responsive)
+   ────────────────────────────────────────────── */
+@media (max-width: 768px) {
+  .ticketing-card {
+    margin: 15px;
+    border-radius: 12px;
+  }
+
+  .ticketing-header {
+    padding: 15px 20px;
+    font-size: 15px;
+  }
+
+  .ticketing-body {
+    padding: 15px 20px;
+    gap: 12px;
+  }
+
+  .ticketing-row {
+    padding: 12px 15px;
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+
+  .ticketing-info {
+    flex: 1 1 100%;
+    margin-bottom: 5px;
+  }
+
+  .ticketing-controls {
+    flex: 1 1 auto;
+    justify-content: flex-start;
+  }
+
+  .ticketing-row-price {
+    flex: 1 1 auto;
+    text-align: right;
+  }
+
+  .btn-ticketing-qty {
+    width: 32px;
+    height: 32px;
+    font-size: 16px;
+  }
+
+  .ticketing-qty-display {
+    min-width: 30px;
+    font-size: 18px;
+  }
+
+  .ticketing-total-box {
+    padding: 15px 20px;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+  }
+
+  .ticketing-total-left {
+    width: 100%;
+  }
+
+  .ticketing-total-amount {
+    font-size: 26px;
+    width: 100%;
+    text-align: right;
+  }
 }

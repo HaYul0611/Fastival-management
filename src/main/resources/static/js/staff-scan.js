@@ -157,7 +157,7 @@ async function init() {
 
     bindEvents();
     await startCamera();
-    loadRecentLogs();
+    // loadRecentLogs(); // 초기 더미 로그가 뜨지 않게 주석 처리
     subscribeRealtime();
 
     // 오프라인 복구 시 동기화 리스너 등록
@@ -620,6 +620,7 @@ async function renderResult(item, result, code) {
             </button>`;
     }
 
+    let cardClass = isSuccess ? 'success' : (isException ? 'exception' : 'fail');
     ssResultCard.className = `ss-result-card ${cardClass}`;
     ssResultCard.hidden = true; // 인라인 결과 카드 오버레이 사용 안함 (중앙 토스트 팝업만 사용)
 
