@@ -5,22 +5,40 @@ import { initializeQRScanner, stopQRScanner, validateTicketState, validateExchan
 import { getSeatStats, renderSeatMap, setupRealtimeSeatSync, manualReserveSeat, releaseSeat } from './seats.js';
 import { calculateTicketPrice, requestTossPayment, requestRefund, acceptRefund } from './payments.js';
 import { getGoodsAvailableStock, lockGoodsStock, unlockGoodsStock, finalizeGoodsPurchase, updateGoodsStock, registerGoods, toggleFoodIngredientOut, registerFood, updateSeasonalPrice, toggleActiveSeason } from './inventory.js';
+import { injectLayout } from './layout.js';
 
-// DOM 선택자
-const sidebar = document.getElementById("sidebar");
-const toggleSidebarBtn = document.getElementById("toggle-sidebar-btn");
-const mainContent = document.getElementById("main-content");
-const views = document.querySelectorAll(".content-view");
-const menuLinks = document.querySelectorAll(".menu-link");
+// DOM 선택자 (동적 주입을 위해 let 사용)
+let sidebar;
+let toggleSidebarBtn;
+let mainContent;
+let views;
+let menuLinks;
 
-const headerCheckpoint = document.getElementById("header-checkpoint");
-const headerUser = document.getElementById("header-user");
-const logoutBtn = document.getElementById("logout-btn");
+let headerCheckpoint;
+let headerUser;
+let logoutBtn;
 
-const notifBell = document.getElementById("notif-bell");
-const notifBadge = document.getElementById("notif-badge");
-const notifPopover = document.getElementById("notif-popover");
-const notifList = document.getElementById("notif-list");
+let notifBell;
+let notifBadge;
+let notifPopover;
+let notifList;
+
+export function initGlobalDOM() {
+  sidebar = document.getElementById("sidebar");
+  toggleSidebarBtn = document.getElementById("toggle-sidebar-btn");
+  mainContent = document.getElementById("main-content");
+  views = document.querySelectorAll(".content-view");
+  menuLinks = document.querySelectorAll(".menu-link");
+
+  headerCheckpoint = document.getElementById("header-checkpoint");
+  headerUser = document.getElementById("header-user");
+  logoutBtn = document.getElementById("logout-btn");
+
+  notifBell = document.getElementById("notif-bell");
+  notifBadge = document.getElementById("notif-badge");
+  notifPopover = document.getElementById("notif-popover");
+  notifList = document.getElementById("notif-list");
+}
 
 // 앱 UI 초기화
 let selectedSeats = [];
@@ -301,7 +319,9 @@ export async function loadSidebarMenu(viewId) {
   }
 }
 
-export function initUI() {
+export async function initUI() {
+  await injectLayout();
+  initGlobalDOM();
   checkAuthSession("dashboard");
   _setupSharedUI();
   setupGlobalSubscriptions();
@@ -320,6 +340,8 @@ export function initUI() {
 
 // 개별 페이지 초기화
 export async function initPage(viewId = 'dashboard') {
+  await injectLayout();
+  initGlobalDOM();
   const urlParams = new URLSearchParams(window.location.search);
   if (urlParams.get('camera_only') === 'true') {
     // 순수 풀스크린 카메라 전용 창 (사이드바, 헤더 없음)
