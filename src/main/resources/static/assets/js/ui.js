@@ -1,4 +1,4 @@
-﻿// UI 렌더링 및 코어 제어 패널 모듈
+// UI 렌더링 및 코어 제어 패널 모듈
 import { DB, saveDB, publish, subscribe, addNotification } from './store.js';
 import { getCurrentUser, login, logout, getStaffList, generateTemporaryAccount } from './auth.js';
 import { initializeQRScanner, stopQRScanner, validateTicketState, validateExchangeQR } from './scanner.js?v=totp-fix-5';
@@ -1250,16 +1250,16 @@ async function updateRecentScanLogsTable() {
       let rightIndicator = "border-right-red";
 
       const resultMap = {
-          "SUCCESS": "입장 승인 완료",
-          "SUCCESS_EXCEPTION": "예외 승인 완료",
-          "FAIL_DUPLICATE": "중복 입장 차단",
-          "FAIL_EXPIRED": "시간 만료",
-          "FAIL_TOKEN_EXPIRED": "QR 토큰 만료",
-          "FAIL_INVALID": "유효하지 않은 QR",
-          "FAIL_REFUNDED": "환불된 티켓",
-          "UNDEFINED": "상태 미상"
+        "SUCCESS": "입장 승인 완료",
+        "SUCCESS_EXCEPTION": "예외 승인 완료",
+        "FAIL_DUPLICATE": "중복 입장 차단",
+        "FAIL_EXPIRED": "시간 만료",
+        "FAIL_TOKEN_EXPIRED": "QR 토큰 만료",
+        "FAIL_INVALID": "유효하지 않은 QR",
+        "FAIL_REFUNDED": "환불된 티켓",
+        "UNDEFINED": "상태 미상"
       };
-      
+
       if (log.result === "SUCCESS" || log.result === "SUCCESS_EXCEPTION") {
         colorClass = "badge-green";
         statusText = resultMap[log.result];
@@ -1351,22 +1351,32 @@ export async function renderFreeTicketForm(container, festivalId) {
   container.innerHTML = `
     <div class="ticketing-card">
       <div class="ticketing-header">
-        <span>🎪</span>
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M2 9a3 3 0 0 1 0 6v2a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-2a3 3 0 0 1 0-6V7a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2Z"/>
+          <path d="M13 5v2"/><path d="M13 17v2"/><path d="M13 11v2"/>
+        </svg>
         <span>${festName} - 자유입장권 매표소</span>
       </div>
       <div class="ticketing-body">
-        
+
         <div class="ticketing-rows-container">
           <!-- 성인 -->
           <div class="ticketing-row">
             <div class="ticketing-info">
-              <div class="ticketing-info-title">일반 (Adult)</div>
-              <div class="ticketing-info-desc">${basePrice.toLocaleString()}원</div>
+              <div class="ticketing-info-title">
+                <span class="ticketing-badge">성인</span>
+                일반 (Adult)
+              </div>
+              <div class="ticketing-info-desc">${basePrice.toLocaleString()}원 / 1매</div>
             </div>
             <div class="ticketing-controls">
-              <button class="btn-ticketing-qty minus" id="btn-dec-adult">-</button>
+              <button class="btn-ticketing-qty" id="btn-dec-adult">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14"/></svg>
+              </button>
               <span id="free-qty-adult" class="ticketing-qty-display">1</span>
-              <button class="btn-ticketing-qty plus" id="btn-inc-adult">+</button>
+              <button class="btn-ticketing-qty" id="btn-inc-adult">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14M5 12h14"/></svg>
+              </button>
               <span id="free-price-adult" class="ticketing-row-price">0원</span>
             </div>
           </div>
@@ -1374,13 +1384,20 @@ export async function renderFreeTicketForm(container, festivalId) {
           <!-- 소아 -->
           <div class="ticketing-row">
             <div class="ticketing-info">
-              <div class="ticketing-info-title">소아 (Child - 만 12세 이하)</div>
-              <div class="ticketing-info-desc">${Math.round(basePrice * 0.7).toLocaleString()}원 (30% 할인)</div>
+              <div class="ticketing-info-title">
+                <span class="ticketing-badge ticketing-badge--child">소아</span>
+                Child (만 12세 이하)
+              </div>
+              <div class="ticketing-info-desc">${Math.round(basePrice * 0.7).toLocaleString()}원 / 1매 <span class="ticketing-discount-tag">30% 할인</span></div>
             </div>
             <div class="ticketing-controls">
-              <button class="btn-ticketing-qty minus" id="btn-dec-child">-</button>
+              <button class="btn-ticketing-qty" id="btn-dec-child">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14"/></svg>
+              </button>
               <span id="free-qty-child" class="ticketing-qty-display">0</span>
-              <button class="btn-ticketing-qty plus" id="btn-inc-child">+</button>
+              <button class="btn-ticketing-qty" id="btn-inc-child">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14M5 12h14"/></svg>
+              </button>
               <span id="free-price-child" class="ticketing-row-price">0원</span>
             </div>
           </div>
@@ -1388,24 +1405,39 @@ export async function renderFreeTicketForm(container, festivalId) {
           <!-- 유아 -->
           <div class="ticketing-row">
             <div class="ticketing-info">
-              <div class="ticketing-info-title">유아 (Infant - 만 36개월 이하)</div>
-              <div class="ticketing-info-desc">${Math.round(basePrice * 0.3).toLocaleString()}원 (70% 할인)</div>
+              <div class="ticketing-info-title">
+                <span class="ticketing-badge ticketing-badge--infant">유아</span>
+                Infant (만 36개월 이하)
+              </div>
+              <div class="ticketing-info-desc">${Math.round(basePrice * 0.3).toLocaleString()}원 / 1매 <span class="ticketing-discount-tag">70% 할인</span></div>
             </div>
             <div class="ticketing-controls">
-              <button class="btn-ticketing-qty minus" id="btn-dec-infant">-</button>
+              <button class="btn-ticketing-qty" id="btn-dec-infant">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14"/></svg>
+              </button>
               <span id="free-qty-infant" class="ticketing-qty-display">0</span>
-              <button class="btn-ticketing-qty plus" id="btn-inc-infant">+</button>
+              <button class="btn-ticketing-qty" id="btn-inc-infant">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14M5 12h14"/></svg>
+              </button>
               <span id="free-price-infant" class="ticketing-row-price">0원</span>
             </div>
           </div>
         </div>
 
         <div class="ticketing-total-box">
-          <span class="ticketing-total-label">최종 합산 결제 금액</span>
+          <div class="ticketing-total-left">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="10"/><path d="M16 8h-6a2 2 0 1 0 0 4h4a2 2 0 1 1 0 4H8"/><path d="M12 18V6"/>
+            </svg>
+            <span class="ticketing-total-label">최종 합산 결제 금액</span>
+          </div>
           <strong id="free-total-price" class="ticketing-total-amount">0원</strong>
         </div>
 
         <button type="button" id="btn-free-pay" class="btn-ticketing-pay">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <rect width="20" height="14" x="2" y="5" rx="2"/><line x1="2" x2="22" y1="10" y2="10"/>
+          </svg>
           입장권 현장 결제하기
         </button>
 
