@@ -9,10 +9,10 @@ Set-Location festival
 # 3. Git 커밋 및 푸시 진행
 git add .
 git commit -m "Auto-deploy: $(Get-Date -Format 'yyyy-MM-dd HH:mm:ss')"
-git push origin main
+git push origin master
 
 
 
 # 4. 원래 폴더로 복귀
 Set-Location ..
-Write-Output "🎉 Hugging Face로 최신 코드가 복사 및 푸시되었습니다! 배포 로그를 확인하세요."
+Write-Output "Hugging Face sync and deploy complete! Check your deploy logs."
