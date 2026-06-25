@@ -18,24 +18,24 @@ const supabase = {
                         or: (condition) => ({
                             limit: (count) => {
                                 console.log(`[Supabase Mock] Limit: ${count}`);
-                                return Promise.resolve({ 
+                                return Promise.resolve({
                                     data: table === 'user' ? [
                                         { id: 1, name: '테스트 사용자', email: 'test@test.com', balance: 100000, membership_grade: 'GOLD', role: 'ROLE_USER' },
                                         { id: 2, name: '김철수', email: 'kim@test.com', balance: 50000, membership_grade: 'SILVER', role: 'ROLE_USER' }
                                     ] : [],
-                                    error: null 
+                                    error: null
                                 });
                             },
                             single: () => Promise.resolve({ data: null, error: null })
                         }),
                         limit: (count) => {
                             console.log(`[Supabase Mock] Limit: ${count}`);
-                            return Promise.resolve({ 
+                            return Promise.resolve({
                                 data: table === 'user' ? [
                                     { id: 1, name: '테스트 사용자', email: 'test@test.com', balance: 100000, membership_grade: 'GOLD', role: 'ROLE_USER' },
                                     { id: 2, name: '김철수', email: 'kim@test.com', balance: 50000, membership_grade: 'SILVER', role: 'ROLE_USER' }
                                 ] : [],
-                                error: null 
+                                error: null
                             });
                         },
                         order: (column, options) => ({
@@ -46,11 +46,11 @@ const supabase = {
                 },
                 or: (condition) => ({
                     eq: (column, value) => ({
-                        limit: (count) => Promise.resolve({ 
+                        limit: (count) => Promise.resolve({
                             data: table === 'user' ? [
                                 { id: 1, name: '테스트 사용자', email: 'test@test.com', balance: 100000, membership_grade: 'GOLD', role: 'ROLE_USER' }
                             ] : [],
-                            error: null 
+                            error: null
                         }),
                         single: () => Promise.resolve({ data: null, error: null })
                     }),
@@ -80,60 +80,60 @@ const obStep3 = document.getElementById('obStep3');
 const obStep4 = document.getElementById('obStep4');
 
 // ── DOM: Step1 (구매자)
-const obUserSearch    = document.getElementById('obUserSearch');
+const obUserSearch = document.getElementById('obUserSearch');
 const obUserSearchBtn = document.getElementById('obUserSearchBtn');
-const obUserResults   = document.getElementById('obUserResults');
-const obSelectedUser  = document.getElementById('obSelectedUser');
+const obUserResults = document.getElementById('obUserResults');
+const obSelectedUser = document.getElementById('obSelectedUser');
 const obSelectedUserName = document.getElementById('obSelectedUserName');
 const obSelectedUserMeta = document.getElementById('obSelectedUserMeta');
-const obClearUser     = document.getElementById('obClearUser');
+const obClearUser = document.getElementById('obClearUser');
 
 // ── DOM: Step2 (행사/좌석)
-const obFestivalList  = document.getElementById('obFestivalList');
-const obSeatPicker    = document.getElementById('obSeatPicker');
-const obFestivalTag   = document.getElementById('obFestivalTag');
-const obChangeFestival= document.getElementById('obChangeFestival');
-const obZoneFilter    = document.getElementById('obZoneFilter');
-const obSeatGrid      = document.getElementById('obSeatGrid');
-const obSeatLoading   = document.getElementById('obSeatLoading');
+const obFestivalList = document.getElementById('obFestivalList');
+const obSeatPicker = document.getElementById('obSeatPicker');
+const obFestivalTag = document.getElementById('obFestivalTag');
+const obChangeFestival = document.getElementById('obChangeFestival');
+const obZoneFilter = document.getElementById('obZoneFilter');
+const obSeatGrid = document.getElementById('obSeatGrid');
+const obSeatLoading = document.getElementById('obSeatLoading');
 
 // ── DOM: Step3 (발권 유형)
-const obTicketTypes   = document.getElementById('obTicketTypes');
-const obTypeGeneral   = document.getElementById('obTypeGeneral');
-const obTypeVulnerable= document.getElementById('obTypeVulnerable');
-const obVulnerableForm= document.getElementById('obVulnerableForm');
+const obTicketTypes = document.getElementById('obTicketTypes');
+const obTypeGeneral = document.getElementById('obTypeGeneral');
+const obTypeVulnerable = document.getElementById('obTypeVulnerable');
+const obVulnerableForm = document.getElementById('obVulnerableForm');
 const obVulnerableName = document.getElementById('obVulnerableName');
-const obVulnerableBirth= document.getElementById('obVulnerableBirth');
+const obVulnerableBirth = document.getElementById('obVulnerableBirth');
 
 // ── DOM: Step4 (결제)
-const obPaymentPanel  = document.getElementById('obPaymentPanel');
-const obOrderSummary  = document.getElementById('obOrderSummary');
-const obPriceTotal    = document.getElementById('obPriceTotal');
-const obCouponSelect  = document.getElementById('obCouponSelect');
-const obPayBalance    = document.getElementById('obPayBalance');
-const obPayBtn        = document.getElementById('obPayBtn');
-const obStaffName     = document.getElementById('obStaffName');
+const obPaymentPanel = document.getElementById('obPaymentPanel');
+const obOrderSummary = document.getElementById('obOrderSummary');
+const obPriceTotal = document.getElementById('obPriceTotal');
+const obCouponSelect = document.getElementById('obCouponSelect');
+const obPayBalance = document.getElementById('obPayBalance');
+const obPayBtn = document.getElementById('obPayBtn');
+const obStaffName = document.getElementById('obStaffName');
 
 // ── DOM: 모달
-const obSuccessModal  = document.getElementById('obSuccessModal');
-const obSuccessBody   = document.getElementById('obSuccessBody');
+const obSuccessModal = document.getElementById('obSuccessModal');
+const obSuccessBody = document.getElementById('obSuccessBody');
 const obSuccessNewBtn = document.getElementById('obSuccessNewBtn');
-const obSuccessScanBtn= document.getElementById('obSuccessScanBtn');
-const obBalanceModal  = document.getElementById('obBalanceModal');
+const obSuccessScanBtn = document.getElementById('obSuccessScanBtn');
+const obBalanceModal = document.getElementById('obBalanceModal');
 const obBalanceBackdrop = document.getElementById('obBalanceBackdrop');
-const obBalanceBody   = document.getElementById('obBalanceBody');
-const obSwitchToCash  = document.getElementById('obSwitchToCash');
-const obBalanceClose  = document.getElementById('obBalanceClose');
+const obBalanceBody = document.getElementById('obBalanceBody');
+const obSwitchToCash = document.getElementById('obSwitchToCash');
+const obBalanceClose = document.getElementById('obBalanceClose');
 
 // ── 상태
-let currentStaff  = null;
+let currentStaff = null;
 let selectedBuyer = null;     // { id, name, email, balance, membership_grade }
 let selectedFestival = null;
-let selectedSeat  = null;     // { id, seat_row, seat_number, price, zone_id }
-let ticketType    = 'GENERAL';
-let zones         = [];
-let seats         = [];
-let selectedZoneId= null;
+let selectedSeat = null;     // { id, seat_row, seat_number, price, zone_id }
+let ticketType = 'GENERAL';
+let zones = [];
+let seats = [];
+let selectedZoneId = null;
 
 // ──────────────────────────────────────
 // 초기화
@@ -173,7 +173,7 @@ function activateStep(stepNum) {
 }
 
 // ──────────────────────────────────────
-// STEP 1: 구매자 검색
+// 1단계: 구매자 검색
 // ──────────────────────────────────────
 async function searchUser() {
     const q = obUserSearch.value.trim();
@@ -209,10 +209,10 @@ async function searchUser() {
 
     obUserResults.querySelectorAll('.ob-user-result-item').forEach(el => {
         el.addEventListener('click', () => selectBuyer({
-            id:               parseInt(el.dataset.id),
-            name:             el.dataset.name,
-            email:            el.dataset.email,
-            balance:          parseInt(el.dataset.balance),
+            id: parseInt(el.dataset.id),
+            name: el.dataset.name,
+            email: el.dataset.email,
+            balance: parseInt(el.dataset.balance),
             membership_grade: el.dataset.grade
         }));
     });
@@ -242,7 +242,7 @@ function clearBuyer() {
 }
 
 // ──────────────────────────────────────
-// STEP 2: 행사 선택
+// 2단계: 행사 선택
 // ──────────────────────────────────────
 async function loadFestivals() {
     const { data } = await supabase
@@ -274,7 +274,7 @@ async function loadFestivals() {
 
     obFestivalList.querySelectorAll('.ob-festival-item').forEach(el => {
         el.addEventListener('click', () => selectFestival({
-            id:   parseInt(el.dataset.id),
+            id: parseInt(el.dataset.id),
             name: el.dataset.name,
         }));
     });
@@ -348,7 +348,7 @@ function renderSeatGrid() {
     }
 
     obSeatGrid.innerHTML = seats.map(seat => {
-        const isTaken    = seat.is_reserved || seat.status !== '빈자리';
+        const isTaken = seat.is_reserved || seat.status !== '빈자리';
         const isSelected = selectedSeat?.id === seat.id;
         const cls = isTaken ? 'ob-seat--taken' : isSelected ? 'ob-seat--selected' : 'ob-seat--empty';
         return `<div class="ob-seat ${cls}" data-id="${seat.id}"
@@ -369,7 +369,7 @@ function renderSeatGrid() {
 }
 
 // ──────────────────────────────────────
-// STEP 3: 발권 유형
+// 3단계: 발권 유형
 // ──────────────────────────────────────
 function updateStep3() {
     if (!selectedSeat) return;
@@ -387,7 +387,7 @@ function setTicketType(type) {
 }
 
 // ──────────────────────────────────────
-// STEP 4: 결제 렌더링
+// 4단계: 결제 렌더링
 // ──────────────────────────────────────
 async function updateStep4() {
     if (!selectedSeat || !selectedBuyer || !selectedFestival) return;
@@ -462,9 +462,9 @@ function renderOrderSummary(balance) {
 }
 
 function renderPriceTotal() {
-    const price    = selectedSeat?.price ?? 0;
+    const price = selectedSeat?.price ?? 0;
     const discount = calcDiscount();
-    const total    = Math.max(0, price - discount);
+    const total = Math.max(0, price - discount);
 
     obPriceTotal.innerHTML = `
         <div class="ob-price-total__row">
@@ -479,19 +479,19 @@ function renderPriceTotal() {
 }
 
 // ──────────────────────────────────────
-// STEP 4: 결제 실행
+// 4단계: 결제 실행
 // ──────────────────────────────────────
 async function submitPayment() {
     obPayBtn.disabled = true;
     obPayBtn.textContent = '처리 중...';
 
     try {
-        const price    = selectedSeat?.price ?? 0;
+        const price = selectedSeat?.price ?? 0;
         const discount = calcDiscount();
-        const total    = Math.max(0, price - discount);
+        const total = Math.max(0, price - discount);
         const payMethod = document.querySelector('input[name=payMethod]:checked')?.value ?? 'FESTIO_PAY';
 
-        // FESTIO Pay 결제 시 잔액 확인
+        // 페스티오 페이 결제 시 잔액 확인
         if (payMethod === 'FESTIO_PAY') {
             const { data: freshUser } = await supabase
                 .from('user')
@@ -506,9 +506,9 @@ async function submitPayment() {
             }
         }
 
-        // VULNERABLE 필수 항목 검증
+        // 우대/취약 계층 필수 항목 검증
         if (ticketType === 'VULNERABLE') {
-            const name  = obVulnerableName.value.trim();
+            const name = obVulnerableName.value.trim();
             const birth = obVulnerableBirth.value;
             if (!name || !birth) {
                 alert('동반자 실명과 생년월일을 입력해주세요.');
@@ -538,43 +538,43 @@ async function submitPayment() {
             .eq('id', selectedSeat.id)
             .eq('version', seatNow.version);
 
-        // order INSERT
+        // 주문 정보 저장
         const { data: newOrder, error: orderErr } = await supabase
             .from('order')
             .insert({
-                user_id:        selectedBuyer.id,
-                festival_id:    selectedFestival.id,
-                total_price:    price,
-                discount_amount:discount,
+                user_id: selectedBuyer.id,
+                festival_id: selectedFestival.id,
+                total_price: price,
+                discount_amount: discount,
                 payment_status: 'PAID'
             })
             .select('id')
             .single();
         if (orderErr) throw orderErr;
 
-        // order_item INSERT
+        // 주문 상세 및 QR코드 저장
         const qrUUID = generateQRCode();
-        const vulName  = obVulnerableName.value.trim() || null;
+        const vulName = obVulnerableName.value.trim() || null;
         const vulBirth = obVulnerableBirth.value || null;
 
         const { error: itemErr } = await supabase
             .from('order_item')
             .insert({
-                order_id:               newOrder.id,
-                seat_id:                selectedSeat.id,
-                quantity:               1,
-                qr_code_uuid:           qrUUID,
-                qr_expired_at:          getQRExpiredAt(),
-                item_status:            ticketType === 'VULNERABLE' ? 'WRISTBAND_PENDING' : 'ORDERED',
-                ticket_type:            ticketType,
+                order_id: newOrder.id,
+                seat_id: selectedSeat.id,
+                quantity: 1,
+                qr_code_uuid: qrUUID,
+                qr_expired_at: getQRExpiredAt(),
+                item_status: ticketType === 'VULNERABLE' ? 'WRISTBAND_PENDING' : 'ORDERED',
+                ticket_type: ticketType,
                 target_vulnerable_name: vulName,
-                target_vulnerable_birth:vulBirth,
-                owner_user_id:          selectedBuyer.id,
-                is_gifted:              false
+                target_vulnerable_birth: vulBirth,
+                owner_user_id: selectedBuyer.id,
+                is_gifted: false
             });
         if (itemErr) throw itemErr;
 
-        // FESTIO Pay 차감
+        // 페스티오 페이 잔액 차감
         if (payMethod === 'FESTIO_PAY') {
             const { data: freshUser } = await supabase
                 .from('user').select('balance').eq('id', selectedBuyer.id).single();

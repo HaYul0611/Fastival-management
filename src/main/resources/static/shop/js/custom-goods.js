@@ -1,4 +1,4 @@
-/* custom_goods.js */
+/* custom-goods.js */
 
 document.addEventListener('DOMContentLoaded', () => {
   // 헤더 렌더링 추가

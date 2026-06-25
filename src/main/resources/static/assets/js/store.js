@@ -3,8 +3,8 @@
 // Initial Data
 const initialDB = {
   activeCheckpoint: {
-    event: "2026 서울 일러스트 엑스포",
-    tenant: "스태프 오퍼레이션 본부"
+    event: "FESTIO",
+    tenant: "스태프 시스템"
   },
   staffs: [
     { id: "staffA", pw: "staff111", name: "게이트 스태프 A" },
@@ -95,7 +95,11 @@ export function publish(event, data) {
     if (event === "seat-change") {
       logMsg = `[좌석 상태 변경] 좌석 ${data.seatId} -> ${data.status}`;
     } else if (event === "scan-log") {
-      logMsg = `[QR 스캔] 티켓 ${data.ticketId}: 결과 [${data.status}]`;
+      let korStatus = data.status;
+      if (korStatus === "INVALID" || korStatus === "FAIL_INVALID") korStatus = "유효하지 않음";
+      if (korStatus === "VALID") korStatus = "정상입장";
+      if (korStatus === "ALREADY_ENTERED") korStatus = "중복스캔";
+      logMsg = `[QR 스캔] 티켓 ${data.ticketId} : 결과 [${korStatus}]`;
     } else if (event === "payment-complete") {
       logMsg = `[결제 완료] ${data.customer} / ${data.amount.toLocaleString()}원 승인`;
     } else if (event === "inventory-change") {

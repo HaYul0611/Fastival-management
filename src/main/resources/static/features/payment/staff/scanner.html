@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="ko">
 
 <head>
@@ -7,6 +7,10 @@
   <title>스태프 통합 관제 시스템 | FESTIO</title>
   <link rel="stylesheet" href="/assets/css/custom.css?v=3">
   <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
+  <script type="module">
+    import { injectLayout } from '/assets/js/layout.js';
+    injectLayout();
+  </script>
 </head>
 
 <body>
@@ -14,38 +18,11 @@
   <div id="app-shell">
 
     <!-- Sidebar -->
-    <aside id="sidebar" class="collapsed">
-      <div class="sidebar-header">
-        <span class="sidebar-title"
-          style="background: linear-gradient(90deg, #38bdf8, #10b981); -webkit-background-clip: text; -webkit-text-fill-color: transparent; font-weight: 900; letter-spacing: 1px;">FESTIO
-          STAFF SYSTEM</span>
-      </div>
-      <ul class="sidebar-menu">
-        <!-- Loaded dynamically from /features/user/staff/menu_aside.html -->
-      </ul>
-    </aside>
+    
 
     <!-- Main Workspace -->
     <main id="main-container">
-      <header id="header">
-        <button id="toggle-sidebar-btn" class="header-menu-btn">≡</button>
-        <div id="header-checkpoint">[ 로딩 중... ]</div>
-        <div class="header-actions">
-          <div class="bell-container">
-            <span id="notif-bell">🔔</span>
-            <span id="notif-badge" style="display: none;">0</span>
-            <div id="notif-popover" class="notif-popover-rigid">
-              <div class="notif-popover-header">
-                <span>실시간 알림 (텔레메트리)</span>
-                <span style="color:#10b981; font-family:var(--font-mono);">SYNC OK</span>
-              </div>
-              <div class="notif-list-container" id="notif-list"></div>
-            </div>
-          </div>
-          <span id="header-user">인증 대기 중</span>
-          <button id="logout-btn">로그아웃</button>
-        </div>
-      </header>
+      
 
       <div id="main-content">
         <section id="view-scanner" class="content-view active">
@@ -61,3 +38,5 @@
 </body>
 
 </html>
+
+

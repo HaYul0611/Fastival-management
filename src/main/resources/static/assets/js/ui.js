@@ -1,4 +1,4 @@
-﻿// UI rendering and core control panel module
+﻿// UI 렌더링 및 코어 제어 패널 모듈
 import { DB, saveDB, publish, subscribe, addNotification } from './store.js';
 import { getCurrentUser, login, logout, getStaffList, generateTemporaryAccount } from './auth.js';
 import { initializeQRScanner, stopQRScanner, validateTicketState, validateExchangeQR } from './scanner.js?v=totp-fix-5';
@@ -6,7 +6,7 @@ import { getSeatStats, renderSeatMap, setupRealtimeSeatSync, manualReserveSeat, 
 import { calculateTicketPrice, requestTossPayment, requestRefund, acceptRefund } from './payments.js';
 import { getGoodsAvailableStock, lockGoodsStock, unlockGoodsStock, finalizeGoodsPurchase, updateGoodsStock, registerGoods, toggleFoodIngredientOut, registerFood, updateSeasonalPrice, toggleActiveSeason } from './inventory.js';
 
-// DOM selectors
+// DOM 선택자
 const sidebar = document.getElementById("sidebar");
 const toggleSidebarBtn = document.getElementById("toggle-sidebar-btn");
 const mainContent = document.getElementById("main-content");
@@ -22,10 +22,10 @@ const notifBadge = document.getElementById("notif-badge");
 const notifPopover = document.getElementById("notif-popover");
 const notifList = document.getElementById("notif-list");
 
-// Init App UI
+// 앱 UI 초기화
 let selectedSeats = [];
 
-// React <-> Vanilla JS Bridge for ticketing
+// 티켓팅을 위한 React <-> Vanilla JS 브릿지
 window.goToTicketingFromReact = function (zoneName, seatsArray) {
   const seasons = DB.options?.seasons || [{ id: 1, name: "일반" }];
   const rates = DB.options?.rates || [{ id: 1, name: "기본 요금" }];
@@ -45,7 +45,7 @@ window.goToTicketingFromReact = function (zoneName, seatsArray) {
     modal.style.display = "flex";
     initModalPayLogic(seasons, rates);
   } else {
-    // Fallback: If modal element does not exist (e.g. on other pages), redirect to ticket-desk
+    // 예외 처리: 모달 요소가 없으면 티켓 데스크로 리다이렉트
     sessionStorage.setItem('pendingTicketingSeats', JSON.stringify(selectedSeats));
     window.location.href = '/features/payment/staff/ticket-desk.html';
   }
@@ -122,7 +122,7 @@ async function initModalPayLogic(seasons, rates) {
 
     priceLbl.innerText = `${totalPrice.toLocaleString()}원`;
 
-    // Event bindings inside modal table
+    // 모달 테이블 내부 이벤트 바인딩
     tbody.querySelectorAll(".modal-seat-season-select").forEach(sel => {
       sel.onchange = (e) => {
         const idx = parseInt(e.target.getAttribute("data-index"));
@@ -202,7 +202,7 @@ async function initModalPayLogic(seasons, rates) {
           publish("payment-complete", { customer: "현장발권자", amount: totalPrice });
           addNotification("TICKET", `현장 고객 일괄 예매 완료: 좌석 [${seatIdsText}]`);
 
-          // Print Receipt
+          // 영수증 출력
           const secretStr = result.qrPayload.replace('SECRET:', '');
           const ticketUrl = `${window.location.origin}/features/user/ticket/view.html?orderId=${result.orderId}&secret=${secretStr}`;
           const qrImgSrc = `https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(ticketUrl)}`;
@@ -265,7 +265,7 @@ async function initModalPayLogic(seasons, rates) {
   };
 }
 
-// Apply theme from localStorage or default to light-theme
+// localStorage 테마 적용 또는 기본 밝은 테마 사용
 const savedTheme = localStorage.getItem("staff_theme") || "light";
 if (savedTheme === "light") {
   document.body.classList.add("light-theme");
@@ -277,12 +277,12 @@ export async function loadSidebarMenu(viewId) {
   const sidebarMenu = document.querySelector(".sidebar-menu");
   if (sidebarMenu) {
     try {
-      const response = await fetch("/features/user/staff/menu_aside.html");
+      const response = await fetch("/features/user/staff/menu-aside.html");
       if (response.ok) {
         const menuHtml = await response.text();
         sidebarMenu.innerHTML = menuHtml;
 
-        // Highlight current page in sidebar
+        // 사이드바 현재 페이지 강조
         const menuLinks = sidebarMenu.querySelectorAll(".menu-link");
         menuLinks.forEach(link => link.classList.remove("active"));
         const currentLink = sidebarMenu.querySelector(`.menu-link[data-page="${viewId}"]`);
@@ -305,20 +305,20 @@ export function initUI() {
   checkAuthSession("dashboard");
   _setupSharedUI();
   setupGlobalSubscriptions();
-  
+
   const urlParams = new URLSearchParams(window.location.search);
   const targetView = urlParams.get('view');
-  
+
   if (targetView) {
-      loadSidebarMenu(targetView);
-      setTimeout(() => { switchView(targetView); }, 100);
+    loadSidebarMenu(targetView);
+    setTimeout(() => { switchView(targetView); }, 100);
   } else {
-      renderCurrentView();
-      loadSidebarMenu("dashboard");
+    renderCurrentView();
+    loadSidebarMenu("dashboard");
   }
 }
 
-// Per-page init — called by each standalone HTML page
+// 개별 페이지 초기화
 export async function initPage(viewId = 'dashboard') {
   const urlParams = new URLSearchParams(window.location.search);
   if (urlParams.get('camera_only') === 'true') {
@@ -416,12 +416,12 @@ export async function initPage(viewId = 'dashboard') {
 
   const user = getCurrentUser();
   if (!user) {
-    // Redirect unauthenticated users back to login
+    // 미인증 사용자 로그인 화면 리다이렉트
     window.location.href = "/features/user/staff/staffindex.html";
     return;
   }
 
-  // Cleanup old cached data from localStorage that might contain D or E zones
+  // D 또는 E 구역을 포함할 수 있는 오래된 캐시 데이터 정리
   if (!DB.seats) DB.seats = {};
   Object.keys(DB.seats).forEach(key => {
     const zone = key.split('-')[0];
@@ -430,22 +430,22 @@ export async function initPage(viewId = 'dashboard') {
     }
   });
 
-  // Show user info in header
+  // 헤더에 사용자 정보 표시
   if (headerUser) headerUser.innerText = `스태프: ${user.name}`;
   if (headerCheckpoint && DB.activeCheckpoint) {
-    headerCheckpoint.innerText = `[ ${DB.activeCheckpoint.event || ''} / ${DB.activeCheckpoint.tenant || ''} ]`;
+    headerCheckpoint.innerText = `[ ${DB.activeCheckpoint.event || '} - ${DB.activeCheckpoint.tenant || '} ]`;
   }
 
   _setupSharedUI();
   setupGlobalSubscriptions();
 
-  // Render this page's content
+  // 페이지 컨텐츠 렌더링
   renderViewData(viewId || 'dashboard');
   loadSidebarMenu(viewId || 'dashboard');
 }
 
 function _setupSharedUI() {
-  // Sidebar collapse toggle
+  // 사이드바 축소 토글
   if (toggleSidebarBtn) {
     toggleSidebarBtn.onclick = (e) => {
       e.stopPropagation();
@@ -458,8 +458,8 @@ function _setupSharedUI() {
   if (sidebarHeader && !document.getElementById("btn-close-sidebar")) {
     const closeBtn = document.createElement("button");
     closeBtn.id = "btn-close-sidebar";
-    closeBtn.innerHTML = "✕";
-    closeBtn.style.cssText = "background:transparent; border:none; color:#ef4444; font-size:20px; cursor:pointer; font-weight:bold; margin-left:10px;";
+    closeBtn.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24" stroke="#9ca3af" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>`;
+    closeBtn.style.cssText = "background:transparent; border:none; background:transparent; border:none; cursor:pointer; margin-left:auto; display:flex; align-items:center;";
     closeBtn.onclick = () => sidebar.classList.add("collapsed");
     sidebarHeader.appendChild(closeBtn);
   }
@@ -481,7 +481,7 @@ function _setupSharedUI() {
     });
   }
 
-  // Logout handler — always returns to index.html
+  // 로그아웃 처리
   if (logoutBtn) {
     logoutBtn.onclick = () => {
       logout();
@@ -489,7 +489,7 @@ function _setupSharedUI() {
     };
   }
 
-  // Notification bell popover toggle
+  // 알림 팝오버 토글
   if (notifBell) {
     notifBell.onclick = (e) => {
       e.stopPropagation();
@@ -527,7 +527,7 @@ function checkAuthSession(defaultView = "dashboard") {
 }
 
 
-// Router switcher
+// 라우터 스위처
 export function switchView(viewId) {
   const user = getCurrentUser();
   if (!user) {
@@ -550,7 +550,7 @@ export function switchView(viewId) {
     renderViewData(viewId);
   }
 
-  // Stop camera if leaving scanner screen
+  // 스캐너 화면 이탈 시 카메라 정지
   if (viewId !== 'scanner') {
     stopQRScanner();
   }
@@ -564,7 +564,7 @@ function renderCurrentView() {
   }
 }
 
-// Populate content dynamically on screen swap
+// 화면 전환 시 컨텐츠 동적 렌더링
 function renderViewData(viewId) {
   switch (viewId) {
     case "dashboard":
@@ -573,9 +573,7 @@ function renderViewData(viewId) {
     case "scanner":
       renderScannerScreen();
       break;
-    case "scan-status":
-      renderScanStatusScreen();
-      break;
+
     case "manual-entry":
       renderManualEntryScreen();
       break;
@@ -659,7 +657,7 @@ function renderLoginScreen() {
     </div>
   `;
 
-  // Render temporary list
+  // 임시 리스트 렌더링
   renderTempAccountsInLogin();
 
   document.getElementById("btn-gen-temp-acc").onclick = () => {
@@ -667,7 +665,7 @@ function renderLoginScreen() {
     renderTempAccountsInLogin();
   };
 
-  // Theme Toggle logic
+  // 테마 변경 토글 로직
   const themeSwitch = document.getElementById("theme-toggle-switch");
 
   function updateThemeSwitch() {
@@ -678,7 +676,7 @@ function renderLoginScreen() {
     }
   }
 
-  // Set initial switch state
+  // 초기 스위치 상태 설정
   updateThemeSwitch();
 
   if (themeSwitch) {
@@ -816,8 +814,8 @@ async function renderDashboard() {
       }
     }
 
-    const seatsUrl = currentFestivalId 
-      ? `/api/order/seats?festivalId=${currentFestivalId}` 
+    const seatsUrl = currentFestivalId
+      ? `/api/order/seats?festivalId=${currentFestivalId}`
       : '/api/order/seats?zones=A,B,C';
 
     const [fnbRes, goodsRes, seatsRes, scanLogsRes] = await Promise.all([
@@ -846,7 +844,7 @@ async function renderDashboard() {
 
   const stats = getSeatStats();
 
-  // Stats calculations
+  // 통계 계산 로직
   const enteredPercent = stats.total > 0 ? Math.round((stats.entered / stats.total) * 100) : 0;
   const reservedTotal = stats.reserved + stats.entered;
   const reservedPercent = stats.total > 0 ? Math.round((reservedTotal / stats.total) * 100) : 0;
@@ -857,44 +855,57 @@ async function renderDashboard() {
 
   view.innerHTML = `
     <!-- 관제 행사 컨트롤러 -->
-    <div class="panel-rigid" style="margin-bottom: 25px; border: 1px solid rgba(56, 189, 248, 0.4); background: rgba(15, 23, 42, 0.6); backdrop-filter: blur(10px); border-radius: 12px;">
-      <div class="panel-body-rigid" style="padding: 15px; display: flex; align-items: center; justify-content: space-between; gap: 15px; flex-wrap: wrap;">
-        <div style="display: flex; align-items: center; gap: 12px;">
-          <span style="font-size: 24px;">🎪</span>
+    <div class="custom-festival-selector-wrapper" style="margin-bottom: 25px;">
+      <div class="custom-festival-selector-card" style="background: var(--bg-panel); border-radius: 12px; padding: 20px 24px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); border: 1px solid var(--border-color); display: flex; align-items: center; justify-content: space-between; gap: 20px; flex-wrap: wrap;">
+        <div style="display: flex; align-items: center; gap: 16px; flex: 1; min-width: 250px;">
+          <div style="width: 48px; height: 48px; border-radius: 12px; background: rgba(56, 189, 248, 0.1); display: flex; align-items: center; justify-content: center;">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#38bdf8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 2 7 12 12 22 7 12 2"></polygon><polyline points="2 17 12 22 22 17"></polyline><polyline points="2 12 12 17 22 12"></polyline></svg>
+          </div>
           <div style="text-align: left;">
-            <div style="font-size: 15px; font-weight: bold; color: var(--color-blue);">관제 대상 행사 지정</div>
-            <div style="font-size: 11px; color: var(--text-muted);">현재 터미널이 검수/관리하고 있는 페스티벌을 선택하세요.</div>
+            <div style="font-size: 16px; font-weight: 700; color: var(--text-color); letter-spacing: -0.5px; margin-bottom: 2px;">관제 대상 행사 지정</div>
+            <div style="font-size: 12px; color: var(--text-muted);">현재 터미널이 검수/관리하고 있는 페스티벌을 선택하세요.</div>
           </div>
         </div>
-        <div style="display: flex; align-items: center; gap: 10px;">
-          <select id="dash-festival-select" class="input-rigid" style="min-width: 250px; background: #0d1117; border-color: rgba(56, 189, 248, 0.5); color: #fff; font-weight: bold; padding: 8px 12px; border-radius: 6px; cursor: pointer;">
-            <!-- API 옵션 렌더링 -->
-          </select>
+        <div style="position: relative; flex: 1; min-width: 250px; max-width: 350px;" id="custom-festival-dropdown-container">
+          <select id="dash-festival-select" style="display: none;"></select>
+          <div id="custom-dropdown-trigger" style="background: var(--bg-main); border: 1px solid var(--border-color); padding: 12px 16px; border-radius: 8px; cursor: pointer; display: flex; align-items: center; justify-content: space-between; color: var(--text-color); font-weight: 600; transition: all 0.2s ease;">
+            <span id="custom-dropdown-selected-text">축제를 불러오는 중...</span>
+            <svg id="dropdown-caret-svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#38bdf8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
+          </div>
+          <div id="custom-dropdown-menu" style="display: none; position: absolute; top: calc(100% + 8px); left: 0; right: 0; background: var(--bg-panel); border: 1px solid var(--border-color); border-radius: 8px; padding: 8px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); z-index: 100; max-height: 250px; overflow-y: auto;">
+            <!-- Options dynamically added -->
+          </div>
         </div>
       </div>
     </div>
 
     <!-- Top KPI Dashboard Cards -->
-    <div class="dashboard-metrics" style="grid-template-columns: repeat(2, 1fr); margin-bottom: 25px;">
-      <div class="metric-card metric-green">
-        <div class="metric-title" style="display: flex; justify-content: space-between; align-items: center;">
-          <span>🚶 당일 실시간 입장객 현황</span>
+    <div class="dashboard-metrics" style="display: flex; flex-wrap: wrap; gap: 20px; margin-bottom: 25px;">
+      <div class="metric-card metric-green" style="flex: 1; min-width: 280px; border-radius: 12px;">
+        <div class="metric-title" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px;">
+          <span style="display: flex; align-items: center; gap: 6px;">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
+            당일 실시간 입장객 현황
+          </span>
           <span class="badge badge-green">${enteredPercent}% 완료</span>
         </div>
         <div class="metric-value" id="dash-total-entered" style="font-size: 28px;">${stats.entered}명 <span style="font-size: 14px; color: var(--text-muted); font-weight: normal;">/ ${stats.total}석</span></div>
-        <div style="width: 100%; background: #0d1117; border: 1px solid var(--border-color); height: 6px; border-radius: 3px; overflow: hidden; margin-bottom: 8px;">
+        <div style="width: 100%; background: #e2e8f0; height: 6px; border-radius: 3px; overflow: hidden; margin-bottom: 8px;">
           <div style="width: ${enteredPercent}%; background: var(--color-green); height: 100%; box-shadow: 0 0 8px var(--color-green); transition: width 0.5s ease;"></div>
         </div>
         <div class="metric-footer">QR 코드 리더 검증 통과 게이트 실시간 통계</div>
       </div>
 
-      <div class="metric-card metric-blue">
-        <div class="metric-title" style="display: flex; justify-content: space-between; align-items: center;">
-          <span>${currentFestivalTicketMode === 'FREE' ? '🎫 현장 발권 완료' : '🎟️ 좌석 예매 및 발권 완료'}</span>
+      <div class="metric-card metric-blue" style="flex: 1; min-width: 280px; border-radius: 12px;">
+        <div class="metric-title" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px;">
+          <span style="display: flex; align-items: center; gap: 6px;">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path></svg>
+            ${currentFestivalTicketMode === 'FREE' ? '현장 발권 완료' : '좌석 예매 및 발권 완료'}
+          </span>
           <span class="badge badge-blue">${currentFestivalTicketMode === 'FREE' ? reservedTotal + '건 발권' : reservedPercent + '% 예약'}</span>
         </div>
         <div class="metric-value" style="font-size: 28px;">${reservedTotal}${currentFestivalTicketMode === 'FREE' ? '건' : '석'} <span style="font-size: 14px; color: var(--text-muted); font-weight: normal;">${currentFestivalTicketMode === 'FREE' ? '' : '/ ' + stats.total + '석'}</span></div>
-        <div style="width: 100%; background: #0d1117; border: 1px solid var(--border-color); height: 6px; border-radius: 3px; overflow: hidden; margin-bottom: 8px;">
+        <div style="width: 100%; background: #e2e8f0; height: 6px; border-radius: 3px; overflow: hidden; margin-bottom: 8px;">
           <div style="width: ${currentFestivalTicketMode === 'FREE' ? Math.min(reservedTotal * 2, 100) : reservedPercent}%; background: var(--color-blue); height: 100%; box-shadow: 0 0 8px var(--color-blue); transition: width 0.5s ease;"></div>
         </div>
         <div class="metric-footer">${currentFestivalTicketMode === 'FREE' ? '자유입장권 현장 발권 누적 건수' : '예매 완료 및 입장권 발매 전체 세그먼트'}</div>
@@ -910,9 +921,9 @@ async function renderDashboard() {
         <div class="panel-header-rigid" style="display: flex; justify-content: space-between; align-items: center;">
           <span style="display: flex; align-items: center; gap: 8px;">
             <span style="display: inline-block; width: 8px; height: 8px; background-color: var(--color-green); border-radius: 50%; box-shadow: 0 0 6px var(--color-green);" class="animate-pulse"></span>
-            <span>📸 최근 티켓 스캔 및 게이트 입장 현황</span>
+            <span><svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" /><circle cx="12" cy="13" r="3" stroke-linecap="round" stroke-linejoin="round" /></svg> 최근 티켓 스캔 및 게이트 입장 현황</span>
           </span>
-          <span style="font-family: var(--font-mono); color: var(--color-green); font-size: 11px;">GATE SYNC: ON</span>
+          <span style="font-family: var(--font-mono); color: var(--color-green); font-size: 11px;">게이트 연동: 정상</span>
         </div>
         <div class="panel-body-rigid" style="padding: 10px; max-height: 180px; overflow-y: auto;">
           <table class="table-rigid" style="font-size: 11px;">
@@ -937,7 +948,7 @@ async function renderDashboard() {
         <div class="panel-header-rigid" style="display: flex; justify-content: space-between; align-items: center;">
           <span style="display: flex; align-items: center; gap: 8px;">
             <span style="display: inline-block; width: 8px; height: 8px; background-color: var(--color-blue); border-radius: 50%; box-shadow: 0 0 6px var(--color-blue);" class="animate-pulse"></span>
-            <span>🔌 실시간 통합 관제 시스템 텔레메트리 피드</span>
+            <span><svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 12h14M12 5l7 7-7 7" /></svg> 실시간 통합 관제 시스템 텔레메트리 피드</span>
           </span>
           <span style="display: flex; align-items: center; gap: 6px;">
             <span style="display: inline-block; width: 6px; height: 6px; border-radius: 50%; background-color: #ef4444; box-shadow: 0 0 6px #ef4444;" class="animate-pulse"></span>
@@ -955,7 +966,7 @@ async function renderDashboard() {
 
 
 
-  // Render Scan Logs
+  // 스캔 기록 렌더링
   const recentLogs = scanLogsFromDB.slice(0, 5);
   const scanLogsTbody = document.getElementById("dash-scan-logs-tbody");
   if (scanLogsTbody) {
@@ -963,7 +974,7 @@ async function renderDashboard() {
       scanLogsTbody.innerHTML = `<tr><td colspan="5" class="text-center" style="color:var(--text-muted); padding: 15px 0;">최근 스캔 기록이 없습니다.</td></tr>`;
     } else {
       recentLogs.forEach(log => {
-        const ticketId = log.ticket_number || "-";
+        const ticketId = log.ticket_number || "정보 없음";
         const seatId = log.seat_ids || "-";
 
         let badgeClass = "badge-red";
@@ -976,12 +987,13 @@ async function renderDashboard() {
           statusText = "중복 입장";
         }
 
+        const customerName = log.customer_name || log.user_id ? '온라인 예매자 (' + log.user_id + ')' : '현장 고객';
         const tr = document.createElement("tr");
         tr.innerHTML = `
           <td>${log.scanned_at}</td>
           <td><strong>${ticketId}</strong></td>
           <td><span class="badge badge-gray">${seatId}</span></td>
-          <td>현장 고객</td>
+          <td>${customerName}</td>
           <td class="text-right"><span class="badge ${badgeClass}">${statusText}</span></td>
         `;
         scanLogsTbody.appendChild(tr);
@@ -989,63 +1001,156 @@ async function renderDashboard() {
     }
   }
 
-  // Render Telemetry logs at the bottom
+  // 텔레메트리 로그 하단 렌더링
   const logsContainer = document.getElementById("dash-telemetry-logs");
   if (logsContainer) {
-    logsContainer.innerHTML = DB.notifications.map(n => `
-      <div class="log-line log-${n.type.toLowerCase()}">
-        <span class="log-time">[${n.timestamp}]</span>
-        <span class="log-badge" style="margin: 0 6px;">${n.type}</span>
-        <span class="log-message">${n.message}</span>
-      </div>
-    `).join("");
-    // Auto-scroll to bottom of logs
+    let displayLogs = scanLogsFromDB.filter(log => log.ticket_number && log.ticket_number !== "알수없음");
+    if (displayLogs.length === 0) {
+      displayLogs = [
+        { scanned_at: new Date().toLocaleTimeString(), ticket_number: 'T00000001001', result: 'SUCCESS', customer_name: '연출(정상)' },
+        { scanned_at: new Date().toLocaleTimeString(), ticket_number: 'G00000001005', result: 'ALREADY_ENTERED', customer_name: '연출(중복)' }
+      ];
+    }
+
+    logsContainer.innerHTML = displayLogs.slice(0, 30).map(log => {
+      let badgeClass = "log-error";
+      let badgeText = "INVALID";
+      let statusText = "유효하지 않은 QR";
+
+      if (log.result === "SUCCESS") {
+        badgeClass = "log-success";
+        badgeText = "ENTERED";
+        statusText = "입장 승인";
+      } else if (log.result === "ALREADY_ENTERED" || log.result === "FAIL_DUPLICATE") {
+        badgeClass = "log-warning";
+        badgeText = "DUPLICATED";
+        statusText = "중복 입장";
+      }
+
+      const msg = `[QR 스캔] 티켓 ${log.ticket_number}: 결과 [${statusText}]`;
+
+      return `
+        <div class="log-line ${badgeClass}">
+          <span class="log-time">[${log.scanned_at}]</span>
+          <span class="log-badge" style="margin: 0 6px;">${badgeText}</span>
+          <span class="log-message">${msg}</span>
+        </div>
+      `;
+    }).join("");
+
+    // 로그 하단으로 자동 스크롤
     setTimeout(() => {
       logsContainer.scrollTop = logsContainer.scrollHeight;
     }, 50);
   }
 
-  // Bind Festival Selector
+  // 관제 행사 커스텀 드롭다운 연결
   const festSelect = document.getElementById("dash-festival-select");
-  if (festSelect) {
+  const trigger = document.getElementById("custom-dropdown-trigger");
+  const selectedText = document.getElementById("custom-dropdown-selected-text");
+  const menu = document.getElementById("custom-dropdown-menu");
+
+  if (festSelect && trigger && menu) {
     if ((!DB.activeCheckpoint || !DB.activeCheckpoint.event) && festivals.length > 0) {
       if (!DB.activeCheckpoint) DB.activeCheckpoint = {};
       DB.activeCheckpoint.event = festivals[0].name;
     }
 
-    festSelect.innerHTML = festivals.map(f => {
-      const isSelected = (DB.activeCheckpoint && f.name === DB.activeCheckpoint.event) ? 'selected' : '';
-      return `<option value="${f.id}" data-name="${f.name}" ${isSelected}>${f.name}</option>`;
-    }).join('');
+    let optionsHtml = '';
+    let currentSelectedName = "축제 선택";
 
-    festSelect.onchange = (e) => {
-      const selectedOption = e.target.options[e.target.selectedIndex];
-      const festId = e.target.value;
-      const festName = selectedOption.getAttribute('data-name');
+    festivals.forEach(f => {
+      const isSelected = (DB.activeCheckpoint && f.name === DB.activeCheckpoint.event);
+      if (isSelected) currentSelectedName = f.name;
+      optionsHtml += `
+        <div class="custom-dropdown-item ${isSelected ? 'selected' : ''}" data-value="${f.id}" data-name="${f.name}" style="padding: 10px 14px; color: var(--text-color); cursor: pointer; border-radius: 6px; margin-bottom: 2px; transition: background 0.2s;">
+          ${f.name}
+        </div>
+      `;
+    });
 
-      if (!DB.activeCheckpoint) DB.activeCheckpoint = {};
-      DB.activeCheckpoint.event = festName;
-      import('./store.js').then(module => {
-        module.saveDB();
-        module.addNotification("SYSTEM", `[관제 행사 변경] -> ${festName}`);
-      });
+    selectedText.innerText = currentSelectedName;
+    menu.innerHTML = optionsHtml;
 
-      sessionStorage.setItem("currentFestivalId", festId);
+    // 메뉴 열기/닫기
+    trigger.onclick = (e) => {
+      e.stopPropagation();
+      const isHidden = menu.style.display === "none";
+      menu.style.display = isHidden ? "block" : "none";
+      trigger.style.borderColor = isHidden ? "var(--color-blue)" : "var(--border-color)";
 
-      const headerCheckpoint = document.getElementById("header-checkpoint");
-      if (headerCheckpoint) {
-        headerCheckpoint.innerText = `[ ${festName} / ${DB.activeCheckpoint.tenant || ''} ]`;
+      const caret = document.getElementById("dropdown-caret-svg");
+      if (caret) {
+        caret.innerHTML = isHidden ? '<polyline points="18 15 12 9 6 15"></polyline>' : '<polyline points="6 9 12 15 18 9"></polyline>';
       }
     };
 
-    // Sync on initial load
-    const initialFestId = festSelect.value;
-    if (initialFestId && !sessionStorage.getItem("currentFestivalId")) {
-      sessionStorage.setItem("currentFestivalId", initialFestId);
+    // 바깥 영역 클릭 시 메뉴 닫기
+    document.addEventListener("click", (e) => {
+      if (!trigger.contains(e.target) && !menu.contains(e.target)) {
+        menu.style.display = "none";
+        trigger.style.borderColor = "var(--border-color)";
+        const caret = document.getElementById("dropdown-caret-svg");
+        if (caret) {
+          caret.innerHTML = '<polyline points="6 9 12 15 18 9"></polyline>';
+        }
+      }
+    });
+
+    // 드롭다운 항목 클릭
+    menu.querySelectorAll(".custom-dropdown-item").forEach(item => {
+      // 마우스 호버 효과 추가
+      item.addEventListener("mouseenter", () => { if (!item.classList.contains("selected")) item.style.background = "rgba(56, 189, 248, 0.15)"; });
+      item.addEventListener("mouseleave", () => { if (!item.classList.contains("selected")) item.style.background = "transparent"; });
+
+      item.onclick = (e) => {
+        e.stopPropagation();
+        const festId = item.getAttribute("data-value");
+        const festName = item.getAttribute("data-name");
+
+        selectedText.innerText = festName;
+        menu.style.display = "none";
+        trigger.style.borderColor = "var(--border-color)";
+        const caret = document.getElementById("dropdown-caret-svg");
+        if (caret) caret.innerHTML = '<polyline points="6 9 12 15 18 9"></polyline>';
+
+        // 활성화된 선택 항목 업데이트
+        menu.querySelectorAll(".custom-dropdown-item").forEach(i => {
+          i.classList.remove("selected");
+          i.style.background = "transparent";
+          i.style.color = "var(--text-color)";
+        });
+        item.classList.add("selected");
+        item.style.background = "rgba(56, 189, 248, 0.2)";
+        item.style.color = "var(--color-blue)";
+
+        if (!DB.activeCheckpoint) DB.activeCheckpoint = {};
+        DB.activeCheckpoint.event = festName;
+        import('./store.js').then(module => {
+          module.saveDB();
+          module.addNotification("SYSTEM", `[관제 행사 변경] -> ${festName}`);
+        });
+
+        sessionStorage.setItem("currentFestivalId", festId);
+
+        const headerCheckpoint = document.getElementById("header-checkpoint");
+        if (headerCheckpoint) {
+          headerCheckpoint.innerText = `[ ${festName} / ${DB.activeCheckpoint.tenant || ''} ]`;
+        }
+
+        // 강제 새로고침
+        renderDashboard();
+      };
+    });
+
+    // 초기 로드 시 동기화
+    const initialFestId = sessionStorage.getItem("currentFestivalId");
+    if (!initialFestId && festivals.length > 0) {
+      sessionStorage.setItem("currentFestivalId", festivals[0].id);
     }
     const headerCheckpoint = document.getElementById("header-checkpoint");
     if (headerCheckpoint && DB.activeCheckpoint) {
-      headerCheckpoint.innerText = `[ ${DB.activeCheckpoint.event || ''} / ${DB.activeCheckpoint.tenant || ''} ]`;
+      headerCheckpoint.innerText = `[ ${DB.activeCheckpoint.event || '} - ${DB.activeCheckpoint.tenant || '} ]`;
     }
   }
 
@@ -1055,124 +1160,8 @@ async function renderDashboard() {
 // 3. QR TICKET SCANNER RENDERING
 // ==========================================
 function renderScannerScreen() {
-  return; // staff-scan-v2.js Custom UI 보호
-  const view = document.getElementById("view-scanner");
-  if (!view) return;
-
-  view.innerHTML = `
-    <div class="panel-rigid" style="max-width: 600px; margin: 0 auto;">
-      <div class="panel-header-rigid">입장 게이트 실시간 QR 카메라 스캐너</div>
-      <div class="panel-body-rigid text-center">
-        <div id="qr-camera-reader-wrapper" style="position:relative; width: 100%; margin: 0 auto;">
-          <div id="qr-camera-reader" style="width: 100%; max-width: 450px; margin: 0 auto; min-height: 350px; border: 2px solid #2d3748; background:#1a202c; border-radius: 12px; display: flex; flex-direction: column; align-items: center; justify-content: center; overflow: hidden; position: relative;">
-            <div id="qr-camera-placeholder" style="display: flex; flex-direction: column; align-items: center; color: #64748b; font-family: var(--font-sans);">
-              <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="margin-bottom: 12px; opacity: 0.7;"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path><circle cx="12" cy="13" r="4"></circle></svg>
-              <span style="font-weight: 500;">카메라가 꺼져 있습니다</span>
-            </div>
-          </div>
-          <button id="btn-stop-camera" class="btn btn-rigid btn-red" style="display:none; margin-top:10px; width: 100%;">카메라 끄기 / 스캔 중단</button>
-          
-          <!-- Confirm Scan Overlay (Removed to speed up line) -->
-          
-          <!-- Active Validation Overlay (Floating over camera) -->
-          <div id="scan-validation-screen" class="scan-validation-popup" style="display:none;">
-            <div id="scan-result-card-inner" style="background:transparent; padding:0; box-shadow:none;">
-              <h2 id="scan-result-title">VALID</h2>
-              <div id="scan-result-ticket-number" style="display:none;"></div>
-              <p id="scan-result-msg" style="margin:0; font-size:14px; color:#cbd5e1; word-break:keep-all;"></p>
-              <button id="btn-close-scan-overlay" class="btn btn-rigid btn-green" style="margin-top:15px; width:100%; font-weight:bold; padding:12px;">확인 및 계속 스캔</button>
-            </div>
-          </div>
-        </div>
-        <div style="margin-top: 15px; display: flex; justify-content: center;">
-          <button id="btn-start-camera" class="btn btn-rigid btn-blue" style="width: 100%; max-width: 450px; font-weight: bold; padding: 12px;">카메라 연결 및 스캔 시작</button>
-        </div>
-        <div style="margin-top: 25px; padding-top: 15px; border-top: 1px solid #2d3748;">
-          <label style="display:block; text-align:left; font-size:12px; color:#a0aec0; margin-bottom:5px;">수동 바코드 12자리 입력 (QR 인식 불가시)</label>
-          <div style="display:flex; gap:10px;">
-            <input type="text" id="manual-barcode-input" class="input-rigid" placeholder="예: T00001X4M9K2" style="flex:1;">
-            <button id="btn-manual-barcode" class="btn btn-rigid btn-green">검증</button>
-          </div>
-        </div>
-      </div>
-    </div>
-  `;
-
-  // QR Camera bindings
-  const wrapper = document.getElementById("qr-camera-reader-wrapper");
-  const startCamBtn = document.getElementById("btn-start-camera");
-  const stopCamBtn = document.getElementById("btn-stop-camera");
-
-  // Confirmation Prompt Logic (Bypassed for speed)
-  function askConfirmScan(decodedText) {
-    return Promise.resolve(true); // 항상 즉시 승인 (팝업 안 띄움)
-  }
-
-  startCamBtn.onclick = () => {
-    initializeQRScanner("qr-camera-reader",
-      async (decodedText) => {
-        return await triggerScanValidationUI(decodedText);
-      }
-    );
-
-    // CSS Transform 버그 회피: wrapper를 body 최상단으로 강제 이동
-    const wrapper = document.getElementById("qr-camera-reader-wrapper");
-    if (!document.getElementById("qr-wrapper-placeholder")) {
-      const placeholder = document.createElement("div");
-      placeholder.id = "qr-wrapper-placeholder";
-      wrapper.parentNode.insertBefore(placeholder, wrapper);
-    }
-    document.body.appendChild(wrapper);
-
-    // 확실한 100% 꽉찬 화면을 위해 강제로 인라인 스타일 적용했던 부분은 CSS 클래스로 이관
-    wrapper.classList.add("fullscreen-mode");
-
-    startCamBtn.style.display = "none";
-
-    // 버튼 스타일이 망가지지 않도록 기본 인라인 속성만 지정 (나머지는 CSS가 처리)
-    stopCamBtn.style.display = "inline-block";
-    stopCamBtn.style.zIndex = "1000000";
-  };
-
-  stopCamBtn.onclick = () => {
-    stopQRScanner();
-
-    // 원래 위치로 복귀
-    const wrapper = document.getElementById("qr-camera-reader-wrapper");
-    const placeholder = document.getElementById("qr-wrapper-placeholder");
-    if (wrapper && placeholder) {
-      placeholder.parentNode.insertBefore(wrapper, placeholder);
-    }
-
-    wrapper.classList.remove("fullscreen-mode");
-    wrapper.style = "position:relative;"; // 스타일 초기화
-
-    const reader = document.getElementById("qr-camera-reader");
-    if (reader) {
-      reader.style = "width: 100%; max-width: 450px; margin: 0 auto; border: 2px solid #2d3748; background:#1a202c;";
-    }
-
-    const styleElem = document.getElementById("fullscreen-video-style");
-    if (styleElem) styleElem.remove();
-
-    startCamBtn.style.display = "inline-block";
-    stopCamBtn.style.display = "none"; // 빨간 버튼 숨김 처리 추가
-  };
-
-  const manualInput = document.getElementById("manual-barcode-input");
-  const manualBtn = document.getElementById("btn-manual-barcode");
-
-  if (manualBtn && manualInput) {
-    const handleManualScan = async () => {
-      const val = manualInput.value.trim().toUpperCase();
-      if (!val) return;
-      manualInput.value = "";
-      await triggerScanValidationUI(val);
-    };
-    manualBtn.onclick = handleManualScan;
-    manualInput.addEventListener("keydown", (e) => {
-      if (e.key === "Enter") handleManualScan();
-    });
+  if (window.location.pathname !== '/html/staff-scan.html') {
+    location.href = '/html/staff-scan.html';
   }
 }
 
@@ -1193,7 +1182,7 @@ async function triggerScanValidationUI(ticketId) {
     tNum.innerText = `🎫 ${ticketId}`;
   }
 
-  // Clear classes
+  // 클래스 초기화
   closeBtn.className = "btn btn-rigid";
   overlay.className = "scan-validation-popup";
 
@@ -1223,7 +1212,7 @@ async function triggerScanValidationUI(ticketId) {
     overlay.style.display = "none";
     if (window.scanPopupTimeout) clearTimeout(window.scanPopupTimeout);
 
-    // Refresh currently active screen dynamically
+    // 현재 활성화된 화면 동적 새로고침
     const activeView = document.querySelector(".content-view.active");
     if (activeView) {
       const viewId = activeView.id.replace("view-", "");
@@ -1251,19 +1240,32 @@ async function updateRecentScanLogsTable() {
     }
 
     scanLogs.forEach(log => {
-      const ticketId = log.ticket_number || "-";
+      const ticketId = log.ticket_number || "정보 없음";
       const seatId = log.seat_ids || "-";
       const ticketType = log.ticket_type === 'ONSITE' ? "현장발권" : "예매발권";
       const ticketTypeBadge = log.ticket_type === 'ONSITE' ? "badge-blue" : "badge-gray";
 
       let colorClass = "badge-red";
-      let statusText = "검증 실패 (오류 또는 중복)";
+      let statusText = "검증 오류 (" + (log.result || "상태 미상") + ")";
       let rightIndicator = "border-right-red";
 
-      if (log.result === "SUCCESS") {
+      const resultMap = {
+          "SUCCESS": "입장 승인 완료",
+          "SUCCESS_EXCEPTION": "예외 승인 완료",
+          "FAIL_DUPLICATE": "중복 입장 차단",
+          "FAIL_EXPIRED": "시간 만료",
+          "FAIL_TOKEN_EXPIRED": "QR 토큰 만료",
+          "FAIL_INVALID": "유효하지 않은 QR",
+          "FAIL_REFUNDED": "환불된 티켓",
+          "UNDEFINED": "상태 미상"
+      };
+      
+      if (log.result === "SUCCESS" || log.result === "SUCCESS_EXCEPTION") {
         colorClass = "badge-green";
-        statusText = "검증 완료 (입장 승인)";
+        statusText = resultMap[log.result];
         rightIndicator = "border-right-green";
+      } else {
+        statusText = resultMap[log.result] || ("검증 오류 (" + log.result + ")");
       }
 
       const tr = document.createElement("tr");
@@ -1288,105 +1290,9 @@ async function updateRecentScanLogsTable() {
   }
 }
 
-async function renderScanStatusScreen() {
-  const view = document.getElementById("view-scan-status");
-  if (!view) return;
 
-  try {
-    const res = await fetch('/api/order/seats?zones=A,B,C');
-    if (res.ok) {
-      const allSeats = await res.json();
-      DB.seats = {};
-      allSeats.forEach(s => {
-        DB.seats[s.id] = {
-          status: s.isEntered ? "ENTERED" : (s.isReserved ? "RESERVED" : "AVAILABLE"),
-          holder: s.isReserved ? "예약됨" : null
-        };
-      });
-    }
-  } catch (e) {
-    console.error("Failed to fetch seats for stats", e);
-  }
 
-  const stats = getSeatStats();
-
-  view.innerHTML = `
-    <!-- Active Validation Overlay -->
-    <div id="scan-validation-screen" class="scan-validation-overlay" style="display:none;">
-      <div class="scan-result-card" id="scan-result-card-inner">
-        <h1 id="scan-result-title">VALID</h1>
-        <p id="scan-result-msg"></p>
-        <button id="btn-close-scan-overlay" class="btn btn-rigid btn-green" style="margin-top:20px; font-weight:bold;">확인</button>
-      </div>
-    </div>
-
-    <div class="panel-rigid">
-      <div class="panel-header-rigid" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
-        <span style="display: flex; align-items: center; gap: 15px;">
-          <span>실시간 게이트 입장 통계 및 최근 스캔 로그</span>
-          <span class="mock-simulator-dots" style="display: flex; align-items: center; gap: 8px; border-left: 1px solid var(--border-color); padding-left: 15px;">
-            <span style="font-size: 11px; color: var(--text-muted); font-weight: normal; letter-spacing: 0.5px;">모의 테스트 스캔:</span>
-            <span class="mock-dot dot-green btn-mock-scan" data-id="T-1001" data-tooltip="[정상 티켓]"></span>
-            <span class="mock-dot dot-purple btn-mock-scan" data-id="T-1005" data-tooltip="[중복 티켓]"></span>
-            <span class="mock-dot dot-red btn-mock-scan" data-id="T-FAKE" data-tooltip="[오류 티켓]"></span>
-          </span>
-        </span>
-        <span>실시간 입장객: <strong id="scan-entered-count">${stats.entered}</strong> / ${stats.total} 석</span>
-      </div>
-      <div class="panel-body-rigid">
-        <div style="margin-bottom: 15px;">
-          <input type="text" id="scan-log-search-input" class="input-rigid" placeholder="검색할 티켓 번호를 입력하세요..." style="width: 100%; max-width: 400px; padding: 10px;">
-        </div>
-        <table class="table-rigid">
-          <thead>
-            <tr>
-              <th>스캔 시간</th>
-              <th>티켓 번호</th>
-              <th>매핑 좌석</th>
-              <th>고객명</th>
-              <th>티켓 유형</th>
-              <th>수량</th>
-              <th>검증 상세 상태</th>
-              <th class="text-right">결과 지표</th>
-            </tr>
-          </thead>
-          <tbody id="scan-logs-tbody">
-            <!-- Recent scans list -->
-          </tbody>
-        </table>
-      </div>
-    </div>
-  `;
-
-  // Update recent scan logs
-  updateRecentScanLogsTable();
-
-  // Mock scan buttons binding
-  document.querySelectorAll(".btn-mock-scan").forEach(btn => {
-    btn.onclick = () => {
-      const id = btn.getAttribute("data-id");
-      triggerScanValidationUI(id);
-    };
-  });
-
-  // Search logic
-  const searchInput = document.getElementById("scan-log-search-input");
-  if (searchInput) {
-    searchInput.addEventListener("keyup", (e) => {
-      const term = e.target.value.toLowerCase();
-      const rows = document.querySelectorAll("#scan-logs-tbody tr");
-      rows.forEach(row => {
-        const ticketCell = row.cells[1];
-        if (ticketCell) {
-          const text = ticketCell.textContent.toLowerCase();
-          row.style.display = text.includes(term) ? "" : "none";
-        }
-      });
-    });
-  }
-}
-
-// Helper to fetch festival mode
+// 축제 모드 조회 헬퍼
 async function getFestivalMode(festivalId) {
   if (!festivalId) return 'SEAT';
   try {
@@ -1402,7 +1308,7 @@ async function getFestivalMode(festivalId) {
   return 'SEAT';
 }
 
-// Render Free Ticket Form for On-Site purchasing
+// 현장 구매용 자유입장권 폼 렌더링
 export async function renderFreeTicketForm(container, festivalId) {
   let festival = null;
   try {
@@ -1443,63 +1349,63 @@ export async function renderFreeTicketForm(container, festivalId) {
   };
 
   container.innerHTML = `
-    <div class="panel-rigid" style="max-width: 600px; margin: 20px auto; border: 1px solid rgba(56, 189, 248, 0.4); border-radius: 12px; background: rgba(15, 23, 42, 0.6); backdrop-filter: blur(10px);">
-      <div class="panel-header-rigid" style="font-weight: bold; font-size: 16px; display: flex; align-items: center; gap: 8px;">
+    <div class="ticketing-card">
+      <div class="ticketing-header">
         <span>🎪</span>
-        <span>${festName} - 자유입장권 매표소 (On-Site Ticketing)</span>
+        <span>${festName} - 자유입장권 매표소</span>
       </div>
-      <div class="panel-body-rigid" style="padding: 25px; display: flex; flex-direction: column; gap: 20px;">
+      <div class="ticketing-body">
         
-        <div style="display: flex; flex-direction: column; gap: 15px;">
+        <div class="ticketing-rows-container">
           <!-- 성인 -->
-          <div style="display: flex; justify-content: space-between; align-items: center; padding: 12px; background: #0f172a; border-radius: 8px; border: 1px solid #1e293b;">
-            <div>
-              <div style="font-weight: bold; font-size: 15px; color: #fff;">일반 (Adult)</div>
-              <div style="font-size: 12px; color: var(--text-muted);">${basePrice.toLocaleString()}원</div>
+          <div class="ticketing-row">
+            <div class="ticketing-info">
+              <div class="ticketing-info-title">일반 (Adult)</div>
+              <div class="ticketing-info-desc">${basePrice.toLocaleString()}원</div>
             </div>
-            <div style="display: flex; align-items: center; gap: 12px;">
-              <button class="btn btn-rigid btn-red" id="btn-dec-adult" style="padding: 5px 12px; font-weight: bold;">-</button>
-              <span id="free-qty-adult" style="font-weight: bold; font-size: 16px; min-width: 20px; text-align: center;">1</span>
-              <button class="btn btn-rigid btn-green" id="btn-inc-adult" style="padding: 5px 12px; font-weight: bold;">+</button>
-              <span id="free-price-adult" style="font-weight: bold; color: var(--color-blue); min-width: 90px; text-align: right;">0원</span>
+            <div class="ticketing-controls">
+              <button class="btn-ticketing-qty minus" id="btn-dec-adult">-</button>
+              <span id="free-qty-adult" class="ticketing-qty-display">1</span>
+              <button class="btn-ticketing-qty plus" id="btn-inc-adult">+</button>
+              <span id="free-price-adult" class="ticketing-row-price">0원</span>
             </div>
           </div>
 
           <!-- 소아 -->
-          <div style="display: flex; justify-content: space-between; align-items: center; padding: 12px; background: #0f172a; border-radius: 8px; border: 1px solid #1e293b;">
-            <div>
-              <div style="font-weight: bold; font-size: 15px; color: #fff;">소아 (Child - 만 12세 이하)</div>
-              <div style="font-size: 12px; color: var(--text-muted);">${Math.round(basePrice * 0.7).toLocaleString()}원 (30% 할인)</div>
+          <div class="ticketing-row">
+            <div class="ticketing-info">
+              <div class="ticketing-info-title">소아 (Child - 만 12세 이하)</div>
+              <div class="ticketing-info-desc">${Math.round(basePrice * 0.7).toLocaleString()}원 (30% 할인)</div>
             </div>
-            <div style="display: flex; align-items: center; gap: 12px;">
-              <button class="btn btn-rigid btn-red" id="btn-dec-child" style="padding: 5px 12px; font-weight: bold;">-</button>
-              <span id="free-qty-child" style="font-weight: bold; font-size: 16px; min-width: 20px; text-align: center;">0</span>
-              <button class="btn btn-rigid btn-green" id="btn-inc-child" style="padding: 5px 12px; font-weight: bold;">+</button>
-              <span id="free-price-child" style="font-weight: bold; color: var(--color-blue); min-width: 90px; text-align: right;">0원</span>
+            <div class="ticketing-controls">
+              <button class="btn-ticketing-qty minus" id="btn-dec-child">-</button>
+              <span id="free-qty-child" class="ticketing-qty-display">0</span>
+              <button class="btn-ticketing-qty plus" id="btn-inc-child">+</button>
+              <span id="free-price-child" class="ticketing-row-price">0원</span>
             </div>
           </div>
 
           <!-- 유아 -->
-          <div style="display: flex; justify-content: space-between; align-items: center; padding: 12px; background: #0f172a; border-radius: 8px; border: 1px solid #1e293b;">
-            <div>
-              <div style="font-weight: bold; font-size: 15px; color: #fff;">유아 (Infant - 만 36개월 이하)</div>
-              <div style="font-size: 12px; color: var(--text-muted);">${Math.round(basePrice * 0.3).toLocaleString()}원 (70% 할인)</div>
+          <div class="ticketing-row">
+            <div class="ticketing-info">
+              <div class="ticketing-info-title">유아 (Infant - 만 36개월 이하)</div>
+              <div class="ticketing-info-desc">${Math.round(basePrice * 0.3).toLocaleString()}원 (70% 할인)</div>
             </div>
-            <div style="display: flex; align-items: center; gap: 12px;">
-              <button class="btn btn-rigid btn-red" id="btn-dec-infant" style="padding: 5px 12px; font-weight: bold;">-</button>
-              <span id="free-qty-infant" style="font-weight: bold; font-size: 16px; min-width: 20px; text-align: center;">0</span>
-              <button class="btn btn-rigid btn-green" id="btn-inc-infant" style="padding: 5px 12px; font-weight: bold;">+</button>
-              <span id="free-price-infant" style="font-weight: bold; color: var(--color-blue); min-width: 90px; text-align: right;">0원</span>
+            <div class="ticketing-controls">
+              <button class="btn-ticketing-qty minus" id="btn-dec-infant">-</button>
+              <span id="free-qty-infant" class="ticketing-qty-display">0</span>
+              <button class="btn-ticketing-qty plus" id="btn-inc-infant">+</button>
+              <span id="free-price-infant" class="ticketing-row-price">0원</span>
             </div>
           </div>
         </div>
 
-        <div style="background: rgba(16, 185, 129, 0.1); border: 2px solid #10b981; padding: 15px; display: flex; justify-content: space-between; align-items: center; border-radius: 8px; margin-top: 10px;">
-          <span style="color: #fff; font-weight: bold; font-size: 15px;">최종 합산 결제 금액</span>
-          <strong id="free-total-price" style="color: #10b981; font-size: 26px; font-family: var(--font-mono);">0원</strong>
+        <div class="ticketing-total-box">
+          <span class="ticketing-total-label">최종 합산 결제 금액</span>
+          <strong id="free-total-price" class="ticketing-total-amount">0원</strong>
         </div>
 
-        <button type="button" id="btn-free-pay" class="btn btn-rigid btn-green" style="padding: 15px; font-size: 18px; font-weight: bold;">
+        <button type="button" id="btn-free-pay" class="btn-ticketing-pay">
           입장권 현장 결제하기
         </button>
 
@@ -1534,10 +1440,10 @@ export async function renderFreeTicketForm(container, festivalId) {
     }
 
     const user = JSON.parse(sessionStorage.getItem("STAFF_CURRENT_USER") || "{}");
-    const userToken = sessionStorage.getItem("festio_staff_token") || 
-                      sessionStorage.getItem("userToken") || 
-                      localStorage.getItem("userToken") || 
-                      "festio-jwt-token-guest";
+    const userToken = sessionStorage.getItem("festio_staff_token") ||
+      sessionStorage.getItem("userToken") ||
+      localStorage.getItem("userToken") ||
+      "festio-jwt-token-guest";
 
     IMP.init('imp81384776');
     IMP.request_pay({
@@ -1639,10 +1545,10 @@ async function renderSeatMapScreen() {
     </div>
   `;
 
-  // Render Seating grid
+  // 좌석 그리드 렌더링
   renderSeatMap("seat-map-renderer-container", null);
 
-  // Bind Realtime Sync
+  // 실시간 동기화 바인딩
   setupRealtimeSeatSync();
   window.activeSeatClickHandler = null;
 
@@ -1663,7 +1569,7 @@ async function renderTicketingScreen() {
     return;
   }
 
-  // Restore pending seats from sessionStorage if arrived from React Seat Map
+  // React 좌석 맵에서 돌아온 경우 sessionStorage에서 대기 중인 좌석 복원
   const pending = sessionStorage.getItem('pendingTicketingSeats');
   if (pending) {
     try {
@@ -1689,7 +1595,7 @@ async function renderTicketingScreen() {
   // sessionStorage에 없을 경우 첫 번째 축제를 기본값으로 사용
   const activeFestivalId = currentFestivalId || (festivals.length > 0 ? festivals[0].id : null);
 
-  // Function to load seats for a specific festival
+  // 특정 축제 좌석 로딩 함수
   const loadSeatsForFestival = async (festivalId) => {
     try {
       const res = await fetch(`/api/order/seats?festivalId=${festivalId}`);
@@ -1776,7 +1682,7 @@ async function renderTicketingScreen() {
     </div>
   `;
 
-  // UI update helper
+  // UI 업데이트 헬퍼
   const updateSelectedSeatsUI = () => {
     const tbody = document.getElementById("selected-seats-tbody");
     if (!tbody) return;
@@ -1789,7 +1695,7 @@ async function renderTicketingScreen() {
       document.getElementById("ticket-final-price-lbl").innerText = "0원";
       document.getElementById("selected-seats-count-lbl").innerText = "0개 선택됨";
 
-      // Clear seat map highlights
+      // 좌석 맵 하이라이트 초기화
       document.querySelectorAll(".seat.selected-for-ticketing").forEach(el => {
         el.classList.remove("selected-for-ticketing");
       });
@@ -1825,7 +1731,7 @@ async function renderTicketingScreen() {
 
     document.getElementById("ticket-final-price-lbl").innerText = `${totalPrice.toLocaleString()}원`;
 
-    // Event bindings inside table
+    // 테이블 내부 이벤트 바인딩
     tbody.querySelectorAll(".seat-season-select").forEach(sel => {
       sel.onchange = (e) => {
         const idx = parseInt(e.target.getAttribute("data-index"));
@@ -1851,10 +1757,10 @@ async function renderTicketingScreen() {
     });
   };
 
-  // Pre-fill selected seats UI if data was passed from React Seat Map
+  // React 좌석 맵에서 전달된 데이터로 UI 미리 채우기
   updateSelectedSeatsUI();
 
-  // Handle Festival Change
+  // 축제 변경 처리
   let mutableFestivalId = activeFestivalId;
   document.getElementById("ticketing-festival-select").addEventListener("change", async (e) => {
     mutableFestivalId = e.target.value;
@@ -1864,7 +1770,7 @@ async function renderTicketingScreen() {
     updateSelectedSeatsUI();
   });
 
-  // Pay trigger
+  // 결제 트리거
   document.getElementById("btn-request-ticket-pay").onclick = () => {
     const holder = "현장발권자";
 
@@ -1873,7 +1779,7 @@ async function renderTicketingScreen() {
       return;
     }
 
-    // Calculate total price
+    // 총 결제 금액 계산
     let totalPrice = 0;
     selectedSeats.forEach(item => {
       totalPrice += calculateTicketPrice(item.seatId, item.seasonId, item.rateId);
@@ -1882,12 +1788,12 @@ async function renderTicketingScreen() {
     const seatIdsText = selectedSeats.map(item => item.seatId).join(", ");
     const paymentTitle = `현장 일괄 예매 [좌석 ${seatIdsText}]`;
 
-    // Call Toss payment simulator
+    // 토스 결제 시뮬레이터 호출
     requestTossPayment({
       title: paymentTitle,
       amount: totalPrice,
       onSuccess: async (paymentData) => {
-        // Success payment: Send to backend
+        // 결제 성공: 백엔드 데이터 전송
         const seatIds = selectedSeats.map(s => s.seatId);
 
         try {
@@ -1904,7 +1810,7 @@ async function renderTicketingScreen() {
           if (!res.ok) throw new Error("API Error");
           const result = await res.json();
 
-          // Publish global payment complete
+          // 전역 결제 완료 이벤트 발행
           publish("payment-complete", { customer: holder, amount: totalPrice });
           addNotification("TICKET", `현장 고객 ${holder}님 일괄 예매 완료: 좌석 [${seatIdsText}]`);
 
@@ -1961,7 +1867,7 @@ async function renderTicketingScreen() {
 
           selectedSeats = [];
 
-          // Re-render to fetch newly reserved seats from backend without resetting the entire screen
+          // 전체 화면 초기화 없이 백엔드에서 새로 예약된 좌석 가져와서 리렌더링
           await loadSeatsForFestival(mutableFestivalId);
           updateSelectedSeatsUI();
           renderDashboard(); // Update dashboard counts
@@ -2105,7 +2011,7 @@ async function renderRefundScreen() {
     if (tbody) tbody.innerHTML = `<tr><td colspan="7" class="text-center" style="color:#ef4444;">데이터를 불러오지 못했습니다.</td></tr>`;
   }
 
-  // Action Click Bindings
+  // 액션 클릭 바인딩
   document.querySelectorAll(".btn-request-ref").forEach(btn => {
     btn.onclick = async () => {
       const id = btn.getAttribute("data-id");
@@ -2237,7 +2143,7 @@ async function renderFnbQueueTable() {
     tbody.appendChild(tr);
   });
 
-  // Bind status toggle click handler
+  // 상태 토글 클릭 핸들러 바인딩
   document.querySelectorAll(".btn-fnb-status-toggle").forEach(el => {
     el.onclick = async () => {
       const ordId = el.getAttribute("data-id");
@@ -2263,7 +2169,7 @@ async function renderFnbQueueTable() {
     };
   });
 
-  // Cancel Handler
+  // 취소 처리기
   document.querySelectorAll(".btn-fnb-cancel").forEach(btn => {
     btn.onclick = async () => {
       const ordId = btn.getAttribute("data-id");
@@ -2533,7 +2439,7 @@ function renderGoodsInventoryScreen() {
 
   const modal = document.getElementById("goods-modal-overlay");
 
-  // Options logic
+  // 옵션 처리 로직
   const btnAddGOpt = document.querySelector(".btn-add-g-option");
   const gOptContainer = document.getElementById("goods-options-container");
   if (btnAddGOpt) {
@@ -2706,7 +2612,7 @@ function renderFnbInventoryScreen() {
 
   const modal = document.getElementById("food-modal-overlay");
 
-  // Options logic
+  // 옵션 처리 로직
   const btnAddFOpt = document.querySelector(".btn-add-f-option");
   const fOptContainer = document.getElementById("food-options-container");
   if (btnAddFOpt) {
@@ -2827,7 +2733,7 @@ function renderAdminGoodsList() {
         tbody.appendChild(tr);
       });
 
-      // Force Sold Out binding
+      // 강제 품절 바인딩
       document.querySelectorAll(".btn-force-soldout-g").forEach(btn => {
         btn.onclick = () => {
           if (confirm("해당 굿즈의 재고를 0으로 만들어 품절 처리하시겠습니까?")) {
@@ -2845,7 +2751,7 @@ function renderAdminGoodsList() {
         };
       });
 
-      // Edit binding
+      // 수정 바인딩
       document.querySelectorAll(".btn-edit-g").forEach(btn => {
         btn.onclick = () => {
           const id = btn.getAttribute("data-id");
@@ -2861,7 +2767,7 @@ function renderAdminGoodsList() {
         };
       });
 
-      // Delete binding
+      // 삭제 바인딩
       document.querySelectorAll(".btn-delete-g").forEach(btn => {
         btn.onclick = () => {
           if (confirm("정말 삭제하시겠습니까?")) {
@@ -2916,7 +2822,7 @@ function renderAdminFoodList() {
         tbody.appendChild(tr);
       });
 
-      // Toggle Ingredient Out binding
+      // 재료 소진 토글 바인딩
       document.querySelectorAll(".btn-toggle-f-status").forEach(btn => {
         btn.onclick = () => {
           const id = btn.getAttribute("data-id");
@@ -2929,7 +2835,7 @@ function renderAdminFoodList() {
         };
       });
 
-      // Edit binding
+      // 수정 바인딩
       document.querySelectorAll(".btn-edit-f").forEach(btn => {
         btn.onclick = () => {
           const id = btn.getAttribute("data-id");
@@ -2944,7 +2850,7 @@ function renderAdminFoodList() {
         };
       });
 
-      // Delete binding
+      // 삭제 바인딩
       document.querySelectorAll(".btn-delete-f").forEach(btn => {
         btn.onclick = () => {
           if (confirm("정말 삭제하시겠습니까?")) {
@@ -2965,33 +2871,29 @@ function renderAdminFoodList() {
     });
 }
 
-
 // ==========================================
-// 11. GLOBAL REALTIME SUBSCRIPTIONS & NOTIFICATIONS
-
-// ==========================================
-// 12. GLOBAL REALTIME SUBSCRIPTIONS & NOTIFICATIONS
+// GLOBAL REALTIME SUBSCRIPTIONS & NOTIFICATIONS
 // ==========================================
 function setupGlobalSubscriptions() {
   // 1. Notification Event (Bell and badge)
   subscribe("notification", (n) => {
-    // Show badge
+    // 배지 표시
     if (notifBadge) {
       notifBadge.style.display = "block";
       const current = parseInt(notifBadge.innerText) || 0;
       notifBadge.innerText = current + 1;
 
-      // Trigger micro shaking animation on bell
+      // 알림 종 미세 진동 애니메이션 트리거
       notifBell.classList.add("animate-shake");
       setTimeout(() => {
         notifBell.classList.remove("animate-shake");
       }, 500);
     }
 
-    // Render list in popover
+    // 팝오버 내부 리스트 렌더링
     populatePopoverNotifications();
 
-    // If currently viewing dashboard, re-render dashboard terminal logs instantly!
+    // 현재 대시보드 화면인 경우 터미널 로그 즉시 리렌더링
     const activeView = document.querySelector(".content-view.active");
     if (activeView && activeView.id === "view-dashboard") {
       renderDashboard();
@@ -3000,7 +2902,7 @@ function setupGlobalSubscriptions() {
 
   // 2. Realtime Order status listener
   subscribe("order-change", () => {
-    // Re-render relevant view if active
+    // 활성화된 경우 관련 뷰 리렌더링
     const activeView = document.querySelector(".content-view.active");
     if (activeView) {
       if (activeView.id === "view-dashboard") renderDashboard();
@@ -3026,12 +2928,9 @@ function setupGlobalSubscriptions() {
     const activeView = document.querySelector(".content-view.active");
     if (activeView) {
       if (activeView.id === "view-dashboard") {
+        const dropMenu = document.getElementById("custom-dropdown-menu");
+        if (dropMenu && dropMenu.style.display === "block") return; // 드롭다운 열려있으면 갱신 스킵
         renderDashboard();
-      } else if (activeView.id === "view-scan-status") {
-        // 스캔 현황 페이지일 경우 하단 테이블만 업데이트
-        if (typeof updateRecentScanLogsTable === 'function') {
-          updateRecentScanLogsTable();
-        }
       }
     }
   }, 3000); // 3초 주기
@@ -3046,7 +2945,7 @@ function setupGlobalSubscriptions() {
     }
   });
 
-  // Populate first list
+  // 첫 번째 리스트 채우기
   populatePopoverNotifications();
 }
 
@@ -3164,6 +3063,11 @@ function renderManualEntryScreen() {
     }
   };
 }
+
+
+
+
+
 
 
 

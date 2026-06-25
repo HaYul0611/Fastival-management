@@ -35,7 +35,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   const tkn = localStorage.getItem('userToken');
   if (tkn) {
     try {
-      const res = await fetch('/api/orders/tickets/qr', { headers: { 'Authorization': tkn } });
+      const res = await fetch('/api/order/tickets/qr', { headers: { 'Authorization': tkn } });
       if (res.ok) {
         const tickets = await res.json();
         festioSpent = tickets.reduce((sum, t) => sum + (t.totalPrice || 0), 0);

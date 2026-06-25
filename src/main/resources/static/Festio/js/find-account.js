@@ -1,5 +1,5 @@
 /* ============================================================
-   Festival O2O — find_account.js
+   Festival O2O — find-account.js
    ============================================================ */
 
 document.addEventListener('DOMContentLoaded', () => {

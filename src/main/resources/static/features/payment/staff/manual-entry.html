@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="ko">
 
 <head>
@@ -6,6 +6,10 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>티켓 수동 입장 처리 | FESTIO</title>
   <link rel="stylesheet" href="/assets/css/custom.css">
+  <script type="module">
+    import { injectLayout } from '/assets/js/layout.js';
+    injectLayout();
+  </script>
 </head>
 
 <body>
@@ -13,27 +17,11 @@
   <div id="app-shell">
 
     <!-- Sidebar -->
-    <aside id="sidebar" class="collapsed">
-      <div class="sidebar-header">
-        <span class="sidebar-title"
-          style="background: linear-gradient(90deg, #38bdf8, #10b981); -webkit-background-clip: text; -webkit-text-fill-color: transparent; font-weight: 900; letter-spacing: 1px;">FESTIO
-          STAFF SYSTEM</span>
-      </div>
-      <ul class="sidebar-menu">
-        <!-- Loaded dynamically from /features/user/staff/menu_aside.html -->
-      </ul>
-    </aside>
+    
 
     <!-- Main Workspace -->
     <main id="main-container">
-      <header id="header">
-        <button id="toggle-sidebar-btn" class="header-menu-btn">≡</button>
-        <div id="header-checkpoint">[ 로딩 중... ]</div>
-        <div class="header-actions">
-          <span id="header-user">인증 대기 중</span>
-          <button id="logout-btn">로그아웃</button>
-        </div>
-      </header>
+      
 
       <div id="main-content">
         <section id="view-manual-entry" class="content-view active">
@@ -49,3 +37,5 @@
 </body>
 
 </html>
+
+

@@ -1,4 +1,4 @@
-﻿/**
+/**
  * Festival O2O Platform — mypage.js
  * ─────────────────────────────────────────────────────────────
  * 마이페이지 고도화:
@@ -56,27 +56,27 @@ async function fetchFoodOrders() {
       return;
     }
 
-    const email = (window.FS && window.FS.Session) ? window.FS.Session.get()?.email : localStorage.getItem('userEmail');
+    const email = (window.FS && window.FS.Session) ? window.FS.Session.get()?.email : localStorage.getItem('email');
     if (!email) return;
 
     // 프로필 ID 조회
     const { data: profile } = await sb.from('shop_profiles').select('id').eq('user_email', email).maybeSingle();
-    if (!profile) return;
 
     // 푸시 알림 구독 (실시간 알림 수신)
-    if (sb.subscribeToNotifications) {
+    if (profile && sb.subscribeToNotifications) {
       sb.subscribeToNotifications(profile.id);
     }
 
     // 푸드트럭 주문 조회 (F로 시작)
-    const { data: fnbOrders, error } = await sb.from('shop_orders').select(`
-      *,
-      shop_order_items ( product_name, quantity, price_at_purchase )
-    `).eq('profile_id', profile.id).like('order_number', 'F%').order('created_at', { ascending: false });
+    const { data: fnbOrders, error } = await sb.from('shop_orders')
+      .select('*, shop_order_items(*)')
+      .eq('user_email', email)
+      .like('order_number', 'F%')
+      .order('created_at', { ascending: false });
 
     if (error) throw error;
 
-    if (fnbOrders) {
+    if (fnbOrders && fnbOrders.length > 0) {
       MOCK_FOOD_ORDERS = fnbOrders.map(f => {
         const item = f.shop_order_items && f.shop_order_items.length > 0 ? f.shop_order_items[0] : {};
         const productName = item.product_name || '푸드 상품';
@@ -103,44 +103,49 @@ async function fetchFoodOrders() {
         };
       });
       console.log('실제 Supabase DB 푸드트럭 주문 조회 완료:', MOCK_FOOD_ORDERS);
+    } else {
+      // DB에 내역이 없을 경우, Shop UI와 동일하게 기본 예시 데이터 출력 처리
+      MOCK_FOOD_ORDERS = [{
+        orderItemId: 'F1X9K2M4P5T8',
+        storeName: 'FESTIO F&B',
+        productName: '스모크 바베큐 버거 + 콜라 세트',
+        quantity: 1,
+        selectedOptions: '기본 옵션',
+        pickupTimeSlot: new Date().toLocaleString(),
+        totalPrice: 12500,
+        itemStatus: 'READY_FOR_PICKUP',
+        statusText: '조리 완료 (픽업 대기)',
+        qrToken: 'F1X9K2M4P5T8',
+        totpSecret: 'dummysecret12345'
+      }];
     }
   } catch (error) {
     console.error('Supabase DB 푸드트럭 주문 로드 실패:', error);
-  } finally {
-    try {
-      const localFood = JSON.parse(localStorage.getItem('LOCAL_MOCK_FOOD')) || [];
-      // 중복 제거 후 합치기
-      const existingIds = MOCK_FOOD_ORDERS.map(o => o.orderItemId);
-      const uniqueLocal = localFood.filter(l => !existingIds.includes(l.orderItemId));
-      MOCK_FOOD_ORDERS = MOCK_FOOD_ORDERS.concat(uniqueLocal);
-    } catch (e) { }
   }
 }
 
 /* 실제 DB 굿즈 구매 내역 조회 API 연동 */
-let MOCK_GOODS_ORDERS = [
-  { id: 1, orderItemId: 'G12345', storeName: '공식 굿즈샵', productName: '응원봉', quantity: 2, deliveryType: '현장 수령', totalPrice: 30000, pickupTimeSlot: '26.06.04 14:30', itemStatus: 'READY', statusText: '준비 완료', qrToken: 'mock_goods_token_1' }
-];
+let MOCK_GOODS_ORDERS = [];
 async function fetchGoodsOrders() {
   try {
     const sb = window.ShopDB ? window.ShopDB.getClient() : (window.getSupabase ? window.getSupabase() : null);
     if (!sb) return;
 
-    const email = (window.FS && window.FS.Session) ? window.FS.Session.get()?.email : localStorage.getItem('userEmail');
+    const email = (window.FS && window.FS.Session) ? window.FS.Session.get()?.email : localStorage.getItem('email');
     if (!email) return;
 
     const { data: profile } = await sb.from('shop_profiles').select('id').eq('user_email', email).maybeSingle();
-    if (!profile) return;
 
     // 굿즈 주문 조회 (G로 시작)
-    const { data: shopOrders, error } = await sb.from('shop_orders').select(`
-      *,
-      shop_order_items ( product_name, quantity, price_at_purchase )
-    `).eq('profile_id', profile.id).like('order_number', 'G%').order('created_at', { ascending: false });
+    const { data: shopOrders, error } = await sb.from('shop_orders')
+      .select('*, shop_order_items(*)')
+      .eq('user_email', email)
+      .like('order_number', 'G%')
+      .order('created_at', { ascending: false });
 
     if (error) throw error;
 
-    if (shopOrders) {
+    if (shopOrders && shopOrders.length > 0) {
       MOCK_GOODS_ORDERS = shopOrders.map(o => {
         const item = o.shop_order_items && o.shop_order_items.length > 0 ? o.shop_order_items[0] : {};
         const productName = item.product_name || '굿즈 상품';
@@ -168,14 +173,24 @@ async function fetchGoodsOrders() {
         };
       });
       console.log('실제 Supabase DB 굿즈 주문 조회 완료:', MOCK_GOODS_ORDERS);
+    } else {
+      MOCK_GOODS_ORDERS = [{
+        orderItemId: 'G9X8K7M6P5T4',
+        storeName: 'FESTIO MD',
+        productName: '페스티벌 공식 티셔츠',
+        quantity: 1,
+        selectedOptions: 'L 사이즈',
+        pickupTimeSlot: new Date().toLocaleString(),
+        totalPrice: 35000,
+        itemStatus: 'READY_FOR_PICKUP',
+        statusText: '수령 대기',
+        qrToken: 'G9X8K7M6P5T4',
+        deliveryType: '현장수령',
+        totpSecret: 'dummysecret99999'
+      }];
     }
   } catch (error) {
     console.error('Supabase DB 굿즈 주문 로드 실패:', error);
-  } finally {
-    try {
-      const localGoods = JSON.parse(localStorage.getItem('LOCAL_MOCK_GOODS')) || [];
-      MOCK_GOODS_ORDERS = MOCK_GOODS_ORDERS.concat(localGoods);
-    } catch (e) { }
   }
 }
 
@@ -577,9 +592,12 @@ function renderReservationList() {
           <div>옵션: ${f.selectedOptions}</div>
           <div class="mp-color-success mp-weight-500" style="display: flex; align-items: center; gap: 6px;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mp-icon-sm" style="flex-shrink: 0;"><circle cx="12" cy="13" r="8"></circle><path d="M12 9v4l2 2"></path><path d="M12 2v2"></path><path d="M18 4l-1 1"></path></svg> <span>${f.pickupTimeSlot}</span></div>
         </div>
-        <div class="mp-card-footer">
+        <div class="mp-card-footer" style="display: flex; justify-content: space-between; align-items: center;">
           <span class="mp-card-price">₩${f.totalPrice.toLocaleString()}</span>
-          ${f.itemStatus !== 'PICKED_UP' ? `<button class="btn btn-sm btn-outline mp-btn-sm mp-btn-outline-success" onclick="showFoodQr('${f.qrToken}')">픽업 QR 확인</button>` : ''}
+          <div style="display: flex; gap: 8px;">
+            <button class="btn btn-sm btn-outline mp-btn-sm" style="border-color: #8930F8; color: #8930F8;" onclick="event.stopPropagation(); window.location.href='/shop/shop.html?category=food'">Shop 이동</button>
+            ${f.itemStatus !== 'PICKED_UP' ? `<button class="btn btn-sm btn-outline mp-btn-sm mp-btn-outline-success" onclick="event.stopPropagation(); showFoodQr('${f.qrToken}')">픽업 QR 확인</button>` : ''}
+          </div>
         </div>
       </div>
     `;
@@ -617,9 +635,12 @@ function renderReservationList() {
           <div>수령방법: ${g.deliveryType}</div>
           <div style="color:#8888a8; display: flex; align-items: center; gap: 6px;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mp-icon-sm" style="flex-shrink: 0;"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg> <span>${g.pickupTimeSlot}</span></div>
         </div>
-        <div class="mp-card-footer">
+        <div class="mp-card-footer" style="display: flex; justify-content: space-between; align-items: center;">
           <span class="mp-card-price">₩${g.totalPrice.toLocaleString()}</span>
-          ${(g.deliveryType === '현장수령' && g.itemStatus !== 'COMPLETED') ? `<button class="btn btn-sm btn-outline mp-btn-sm" style="color:#F5A623; border-color:#F5A623;" onclick="window.location.href='/shop/orders.html'">상세/QR 보기</button>` : ''}
+          <div style="display: flex; gap: 8px;">
+            <button class="btn btn-sm btn-outline mp-btn-sm" style="color:#F5A623; border-color:#F5A623;" onclick="event.stopPropagation(); window.location.href='/shop/shop.html?category=goods'">Shop 이동</button>
+            ${(g.deliveryType === '현장수령' || g.deliveryType === '현장 수령') && g.itemStatus !== 'COMPLETED' ? `<button class="btn btn-sm btn-outline mp-btn-sm" style="color:#F5A623; border-color:#F5A623;" onclick="event.stopPropagation(); showGoodsQr('${g.qrToken}')">수령 QR 확인</button>` : ''}
+          </div>
         </div>
       </div>
     `;
@@ -883,6 +904,10 @@ function showTicketQr(token) {
 
 function showFoodQr(token) {
   openQrModalView(token, 'FOOD');
+}
+
+function showGoodsQr(token) {
+  openQrModalView(token, 'GOODS');
 }
 
 async function openQrModalView(token, type = 'TICKET') {
@@ -2817,7 +2842,7 @@ async function openQrModalView(token, type = 'TICKET') {
           </div>
           <div style="background: #fff;">
             <div style="display: flex; flex-direction: column; align-items: center; padding: 28px 24px 24px; gap: 16px;">
-              <div style="font-size: 0.9rem; font-weight: 700; color: #000; margin-bottom: -4px;">예매번호: <span id="dynamicQrStaticId" style="color: #000;"></span></div>
+              <div style="font-size: 0.9rem; font-weight: 700; color: #000; margin-bottom: -4px;"><span id="dynamicQrLabel">예매번호</span>: <span id="dynamicQrStaticId" style="color: #000;"></span></div>
               <div class="qr-canvas-container" style="border-radius: 12px; border: 2px solid #e0d8ff; background: #fff; padding: 8px; position: relative; overflow: hidden; display: flex; justify-content: center; align-items: center; width: 160px; height: 160px; box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);">
               <div id="dynamicQrCanvas" style="width: 100%; height: 100%; z-index: 1; position: relative; overflow: hidden; display: flex; align-items: center; justify-content: center;"></div>
             </div>
@@ -2867,6 +2892,7 @@ async function openQrModalView(token, type = 'TICKET') {
 
     document.getElementById('dynamicQrClose').addEventListener('click', () => {
       modal.style.display = 'none';
+      document.body.style.overflow = '';
     });
     document.getElementById('dynamicQrRefresh').addEventListener('click', () => {
       triggerQrRefresh(true);
@@ -2921,15 +2947,24 @@ async function openQrModalView(token, type = 'TICKET') {
 
   const qrTitle = document.getElementById('dynamicQrTitle');
   if (qrTitle) {
-    if (type === 'FOOD' || type === 'GOODS') {
-      const mockData = (window.MOCK_TICKETS && window.MOCK_TICKETS[0]) ? window.MOCK_TICKETS[0] : null;
-      const eventName = mockData ? mockData.eventName : '2026 워터밤 서울';
-      qrTitle.textContent = `${eventName} - 춘향이네 야시장`;
+    const mockData = (window.MOCK_TICKETS && window.MOCK_TICKETS[0]) ? window.MOCK_TICKETS[0] : null;
+    const eventName = mockData ? mockData.eventName : '2026 워터밤 서울';
+    if (type === 'FOOD') {
+      const foodOrder = typeof MOCK_FOOD_ORDERS !== 'undefined' ? MOCK_FOOD_ORDERS.find(f => f.qrToken === token) : null;
+      const storeName = foodOrder ? foodOrder.storeName : '춘향이네 야시장';
+      qrTitle.textContent = `${eventName} - ${storeName}`;
+    } else if (type === 'GOODS') {
+      const goodsOrder = typeof MOCK_GOODS_ORDERS !== 'undefined' ? MOCK_GOODS_ORDERS.find(g => g.qrToken === token) : null;
+      const storeName = goodsOrder ? goodsOrder.storeName : 'FESTIO MD';
+      qrTitle.textContent = `${eventName} - ${storeName}`;
     } else {
-      const mockData = (window.MOCK_TICKETS && window.MOCK_TICKETS[0]) ? window.MOCK_TICKETS[0] : null;
-      const eventName = mockData ? mockData.eventName : '2026 워터밤 서울';
       qrTitle.textContent = `나의 티켓 QR - ${eventName}`;
     }
+  }
+
+  const qrLabel = document.getElementById('dynamicQrLabel');
+  if (qrLabel) {
+    qrLabel.textContent = (type === 'FOOD' || type === 'GOODS') ? '주문번호' : '예매번호';
   }
 
   const accBody = modal.querySelector('.qr-accordion-body');
@@ -3076,10 +3111,10 @@ function generateHeroQR(token) {
 let _qrEpochOffset = 0; // Legacy variable, no longer accumulates
 
 async function triggerQrRefresh(isManual = false) {
-    if (isManual) {
-        _qrEpochOffset += 1;
-    }
-    const prefix = _currentQrType === 'FOOD' ? 'F' : (_currentQrType === 'GOODS' ? 'G' : 'T');
+  if (isManual) {
+    _qrEpochOffset += 1;
+  }
+  const prefix = _currentQrType === 'FOOD' ? 'F' : (_currentQrType === 'GOODS' ? 'G' : 'T');
   let newToken = '';
   let fixedOrderId = parseInt(_currentActiveOrderId, 10);
   if (isNaN(fixedOrderId)) fixedOrderId = 1;

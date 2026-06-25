@@ -14,7 +14,11 @@ window.ShopDB = (function () {
    */
   function getClient() {
     if (!_client && window.supabase) {
-      _client = window.supabase.createClient(SHOP_SUPABASE_URL, SHOP_SUPABASE_KEY);
+      if (typeof window.getSupabase === 'function' && window.getSupabase()) {
+        _client = window.getSupabase();
+      } else {
+        _client = window.supabase.createClient(SHOP_SUPABASE_URL, SHOP_SUPABASE_KEY);
+      }
     }
     return _client;
   }

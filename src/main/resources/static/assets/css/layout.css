@@ -1,0 +1,19 @@
+﻿/* Layout CSS for Header and Sidebar Components */
+#header {
+    position: relative;
+    z-index: 1000 !important;
+}
+
+.notif-popover-rigid {
+    position: absolute;
+    top: 30px; /* Reduced from 50px to make it closer */
+    right: 0;
+    width: 320px;
+    background: #fff;
+    border: 1px solid var(--border-color);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    border-radius: 8px;
+    display: none;
+    flex-direction: column;
+    z-index: 9999 !important;
+}

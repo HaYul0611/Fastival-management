@@ -62,3 +62,9 @@ tasks.named('bootRun') {
     sourceResources sourceSets.main
     systemProperty "file.encoding", "UTF-8"
 }
+tasks.withType(JavaCompile) {
+    options.encoding = 'UTF-8'
+}
+bootRun {
+    jvmArgs = ["-Dfile.encoding=UTF-8"]
+}

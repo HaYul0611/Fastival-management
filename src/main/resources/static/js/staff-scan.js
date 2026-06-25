@@ -1,4 +1,4 @@
-﻿// ============================================================
+// ============================================================
 // src/features/payment/staff-scan.js
 // 역할: HTML5 Camera API QR 스캔 + scan_log INSERT
 //       스캔 결과 7종 분기 + 팔찌 발급 + 관리자 잠금 해제
@@ -109,10 +109,9 @@ const ssExceptionCancelBtn = document.getElementById('ssExceptionCancelBtn');
 // ── 상태
 let currentUser = null;
 let userProfile = null;
-let scanType = 'ENTRANCE';
-let scanCooldown = false;  // 연속 스캔 방지 (1초)
+let scanCooldown = false;  // 중복 스캔 방지 (1초)
 let logRows = [];
-let pendingExceptionItem = null; // 예외 승인 대기 item
+let pendingExceptionItem = null; // 예외 처리 대상 item
 
 // ──────────────────────────────────────
 // 스캔 결과 상수 (schema.sql result 컬럼)
@@ -160,12 +159,10 @@ async function init() {
     await startCamera();
     loadRecentLogs();
     subscribeRealtime();
-    updateScanStatusSummary();
 
     // 오프라인 복구 시 동기화 리스너 등록
     window.addEventListener('online', syncPendingOfflineLogs);
 }
-
 
 // ──────────────────────────────────────
 // 카메라
@@ -175,15 +172,27 @@ async function startCamera() {
         const stream = await navigator.mediaDevices.getUserMedia({
             video: { facingMode: 'environment', width: { ideal: 1280 } }
         });
-        if (ssVideo) ssVideo.srcObject = stream;
+        if (ssVideo) {
+            ssVideo.srcObject = stream;
+            ssVideo.onplaying = () => {
+                const ph = document.getElementById('ssCameraPlaceholder');
+                if (ph) ph.style.display = 'none';
+            };
+        }
         if (ssCameraError) ssCameraError.hidden = true;
         requestAnimationFrame(scanFrame);
     } catch (err) {
         if (ssCameraError) {
             ssCameraError.hidden = false;
-            ssCameraError.innerText = "카메라를 시작할 수 없습니다. (권한 차단 또는 카메라 없음)\n" + err.message;
+            ssCameraError.innerText = "카메라를 시작할 수 없습니다. (권한 차단 또는 카메라 없음)";
         }
         if (ssRetryBtn) ssRetryBtn.style.display = 'inline-block';
+        const ph = document.getElementById('ssCameraPlaceholder');
+        if (ph) {
+            ph.style.display = 'flex';
+            const span = ph.querySelector('span');
+            if (span) span.innerText = '카메라 오류 (연결 불가)';
+        }
     }
 }
 
@@ -256,6 +265,20 @@ async function processQR(qrCode) {
     if (scanCooldown) return;
     scanCooldown = true;
     setTimeout(() => { scanCooldown = false; }, 1500);
+
+    // 모의 테스트 분기 (빠른 성공/실패 목업)
+    if (qrCode === 'T00000001001') {
+        await renderResult({ ticket_type: 'NORMAL', seat: { seat_row: 'A구역', seat_number: '12' } }, RESULT.SUCCESS, qrCode);
+        return;
+    }
+    if (qrCode === 'G00000001005') {
+        await renderResult({ ticket_type: 'NORMAL', seat: { seat_row: 'A구역', seat_number: '12' } }, RESULT.FAIL_DUPLICATE, qrCode);
+        return;
+    }
+    if (qrCode === 'F0000000000X') {
+        await renderResult(null, RESULT.FAIL_INVALID, qrCode);
+        return;
+    }
 
     // 12자리 유효성 체크
     if (!/^[A-Z0-9]{12}$/i.test(qrCode)) {
@@ -421,9 +444,10 @@ async function processQR(qrCode) {
         return;
     }
 
-    // 입장 게이트 전용 로직
-    if (scanType === 'ENTRANCE') {
-        if (item.item_status === 'ENTERED') {
+    // 통합 자동 스캔 로직 (바코드 타입에 따라 자동 분류)
+    if (prefix === 'T') {
+        // 티켓 스캔 (입장 처리)
+        if (item.item_status === 'ENTERED' || item.item_status === 'PICKED_UP') {
             await renderResult(item, RESULT.FAIL_DUPLICATE, qrCode);
             await insertScanLog(item.id, RESULT.FAIL_DUPLICATE);
             return;
@@ -434,12 +458,11 @@ async function processQR(qrCode) {
             return;
         }
 
-        if (prefix === 'T') {
-            await supabase
-                .from('order_item')
-                .update({ item_status: 'ENTERED', updated_at: new Date().toISOString() })
-                .eq('id', item.id);
-        }
+        await supabase
+            .from('order_item')
+            .update({ item_status: 'ENTERED', updated_at: new Date().toISOString() })
+            .eq('id', item.id);
+
         await renderResult(item, RESULT.SUCCESS, qrCode);
         await insertScanLog(item.id, RESULT.SUCCESS);
 
@@ -447,27 +470,18 @@ async function processQR(qrCode) {
             showWristbandModal(item);
         }
         return;
-    }
-
-    // 부스 수령 로직
-    if (scanType === 'STORE_PICKUP') {
-        if (item.item_status === 'PICKED_UP' || item.item_status === 'COMPLETED') {
+    } else if (prefix === 'F' || prefix === 'G') {
+        // 굿즈 / F&B 스캔 (수령 처리)
+        if (item.status === 'COMPLETED' || item.item_status === 'COMPLETED') {
             await renderResult(item, RESULT.FAIL_DUPLICATE, qrCode);
             await insertScanLog(item.id, RESULT.FAIL_DUPLICATE);
             return;
         }
 
-        if (prefix === 'T') {
-            await supabase
-                .from('order_item')
-                .update({ item_status: 'PICKED_UP', updated_at: new Date().toISOString() })
-                .eq('id', item.id);
-        } else {
-            await supabase
-                .from('shop_orders')
-                .update({ status: 'COMPLETED' })
-                .eq('id', item.id);
-        }
+        await supabase
+            .from('shop_orders')
+            .update({ status: 'COMPLETED' })
+            .eq('id', item.id);
 
         await renderResult(item, RESULT.SUCCESS, qrCode);
         await insertScanLog(item.id, RESULT.SUCCESS);
@@ -512,7 +526,7 @@ async function insertScanLog(orderItemId, result) {
     const logData = {
         order_item_id: orderItemId,
         staff_user_id: currentUser.id,
-        scan_type: scanType,
+        scan_type: 'AUTO_DETECT',
         result: result,
         scanned_at: new Date().toISOString()
     };
@@ -576,14 +590,6 @@ async function renderResult(item, result, code) {
     const isException = result === RESULT.SUCCESS_EXCEPTION;
     const isFail = !isSuccess && !isException;
 
-    const cardClass = isSuccess ? 'ss-result-card--success'
-        : isException ? 'ss-result-card--success-exception'
-            : 'ss-result-card--fail';
-
-    const iconClass = isSuccess ? 'ss-result-card__icon--success'
-        : isException ? 'ss-result-card__icon--warning'
-            : 'ss-result-card__icon--fail';
-
     const resultLabel = getResultLabel(result);
 
     let bodyHtml = '';
@@ -596,8 +602,8 @@ async function renderResult(item, result, code) {
         bodyHtml = `
             <div class="ss-result-card__rows">
                 <div class="ss-result-card__row"><span>좌석</span><strong>${seatStr}</strong></div>
-                <div class="ss-result-card__row"><span>유형</span><strong>${typeStr}</strong></div>
-                <div class="ss-result-card__row"><span>스캔</span><strong>${scanType === 'ENTRANCE' ? '입장 게이트' : '부스 수령'}</strong></div>
+                <div class="ss-result-card__row"><span>티켓</span><strong>${typeStr}</strong></div>
+                <div class="ss-result-card__row"><span>결과</span><strong>${isSuccess ? '처리 완료' : '처리 불가'}</strong></div>
             </div>`;
     }
 
@@ -615,30 +621,74 @@ async function renderResult(item, result, code) {
     }
 
     ssResultCard.className = `ss-result-card ${cardClass}`;
-    ssResultCard.innerHTML = `
-        <div class="ss-result-card__top">
-            <div class="ss-result-card__icon ${iconClass}">
-                ${isSuccess ? successSVG() : ''}
-                ${isException ? warningSVG() : ''}
-                ${isFail ? failSVG() : ''}
-            </div>
-            <div>
-                <div class="ss-result-card__result-text">${resultLabel}</div>
-                <div class="ss-result-card__code">${(code ?? '').toUpperCase()}</div>
-            </div>
-        </div>
-        ${bodyHtml}
-        ${actionBtn}`;
+    ssResultCard.hidden = true; // 인라인 결과 카드 오버레이 사용 안함 (중앙 토스트 팝업만 사용)
 
-    ssResultCard.hidden = false;
-
-    // 예외 승인 버튼 이벤트
-    var el = document.getElementById('ssExceptionBtnInCard'); if (el) el.addEventListener('click', () => {
-        if (item) showExceptionModal(item, code);
-    });
+    // 화면 정중앙 토스트 표시 (Windows Toast 형태)
+    showToastOverlay(result, code, item);
 
     // 로그에 추가
     prependLog({ code, item, result, time: new Date() });
+}
+
+function showToastOverlay(result, code, item) {
+    const overlay = document.getElementById("scan-validation-screen");
+    if (!overlay) return;
+    const title = document.getElementById("scan-result-title");
+    const msg = document.getElementById("scan-result-msg");
+    const tNum = document.getElementById("scan-result-ticket-number");
+    const closeBtn = document.getElementById("btn-close-scan-overlay");
+    const exceptionBtn = document.getElementById("ssExceptionBtnInToast");
+
+    const resultLabel = getResultLabel(result);
+    title.innerText = resultLabel;
+    msg.innerText = item?.seat ? `${item.seat.seat_row} ${item.seat.seat_number}번` : (item ? "입장권" : "");
+    tNum.innerText = `🎫 ${code ? code.toUpperCase() : '알 수 없음'}`;
+
+    closeBtn.className = "btn btn-rigid";
+    overlay.className = "scan-validation-popup";
+
+    if (result === RESULT.SUCCESS || result === RESULT.SUCCESS_EXCEPTION) {
+        overlay.classList.add("status-valid");
+        closeBtn.classList.add("btn-green");
+    } else if (result === RESULT.FAIL_DUPLICATE) {
+        overlay.classList.add("status-already");
+        closeBtn.classList.add("btn-purple");
+    } else {
+        overlay.classList.add("status-invalid");
+        closeBtn.classList.add("btn-red");
+    }
+
+    // 예외 승인 버튼 노출 로직
+    const isFail = result.startsWith('실패-');
+    const isStaffRole = ['ROLE_STAFF', 'ROLE_FOOD_STAFF', 'ROLE_GATE_STAFF', 'ROLE_GOODS_STAFF'].includes(userProfile?.role);
+    if (exceptionBtn) {
+        if (isFail && result !== RESULT.FAIL_INVALID && result !== RESULT.FAIL_REFUNDED && isStaffRole) {
+            exceptionBtn.style.display = "block";
+            exceptionBtn.onclick = () => {
+                overlay.style.display = "none";
+                if (window.scanPopupTimeout) clearTimeout(window.scanPopupTimeout);
+                if (item) showExceptionModal(item, code);
+            };
+        } else {
+            exceptionBtn.style.display = "none";
+        }
+    }
+
+    overlay.style.display = "block";
+
+    if (window.scanPopupTimeout) clearTimeout(window.scanPopupTimeout);
+
+    // 에러 발생이나 예외 승인이 필요한 경우 토스트가 빨리 사라지지 않도록 시간을 늘림
+    const timeoutDuration = (isFail) ? 3000 : 1500;
+
+    window.scanPopupTimeout = setTimeout(() => {
+        overlay.style.display = "none";
+    }, timeoutDuration);
+
+    closeBtn.onclick = () => {
+        overlay.style.display = "none";
+        if (window.scanPopupTimeout) clearTimeout(window.scanPopupTimeout);
+    };
 }
 
 function getResultLabel(result) {
@@ -706,17 +756,18 @@ async function loadRecentLogs() {
         .from('scan_log')
         .select(`
             id, scan_type, result, scanned_at,
-            order_item:order_item_id ( qr_code_uuid, ticket_type )
+            order_item:order_item_id ( qr_code_uuid, ticket_type, target_vulnerable_name, seat:seat_id ( seat_row, seat_number ) )
         `)
         .eq('staff_user_id', currentUser.id)
         .order('scanned_at', { ascending: false })
         .limit(20);
 
     if (!data?.length) return;
-    if (ssLogList) if (ssLogList) ssLogList.innerHTML = '';
+    if (ssLogList) ssLogList.innerHTML = '';
     data.forEach(log => {
         appendLogRow({
-            code: log.order_item?.qr_code_uuid ?? '------',
+            code: log.order_item?.qr_code_uuid ?? '알 수 없음',
+            item: log.order_item,
             type: log.scan_type,
             result: log.result,
             time: new Date(log.scanned_at)
@@ -731,46 +782,69 @@ function prependLog({ code, item, result, time }) {
 
     const row = buildLogRow({
         code: code ?? '',
-        type: scanType,
+        item: item,
+        type: 'AUTO',
         result,
         time
     });
     if (!ssLogList) return; const empty = ssLogList.querySelector('.ss-log-empty');
     if (empty) empty.remove();
     ssLogList.insertBefore(row, ssLogList.firstChild);
-    
+
     // 로그 추가 후 통계 업데이트
-    if (typeof updateScanStatusSummary === 'function') {
-        updateScanStatusSummary();
-    }
 }
 
 function appendLogRow(data) {
     if (ssLogList) ssLogList.appendChild(buildLogRow(data));
 }
 
-function buildLogRow({ code, type, result, time }) {
+function buildLogRow({ code, item, type, result, time }) {
     const isSuccess = result === RESULT.SUCCESS;
     const isException = result === RESULT.SUCCESS_EXCEPTION;
-    const modClass = isSuccess ? 'ss-log-row--success'
-        : isException ? 'ss-log-row--exception'
-            : 'ss-log-row--fail';
-    const badgeClass = isSuccess ? 'ss-log-row__result--success'
-        : isException ? 'ss-log-row__result--exception'
-            : 'ss-log-row__result--fail';
 
     const timeStr = time.toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
     const typeStr = type === 'ENTRANCE' ? '입장' : '수령';
-    const shortResult = isSuccess ? '성공' : isException ? '예외승인' : '실패';
 
-    const el = document.createElement('div');
-    el.className = `ss-log-row ${modClass}`;
-    el.innerHTML = `
-        <span class="ss-log-row__code">${(code ?? '').toUpperCase()}</span>
-        <span class="ss-log-row__name">${result}</span>
-        <span class="ss-log-row__type">${typeStr}</span>
-        <span class="ss-log-row__result ${badgeClass}">${shortResult}</span>`;
-    return el;
+    const ticketId = code || "알 수 없음";
+    const seatId = (item && item.seat) ? `${item.seat.seat_row} ${item.seat.seat_number}` : "-";
+    const customerName = (item && item.target_vulnerable_name) ? item.target_vulnerable_name : "현장 고객";
+    const ticketType = (item && item.ticket_type === 'VULNERABLE') ? "우대/취약" : "일반/현장";
+    const ticketTypeBadge = (ticketType === '우대/취약') ? "badge-gray" : "badge-blue";
+
+    let colorClass = "badge-red";
+    let statusText = getResultLabel(result);
+    let rightIndicator = "border-right-red";
+    let indicatorClass = "invalid";
+
+    if (isSuccess) {
+        colorClass = "badge-green";
+        rightIndicator = "border-right-green";
+        indicatorClass = "valid";
+    } else if (isException) {
+        colorClass = "badge-warning";
+        rightIndicator = "border-right-yellow";
+        indicatorClass = "already_entered";
+    } else if (result === RESULT.FAIL_DUPLICATE) {
+        colorClass = "badge-purple";
+        rightIndicator = "border-right-purple";
+        indicatorClass = "duplicate";
+    }
+
+    const tr = document.createElement('tr');
+    tr.className = rightIndicator;
+    tr.innerHTML = `
+        <td>${timeStr}</td>
+        <td><strong>${ticketId}</strong></td>
+        <td><span class="badge badge-gray">${seatId}</span></td>
+        <td>${customerName}</td>
+        <td><span class="badge ${ticketTypeBadge}">${ticketType}</span></td>
+        <td><strong>1개</strong></td>
+        <td><span class="badge ${colorClass}">${statusText}</span></td>
+        <td class="text-right">
+          <span class="indicator-bar ${indicatorClass}"></span>
+        </td>
+    `;
+    return tr;
 }
 
 // ──────────────────────────────────────
@@ -833,11 +907,6 @@ function showUnlockResult(msg, ok) {
 function bindEvents() {
     if (ssRetryBtn) ssRetryBtn.addEventListener('click', startCamera);
 
-    if (ssManualBtn) ssManualBtn.addEventListener('click', () => {
-        if (ssManualPanel) ssManualPanel.hidden = !ssManualPanel.hidden;
-        if (ssManualPanel && !ssManualPanel.hidden && ssManualInput) ssManualInput.focus();
-    });
-
     if (ssManualSubmit && ssManualInput) ssManualSubmit.addEventListener('click', () => {
         const v = ssManualInput.value.trim();
         if (v) { processQR(v); ssManualInput.value = ''; }
@@ -847,14 +916,35 @@ function bindEvents() {
         if (e.key === 'Enter' && ssManualSubmit) ssManualSubmit.click();
     });
 
-    if (btnEntrance) btnEntrance.addEventListener('click', () => setScanType('ENTRANCE'));
-    if (btnPickup) btnPickup.addEventListener('click', () => setScanType('STORE_PICKUP'));
-
     if (ssUnlockBtn) ssUnlockBtn.addEventListener('click', handleUnlock);
     if (ssUnlockInput) ssUnlockInput.addEventListener('keydown', e => { if (e.key === 'Enter') handleUnlock(); });
 
     // 팔찌 모달
     if (ssWristbandCloseBtn) ssWristbandCloseBtn.addEventListener('click', () => { ssWristbandModal.hidden = true; });
+
+    // 스캔 기록 검색
+    const searchInput = document.getElementById("ssLogSearchInput");
+    if (searchInput) {
+        searchInput.addEventListener("keyup", (e) => {
+            const term = e.target.value.toLowerCase();
+            const rows = document.querySelectorAll("#ssLogList tr");
+            rows.forEach(row => {
+                const ticketCell = row.cells[1];
+                if (ticketCell) {
+                    const text = ticketCell.textContent.toLowerCase();
+                    row.style.display = text.includes(term) ? "" : "none";
+                }
+            });
+        });
+    }
+
+    // 모의 테스트 스캔
+    document.querySelectorAll(".btn-mock-scan").forEach(btn => {
+        btn.addEventListener('click', () => {
+            const id = btn.getAttribute("data-id");
+            if (id) processQR(id);
+        });
+    });
     var el = document.getElementById('ssWristbandBackdrop'); if (el) el.addEventListener('click', () => { ssWristbandModal.hidden = true; });
 
     // 예외 승인 모달
@@ -878,12 +968,6 @@ function bindEvents() {
         ssExceptionModal.hidden = true;
         pendingExceptionItem = null;
     });
-}
-
-function setScanType(type) {
-    scanType = type;
-    if (btnEntrance) btnEntrance.classList.toggle('ss-scan-type-btn--active', type === 'ENTRANCE');
-    if (btnPickup) btnPickup.classList.toggle('ss-scan-type-btn--active', type === 'STORE_PICKUP');
 }
 
 // ──────────────────────────────────────
@@ -912,6 +996,7 @@ function failSVG() {
 // 실행
 // ──────────────────────────────────────
 init();
+
 
 
 

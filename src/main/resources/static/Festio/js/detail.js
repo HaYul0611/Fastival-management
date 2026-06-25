@@ -2031,6 +2031,29 @@ document.addEventListener('DOMContentLoaded', async () => {
           }
         }
       }
+
+      // 리뷰 탭 등 동적으로 생성된 댓글 영역이 빌더 저장 시 함께 저장된 경우 제거하여 항상 새롭게 초기화 (깜빡임/오류메시지 캐싱 방지)
+      const dynamicComments = tempDiv.querySelector('#dynamic-comments-section');
+      if (dynamicComments) {
+        dynamicComments.remove();
+      }
+
+      // 구버전 빌더 데이터 호환성 처리: tabs-header-wrapper가 없는 경우 동적으로 감싸서 sticky 기능 복원
+      const oldTabsHeader = tempDiv.querySelector('.detail-tabs-header');
+      if (oldTabsHeader && !oldTabsHeader.closest('.tabs-header-wrapper')) {
+        const wrapper = document.createElement('div');
+        wrapper.className = 'tabs-header-wrapper';
+        wrapper.style.position = 'relative';
+        wrapper.style.display = 'flex';
+        wrapper.style.alignItems = 'center';
+        oldTabsHeader.parentNode.insertBefore(wrapper, oldTabsHeader);
+        wrapper.appendChild(oldTabsHeader);
+      }
+
+      // Supabase 데이터 내 잘못 저장된 깨진 stylesheet link 태그 제거 (불필요한 네트워크 에러 방지)
+      const strayLinks = tempDiv.querySelectorAll('link[rel="stylesheet"]');
+      strayLinks.forEach(link => link.remove());
+
       tabsSection.innerHTML = tempDiv.innerHTML;
     }
   }

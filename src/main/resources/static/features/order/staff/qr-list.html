@@ -1,31 +1,21 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="ko">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>현장 발권 내역 (QR) | FESTIO</title>
   <link rel="stylesheet" href="/assets/css/custom.css">
+  <script type="module">
+    import { injectLayout } from '/assets/js/layout.js';
+    injectLayout();
+  </script>
 </head>
 <body>
   <div id="app-shell">
-    <aside id="sidebar" class="collapsed">
-      <div class="sidebar-header">
-        <span class="sidebar-title" style="background: linear-gradient(90deg, #38bdf8, #10b981); -webkit-background-clip: text; -webkit-text-fill-color: transparent; font-weight: 900; letter-spacing: 1px;">FESTIO STAFF SYSTEM</span>
-      </div>
-      <ul class="sidebar-menu">
-        <!-- Loaded dynamically from /features/user/staff/menu_aside.html -->
-      </ul>
-    </aside>
+    
 
     <main id="main-container">
-      <header id="header">
-        <button id="toggle-sidebar-btn" class="header-menu-btn">≡</button>
-        <div id="header-checkpoint">티켓 관리</div>
-        <div class="header-actions">
-          <span id="header-user">인증 대기 중</span>
-          <button id="logout-btn">로그아웃</button>
-        </div>
-      </header>
+      
 
       <div id="main-content">
         <section class="content-view active">
@@ -47,3 +37,5 @@
   <script src="js/qr-list.js"></script>
 </body>
 </html>
+
+

@@ -4,7 +4,7 @@ Copy-Item -Path .gitignore -Destination festival\ -Force
 
 
 # 2. festival 폴더로 이동
-cd festival
+Set-Location festival
 
 # 3. Git 커밋 및 푸시 진행
 git add .
@@ -14,5 +14,5 @@ git push origin main
 
 
 # 4. 원래 폴더로 복귀
-cd ..
+Set-Location ..
 Write-Output "🎉 Hugging Face로 최신 코드가 복사 및 푸시되었습니다! 배포 로그를 확인하세요."

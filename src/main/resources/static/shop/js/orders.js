@@ -445,8 +445,20 @@ document.addEventListener('DOMContentLoaded', async () => {
             { product_name: '스모크 바베큐 버거 + 콜라 세트', quantity: 1, price_at_purchase: 12500, shop_products: { type: 'FOOD' } }
           ]
         };
-        window.currentOrders = [dummyOrder];
-        listEl.innerHTML = renderOrderCard(dummyOrder);
+        const dummyGoods = {
+          order_number: 'G9X8K7M6P5T4',
+          created_at: new Date().toISOString(),
+          delivery_type: 'PICKUP',
+          status: 'READY_FOR_PICKUP',
+          payment_method: 'FESTIO_PAY',
+          total_amount: 35000,
+          totp_secret: 'dummysecret99999',
+          shop_order_items: [
+            { product_name: '페스티벌 공식 티셔츠', quantity: 1, price_at_purchase: 35000, shop_products: { type: 'GOODS' } }
+          ]
+        };
+        window.currentOrders = [dummyOrder, dummyGoods];
+        listEl.innerHTML = renderOrderCard(dummyOrder) + renderOrderCard(dummyGoods);
         return;
       }
 

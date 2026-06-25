@@ -278,8 +278,10 @@ window.initCommentUI = function () {
       allReviews = reviews || [];
       renderList();
     } catch (e) {
-      console.error(e);
-      document.getElementById('commentListContainer').innerHTML = `<div style="text-align:center; padding:2rem; color:#ef4444;">데이터를 불러오는 데 실패했습니다.</div>`;
+      console.warn('Comments/Reviews load error:', e);
+      allComments = [];
+      allReviews = [];
+      renderList();
     }
   }
 

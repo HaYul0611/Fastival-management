@@ -1255,7 +1255,7 @@ const commentApi = {
         .select(`
           *,
           app_user:user_id ( name, profile_img, gender ),
-          comment_likes ( user_id )
+          comment_likes!fk_comment_likes_comment ( user_id )
         `)
         .eq('festival_id', festivalId)
         .order('created_at', { ascending: true });
