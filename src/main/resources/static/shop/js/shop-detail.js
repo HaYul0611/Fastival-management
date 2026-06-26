@@ -90,6 +90,16 @@ function renderRelatedProducts(storeId, currentProductId) {
     if (!sold && rp.cat === 'food' && rp.wait > 0) badges.push(`<span class="badge badge-wait">대기 ${rp.wait}분</span>`);
     if (!sold && rp.stock > 0 && rp.stock <= 5) badges.push(`<span class="badge badge-low">잔여 ${rp.stock}개</span>`);
 
+    let rpUrl = rp.imageUrl || '';
+    if (rpUrl && !rpUrl.startsWith('http') && !rpUrl.startsWith('/')) {
+      rpUrl = '/assets/img/products/' + rpUrl;
+    }
+    if (rpUrl && rpUrl.includes('french_fries.jpg')) {
+      rpUrl = '/assets/img/products/fries_chili.jpg';
+    } else if (rpUrl && rpUrl.includes('cube_steak.jpg')) {
+      rpUrl = '/assets/img/products/burger_double.jpg';
+    }
+
     return `
       <article class="pcard${sold ? ' sold' : ''}" data-id="${rp.id}" tabindex="0" onclick="location.href='shop-detail.html?id=${rp.id}'" style="cursor:pointer">
         <div class="pcard-img-area">
@@ -109,8 +119,8 @@ function renderRelatedProducts(storeId, currentProductId) {
           ];
           mockImg = goodsImgs[rp.id % goodsImgs.length];
         }
-        return rp.imageUrl
-          ? `<img src="${rp.imageUrl}" class="pcard-img" alt="${rp.name}" onerror="if(this.src !== '${mockImg}') { this.src='${mockImg}'; } else { this.style.display='none'; this.nextElementSibling.style.display='flex'; }">
+        return rpUrl
+          ? `<img src="${rpUrl}" class="pcard-img" alt="${rp.name}" onerror="if(this.src !== '${mockImg}') { this.src='${mockImg}'; } else { this.style.display='none'; this.nextElementSibling.style.display='flex'; }">
                  <div class="pcard-placeholder" style="display:none; align-items:center; justify-content:center; width:100%; height:100%;">${smallPlaceholder(rp.cat)}</div>`
           : `<img src="${mockImg}" class="pcard-img" alt="${rp.name}" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
                  <div class="pcard-placeholder" style="display:none; align-items:center; justify-content:center; width:100%; height:100%;">${smallPlaceholder(rp.cat)}</div>`;
@@ -152,6 +162,16 @@ function renderDetail(p) {
   main.className = `gal-main gal-main-cat-${p.cat}`;
 
   // 메인 이미지 렌더링
+  let detailUrl = p.imageUrl || '';
+  if (detailUrl && !detailUrl.startsWith('http') && !detailUrl.startsWith('/')) {
+    detailUrl = '/assets/img/products/' + detailUrl;
+  }
+  if (detailUrl && detailUrl.includes('french_fries.jpg')) {
+    detailUrl = '/assets/img/products/fries_chili.jpg';
+  } else if (detailUrl && detailUrl.includes('cube_steak.jpg')) {
+    detailUrl = '/assets/img/products/burger_double.jpg';
+  }
+
   let mockMainImg = '';
   if (p.cat === 'food') {
     const foodImgs = [
@@ -167,7 +187,7 @@ function renderDetail(p) {
     mockMainImg = goodsImgs[p.id % goodsImgs.length];
   }
 
-  const renderImgSrc = p.imageUrl || mockMainImg;
+  const renderImgSrc = detailUrl || mockMainImg;
 
   if (renderImgSrc) {
     document.getElementById('galPlaceholder').style.display = 'none';
@@ -352,7 +372,7 @@ function tabContent(k) {
           </div>
           <div style="display:flex; gap:8px; margin-bottom:12px;">
             <div style="width:80px; height:80px; border-radius:8px; background:var(--g100); overflow:hidden;">
-              <img src="https://placehold.co/80x80/eee/ccc?text=QR" style="width:100%; height:100%; object-fit:cover; opacity: 0.3;">
+              <img src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" style="width:100%; height:100%; object-fit:cover; opacity: 0.3;">
             </div>
           </div>
           <p style="font-size:14px; line-height:1.6; color:var(--g800); margin-bottom:16px;">
@@ -425,6 +445,10 @@ function getOpts() {
 /* ── 액션 버튼 ──────────────────────────────────────────────── */
 function bindActions() {
   document.getElementById('btnCart').addEventListener('click', () => {
+    if (!DS.product) {
+      window.FS.Toast.show({ title: '잠시만 기다려주세요', msg: '상품 정보를 불러오는 중입니다.', type: 'warning' });
+      return;
+    }
     window.FS.requireLogin(() => {
       const opts = getOpts(); if (opts === null) return;
       const item = { productId: DS.product.id, name: DS.product.name, price: DS.unitPrice, qty: DS.qty, opts, cat: DS.product.cat };
@@ -439,6 +463,10 @@ function bindActions() {
   });
 
   document.getElementById('btnBuy').addEventListener('click', () => {
+    if (!DS.product) {
+      window.FS.Toast.show({ title: '잠시만 기다려주세요', msg: '상품 정보를 불러오는 중입니다.', type: 'warning' });
+      return;
+    }
     window.FS.requireLogin(() => {
       const opts = getOpts(); if (opts === null) return;
       const item = { productId: DS.product.id, name: DS.product.name, price: DS.unitPrice, qty: DS.qty, opts, cat: DS.product.cat };

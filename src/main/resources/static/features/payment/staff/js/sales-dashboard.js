@@ -102,7 +102,7 @@
           });
 
           // 인기 메뉴 Top 5 리스트 그리기
-          renderRankingList(data.topProducts, 'quantity', '개 판매');
+          renderRankingList(data.topProducts, 'total_quantity', '개 판매');
 
         } else if (userSpecificRole === 'ROLE_GOODS_STAFF') {
           // GOODS STAFF: 인기 상품 Top 5 가로 막대 차트

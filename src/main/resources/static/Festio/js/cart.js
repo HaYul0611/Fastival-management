@@ -175,6 +175,17 @@ function initCartPayment() {
     if (festioArea) {
       if (_selectedPayMethod === 'festiopay') {
         festioArea.classList.remove('hidden');
+        // 실시간 지갑 잔액 조회 및 반영
+        const token = localStorage.getItem('userToken');
+        if (token) {
+          fetch('/api/wallet/balance', { headers: { 'Authorization': token } })
+            .then(res => res.json())
+            .then(data => {
+              const balEl = $('#cart-festiopay-balance');
+              if (balEl) balEl.textContent = formatKRW(data.balance || 0);
+            })
+            .catch(err => console.error('장바구니 지갑 잔액 조회 실패', err));
+        }
       } else {
         festioArea.classList.add('hidden');
       }
@@ -266,12 +277,56 @@ function initCartPayment() {
     const totalGross = _cartItems.reduce((sum, item) => sum + (item.price * item.quantity), 0);
 
     if (_selectedPayMethod === 'festiopay') {
-      const balEl = $('#cart-festiopay-balance');
-      let balance = parseInt(balEl ? balEl.textContent.replace(/[^0-9]/g, '') : 0);
+      const token = localStorage.getItem('userToken');
+      if (!token) {
+        Toast.warning('로그인이 필요합니다.');
+        return;
+      }
+
+      // 실시간 잔액을 백엔드에서 다시 한 번 확인
+      let balance = 0;
+      try {
+        const balRes = await fetch('/api/wallet/balance', { headers: { 'Authorization': token } });
+        if (balRes.ok) {
+          const balData = await balRes.json();
+          balance = balData.balance || 0;
+        }
+      } catch (err) {
+        const balEl = $('#cart-festiopay-balance');
+        balance = parseInt(balEl ? balEl.textContent.replace(/[^0-9]/g, '') : 0);
+      }
+
       if (balance < totalGross) {
         Toast.warning('잔액이 부족합니다. 충전 후 다시 시도해주세요.');
         return;
       }
+
+      // 백엔드 지갑 차감 API 호출
+      try {
+        const payRes = await fetch('/api/wallet/pay', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': token
+          },
+          body: JSON.stringify({ amount: totalGross })
+        });
+
+        if (!payRes.ok) {
+          const errText = await payRes.text();
+          throw new Error(errText || '결제 처리에 실패했습니다.');
+        }
+
+        const payData = await payRes.json();
+        // 화면 잔액 갱신
+        const balEl = $('#cart-festiopay-balance');
+        if (balEl) balEl.textContent = formatKRW(payData.newBalance);
+
+      } catch (err) {
+        Toast.error(`FESTIO Pay 결제 실패: ${err.message}`);
+        return;
+      }
+
       Toast.success('FESTIO Pay로 결제되었습니다.');
 
       try {

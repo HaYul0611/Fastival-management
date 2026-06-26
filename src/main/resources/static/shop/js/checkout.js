@@ -344,9 +344,43 @@ document.addEventListener('DOMContentLoaded', () => {
       if (itemsErr) {
         console.error("Order items insert failed", itemsErr);
       }
+
+      // [핵심] Java 백엔드 orders/order_item 테이블에도 동기화 저장 → 업주 대시보드 주문 전달
+      try {
+        const backendOrderPayload = {
+          orderNumber: orderNumber,
+          userEmail: (u && u.email) || 'guest@festio.com',
+          totalPrice: finalTotal,
+          paymentStatus: 'PAID',
+          items: order.map(item => ({
+            productId: item.productId || item.id,
+            storeId: item.storeId,
+            quantity: item.qty,
+            selectedOptions: item.opts ? JSON.stringify(item.opts) : null
+          }))
+        };
+
+        const token = localStorage.getItem('userToken');
+        const backendRes = await fetch('/api/order/shop-create', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': token
+          },
+          body: JSON.stringify(backendOrderPayload)
+        });
+
+        if (!backendRes.ok) {
+          console.warn('[주문 동기화] 업주 대시보드용 주문 저장 실패 (status:', backendRes.status, ')');
+        } else {
+          console.log('[주문 동기화] 업주 대시보드용 주문 저장 완료');
+        }
+      } catch (syncErr) {
+        console.warn('[주문 동기화] 백엔드 연동 중 오류 (결제 자체는 완료):', syncErr);
+      }
     }
 
-    // Supabase에 저장 시도 (FESTIO Pay)
+    // FESTIO Pay 결제 처리 (Java 백엔드 API 연동)
     if (method === 'festiopay') {
       try {
         const token = localStorage.getItem('userToken');
@@ -356,26 +390,64 @@ document.addEventListener('DOMContentLoaded', () => {
           return;
         }
 
-        // Supabase에서 현재 잔액 확인
-        const profile = await window.ShopDB.getProfile(u.email);
-        const currentBalance = profile ? (profile.festio_pay_points || 0) : 0;
+        // Java 백엔드에서 최신 잔액 확인
+        let currentBalance = 0;
+        try {
+          const balRes = await fetch('/api/wallet/balance', { headers: { 'Authorization': token } });
+          if (balRes.ok) {
+            const balData = await balRes.json();
+            currentBalance = balData.balance || 0;
+          }
+        } catch (err) {
+          console.error('실시간 잔액 조회 실패, 기존 캐시 사용', err);
+          currentBalance = currentFestioBalance;
+        }
 
+        // 잔액이 부족한 경우 자동 충전 처리
         if (currentBalance < finalTotal) {
           const diff = finalTotal - currentBalance;
           const rechargeAmount = Math.ceil(diff / 10000) * 10000; // 1만원 단위 자동 충전
 
           if (confirm(`잔액이 부족합니다. (현재 ${currentBalance.toLocaleString()}원)\nFESTIO Pay ${rechargeAmount.toLocaleString()}원을 자동 충전하시겠습니까?`)) {
-            // 원클릭 자동 충전 (테스트 환경 모의 처리)
-            const newBalance = currentBalance + rechargeAmount;
-            await window.ShopDB.updateProfile(profile.id, { festio_pay_points: newBalance });
+            
+            // Java 백엔드 자동 충전 API 호출
+            const chargeRes = await fetch('/api/wallet/charge', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                impUid: 'festio-auto-charge-' + Date.now(),
+                amount: rechargeAmount,
+                userToken: token
+              })
+            });
+
+            if (!chargeRes.ok) {
+              throw new Error('자동 충전 처리에 실패했습니다.');
+            }
+
+            const chargeData = await chargeRes.json();
+            const newBalance = chargeData.newBalance;
 
             // 충전 이력 로컬스토리지 기록 (mypage.js 연동)
             let walletHist = JSON.parse(localStorage.getItem('shopWalletHistory_' + u.email) || '[]');
             walletHist.unshift({ type: 'charge', desc: '자동 충전', amount: rechargeAmount, date: new Date().toLocaleString() });
             localStorage.setItem('shopWalletHistory_' + u.email, JSON.stringify(walletHist));
 
+            // 충전 성공 후 Supabase 잔액 동기화
+            try {
+              const profile = await window.ShopDB.getProfile(u.email);
+              if (profile) {
+                await window.ShopDB.updateProfile(profile.id, { festio_pay_points: newBalance });
+              }
+            } catch (syncErr) {
+              console.warn('Supabase profile sync failed:', syncErr);
+            }
+
             Toast.show({ title: '충전 완료', msg: `${rechargeAmount.toLocaleString()}원이 충전되었습니다. 결제를 다시 시도합니다.`, type: 'success' });
+            
+            // 즉시 재시도할 수 있도록 isPaying 해제 후 결제 버튼 자동 트리거
             isPaying = false;
+            document.getElementById('btnPay').click();
             return;
           } else {
             Toast.show({ title: '결제 취소', msg: '잔액 부족으로 결제가 취소되었습니다.', type: 'error' });
@@ -384,14 +456,38 @@ document.addEventListener('DOMContentLoaded', () => {
           }
         }
 
-        // 결제 (잔액 차감)
-        const balanceAfterPay = currentBalance - finalTotal;
-        await window.ShopDB.updateProfile(profile.id, { festio_pay_points: balanceAfterPay });
+        // 잔액 충분 시: Java 백엔드 잔액 차감 API 호출
+        const payRes = await fetch('/api/wallet/pay', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': token
+          },
+          body: JSON.stringify({ amount: finalTotal })
+        });
+
+        if (!payRes.ok) {
+          const errText = await payRes.text();
+          throw new Error(errText || '결제 차감 처리에 실패했습니다.');
+        }
+
+        const payData = await payRes.json();
+        const balanceAfterPay = payData.newBalance;
 
         // 결제 이력 로컬스토리지 기록
         let walletHist = JSON.parse(localStorage.getItem('shopWalletHistory_' + u.email) || '[]');
         walletHist.unshift({ type: 'use', desc: 'FESTIO SHOP 결제', amount: finalTotal, date: new Date().toLocaleString() });
         localStorage.setItem('shopWalletHistory_' + u.email, JSON.stringify(walletHist));
+
+        // Supabase DB 프로필 잔액 동기화
+        try {
+          const profile = await window.ShopDB.getProfile(u.email);
+          if (profile) {
+            await window.ShopDB.updateProfile(profile.id, { festio_pay_points: balanceAfterPay });
+          }
+        } catch (syncErr) {
+          console.warn('Supabase profile sync failed:', syncErr);
+        }
 
         // 2. Supabase DB에 주문 데이터 전송
         await saveOrderToDB(method);

@@ -13,6 +13,134 @@ public class OrderController {
     @Autowired
     private JdbcTemplate jdbcTemplate;
 
+    /**
+     * [쇼핑 결제 완료 → 업주 대시보드 주문 동기화]
+     * checkout.js에서 FESTIO Pay 결제 완료 후 호출.
+     * orders 테이블과 order_item 테이블에 주문 데이터를 저장하여
+     * 업주 대시보드(/api/payment/staff/orders)에서 주문을 조회할 수 있도록 함.
+     */
+    @PostMapping("/shop-create")
+    public org.springframework.http.ResponseEntity<?> createShopOrder(
+            @RequestHeader(value = "Authorization", required = false) String token,
+            @RequestBody Map<String, Object> payload) {
+        try {
+            // 1. 토큰에서 userId 추출
+            String userId = null;
+            if (token != null) {
+                String t = token.startsWith("Bearer ") ? token.substring(7) : token;
+                if (t.startsWith("festio-jwt-token-")) {
+                    userId = t.substring("festio-jwt-token-".length());
+                }
+            }
+            // userId가 없으면 이메일로 조회
+            if (userId == null) {
+                String email = (String) payload.get("userEmail");
+                if (email != null) {
+                    try {
+                        userId = jdbcTemplate.queryForObject(
+                            "SELECT id FROM app_user WHERE email = ?", String.class, email);
+                    } catch (Exception ignored) {}
+                }
+            }
+
+            String userEmail = (String) payload.getOrDefault("userEmail", "guest@festio.com");
+            Integer totalPrice = payload.get("totalPrice") != null
+                ? ((Number) payload.get("totalPrice")).intValue() : 0;
+            String orderNumber = (String) payload.getOrDefault("orderNumber", "ORD-" + System.currentTimeMillis());
+
+            // 2. orders 테이블에 주문 헤더 INSERT
+            String insertOrderSql = "INSERT INTO orders (user_id, total_price, payment_status, ticket_type, ticket_number, created_at) " +
+                                    "VALUES (?, ?, 'PAID', 'SHOP', ?, NOW())";
+            jdbcTemplate.update(insertOrderSql, userId, totalPrice, orderNumber);
+
+            // 3. 방금 삽입한 orders.id 조회
+            Long orderId = jdbcTemplate.queryForObject(
+                "SELECT id FROM orders WHERE ticket_number = ? ORDER BY id DESC LIMIT 1",
+                Long.class, orderNumber);
+
+            if (orderId == null) {
+                return org.springframework.http.ResponseEntity.status(500)
+                    .body(Map.of("success", false, "message", "주문 헤더 생성 실패"));
+            }
+
+            // 4. order_item 테이블에 주문 상세 INSERT
+            @SuppressWarnings("unchecked")
+            List<Map<String, Object>> items = (List<Map<String, Object>>) payload.get("items");
+            if (items != null) {
+                for (Map<String, Object> item : items) {
+                    Long productId = item.get("productId") != null
+                        ? ((Number) item.get("productId")).longValue() : null;
+                    int quantity = item.get("quantity") != null
+                        ? ((Number) item.get("quantity")).intValue() : 1;
+                    String selectedOptions = (String) item.get("selectedOptions");
+                    String productType = "FOOD"; // 기본값
+
+                    // product 테이블에서 product_type 조회
+                    if (productId != null) {
+                        try {
+                            String pt = jdbcTemplate.queryForObject(
+                                "SELECT product_type FROM product WHERE id = ?", String.class, productId);
+                            if (pt != null) productType = pt;
+                        } catch (Exception ignored) {}
+                    }
+
+                    String insertItemSql = "INSERT INTO order_item (order_id, product_id, quantity, item_status, product_type, selected_options, updated_at) " +
+                                          "VALUES (?, ?, ?, 'ORDERED', ?, ?, NOW())";
+                    jdbcTemplate.update(insertItemSql, orderId, productId, quantity, productType, selectedOptions);
+
+                    // 상품 재고 차감
+                    if (productId != null) {
+                        try {
+                            jdbcTemplate.update(
+                                "UPDATE product SET reserved_stock = reserved_stock + ?, available_stock = available_stock - ? WHERE id = ? AND available_stock >= ?",
+                                quantity, quantity, productId, quantity);
+                        } catch (Exception ignored) {}
+                    }
+                }
+            }
+
+            return org.springframework.http.ResponseEntity.ok(Map.of(
+                "success", true,
+                "orderId", orderId,
+                "orderNumber", orderNumber,
+                "message", "주문이 업주 대시보드에 정상 전달되었습니다."
+            ));
+
+        } catch (Exception e) {
+            System.err.println("[shop-create] 주문 동기화 오류: " + e.getMessage());
+            return org.springframework.http.ResponseEntity.status(500)
+                .body(Map.of("success", false, "message", e.getMessage()));
+        }
+    }
+
+    @GetMapping("/test-debug")
+    public org.springframework.http.ResponseEntity<?> testDebug() {
+        Map<String, Object> debugInfo = new HashMap<>();
+        try {
+            // 1. shop_orders 컬럼 정보
+            List<Map<String, Object>> columns = jdbcTemplate.queryForList(
+                "SELECT column_name, data_type FROM information_schema.columns WHERE table_name = 'shop_orders'"
+            );
+            debugInfo.put("shop_orders_columns", columns);
+
+            // 2. shop_orders 최근 5개 데이터
+            List<Map<String, Object>> recentOrders = jdbcTemplate.queryForList(
+                "SELECT * FROM shop_orders ORDER BY created_at DESC LIMIT 5"
+            );
+            debugInfo.put("shop_orders_recent", recentOrders);
+
+            // 3. shop_order_items 최근 5개 데이터
+            List<Map<String, Object>> recentItems = jdbcTemplate.queryForList(
+                "SELECT * FROM shop_order_items LIMIT 5"
+            );
+            debugInfo.put("shop_order_items_recent", recentItems);
+
+        } catch (Exception e) {
+            debugInfo.put("error", e.getMessage());
+        }
+        return org.springframework.http.ResponseEntity.ok(debugInfo);
+    }
+
     @GetMapping("/fnb")
     public List<Map<String, Object>> getFnbOrders(
             @RequestHeader(value = "Authorization", required = false) String authHeader) {
@@ -242,6 +370,7 @@ public class OrderController {
                 order.put("status", oStatus);
 
                 order.put("shop_order_items", new ArrayList<Map<String, Object>>());
+                order.put("item_statuses", new ArrayList<String>());
                 orderMap.put(orderId, order);
             }
 
@@ -265,14 +394,45 @@ public class OrderController {
                 items.add(item);
 
                 String iStatus = (String) row.get("item_status");
-                if ("READY".equals(iStatus) || "COMPLETED".equals(iStatus) || "SERVED".equals(iStatus)) {
-                    order.put("status", "READY_FOR_PICKUP");
+                @SuppressWarnings("unchecked")
+                List<String> statuses = (List<String>) order.get("item_statuses");
+                if (iStatus != null) {
+                    statuses.add(iStatus);
                 }
 
                 if ("GOODS".equals(pType)) {
                     order.put("order_number", "G" + String.format("%011d", orderId));
                 } else if ("FOOD".equals(pType) && !order.get("order_number").toString().startsWith("G")) {
                     order.put("order_number", "F" + String.format("%011d", orderId));
+                }
+            }
+        }
+
+        // 아이템들의 상태를 종합하여 최종 주문 상태 결정
+        for (Map<String, Object> order : orderMap.values()) {
+            @SuppressWarnings("unchecked")
+            List<String> statuses = (List<String>) order.get("item_statuses");
+            order.remove("item_statuses");
+
+            if (statuses != null && !statuses.isEmpty()) {
+                boolean allServed = true;
+                boolean anyReady = false;
+
+                for (String stat : statuses) {
+                    if (!"SERVED".equals(stat) && !"COMPLETED".equals(stat)) {
+                        allServed = false;
+                    }
+                    if ("READY".equals(stat)) {
+                        anyReady = true;
+                    }
+                }
+
+                if (allServed) {
+                    order.put("status", "COMPLETED");
+                } else if (anyReady) {
+                    order.put("status", "READY_FOR_PICKUP");
+                } else {
+                    order.put("status", "PAID");
                 }
             }
         }

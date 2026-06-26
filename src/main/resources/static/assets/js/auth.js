@@ -13,8 +13,12 @@ export function getCurrentUser() {
   const userRole = localStorage.getItem("userRole") || sessionStorage.getItem("userRole");
   const specificRole = localStorage.getItem("userSpecificRole") || sessionStorage.getItem("userSpecificRole");
 
-  // 관리자 권한이거나 게이트 스태프 권한인 경우 자동 로그인 승인
-  if (ssoToken && (userRole === "ADMIN" || specificRole === "ROLE_GATE_STAFF" || specificRole === "ROLE_ADMIN")) {
+  // 관리자 권한이거나 스태프 권한(푸드, MD, 게이트 등)인 경우 자동 로그인 승인
+  if (ssoToken && (userRole === "ADMIN" || 
+                   specificRole === "ROLE_GATE_STAFF" || 
+                   specificRole === "ROLE_FOOD_STAFF" || 
+                   specificRole === "ROLE_GOODS_STAFF" || 
+                   specificRole === "ROLE_ADMIN")) {
     const userName = localStorage.getItem("userName") || sessionStorage.getItem("userName") || "통합인증 사용자";
     const email = localStorage.getItem("email") || sessionStorage.getItem("email") || "sso@festio.com";
     

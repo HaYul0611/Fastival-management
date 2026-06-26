@@ -593,7 +593,7 @@ function renderReservationList() {
           <div class="mp-color-success mp-weight-500" style="display: flex; align-items: center; gap: 6px;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mp-icon-sm" style="flex-shrink: 0;"><circle cx="12" cy="13" r="8"></circle><path d="M12 9v4l2 2"></path><path d="M12 2v2"></path><path d="M18 4l-1 1"></path></svg> <span>${f.pickupTimeSlot}</span></div>
         </div>
         <div class="mp-card-footer" style="display: flex; justify-content: space-between; align-items: center;">
-          <span class="mp-card-price">₩${f.totalPrice.toLocaleString()}</span>
+          <span class="mp-card-price">₩${(f.totalPrice || 0).toLocaleString()}</span>
           <div style="display: flex; gap: 8px;">
             <button class="btn btn-sm btn-outline mp-btn-sm" style="border-color: #8930F8; color: #8930F8;" onclick="event.stopPropagation(); window.location.href='/shop/shop.html?category=food'">Shop 이동</button>
             ${f.itemStatus !== 'PICKED_UP' ? `<button class="btn btn-sm btn-outline mp-btn-sm mp-btn-outline-success" onclick="event.stopPropagation(); showFoodQr('${f.qrToken}')">픽업 QR 확인</button>` : ''}
@@ -636,7 +636,7 @@ function renderReservationList() {
           <div style="color:#8888a8; display: flex; align-items: center; gap: 6px;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mp-icon-sm" style="flex-shrink: 0;"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg> <span>${g.pickupTimeSlot}</span></div>
         </div>
         <div class="mp-card-footer" style="display: flex; justify-content: space-between; align-items: center;">
-          <span class="mp-card-price">₩${g.totalPrice.toLocaleString()}</span>
+          <span class="mp-card-price">₩${(g.totalPrice || 0).toLocaleString()}</span>
           <div style="display: flex; gap: 8px;">
             <button class="btn btn-sm btn-outline mp-btn-sm" style="color:#F5A623; border-color:#F5A623;" onclick="event.stopPropagation(); window.location.href='/shop/shop.html?category=goods'">Shop 이동</button>
             ${(g.deliveryType === '현장수령' || g.deliveryType === '현장 수령') && g.itemStatus !== 'COMPLETED' ? `<button class="btn btn-sm btn-outline mp-btn-sm" style="color:#F5A623; border-color:#F5A623;" onclick="event.stopPropagation(); showGoodsQr('${g.qrToken}')">수령 QR 확인</button>` : ''}
@@ -1605,7 +1605,7 @@ function renderCouponList() {
   }
   couponList.innerHTML = activeCoupons.map(c => `
     <div class="mp-card coupon-card" style="display:flex; justify-content:space-between; align-items:center; position:relative; padding:16px 20px; margin-bottom:12px; border:1px solid #e2e8f0; border-radius:12px; box-shadow:0 2px 8px rgba(0,0,0,0.04); background:#fff;">
-      <img src="/Festio/images/festivals/메이플_단풍잎.png" style="position:absolute; top:50%; left:50%; transform:translate(-50%, -50%); width:100px; height:100px; opacity:0.12; pointer-events:none; object-fit:contain;" alt="단풍잎 워터마크" />
+      <img src="/Festio/images/festivals/메이플-단풍잎.png" style="position:absolute; top:50%; left:50%; transform:translate(-50%, -50%); width:100px; height:100px; opacity:0.12; pointer-events:none; object-fit:contain;" alt="단풍잎 워터마크" />
       <button class="coupon-delete-btn" onclick="deleteCoupon(${c.id})" style="position:absolute; top:-10px; right:-10px; width:26px; height:26px; background:#ff4757; color:white; border:none; border-radius:50%; font-size:12px; font-weight:bold; cursor:pointer; display:flex; align-items:center; justify-content:center; box-shadow:0 2px 6px rgba(255, 71, 87, 0.4); opacity:0; transition:opacity 0.2s, transform 0.2s; z-index:2;">
         <svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
       </button>

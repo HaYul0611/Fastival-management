@@ -154,6 +154,9 @@ public class WalletController {
         if (token == null) {
             return ResponseEntity.status(401).body("로그인이 필요합니다.");
         }
+        if (token.startsWith("Bearer ")) {
+            token = token.substring(7);
+        }
         String userId = null;
         if (token.startsWith("festio-jwt-token-")) {
             userId = token.substring("festio-jwt-token-".length());
@@ -187,6 +190,9 @@ public class WalletController {
     public ResponseEntity<?> pay(@RequestBody Map<String, Object> body, @RequestHeader(value = "Authorization", required = false) String token) {
         if (token == null) {
             return ResponseEntity.status(401).body("로그인이 필요합니다.");
+        }
+        if (token.startsWith("Bearer ")) {
+            token = token.substring(7);
         }
         
         Integer amount = (Integer) body.get("amount");

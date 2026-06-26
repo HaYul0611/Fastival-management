@@ -10,15 +10,27 @@ document.addEventListener('DOMContentLoaded', async () => {
     return;
   }
 
+  const listEl = document.getElementById('ordersList');
   const email = localStorage.getItem('email');
-  if (!email || !window.ShopDB) return;
+  if (!email) {
+    console.error('[orders.js] 초기 검증 실패 - email 누락');
+    if (listEl) {
+      listEl.innerHTML = `<p style="color:red; font-weight:bold;">[초기화 오류] 이메일 정보가 누락되었습니다. 다시 로그인해주세요.</p>`;
+    }
+    return;
+  }
 
-  let profile = await window.ShopDB.getProfile(email);
+  let profile = null;
+  if (window.ShopDB) {
+    try {
+      profile = await window.ShopDB.getProfile(email);
+    } catch (e) {
+      console.warn('[orders.js] Profile load 실패, 폴백 사용:', e);
+    }
+  }
   if (!profile) {
     profile = { id: 'mock', user_name: '관리자', tier: 'BRONZE' };
   }
-
-  const listEl = document.getElementById('ordersList');
 
   // 모달 닫기 이벤트
   const qrModal = document.getElementById('qrModal');
@@ -122,6 +134,67 @@ document.addEventListener('DOMContentLoaded', async () => {
       })
       .subscribe();
   }
+
+  // 주문 내역 가져오기 (Java 백엔드 연동)
+  const fetchOrders = async () => {
+    try {
+      const token = localStorage.getItem('userToken');
+      console.log('[orders.js] fetchOrders 시작 - token 존재여부:', !!token);
+
+      const response = await fetch('/api/order/shop/my', {
+        headers: {
+          'Authorization': token ? `Bearer ${token}` : ''
+        }
+      });
+
+      if (!response.ok) {
+        console.error('[orders.js] 백엔드 shop/my query 실패:', response.status);
+        listEl.innerHTML = `<p style="color:red;">[서버 오류] 주문 정보를 조회하지 못했습니다. 상태코드: ${response.status}</p>`;
+        return;
+      }
+
+      const orders = await response.json();
+
+      if (!orders || orders.length === 0) {
+        console.log('[orders.js] 주문 내역이 비어 있어 더미 데이터 표시');
+        // 미리보기용 더미 데이터
+        const dummyOrder = {
+          order_number: 'F1X9K2M4P5T8',
+          created_at: new Date().toISOString(),
+          delivery_type: 'PICKUP',
+          status: 'READY_FOR_PICKUP',
+          payment_method: 'FESTIO_PAY',
+          total_amount: 12500,
+          totp_secret: 'dummysecret12345',
+          shop_order_items: [
+            { product_name: '스모크 바베큐 버거 + 콜라 세트', quantity: 1, price_at_purchase: 12500, shop_products: { type: 'FOOD' } }
+          ]
+        };
+        const dummyGoods = {
+          order_number: 'G9X8K7M6P5T4',
+          created_at: new Date().toISOString(),
+          delivery_type: 'PICKUP',
+          status: 'READY_FOR_PICKUP',
+          payment_method: 'FESTIO_PAY',
+          total_amount: 35000,
+          totp_secret: 'dummysecret99999',
+          shop_order_items: [
+            { product_name: '페스티벌 공식 티셔츠', quantity: 1, price_at_purchase: 35000, shop_products: { type: 'GOODS' } }
+          ]
+        };
+        window.currentOrders = [dummyOrder, dummyGoods];
+        listEl.innerHTML = renderOrderCard(dummyOrder) + renderOrderCard(dummyGoods);
+        return;
+      }
+
+      console.log('[orders.js] 조회된 주문 수:', orders.length);
+      window.currentOrders = orders;
+      listEl.innerHTML = orders.map(renderOrderCard).join('');
+    } catch (e) {
+      console.error('[orders.js] fetchOrders catch 예외:', e);
+      listEl.innerHTML = `<p style="color:red;">[예외 발생] 주문 내역 로드 중 예외가 발생했습니다.<br>상세: ${e.message || e}</p>`;
+    }
+  };
 
   // TOTP 로직
   let totpTimer = null;
@@ -349,8 +422,21 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     const itemsHtml = (order.shop_order_items || []).map(item => {
       const isFood = item.shop_products && item.shop_products.type === 'FOOD';
-      const hasImage = !!(item.shop_products && item.shop_products.thumbnail_image_url);
-      const imageUrl = hasImage ? item.shop_products.thumbnail_image_url : '';
+      let imageUrl = '';
+      let hasImage = false;
+      if (item.shop_products && item.shop_products.thumbnail_image_url) {
+        let url = item.shop_products.thumbnail_image_url;
+        if (!url.startsWith('http') && !url.startsWith('/')) {
+          url = '/assets/img/products/' + url;
+        }
+        if (url.includes('french_fries.jpg')) {
+          url = '/assets/img/products/fries_chili.jpg';
+        } else if (url.includes('cocktail_mohito.jpg')) {
+          url = '/assets/img/products/burger_double.jpg';
+        }
+        imageUrl = url;
+        hasImage = true;
+      }
 
       const svgFood = `<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#9ca3af" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 2v7c0 1.1.9 2 2 2h4a2 2 0 0 0 2-2V2"></path><path d="M7 2v20"></path><path d="M21 15V2v0a5 5 0 0 0-5 5v6c0 1.1.9 2 2 2h3Zm0 0v7"></path></svg>`;
       const svgGoods = `<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#9ca3af" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"></path><line x1="3" y1="6" x2="21" y2="6"></line><path d="M16 10a4 4 0 0 1-8 0"></path></svg>`;
@@ -413,61 +499,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     document.getElementById('odContent').innerHTML = html;
     odModal.style.zIndex = '2147483647'; // 챗봇/NPC 등 외부 플러그인 위로 노출되도록 최댓값 설정
     odModal.classList.add('show');
-  };
-
-  // 주문 내역 가져오기 (Supabase 연동)
-  const fetchOrders = async () => {
-    try {
-      const sb = window.ShopDB.getClient();
-      const userEmail = (profile && profile.email) || localStorage.getItem('email') || 'guest@festio.com';
-
-      const { data: rawOrders, error } = await sb.from('shop_orders')
-        .select('*, shop_order_items(*)')
-        .eq('user_email', userEmail)
-        .order('created_at', { ascending: false });
-
-      let orders = [];
-      if (!error && rawOrders) {
-        orders = rawOrders.filter(o => o.shop_order_items && o.shop_order_items.length > 0);
-      }
-
-      if (!orders || orders.length === 0) {
-        // 미리보기용 더미 데이터
-        const dummyOrder = {
-          order_number: 'F1X9K2M4P5T8',
-          created_at: new Date().toISOString(),
-          delivery_type: 'PICKUP',
-          status: 'READY_FOR_PICKUP',
-          payment_method: 'FESTIO_PAY',
-          total_amount: 12500,
-          totp_secret: 'dummysecret12345',
-          shop_order_items: [
-            { product_name: '스모크 바베큐 버거 + 콜라 세트', quantity: 1, price_at_purchase: 12500, shop_products: { type: 'FOOD' } }
-          ]
-        };
-        const dummyGoods = {
-          order_number: 'G9X8K7M6P5T4',
-          created_at: new Date().toISOString(),
-          delivery_type: 'PICKUP',
-          status: 'READY_FOR_PICKUP',
-          payment_method: 'FESTIO_PAY',
-          total_amount: 35000,
-          totp_secret: 'dummysecret99999',
-          shop_order_items: [
-            { product_name: '페스티벌 공식 티셔츠', quantity: 1, price_at_purchase: 35000, shop_products: { type: 'GOODS' } }
-          ]
-        };
-        window.currentOrders = [dummyOrder, dummyGoods];
-        listEl.innerHTML = renderOrderCard(dummyOrder) + renderOrderCard(dummyGoods);
-        return;
-      }
-
-      window.currentOrders = orders;
-      listEl.innerHTML = orders.map(renderOrderCard).join('');
-    } catch (e) {
-      console.error(e);
-      listEl.innerHTML = '<p>주문 내역을 불러오지 못했습니다.</p>';
-    }
   };
 
   // 즉시 실행 (스켈레톤 지연 제거)
@@ -546,8 +577,21 @@ function renderOrderCard(order) {
 
   const itemsHtml = (order.shop_order_items || []).map(item => {
     const isFood = item.shop_products && item.shop_products.type === 'FOOD';
-    const hasImage = !!(item.shop_products && item.shop_products.thumbnail_image_url);
-    const imageUrl = hasImage ? item.shop_products.thumbnail_image_url : '';
+    let imageUrl = '';
+    let hasImage = false;
+    if (item.shop_products && item.shop_products.thumbnail_image_url) {
+      let url = item.shop_products.thumbnail_image_url;
+      if (!url.startsWith('http') && !url.startsWith('/')) {
+        url = '/assets/img/products/' + url;
+      }
+      if (url.includes('french_fries.jpg')) {
+        url = '/assets/img/products/fries_chili.jpg';
+      } else if (url.includes('cocktail_mohito.jpg')) {
+        url = '/assets/img/products/burger_double.jpg';
+      }
+      imageUrl = url;
+      hasImage = true;
+    }
 
     const svgFood = `<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#9ca3af" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 2v7c0 1.1.9 2 2 2h4a2 2 0 0 0 2-2V2"></path><path d="M7 2v20"></path><path d="M21 15V2v0a5 5 0 0 0-5 5v6c0 1.1.9 2 2 2h3Zm0 0v7"></path></svg>`;
     const svgGoods = `<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#9ca3af" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"></path><line x1="3" y1="6" x2="21" y2="6"></line><path d="M16 10a4 4 0 0 1-8 0"></path></svg>`;

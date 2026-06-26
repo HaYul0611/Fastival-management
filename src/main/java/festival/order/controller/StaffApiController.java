@@ -47,7 +47,21 @@ public class StaffApiController {
             if (storeIds.isEmpty() || storeIds.get(0) == null || storeIds.get(0) == 0L) {
                 return getFirstStoreIdFallback();
             }
-            return storeIds.get(0);
+            
+            Long storeId = storeIds.get(0);
+            
+            // 실제 store 테이블에 존재하는지 유효성 검증
+            try {
+                String checkSql = "SELECT COUNT(*) FROM store WHERE id = ?";
+                Integer count = jdbcTemplate.queryForObject(checkSql, Integer.class, storeId);
+                if (count == null || count == 0) {
+                    return getFirstStoreIdFallback();
+                }
+            } catch (Exception e) {
+                return getFirstStoreIdFallback();
+            }
+            
+            return storeId;
 
         } catch (Exception e) {
             System.err.println("인증 토큰 분석 오류: " + e.getMessage());
@@ -74,6 +88,12 @@ public class StaffApiController {
         Long storeId = getLoggedInStoreId(token);
         String sql = "SELECT * FROM store WHERE id = ?";
         List<Map<String, Object>> stores = jdbcTemplate.queryForList(sql, storeId);
+
+        // [안정성 보완] 만약 storeId로 조회된 결과가 없으면 첫 번째 매장을 조회해 옴
+        if (stores.isEmpty()) {
+            Long fallbackStoreId = getFirstStoreIdFallback();
+            stores = jdbcTemplate.queryForList(sql, fallbackStoreId);
+        }
 
         if (stores.isEmpty()) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("message", "상점 정보를 찾을 수 없습니다."));
@@ -538,6 +558,33 @@ public class StaffApiController {
 
         String updateSql = "UPDATE order_item SET item_status = ?, updated_at = NOW() WHERE id = ?";
         jdbcTemplate.update(updateSql, nextStatus, orderId);
+
+        // [Supabase 동기화] order_item의 order_id를 통해 orders.ticket_number(주문번호)를 구한 후 Supabase shop_orders 상태 업데이트
+        try {
+            String ticketNumber = jdbcTemplate.queryForObject(
+                "SELECT o.ticket_number FROM order_item oi JOIN orders o ON oi.order_id = o.id WHERE oi.id = ?",
+                String.class, orderId);
+            
+            if (ticketNumber != null) {
+                String supabaseStatus = "PREPARING";
+                if ("READY".equals(nextStatus)) {
+                    supabaseStatus = "READY_FOR_PICKUP";
+                } else if ("SERVED".equals(nextStatus) || "COMPLETED".equals(nextStatus)) {
+                    supabaseStatus = "COMPLETED";
+                } else if ("SHIPPED".equals(nextStatus)) {
+                    supabaseStatus = "SHIPPING";
+                } else if ("DELIVERED".equals(nextStatus)) {
+                    supabaseStatus = "DELIVERED";
+                } else if ("COOKING".equals(nextStatus)) {
+                    supabaseStatus = "PREPARING";
+                }
+
+                jdbcTemplate.update("UPDATE shop_orders SET status = ? WHERE order_number = ?", supabaseStatus, ticketNumber);
+                System.out.println("[Supabase 동기화] shop_orders 상태 업데이트 성공: " + ticketNumber + " -> " + supabaseStatus);
+            }
+        } catch (Exception e) {
+            System.err.println("[Supabase 동기화] shop_orders 상태 업데이트 실패: " + e.getMessage());
+        }
 
         return ResponseEntity.ok(Map.of("status", "success", "orderId", orderId, "orderStatus", nextStatus));
     }

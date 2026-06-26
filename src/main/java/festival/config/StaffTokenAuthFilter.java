@@ -63,16 +63,15 @@ public class StaffTokenAuthFilter extends OncePerRequestFilter {
                 } else if (token.startsWith("festio-jwt-token-")) {
                     // 일반 유저 토큰 → DB에서 실제 Role 조회
                     String userId = token.substring("festio-jwt-token-".length());
-                    Long numericUserId = Long.parseLong(userId);
 
                     String sql = "SELECT role FROM app_user WHERE id = ?";
                     List<String> roles = jdbcTemplate.query(sql,
-                            (rs, rowNum) -> rs.getString("role"), numericUserId);
+                            (rs, rowNum) -> rs.getString("role"), userId);
 
                     if (!roles.isEmpty() && roles.get(0) != null) {
                         String role = roles.get(0); // ex: "ROLE_STAFF", "ROLE_ADMIN"
                         authorities.add(new SimpleGrantedAuthority(role));
-                        principalName = String.valueOf(numericUserId);
+                        principalName = userId;
                     }
                 }
 

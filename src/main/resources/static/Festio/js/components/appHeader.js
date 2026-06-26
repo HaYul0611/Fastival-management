@@ -93,6 +93,20 @@
         ${staffModeBtnSvg}
         <span class="mode-btn-label">게이트 모드</span>
       </a>`;
+    } else if (userSpecificRole === 'ROLE_FOOD_STAFF') {
+      const targetUrl = '/features/payment/staff/store-management.html';
+      modeSwitchBtnHtml = `
+      <a href="${targetUrl}" id="modeSwitchBtn" class="header-mode-switch-btn header-mode-switch-staff" aria-label="업주 모드로 전환">
+        ${staffModeBtnSvg}
+        <span class="mode-btn-label">업주 모드</span>
+      </a>`;
+    } else if (userSpecificRole === 'ROLE_GOODS_STAFF') {
+      const targetUrl = '/features/payment/staff/goods-store.html';
+      modeSwitchBtnHtml = `
+      <a href="${targetUrl}" id="modeSwitchBtn" class="header-mode-switch-btn header-mode-switch-staff" aria-label="업주 모드로 전환">
+        ${staffModeBtnSvg}
+        <span class="mode-btn-label">업주 모드</span>
+      </a>`;
     } else {
       const targetUrl = '/features/user/staff/staffindex.html'; // 스태프 통합 시스템
       modeSwitchBtnHtml = `
