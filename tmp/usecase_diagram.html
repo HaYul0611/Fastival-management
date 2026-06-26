@@ -1,0 +1,360 @@
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>유스케이스 다이어그램</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700;900&display=swap"
+        rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Noto Sans KR', sans-serif;
+            background-color: #f3f4f6;
+            margin: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        .slide-wrapper {
+            padding: 2rem;
+            display: flex;
+            justify-content: center;
+        }
+
+        .slide-container {
+            background-color: #ffffff;
+            border-radius: 24px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.08);
+            padding: 40px;
+            width: 1400px;
+            min-height: 1000px;
+            position: relative;
+            border: 1px solid #e5e7eb;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .diagram-area {
+            position: relative;
+            flex: 1;
+            width: 100%;
+            display: flex;
+            justify-content: space-between;
+            padding: 2rem 1rem 2rem 3rem;
+            background: #fff;
+            gap: 150px;
+        }
+
+        .col-actors {
+            display: flex;
+            flex-direction: column;
+            gap: 80px;
+            justify-content: center;
+            z-index: 10;
+        }
+
+        .actor-node {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+            background: white;
+            padding: 10px;
+            border-radius: 20px;
+            transition: transform 0.2s;
+        }
+
+        .actor-node:hover {
+            transform: scale(1.05);
+        }
+
+        .actor-emoji {
+            font-size: 50px;
+            background: #fff;
+            border-radius: 50%;
+            width: 80px;
+            height: 80px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.08);
+            margin-bottom: 12px;
+            z-index: 10;
+            padding-top: 6px;
+        }
+
+        .actor-title {
+            font-weight: 800;
+            color: #1e293b;
+            font-size: 15px;
+        }
+
+        .col-domains {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 50px;
+            z-index: 10;
+            justify-content: space-around;
+        }
+
+        .domain-box {
+            border-radius: 20px;
+            padding: 32px 24px 24px;
+            position: relative;
+            border: 2px dashed #cbd5e1;
+            background: rgba(248, 250, 252, 0.6);
+            display: flex;
+            flex-wrap: wrap;
+            gap: 16px;
+        }
+
+        .domain-title {
+            position: absolute;
+            top: -16px;
+            left: 24px;
+            background: white;
+            padding: 4px 16px;
+            font-weight: 800;
+            color: #475569;
+            font-size: 14px;
+            border-radius: 12px;
+            border: 2px solid #e2e8f0;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+        }
+
+        .uc-node {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: white;
+            padding: 10px 18px;
+            border-radius: 30px;
+            font-size: 13px;
+            font-weight: 700;
+            color: #334155;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04);
+            border: 1px solid #e2e8f0;
+        }
+
+        #svg-canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 5;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="slide-wrapper">
+        <div class="slide-container" id="capture-area">
+            <div class="mb-4 pb-4 border-b border-gray-100 z-10 relative">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-xl bg-emerald-100 flex items-center justify-center text-emerald-600">
+                        <svg width="24" height="24" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z">
+                            </path>
+                        </svg>
+                    </div>
+                    <h1 class="text-3xl font-bold text-gray-800 tracking-tight">유스케이스 다이어그램</h1>
+                    <span
+                        class="bg-emerald-50 text-emerald-600 px-3 py-1 rounded-full text-sm font-semibold ml-2">Usecase</span>
+                </div>
+            </div>
+
+            <div class="diagram-area" id="diagram-area">
+                <svg id="svg-canvas"></svg>
+
+                <div class="col-actors">
+                    <div class="actor-node" id="actor-user">
+                        <div class="actor-emoji" style="border: 3px solid #3b82f6;">👩‍💻</div>
+                        <div class="actor-title">일반 사용자</div>
+                    </div>
+                    <div class="actor-node" id="actor-staff">
+                        <div class="actor-emoji" style="border: 3px solid #f59e0b;">👷</div>
+                        <div class="actor-title">현장 스태프</div>
+                    </div>
+                    <div class="actor-node" id="actor-merchant">
+                        <div class="actor-emoji" style="border: 3px solid #10b981;">🏪</div>
+                        <div class="actor-title">가맹점주</div>
+                    </div>
+                    <div class="actor-node" id="actor-admin">
+                        <div class="actor-emoji" style="border: 3px solid #8b5cf6;">👑</div>
+                        <div class="actor-title">플랫폼 관리자</div>
+                    </div>
+                </div>
+
+                <div class="col-domains">
+                    <!-- User Domain -->
+                    <div class="domain-box" style="border-color: #bfdbfe; background: #eff6ff;" id="domain-user">
+                        <div class="domain-title" style="color: #1d4ed8; border-color: #bfdbfe;">사용자 영역</div>
+                        <div class="uc-node" id="uc-1">✨ 회원가입/로그인</div>
+                        <div class="uc-node" id="uc-2">🔍 축제 상세/좌석 조회</div>
+                        <div class="uc-node" id="uc-3">💳 티켓 예매/결제</div>
+                        <div class="uc-node" id="uc-4">👛 지갑 잔액 충전</div>
+                        <div class="uc-node" id="uc-5">📱 마이페이지 내역</div>
+                        <div class="uc-node" id="uc-6">🍔 예약 주문</div>
+                        <div class="uc-node" id="uc-7">💬 실시간 1:1 문의</div>
+                        <div class="uc-node" id="uc-14">🛒 장바구니 수량 조절</div>
+                        <div class="uc-node" id="uc-15">🎟️ 할인 쿠폰 적용</div>
+                        <div class="uc-node" id="uc-16">❤️ 관심 축제/상점 찜</div>
+                        <div class="uc-node" id="uc-17">📸 다중 포토 리뷰</div>
+                        <div class="uc-node" id="uc-18">⏱️ 3분 입장 QR 갱신</div>
+                    </div>
+
+                    <!-- Staff Domain -->
+                    <div class="domain-box" style="border-color: #fde68a; background: #fffbeb;" id="domain-staff">
+                        <div class="domain-title" style="color: #b45309; border-color: #fde68a;">스태프 영역</div>
+                        <div class="uc-node" id="uc-8">🔑 스태프/점주 로그인</div>
+                        <div class="uc-node" id="uc-9">📱 관람객 QR 스캔</div>
+                    </div>
+
+                    <!-- Merchant Domain -->
+                    <div class="domain-box" style="border-color: #a7f3d0; background: #ecfdf5;" id="domain-merchant">
+                        <div class="domain-title" style="color: #047857; border-color: #a7f3d0;">가맹 상점 영역</div>
+                        <div class="uc-node" id="uc-10">🛍️ F&B/굿즈 픽업 관리</div>
+                        <div class="uc-node" id="uc-19">📦 상점 판매 품목/재고</div>
+                    </div>
+
+                    <!-- Admin Domain -->
+                    <div class="domain-box" style="border-color: #ddd6fe; background: #f5f3ff;" id="domain-admin">
+                        <div class="domain-title" style="color: #5b21b6; border-color: #ddd6fe;">관리자 영역</div>
+                        <div class="uc-node" id="uc-11">📊 통합 예매 통계</div>
+                        <div class="uc-node" id="uc-12">🗺️ SVG 실시간 좌석 편집</div>
+                        <div class="uc-node" id="uc-13">💰 정산 대시보드 관리</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function drawLines() {
+            const svg = document.getElementById('svg-canvas');
+            const area = document.getElementById('diagram-area');
+            const areaRect = area.getBoundingClientRect();
+
+            svg.setAttribute('width', areaRect.width);
+            svg.setAttribute('height', areaRect.height);
+
+            svg.innerHTML = `
+                <defs>
+                    <marker id="arrow-user" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+                        <path d="M 0 0 L 10 5 L 0 10 z" fill="#3b82f6" />
+                    </marker>
+                    <marker id="arrow-staff" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+                        <path d="M 0 0 L 10 5 L 0 10 z" fill="#f59e0b" />
+                    </marker>
+                    <marker id="arrow-merchant" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+                        <path d="M 0 0 L 10 5 L 0 10 z" fill="#10b981" />
+                    </marker>
+                    <marker id="arrow-admin" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+                        <path d="M 0 0 L 10 5 L 0 10 z" fill="#8b5cf6" />
+                    </marker>
+                </defs>
+            `;
+
+            function getCenter(el) {
+                const rect = el.getBoundingClientRect();
+                return {
+                    x: rect.left + rect.width / 2 - areaRect.left,
+                    y: rect.top + rect.height / 2 - areaRect.top,
+                    top: rect.top - areaRect.top,
+                    bottom: rect.bottom - areaRect.top,
+                    left: rect.left - areaRect.left,
+                    right: rect.right - areaRect.left
+                };
+            }
+
+            // Draw a routed step line (horizontal -> vertical -> horizontal) with dashed styling
+            function drawRoutedLine(startX, startY, endX, endY, verticalBusX, color, markerId) {
+                const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+                const d = 'M ' + startX + ' ' + startY + ' L ' + verticalBusX + ' ' + startY + ' L ' + verticalBusX + ' ' + endY + ' L ' + endX + ' ' + endY;
+
+                path.setAttribute('d', d);
+                path.setAttribute('fill', 'none');
+                path.setAttribute('stroke', color);
+                path.setAttribute('stroke-width', '1.5');
+                path.setAttribute('marker-end', 'url(#' + markerId + ')');
+                path.setAttribute('stroke-dasharray', '5,5'); // Make line dashed
+                path.setAttribute('stroke-opacity', '0.7');
+                svg.appendChild(path);
+            }
+
+            // Draw a direct curve with dashed styling
+            function drawDirectCurve(startX, startY, endX, endY, color, markerId) {
+                const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+                const midX = (startX + endX) / 2;
+                const d = 'M ' + startX + ' ' + startY + ' C ' + midX + ' ' + startY + ', ' + midX + ' ' + endY + ', ' + endX + ' ' + endY;
+                path.setAttribute('d', d);
+                path.setAttribute('fill', 'none');
+                path.setAttribute('stroke', color);
+                path.setAttribute('stroke-width', '1.5');
+                path.setAttribute('marker-end', 'url(#' + markerId + ')');
+                path.setAttribute('stroke-dasharray', '5,5'); // Make line dashed
+                path.setAttribute('stroke-opacity', '0.7');
+                svg.appendChild(path);
+            }
+
+            const actorUser = getCenter(document.getElementById('actor-user'));
+            const actorStaff = getCenter(document.getElementById('actor-staff'));
+            const actorMerchant = getCenter(document.getElementById('actor-merchant'));
+            const actorAdmin = getCenter(document.getElementById('actor-admin'));
+
+            // Colors per actor
+            const colUser = '#3b82f6';
+            const colStaff = '#f59e0b';
+            const colMerchant = '#10b981';
+            const colAdmin = '#8b5cf6';
+
+            const startBusX = actorUser.right + 20;
+
+            // Connect User (Blue)
+            [1, 2, 3, 4, 5, 6, 7, 14, 15, 16, 17, 18].forEach(id => {
+                const uc = getCenter(document.getElementById('uc-' + id));
+                drawDirectCurve(actorUser.right, actorUser.y, uc.left - 5, uc.y, colUser, 'arrow-user');
+            });
+
+            // Connect Staff (Orange)
+            [8, 9].forEach(id => {
+                const uc = getCenter(document.getElementById('uc-' + id));
+                drawDirectCurve(actorStaff.right, actorStaff.y, uc.left - 5, uc.y, colStaff, 'arrow-staff');
+            });
+
+            // Connect Merchant (Green)
+            [10, 19].forEach(id => {
+                const uc = getCenter(document.getElementById('uc-' + id));
+                drawDirectCurve(actorMerchant.right, actorMerchant.y, uc.left - 5, uc.y, colMerchant, 'arrow-merchant');
+            });
+            const merchantBus = startBusX + 25;
+            [8, 13].forEach(id => {
+                const uc = getCenter(document.getElementById('uc-' + id));
+                drawRoutedLine(actorMerchant.right, actorMerchant.y, uc.left - 5, uc.y, merchantBus, colMerchant, 'arrow-merchant');
+            });
+
+            // Connect Admin (Purple)
+            [11, 12, 13].forEach(id => {
+                const uc = getCenter(document.getElementById('uc-' + id));
+                drawDirectCurve(actorAdmin.right, actorAdmin.y, uc.left - 5, uc.y, colAdmin, 'arrow-admin');
+            });
+            const adminBus = startBusX + 50;
+            const uc1 = getCenter(document.getElementById('uc-1'));
+            drawRoutedLine(actorAdmin.right, actorAdmin.y, uc1.left - 5, uc1.y, adminBus, colAdmin, 'arrow-admin');
+        }
+
+        window.addEventListener('load', () => { setTimeout(drawLines, 100); });
+        window.addEventListener('resize', drawLines);
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,480 @@
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>시스템 아키텍처 다이어그램</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700;900&display=swap"
+        rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Noto Sans KR', sans-serif;
+            background-color: #f3f4f6;
+            margin: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        .slide-wrapper {
+            padding: 2rem;
+            display: flex;
+            justify-content: center;
+        }
+
+        .slide-container {
+            background-color: #ffffff;
+            border-radius: 24px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.08);
+            padding: 40px;
+            width: 1400px;
+            min-height: 900px;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            border: 1px solid #e5e7eb;
+            overflow: hidden;
+        }
+
+        .diagram-area {
+            position: relative;
+            width: 100%;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 4rem 2rem;
+            background: #fff;
+            gap: 75px;
+            /* Reduced gap as requested */
+        }
+
+        .arch-node {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            position: relative;
+            z-index: 10;
+            width: 140px;
+            background: white;
+            padding: 10px;
+            border-radius: 16px;
+            transition: transform 0.2s;
+        }
+
+        .arch-node:hover {
+            transform: translateY(-5px);
+        }
+
+        .logo-img {
+            width: 56px;
+            height: 56px;
+            object-fit: contain;
+            margin-bottom: 12px;
+            filter: drop-shadow(0 4px 6px rgba(0, 0, 0, 0.1));
+        }
+
+        .emoji-logo {
+            font-size: 50px;
+            line-height: 1;
+            margin-bottom: 12px;
+            filter: drop-shadow(0 4px 6px rgba(0, 0, 0, 0.1));
+        }
+
+        .node-title {
+            font-weight: 800;
+            color: #1e293b;
+            font-size: 15px;
+            line-height: 1.3;
+        }
+
+        .node-desc {
+            font-size: 12px;
+            color: #64748b;
+            margin-top: 6px;
+            font-weight: 600;
+        }
+
+        .group-container {
+            display: flex;
+            gap: 60px;
+            justify-content: center;
+            position: relative;
+            width: fit-content;
+            padding: 50px 70px 40px;
+            /* Increased padding to give natural space from dashed border */
+            margin: 0 auto;
+        }
+
+        .group-box {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            border: 2px dashed #94a3b8;
+            border-radius: 32px;
+            background: rgba(248, 250, 252, 0.6);
+            z-index: 1;
+            pointer-events: none;
+        }
+
+        .group-title {
+            position: absolute;
+            top: -16px;
+            left: 40px;
+            background: white;
+            padding: 4px 16px;
+            font-weight: 800;
+            color: #334155;
+            font-size: 14px;
+            border-radius: 12px;
+            border: 2px solid #cbd5e1;
+            white-space: nowrap;
+            z-index: 15;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+        }
+
+        #svg-canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 5;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="slide-wrapper">
+        <div class="slide-container" id="capture-area">
+            <div class="mb-4 pb-4 border-b border-gray-100 z-10 relative">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-xl bg-blue-100 flex items-center justify-center text-blue-600">
+                        <svg width="24" height="24" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 002-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10">
+                            </path>
+                        </svg>
+                    </div>
+                    <h1 class="text-3xl font-bold text-gray-800 tracking-tight">시스템 아키텍처 다이어그램</h1>
+                    <span
+                        class="bg-indigo-50 text-indigo-600 px-3 py-1 rounded-full text-sm font-semibold ml-2">Architecture</span>
+                </div>
+            </div>
+
+            <div class="diagram-area" id="diagram-area">
+                <svg id="svg-canvas"></svg>
+
+                <!-- 1. Clients Row -->
+                <div class="group-container" id="row-clients">
+                    <div class="group-box"></div>
+                    <div class="group-title">Client 웹 어플리케이션</div>
+                    <div class="arch-node" id="node-user-ui">
+                        <img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/react/react-original.svg"
+                            class="logo-img" />
+                        <div class="node-title">사용자 포털</div>
+                        <div class="node-desc">예매/쇼핑/지갑</div>
+                    </div>
+                    <div class="arch-node" id="node-staff-ui">
+                        <img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/vuejs/vuejs-original.svg"
+                            class="logo-img" />
+                        <div class="node-title">스태프 웹</div>
+                        <div class="node-desc">QR 검증/픽업 관리</div>
+                    </div>
+                    <div class="arch-node" id="node-admin-ui">
+                        <img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/nextjs/nextjs-original.svg"
+                            class="logo-img" />
+                        <div class="node-title">어드민 콘솔</div>
+                        <div class="node-desc">좌석 편집/정산</div>
+                    </div>
+                </div>
+
+                <!-- 2. Middleware Row -->
+                <div class="group-container" id="row-middleware">
+                    <div class="group-box"></div>
+                    <div class="group-title">인증 및 미들웨어</div>
+                    <div class="arch-node" id="node-auth">
+                        <div class="emoji-logo">🛡️</div>
+                        <div class="node-title">Auth Filter</div>
+                        <div class="node-desc">Spring Security</div>
+                    </div>
+                    <div class="arch-node" id="node-socket">
+                        <div class="emoji-logo">⚡</div>
+                        <div class="node-title">WebSocket</div>
+                        <div class="node-desc">실시간 알림 서버</div>
+                    </div>
+                </div>
+
+                <!-- 3. Backend Row -->
+                <div class="group-container" id="row-backend">
+                    <div class="group-box"></div>
+                    <div class="group-title flex items-center gap-2">
+                        <img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/spring/spring-original.svg"
+                            width="18" />
+                        Spring Boot 백엔드 도메인
+                    </div>
+                    <div class="arch-node" id="node-domain-user">
+                        <div class="emoji-logo">👤</div>
+                        <div class="node-title">User</div>
+                        <div class="node-desc">회원/인증</div>
+                    </div>
+                    <div class="arch-node" id="node-domain-ticket">
+                        <div class="emoji-logo">🎟️</div>
+                        <div class="node-title">Ticket/Seat</div>
+                        <div class="node-desc">실시간 예매</div>
+                    </div>
+                    <div class="arch-node" id="node-domain-wallet">
+                        <div class="emoji-logo">💳</div>
+                        <div class="node-title">Wallet</div>
+                        <div class="node-desc">FESTIO Pay</div>
+                    </div>
+                    <div class="arch-node" id="node-domain-store">
+                        <div class="emoji-logo">🏪</div>
+                        <div class="node-title">Store</div>
+                        <div class="node-desc">F&B/굿즈 관리</div>
+                    </div>
+                    <div class="arch-node" id="node-domain-settlement">
+                        <div class="emoji-logo">📊</div>
+                        <div class="node-title">Settlement</div>
+                        <div class="node-desc">정산 대시보드</div>
+                    </div>
+                </div>
+
+                <!-- 4. DB Layer -->
+                <div class="group-container" id="row-db">
+                    <div class="group-box"></div>
+                    <div class="group-title">하이브리드 데이터베이스</div>
+                    <div class="arch-node" id="node-db-local">
+                        <img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/postgresql/postgresql-original.svg"
+                            class="logo-img" />
+                        <div class="node-title">PostgreSQL</div>
+                        <div class="node-desc">예매/좌석/잔액 DB</div>
+                    </div>
+                    <div class="arch-node" id="node-db-supa">
+                        <img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/supabase/supabase-original.svg"
+                            class="logo-img" />
+                        <div class="node-title">Supabase Cloud</div>
+                        <div class="node-desc">상점 실시간 주문 DB</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function drawLines() {
+            const svg = document.getElementById('svg-canvas');
+            const area = document.getElementById('diagram-area');
+            const areaRect = area.getBoundingClientRect();
+
+            svg.setAttribute('width', areaRect.width);
+            svg.setAttribute('height', areaRect.height);
+
+            svg.innerHTML = `
+                <defs>
+                    <marker id="arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+                        <path d="M 0 0 L 10 5 L 0 10 z" fill="#64748b" />
+                    </marker>
+                    <marker id="arrow-green" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+                        <path d="M 0 0 L 10 5 L 0 10 z" fill="#10b981" />
+                    </marker>
+                </defs>
+            `;
+
+            function getCenter(el) {
+                const rect = el.getBoundingClientRect();
+                return {
+                    x: rect.left + rect.width / 2 - areaRect.left,
+                    y: rect.top + rect.height / 2 - areaRect.top,
+                    top: rect.top - areaRect.top,
+                    bottom: rect.bottom - areaRect.top,
+                    left: rect.left - areaRect.left,
+                    right: rect.right - areaRect.left
+                };
+            }
+
+            // Curve line
+            function drawPath(startX, startY, endX, endY, color, marker, dash = false, label = '', offsetY = 0) {
+                const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+                const midY = (startY + endY) / 2 + offsetY;
+                const d = 'M ' + startX + ' ' + startY + ' C ' + startX + ' ' + midY + ', ' + endX + ' ' + midY + ', ' + endX + ' ' + endY;
+
+                path.setAttribute('d', d);
+                path.setAttribute('fill', 'none');
+                path.setAttribute('stroke', color);
+                path.setAttribute('stroke-width', '2');
+                path.setAttribute('marker-end', 'url(#' + marker + ')');
+                if (dash) path.setAttribute('stroke-dasharray', '5,5');
+                svg.appendChild(path);
+
+                if (label) {
+                    const text = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+                    text.setAttribute('x', (startX + endX) / 2);
+                    text.setAttribute('y', midY - 8);
+                    text.setAttribute('fill', color);
+                    text.setAttribute('font-size', '12');
+                    text.setAttribute('font-weight', 'bold');
+                    text.setAttribute('text-anchor', 'middle');
+
+                    const filter = document.createElementNS('http://www.w3.org/2000/svg', 'filter');
+                    filter.setAttribute('id', 'solid-' + Math.random().toString(36).substr(2, 9));
+                    filter.setAttribute('x', '-0.1'); filter.setAttribute('y', '-0.1'); filter.setAttribute('width', '1.2'); filter.setAttribute('height', '1.2');
+                    filter.innerHTML = '<feFlood flood-color="white"/><feComposite in="SourceGraphic"/>';
+                    svg.appendChild(filter);
+                    text.setAttribute('filter', 'url(#' + filter.id + ')');
+
+                    text.textContent = label;
+                    svg.appendChild(text);
+                }
+            }
+
+            // Orthogonal Routing (Step lines) for complex routes to avoid overlapping
+            function drawStepPath(points, color, marker, dash = false, label = '', labelPos = 1) {
+                const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+                let d = 'M ' + points[0].x + ' ' + points[0].y;
+                for (let i = 1; i < points.length; i++) {
+                    d += ' L ' + points[i].x + ' ' + points[i].y;
+                }
+                path.setAttribute('d', d);
+                path.setAttribute('fill', 'none');
+                path.setAttribute('stroke', color);
+                path.setAttribute('stroke-width', '2');
+                path.setAttribute('marker-end', 'url(#' + marker + ')');
+                if (dash) path.setAttribute('stroke-dasharray', '5,5');
+                svg.appendChild(path);
+
+                if (label && points.length > labelPos) {
+                    const p1 = points[labelPos - 1];
+                    const p2 = points[labelPos];
+                    const text = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+                    text.setAttribute('x', (p1.x + p2.x) / 2);
+                    text.setAttribute('y', (p1.y + p2.y) / 2 - 8);
+                    text.setAttribute('fill', color);
+                    text.setAttribute('font-size', '12');
+                    text.setAttribute('font-weight', 'bold');
+                    text.setAttribute('text-anchor', 'middle');
+                    text.textContent = label;
+
+                    const filter = document.createElementNS('http://www.w3.org/2000/svg', 'filter');
+                    filter.setAttribute('id', 'solid-step-' + Math.random().toString(36).substr(2, 9));
+                    filter.setAttribute('x', '-0.1'); filter.setAttribute('y', '-0.1'); filter.setAttribute('width', '1.2'); filter.setAttribute('height', '1.2');
+                    filter.innerHTML = '<feFlood flood-color="white"/><feComposite in="SourceGraphic"/>';
+                    svg.appendChild(filter);
+                    text.setAttribute('filter', 'url(#' + filter.id + ')');
+
+                    svg.appendChild(text);
+                }
+            }
+
+            const cUser = getCenter(document.getElementById('node-user-ui'));
+            const cStaff = getCenter(document.getElementById('node-staff-ui'));
+            const cAdmin = getCenter(document.getElementById('node-admin-ui'));
+
+            const nAuth = getCenter(document.getElementById('node-auth'));
+            const nSocket = getCenter(document.getElementById('node-socket'));
+
+            const rowBackend = getCenter(document.getElementById('row-backend'));
+            const dUser = getCenter(document.getElementById('node-domain-user'));
+            const dTicket = getCenter(document.getElementById('node-domain-ticket'));
+            const dWallet = getCenter(document.getElementById('node-domain-wallet'));
+            const dStore = getCenter(document.getElementById('node-domain-store'));
+            const dSettle = getCenter(document.getElementById('node-domain-settlement'));
+
+            const dbLocal = getCenter(document.getElementById('node-db-local'));
+            const dbSupa = getCenter(document.getElementById('node-db-supa'));
+
+            // 1. Clients to Auth (REST API)
+            // Route from bottom of clients down to a bus line, then to Auth
+            const busY1 = cUser.bottom + 20;
+            drawStepPath([
+                { x: cUser.x, y: cUser.bottom },
+                { x: cUser.x, y: busY1 },
+                { x: nAuth.x - 20, y: busY1 },
+                { x: nAuth.x - 20, y: nAuth.top - 10 }
+            ], '#64748b', 'arrow');
+
+            drawStepPath([
+                { x: cStaff.x, y: cStaff.bottom },
+                { x: cStaff.x, y: busY1 },
+                { x: nAuth.x, y: busY1 },
+                { x: nAuth.x, y: nAuth.top - 10 }
+            ], '#64748b', 'arrow', false, 'REST API / Auth Header', 2);
+
+            drawStepPath([
+                { x: cAdmin.x, y: cAdmin.bottom },
+                { x: cAdmin.x, y: busY1 },
+                { x: nAuth.x + 20, y: busY1 },
+                { x: nAuth.x + 20, y: nAuth.top - 10 }
+            ], '#64748b', 'arrow');
+
+            // 2. Clients to Socket (Realtime)
+            const busY2 = cUser.bottom + 40;
+            drawStepPath([
+                { x: cUser.x + 20, y: cUser.bottom },
+                { x: cUser.x + 20, y: busY2 },
+                { x: nSocket.x, y: busY2 },
+                { x: nSocket.x, y: nSocket.top - 10 }
+            ], '#64748b', 'arrow', true);
+
+            // 3. Socket to Clients (Feedback)
+            drawPath(nSocket.x + 40, nSocket.top - 10, cStaff.x + 60, cStaff.bottom, '#3b82f6', 'arrow', true, '알림 전송', -20);
+
+            // 4. Auth to Backend
+            drawPath(nAuth.x, nAuth.bottom, nAuth.x, rowBackend.top - 10, '#64748b', 'arrow');
+
+            // 5. Backend to Local DB
+            const busY3 = dUser.bottom + 20;
+            drawStepPath([
+                { x: dUser.x, y: dUser.bottom }, { x: dUser.x, y: busY3 }, { x: dbLocal.x - 40, y: busY3 }, { x: dbLocal.x - 40, y: dbLocal.top - 10 }
+            ], '#64748b', 'arrow');
+            drawStepPath([
+                { x: dTicket.x, y: dTicket.bottom }, { x: dTicket.x, y: busY3 }, { x: dbLocal.x - 15, y: busY3 }, { x: dbLocal.x - 15, y: dbLocal.top - 10 }
+            ], '#64748b', 'arrow');
+            drawStepPath([
+                { x: dWallet.x, y: dWallet.bottom }, { x: dWallet.x, y: busY3 }, { x: dbLocal.x + 15, y: busY3 }, { x: dbLocal.x + 15, y: dbLocal.top - 10 }
+            ], '#64748b', 'arrow');
+            drawStepPath([
+                { x: dSettle.x, y: dSettle.bottom }, { x: dSettle.x, y: busY3 }, { x: dbLocal.x + 40, y: busY3 }, { x: dbLocal.x + 40, y: dbLocal.top - 10 }
+            ], '#64748b', 'arrow');
+
+            // 6. Backend to Supa DB
+            drawStepPath([
+                { x: dStore.x, y: dStore.bottom }, { x: dStore.x, y: busY3 }, { x: dbSupa.x, y: busY3 }, { x: dbSupa.x, y: dbSupa.top - 10 }
+            ], '#64748b', 'arrow');
+
+            // 7. Direct SupaDB Access (Green dashed lines routed around the OUTSIDE to avoid crossing)
+            const leftEdge = 40; // Absolute margin
+            drawStepPath([
+                {x: cUser.left + 20, y: cUser.bottom}, 
+                {x: cUser.left + 20, y: cUser.bottom + 20}, 
+                {x: leftEdge, y: cUser.bottom + 20}, 
+                {x: leftEdge, y: dbSupa.bottom + 30}, 
+                {x: dbSupa.x - 40, y: dbSupa.bottom + 30}, 
+                {x: dbSupa.x - 40, y: dbSupa.bottom + 10}
+            ], '#10b981', 'arrow-green', true, '직접 엑세스', 2);
+
+            const rightEdge = areaRect.width - 40; // Absolute margin
+            drawStepPath([
+                {x: cStaff.right - 20, y: cStaff.bottom}, 
+                {x: cStaff.right - 20, y: cStaff.bottom + 20}, 
+                {x: rightEdge, y: cStaff.bottom + 20}, 
+                {x: rightEdge, y: dbSupa.bottom + 30}, 
+                {x: dbSupa.x + 40, y: dbSupa.bottom + 30}, 
+                {x: dbSupa.x + 40, y: dbSupa.bottom + 10}
+            ], '#10b981', 'arrow-green', true, '실시간 구독', 2);
+        }
+
+        window.addEventListener('load', () => { setTimeout(drawLines, 100); });
+        window.addEventListener('resize', drawLines);
+    </script>
+</body>
+
+</html>

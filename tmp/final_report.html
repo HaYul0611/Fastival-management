@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <title>팀 프로젝트 결과보고서</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Pretendard:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Pretendard', sans-serif; background-color: #f1f5f9; padding: 3rem 1rem; }
+        .report-paper {
+            margin: 0 auto; background: white; padding: 4rem; border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.08); border-top: 12px solid #3b82f6;
+        }
+        
+        .header-table { width: 100%; border-collapse: collapse; margin-bottom: 2rem; }
+        .header-table th { background: #f8fafc; border: 1px solid #e2e8f0; padding: 12px 16px; width: 120px; color: #475569; text-align: left; font-size: 14px; }
+        .header-table td { border: 1px solid #e2e8f0; padding: 12px 16px; color: #1e293b; font-weight: 600; font-size: 15px; }
+        
+        .section-title {
+            font-size: 20px; font-weight: 800; color: #0f172a; margin-top: 3rem; margin-bottom: 1.5rem;
+            display: flex; align-items: center; gap: 10px; border-bottom: 2px solid #e2e8f0; padding-bottom: 10px;
+        }
+
+        /* Summary Table Styles (Matching attached image structure) */
+        .summary-table {
+            width: 100%; border-collapse: collapse; margin-bottom: 3rem;
+            border: 1px solid #94a3b8;
+        }
+        .summary-table th {
+            background: #e0f2fe; /* Light blue background as in image */
+            border: 1px solid #94a3b8; padding: 24px 20px; width: 160px;
+            color: #0f172a; text-align: center; font-size: 16px; font-weight: 800;
+            vertical-align: middle;
+        }
+        .summary-table td {
+            border: 1px solid #94a3b8; padding: 24px; color: #1e293b; font-size: 15px; line-height: 1.7;
+        }
+        .summary-list { margin: 0; padding-left: 20px; list-style-type: disc; }
+        .summary-list li { margin-bottom: 8px; }
+        .summary-list-none { margin: 0; padding-left: 0; list-style-type: none; }
+        .summary-list-none li { margin-bottom: 8px; }
+        
+        /* Role Assignment Styles */
+        .member-card { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 16px; padding: 24px; margin-bottom: 24px; }
+        .member-name { font-size: 18px; font-weight: 800; color: #3b82f6; margin-bottom: 16px; display: flex; align-items: center; gap: 8px; }
+        .role-list { list-style: none; padding: 0; margin: 0; }
+        .role-list li { position: relative; padding-left: 20px; margin-bottom: 12px; font-size: 15px; color: #334155; line-height: 1.6; }
+        .role-list li::before { content: ''; position: absolute; left: 0; top: 8px; width: 6px; height: 6px; border-radius: 50%; background: #3b82f6; }
+        
+        .badge-transfer {
+            background-color: #fee2e2; color: #dc2626; border: 1px solid #fca5a5;
+            font-size: 11px; font-weight: 700; padding: 2px 8px; border-radius: 9999px; margin-right: 6px; vertical-align: middle;
+        }
+    </style>
+</head>
+<body>
+    <div class="max-w-4xl report-paper">
+        <div class="text-center mb-10">
+            <h1 class="text-4xl font-extrabold text-slate-800 tracking-tight mb-4">팀 프로젝트 결과보고서</h1>
+            <p class="text-lg text-slate-500 font-medium">최종 산출물 및 역할 분담</p>
+        </div>
+
+        <table class="header-table">
+            <tbody>
+                <tr>
+                    <th>프로젝트 제목</th>
+                    <td colspan="3" class="text-blue-600">축제 올인원 O2O(Online to Offline) 플랫폼</td>
+                </tr>
+                <tr>
+                    <th>과정명</th>
+                    <td colspan="3">바이브코딩을 활용한 AI 기반 웹풀스택 개발 과정</td>
+                </tr>
+                <tr>
+                    <th>담당강사</th>
+                    <td>유 영 식</td>
+                    <th>팀 구성원</th>
+                    <td>오하율, 강진원</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <!-- 프로젝트 결과 요약 표 (첨부 이미지 영역 반영) -->
+        <div class="section-title">
+            <svg width="24" height="24" fill="none" stroke="#3b82f6" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+            프로젝트 결과 요약
+        </div>
+        <table class="summary-table">
+            <tbody>
+                <tr>
+                    <th>컨셉</th>
+                    <td>페스티벌의 예매부터 현장 주문, 관제, 정산까지 모든 여정을 하나의 플랫폼에서 원스톱으로 관리하는 <b>'축제 올인원 O2O(Online to Offline) 하이브리드 플랫폼'</b></td>
+                </tr>
+                <tr>
+                    <th>기능</th>
+                    <td>
+                        <ul class="summary-list">
+                            <li>실시간 동기화 웹 티켓팅 및 Dynamic QR(TOTP) 출입 통제</li>
+                            <li>가맹점(F&B, 굿즈) 실시간 모바일 픽업 주문 및 통합 장바구니</li>
+                            <li>FESTIVAL PAY 가상머니 충전/결제 시스템 및 외부 PG사 연동</li>
+                            <li>관리자용 실시간 좌석 편집기(SVG) 및 혼잡도/매출 통합 관제 대시보드</li>
+                        </ul>
+                    </td>
+                </tr>
+                <tr>
+                    <th>특장점</th>
+                    <td>
+                        <ul class="summary-list">
+                            <li>대규모 트래픽 대비 3중 재고 동시성 방어 및 타임세일 트래픽 분산 처리</li>
+                            <li>WebSocket 및 Supabase Realtime을 활용한 새로고침 없는 양방향 실시간 상태 동기화 (좌석 선점, 주문 알림)</li>
+                            <li>역할 기반(RBAC) 분리 및 폐쇄형 스태프 계정 관리를 통한 보안성 강화</li>
+                            <li>오프라인(현장 키오스크/POS)과 온라인(앱) 데이터의 실시간 통합 연동 및 가맹점 정산 자동화</li>
+                        </ul>
+                    </td>
+                </tr>
+                <tr>
+                    <th>사용기술 및 환경</th>
+                    <td>
+                        <ul class="summary-list">
+                            <li><strong>Frontend:</strong> HTML, CSS, JavaScript, Toss Payments PG</li>
+                            <li><strong>Backend:</strong> Java, Spring Boot</li>
+                            <li><strong>Database & Realtime:</strong> PostgreSQL, H2, Supabase</li>
+                            <li><strong>External API:</strong> Portone PG, Hugging Face AI</li>
+                        </ul>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+
+        <!-- 인원 조정에 따른 업무 배분 결과 -->
+        <div class="section-title">
+            <svg width="24" height="24" fill="none" stroke="#3b82f6" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path></svg>
+            팀원별 담당 파트
+        </div>
+
+        <div class="member-card">
+            <div class="member-name">👩‍💻 오하율 (프론트엔드 및 플랫폼 제어 주도)</div>
+            <ul class="role-list">
+                <li><b>사용자 관점 프론트엔드 (UI/UX):</b> 페스티벌(FESTIO) 예매 페이지 및 F&B/굿즈 Shop 페이지 등 전체적인 클라이언트 웹 화면 기획 및 구현.</li>
+                <li><b>스태프 및 관리자 전용 페이지:</b> 관리자 및 현장 스태프가 이용하는 백오피스 관제 페이지와 동적 제어 기능 전반 작업.</li>
+                <li><b>온/오프라인 현장 발권:</b> 토스 페이먼츠(Toss Payments) PG 연동을 통한 현장 매표소 및 키오스크 결제 연동.</li>
+                <li><b>통합 출입 제어 시스템:</b> 오픈소스(html5-qrcode)를 활용한 모바일 후면 카메라 스캔 및 Dynamic QR 발급/사용/스캔 인증 기능 구현.</li>
+                <li><b>중복 입장 및 만료 검증:</b> 스캔 즉시 서버에서 중복·만료 여부를 검증하고 상태(초록/빨강/보라) 로그 스트리밍을 통한 입퇴장 처리.</li>
+                <li><span class="badge-transfer">추가인수</span> <b>점포별 실시간 주문 보드:</b> 상점별 실시간 주문 필터링 및 단계별(접수→조리중→준비완료) 상태 변경 소켓 동기화 뷰 구현.</li>
+                <li><span class="badge-transfer">추가인수</span> <b>교환 QR 및 현장 포스 제어:</b> 푸드·굿즈 수령 시 QR 스캔 픽업 처리 및 다이렉트 주방 인서트 연동.</li>
+            </ul>
+        </div>
+
+        <div class="member-card">
+            <div class="member-name">👨‍💻 강진원 (백엔드 및 트랜잭션 제어 주도)</div>
+            <ul class="role-list">
+                <li><b>실시간 좌석 맵 동기화:</b> WebSocket / Supabase Realtime을 연동하여 새로고침 없는 실시간 잔여석 시각화 및 선택 차단 기능 완성.</li>
+                <li><b>RBAC 권한 제어:</b> 최고관리자(ADMIN)와 현장스태프·점주(STAFF) 권한을 분리하여 보안 및 동적 사이드바 메뉴 구현.</li>
+                <li><b>FESTIVAL PAY (가상머니):</b> @Transactional 기반 가상머니 충전/결제/환불 원장 시스템 및 실시간 잔액 검증 로직 구축.</li>
+                <li><b>통합 장바구니 및 타임세일:</b> 최근 본 상품, 푸드, 굿즈 통합 담기 및 특정 비인기 시간대 자동 할인 알고리즘 구현.</li>
+                <li><b>폐쇄형 계정 관리:</b> 관리자가 수동 발급한 임시 계정으로만 스태프 로그인을 허용하는 보안 시스템 구축.</li>
+                <li><span class="badge-transfer">추가인수</span> <b>3중 재고 동시성 방어:</b> 대용량 결제 트래픽 시 재고 마이너스 결함 방지 (5분 내 결제 미완료 시 실시간 원복).</li>
+                <li><span class="badge-transfer">추가인수</span> <b>조건부 취소/환불 및 재료 소진 제어:</b> 상태별 취소 분기 로직 및 관리자용 원격 재료 소진 강제 토글 API 구현.</li>
+            </ul>
+        </div>
+        
+        <div class="member-card bg-indigo-50 border-indigo-100">
+            <div class="member-name text-indigo-600">🤝 공통 및 협업 파트</div>
+            <ul class="role-list">
+                <li><b>통합 관제 메인 대시보드:</b> 당일 입장객 수, 예매수, 주문 대기 현황판 구축 및 ApexCharts 기반 통계 시각화.</li>
+                <li><b>가맹점 정산 및 자동 마감:</b> 가맹점별 수수료를 대입한 자동 정산 출력 및 미수령 노쇼 상품 일괄 마감 배치 프로세스.</li>
+                <li><b>인프라 원격 강제 셧다운:</b> 부스 혼잡 시 최고 관리자가 해당 상점의 영업 상태를 강제 변경해 신규 주문을 원격 차단하는 시스템 구축.</li>
+                <li><b>인파 밀집 자동 경보 (Crowd Control):</b> 특정 구역 내 QR 스캔 누적 데이터 기반으로 밀집도를 산출하여 스태프에게 자동 푸시 경보 발송.</li>
+            </ul>
+        </div>
+    </div>
+</body>
+</html>
