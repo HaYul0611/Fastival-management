@@ -167,26 +167,43 @@ async function init() {
 // ──────────────────────────────────────
 // 카메라
 // ──────────────────────────────────────
+let html5QrcodeScanner = null;
+
 async function startCamera() {
     try {
-        const stream = await navigator.mediaDevices.getUserMedia({
-            video: { facingMode: 'environment', width: { ideal: 1280 } }
-        });
-        if (ssVideo) {
-            ssVideo.srcObject = stream;
-            ssVideo.onplaying = () => {
-                const ph = document.getElementById('ssCameraPlaceholder');
-                if (ph) ph.style.display = 'none';
-            };
+        if (!html5QrcodeScanner) {
+            html5QrcodeScanner = new Html5Qrcode("ssCameraReader");
         }
+
+        await html5QrcodeScanner.start(
+            { facingMode: "environment" },
+            {
+                fps: 10,
+                qrbox: { width: 250, height: 250 }
+            },
+            async (decodedText, decodedResult) => {
+                if (!scanCooldown) {
+                    await processQR(decodedText.trim());
+                }
+            },
+            (errorMessage) => {
+                // Ignore background scan errors
+            }
+        );
+
+        // 카메라 정상 로드 후 대기 아이콘 숨김
+        const ph = document.getElementById('ssCameraPlaceholder');
+        if (ph) ph.style.display = 'none';
+
         if (ssCameraError) ssCameraError.hidden = true;
-        requestAnimationFrame(scanFrame);
     } catch (err) {
         if (ssCameraError) {
             ssCameraError.hidden = false;
             ssCameraError.innerText = "카메라를 시작할 수 없습니다. (권한 차단 또는 카메라 없음)";
         }
         if (ssRetryBtn) ssRetryBtn.style.display = 'inline-block';
+
+        // 오류 시 에러 아이콘으로 표시
         const ph = document.getElementById('ssCameraPlaceholder');
         if (ph) {
             ph.style.display = 'flex';
@@ -194,37 +211,6 @@ async function startCamera() {
             if (span) span.innerText = '카메라 오류 (연결 불가)';
         }
     }
-}
-
-// jsQR 라이브러리 동적 로드 (CDN)
-let jsQR = null;
-async function loadJsQR() {
-    if (jsQR) return jsQR;
-    return new Promise(resolve => {
-        const s = document.createElement('script');
-        s.src = 'https://cdnjs.cloudflare.com/ajax/libs/jsQR/1.4.0/jsQR.min.js';
-        s.onload = () => { jsQR = window.jsQR; resolve(jsQR); };
-        document.head.appendChild(s);
-    });
-}
-
-async function scanFrame() {
-    if (!jsQR) await loadJsQR();
-
-    if (ssVideo.readyState === ssVideo.HAVE_ENOUGH_DATA) {
-        const ctx = ssScanCanvas.getContext('2d');
-        ssScanCanvas.width = ssVideo.videoWidth;
-        ssScanCanvas.height = ssVideo.videoHeight;
-        ctx.drawImage(ssVideo, 0, 0);
-
-        const imageData = ctx.getImageData(0, 0, ssScanCanvas.width, ssScanCanvas.height);
-        const code = jsQR(imageData.data, imageData.width, imageData.height);
-
-        if (code?.data && !scanCooldown) {
-            await processQR(code.data.trim());
-        }
-    }
-    requestAnimationFrame(scanFrame);
 }
 
 // ──────────────────────────────────────
@@ -280,6 +266,17 @@ async function processQR(qrCode) {
         return;
     }
 
+    // URL 형식인 경우 id 파라미터 추출
+    if (qrCode.includes('id=')) {
+        try {
+            const url = new URL(qrCode);
+            const idParam = url.searchParams.get('id');
+            if (idParam) qrCode = idParam;
+        } catch (e) {
+            // 무시하고 원본 사용
+        }
+    }
+
     // 12자리 유효성 체크
     if (!/^[A-Z0-9]{12}$/i.test(qrCode)) {
         await renderResult(null, RESULT.FAIL_INVALID, qrCode);
@@ -317,157 +314,47 @@ async function processQR(qrCode) {
     const isOffline = !navigator.onLine;
 
     if (prefix === 'T') {
-        // 티켓 조회
+        // 티켓 조회 (API 사용)
         if (!isOffline) {
             try {
-                const res = await supabase
-                    .from('order_item')
-                    .select(`
-                        id, item_status, qr_code_uuid, qr_expired_at, totp_secret,
-                        ticket_type, target_vulnerable_name, target_vulnerable_birth,
-                        owner_user_id,
-                        order:order_id ( festival_id, payment_status ),
-                        seat:seat_id ( seat_row, seat_number )
-                    `)
-                    .or(`qr_code_uuid.eq.${qrCode.toUpperCase()},id.eq.${orderIdNum}`)
-                    .maybeSingle();
-                item = res.data;
-                error = res.error;
-            } catch (e) {
-                error = e;
-            }
-        }
-    } else if (prefix === 'F' || prefix === 'G') {
-        // FESTIO SHOP 조회
-        if (!isOffline) {
-            try {
-                const res = await supabase
-                    .from('shop_orders')
-                    .select(`
-                        id, order_number, status, payment_method, delivery_type,
-                        created_at, total_amount, totp_secret
-                    `)
-                    .like('order_number', prefix + '%' + orderIdNum + '%')
-                    .maybeSingle();
+                const res = await fetch('/api/order/tickets/scan', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ qrText: qrCode })
+                });
 
-                if (res.data) {
-                    item = res.data;
-                    item.item_status = item.status;
-                    item.ticket_type = 'SHOP';
-                    item.order = { payment_status: 'COMPLETED' };
-                }
-                error = res.error;
-            } catch (e) {
-                error = e;
-            }
-        }
-    } else {
-        await renderResult(null, RESULT.FAIL_INVALID, qrCode);
-        await insertScanLog(null, RESULT.FAIL_INVALID);
-        return;
-    }
+                if (!res.ok) throw new Error('API 오류');
+                const data = await res.json();
 
-    // 통신 장애(오프라인)로 인한 임시 승인 로직 (하이브리드 인증)
-    if (isOffline || (error && error.message && error.message.includes('fetch'))) {
-        const offlineItem = {
-            id: orderIdNum,
-            item_status: 'COMPLETED',
-            ticket_type: prefix === 'T' ? 'TICKET_OFFLINE' : 'SHOP_OFFLINE',
-            name: '통신장애 임시승인'
-        };
-        await renderResult(offlineItem, RESULT.SUCCESS, qrCode);
-        await insertScanLog(orderIdNum, RESULT.SUCCESS);
-        if (window.Toast) window.Toast.error('오프라인 상태입니다. 기기 자체 검증으로 임시 승인했습니다.');
-        return;
-    }
-
-    if (error || !item) {
-        // Mock 데이터 우회 로직 (F, G 한정)
-        if (!item && (prefix === 'F' || prefix === 'G')) {
-            const mockKey = `mock_scanned_${prefix}_${orderIdNum}`;
-            if (localStorage.getItem(mockKey)) {
-                await renderResult(null, RESULT.FAIL_DUPLICATE, qrCode);
-                await insertScanLog(null, RESULT.FAIL_DUPLICATE);
-                return;
-            } else {
-                localStorage.setItem(mockKey, 'true');
-                const mockItem = {
+                const itemData = {
                     id: orderIdNum,
-                    item_status: 'COMPLETED',
-                    ticket_type: 'SHOP_MOCK',
-                    name: '임시 상품 (Mock)'
+                    seat: { seat_row: '', seat_number: data.seats || '' },
+                    ticket_type: 'NORMAL'
                 };
-                await renderResult(mockItem, RESULT.SUCCESS, qrCode);
-                await insertScanLog(orderIdNum, RESULT.SUCCESS);
-                return;
+
+                if (data.status === 'VALID') {
+                    await renderResult(itemData, RESULT.SUCCESS, qrCode);
+                } else if (data.status === 'ALREADY_ENTERED') {
+                    await renderResult(itemData, RESULT.FAIL_DUPLICATE, qrCode);
+                } else {
+                    await renderResult(itemData, RESULT.FAIL_INVALID, qrCode);
+                }
+
+                // 백엔드 API에서 이미 로그를 저장하므로 별도의 insertScanLog는 생략하거나 화면용으로만 사용
+            } catch (e) {
+                await renderResult(null, RESULT.FAIL_INVALID, qrCode);
             }
-        }
-
-        await renderResult(null, RESULT.FAIL_INVALID, qrCode);
-        await insertScanLog(null, RESULT.FAIL_INVALID);
-        return;
-    }
-
-    if (error || !item) {
-        await renderResult(null, RESULT.FAIL_INVALID, qrCode);
-        await insertScanLog(null, RESULT.FAIL_INVALID);
-        return;
-    }
-
-    // TOTP 유효성 검증 (정적 QR 매칭 제외)
-    const isStaticMatch = item.qr_code_uuid && item.qr_code_uuid === qrCode.toUpperCase();
-    if (!isStaticMatch) {
-        const secret = item.totp_secret || 'dummysecret12345';
-        const currentTotp = await generateTotpCode(secret, 0);
-        const prevTotp = await generateTotpCode(secret, -1);
-        const nextTotp = await generateTotpCode(secret, 1);
-        const decodedTotpStr = String(decodedTotp).padStart(6, '0');
-
-        if (decodedTotpStr !== currentTotp && decodedTotpStr !== prevTotp && decodedTotpStr !== nextTotp) {
-            await renderResult(item, RESULT.FAIL_TOKEN_EXPIRED, qrCode);
-            await insertScanLog(item.id, RESULT.FAIL_TOKEN_EXPIRED);
-            return;
-        }
-    }
-
-    // 환불된 티켓
-    if (item.item_status === 'REFUNDED' || item.order?.payment_status === 'CANCELLED') {
-        await renderResult(item, RESULT.FAIL_REFUNDED, qrCode);
-        await insertScanLog(item.id, RESULT.FAIL_REFUNDED);
-        return;
-    }
-
-    // QR 만료 확인 (정적 QR에 해당)
-    if (item.qr_expired_at && isQRExpired(item.qr_expired_at)) {
-        await renderResult(item, RESULT.FAIL_TOKEN_EXPIRED, qrCode);
-        await insertScanLog(item.id, RESULT.FAIL_TOKEN_EXPIRED);
-        return;
-    }
-
-    // 통합 자동 스캔 로직 (바코드 타입에 따라 자동 분류)
-    if (prefix === 'T') {
-        // 티켓 스캔 (입장 처리)
-        if (item.item_status === 'ENTERED' || item.item_status === 'PICKED_UP') {
-            await renderResult(item, RESULT.FAIL_DUPLICATE, qrCode);
-            await insertScanLog(item.id, RESULT.FAIL_DUPLICATE);
-            return;
-        }
-
-        if (item.item_status === 'SUSPENDED') {
-            showExceptionModal(item, qrCode);
-            return;
-        }
-
-        await supabase
-            .from('order_item')
-            .update({ item_status: 'ENTERED', updated_at: new Date().toISOString() })
-            .eq('id', item.id);
-
-        await renderResult(item, RESULT.SUCCESS, qrCode);
-        await insertScanLog(item.id, RESULT.SUCCESS);
-
-        if (item.ticket_type === 'VULNERABLE') {
-            showWristbandModal(item);
+        } else {
+            // 오프라인 모드일 때
+            const offlineItem = {
+                id: orderIdNum,
+                item_status: 'COMPLETED',
+                ticket_type: 'TICKET_OFFLINE',
+                name: '통신장애 임시승인'
+            };
+            await renderResult(offlineItem, RESULT.SUCCESS, qrCode);
+            await insertScanLog(orderIdNum, RESULT.SUCCESS);
+            if (window.Toast) window.Toast.error('오프라인 상태입니다. 기기 자체 검증으로 임시 승인했습니다.');
         }
         return;
     } else if (prefix === 'F' || prefix === 'G') {
@@ -642,7 +529,13 @@ function showToastOverlay(result, code, item) {
 
     const resultLabel = getResultLabel(result);
     title.innerText = resultLabel;
-    msg.innerText = item?.seat ? `${item.seat.seat_row} ${item.seat.seat_number}번` : (item ? "입장권" : "");
+
+    if (item?.seat && (item.seat.seat_row || item.seat.seat_number)) {
+        msg.innerText = `${item.seat.seat_row} ${item.seat.seat_number}번`.trim();
+    } else {
+        msg.innerText = item && item.ticket_type !== 'NORMAL' ? "입장권" : "";
+    }
+
     tNum.innerText = `🎫 ${code ? code.toUpperCase() : '알 수 없음'}`;
 
     closeBtn.className = "btn btn-rigid";

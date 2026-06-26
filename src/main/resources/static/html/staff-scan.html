@@ -36,25 +36,8 @@
             <div class="camera-section" style="flex: 1; min-width: 300px; max-width: 600px;">
               <div
                 style="position: relative; width: 100%; border-radius: 8px; overflow: hidden; background: #000; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);">
-                <video id="ssVideo" autoplay playsinline
-                  style="width: 100%; aspect-ratio: 4/3; object-fit: cover; display: block;"></video>
-                <canvas id="ssScanCanvas" hidden></canvas>
-
-                <!-- QR 스캐너 프레임 오버레이 -->
-                <div
-                  style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 200px; height: 200px; pointer-events: none; z-index: 5;">
-                  <div
-                    style="position: absolute; top: 0; left: 0; width: 30px; height: 30px; border-top: 4px solid #fff; border-left: 4px solid #fff; border-top-left-radius: 8px;">
-                  </div>
-                  <div
-                    style="position: absolute; top: 0; right: 0; width: 30px; height: 30px; border-top: 4px solid #fff; border-right: 4px solid #fff; border-top-right-radius: 8px;">
-                  </div>
-                  <div
-                    style="position: absolute; bottom: 0; left: 0; width: 30px; height: 30px; border-bottom: 4px solid #fff; border-left: 4px solid #fff; border-bottom-left-radius: 8px;">
-                  </div>
-                  <div
-                    style="position: absolute; bottom: 0; right: 0; width: 30px; height: 30px; border-bottom: 4px solid #fff; border-right: 4px solid #fff; border-bottom-right-radius: 8px;">
-                  </div>
+                <div id="ssCameraReader"
+                  style="width: 100%; min-height: 300px; display: block; border-radius: 8px; overflow: hidden; background: #000;">
                 </div>
 
                 <!-- 카메라 대기 상태 아이콘 (SVG) -->
@@ -165,19 +148,19 @@
             <!-- 모달 팝업 영역 -->
             <!-- 화면 중앙 실시간 검증 결과 오버레이 팝업 -->
             <div id="scan-validation-screen" class="scan-validation-popup" style="display:none;">
-              <h1 id="scan-result-title" style="margin: 0 0 10px 0; font-size: 24px; font-weight: 900;"></h1>
+              <h1 id="scan-result-title" style="margin: 0 0 10px 0; font-size: 32px; font-weight: 900;"></h1>
               <h2 id="scan-result-ticket-number"
-                style="margin: 0 0 15px 0; font-size: 18px; font-weight: 600; color: #475569;"></h2>
+                style="margin: 0 0 15px 0; font-size: 24px; font-weight: 600; color: #475569;"></h2>
               <div id="scan-result-msg"
-                style="font-size: 16px; font-weight: bold; margin-bottom: 24px; color: #334155;"></div>
+                style="font-size: 22px; font-weight: bold; margin-bottom: 24px; color: #334155;"></div>
 
               <button type="button" id="ssExceptionBtnInToast" class="btn btn-rigid"
-                style="display: none; width: 100%; padding: 15px; font-size: 18px; font-weight: bold; margin-bottom: 10px; background: #64748b; color: #fff;">
+                style="display: none; width: 100%; padding: 20px; font-size: 24px; font-weight: bold; margin-bottom: 15px; background: #64748b; color: #fff;">
                 스태프 예외 승인
               </button>
 
               <button type="button" id="btn-close-scan-overlay" class="btn btn-rigid btn-green"
-                style="width: 100%; padding: 15px; font-size: 18px; font-weight: bold;">
+                style="width: 100%; padding: 20px; font-size: 24px; font-weight: bold;">
                 확인
               </button>
             </div>

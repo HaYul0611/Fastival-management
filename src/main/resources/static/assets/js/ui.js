@@ -1706,8 +1706,8 @@ async function renderTicketingScreen() {
         <div class="panel-body-rigid" style="flex: 1; overflow-y: auto; display: flex; flex-direction: column;">
           <form id="ticketing-form" style="display: flex; flex-direction: column; height: 100%;">
             <div class="form-group-rigid" style="margin-bottom: 20px; flex-shrink: 0;">
-              <label style="font-size: 18px; font-weight: bold; margin-bottom: 10px; display: block;">진행 행사 (Festival) 선택</label>
-              <select id="ticketing-festival-select" class="input-rigid" style="width: 100%; padding: 15px; font-size: 18px;">
+              <label style="font-size: 14px; font-weight: bold; color: var(--text-muted); margin-bottom: 8px; display: block;">진행 행사 (Festival) 선택</label>
+              <select id="ticketing-festival-select" class="input-rigid">
                 ${festivals.map(f => `<option value="${f.id}" ${f.id === activeFestivalId ? 'selected' : ''}>${f.name} (${f.startDate} ~ ${f.endDate})</option>`).join('')}
               </select>
             </div>
@@ -1717,7 +1717,7 @@ async function renderTicketingScreen() {
                 <span style="font-size: 18px; font-weight: bold;">선택된 좌석 목록 및 이용 고객 지정</span>
                 <span id="selected-seats-count-lbl" style="font-size: 16px; color: var(--text-muted); font-weight: bold;">0개 선택됨</span>
               </label>
-              <div class="selected-seats-table-container" style="flex: 1; overflow-y: auto; overflow-x: auto; border: 1px solid var(--border-color); background: #1a202c; border-radius: 4px;">
+              <div class="selected-seats-table-container" style="flex: 1; overflow-y: auto; overflow-x: auto; border: 1px solid var(--border-color); border-radius: 4px;">
                 <table class="table-rigid" style="margin: 0; font-size: 16px; width: 100%; min-width: 500px;">
                   <thead>
                     <tr>

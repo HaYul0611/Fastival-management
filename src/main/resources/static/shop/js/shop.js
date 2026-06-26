@@ -743,8 +743,34 @@ document.addEventListener('DOMContentLoaded', () => {
                 'https://shopkpop.cafe24.com/web/upload/weskin14/kr/main/ADB_VC_PC.png',
                 'https://shopkpop.cafe24.com/web/upload/weskin14/kr/main/HTW_3RD_PC.png',
                 'https://shopkpop.cafe24.com/web/upload/weskin14/kr/main/QWER_PC_0527.png',
+                'https://shopkpop.cafe24.com/web/upload/weskin14/kr/main/hzwav_pc.png',
+                'https://shopkpop.cafe24.com/web/upload/weskin14/kr/main/evven_pc.png',
+                'https://shopkpop.cafe24.com/web/upload/weskin14/kr/main/ald1ols_pc.png',
+                'https://shopkpop.cafe24.com/web/upload/weskin14/kr/main/A2B_PC.png',
+                'https://shopkpop.cafe24.com/web/upload/weskin14/kr/main/HTW_PC.png',
+                'https://shopkpop.cafe24.com/web/upload/weskin14/kr/main/XIKERS_7TH_PC_F.png',
+                'https://shopkpop.cafe24.com/web/upload/weskin14/kr/main/WOODZ_2ND_PC.jpg',
+                'https://shopkpop.cafe24.com/web/upload/weskin14/kr/main/QWER_PC.jpg',
+                'https://shopkpop.cafe24.com/web/upload/weskin14/kr/main/H2H_260317_PC.jpg',
+                'https://shopkpop.cafe24.com/web/upload/weskin14/kr/main/LJS_NEW_PC.jpg',
+                'https://shopkpop.cafe24.com/web/upload/weskin14/kr/main/MIYEON_LD4_PC.png',
                 'https://dokidokigoods.co.kr/web/product/medium/202606/bffa43558cb7e84a3361e4a75b786a3d.png',
-                'https://dokidokigoods.co.kr/web/product/medium/202606/9bae5a6662d312f1af7df7dc1b87c811.png'
+                'https://dokidokigoods.co.kr/web/product/medium/202606/9bae5a6662d312f1af7df7dc1b87c811.png',
+                'https://dokidokigoods.co.kr/web/product/medium/202606/d8f3fe91bf40ca88c82735dfba2553eb.png',
+                'https://dokidokigoods.co.kr/web/product/medium/202606/90962947887dcc67632c06a2e1c9bfc3.png',
+                'https://dokidokigoods.co.kr/web/product/medium/202606/1de798c15be2ac32aaf84d8bba71294a.png',
+                'https://dokidokigoods.co.kr/web/product/medium/202606/a677f69c9ac28fa7068e5894c3ef93d8.png',
+                'https://dokidokigoods.co.kr/web/product/medium/202404/288d18d67410c1f248e0e2764a9297f1.jpg',
+                'https://dokidokigoods.co.kr/web/product/big/202606/50bc807823ee1081cdfbeaff7abbd7f8.png',
+                'https://dokidokigoods.co.kr/web/product/big/202606/d5fcbc07c5112d5bd2c1b911b684f3ae.png',
+                'https://dokidokigoods.co.kr/web/product/big/202606/8554744a9f66f780be4fdb09a0cf2fd8.png',
+                'https://dokidokigoods.co.kr/web/product/big/202606/ccbd726fa9fc5fbe93052125b7073244.png',
+                'https://dokidokigoods.co.kr/web/product/big/202606/d9014728ae5cbd5cacb2ffa1a965819b.png',
+                'https://dokidokigoods.co.kr/web/product/big/202606/ac6b65b316e5222683771ec6f8ac7c25.png',
+                'https://dokidokigoods.co.kr/web/product/big/202606/061a8af2169e5203772d34b94729680f.png',
+                'https://dokidokigoods.co.kr/web/product/big/202606/70bcd81b4414ffd901a5d844c6fb4e7c.png',
+                'https://dokidokigoods.co.kr/web/product/big/202606/1e21d49da08367eb8396ec8f537dbefa.png',
+                'https://dokidokigoods.co.kr/web/product/big/202606/89eda58119cfa62779fa639da8bbfe04.png'
               ];
               imgUrl = fallbackGoods[numId % fallbackGoods.length];
             }
@@ -770,7 +796,7 @@ document.addEventListener('DOMContentLoaded', () => {
       // 2. Process API (Mock) data
       // ============================================
       if (apiStores && apiStores.length > 0) {
-        const productPromises = apiStores.map(store => {
+        const productPromises = apiStores.map((store, storeIndex) => {
           let storeCatMapped = 'goods';
           const storeCat = (store.category || '').toLowerCase();
           if (storeCat === 'food' || storeCat === 'drink') storeCatMapped = 'food';
@@ -784,10 +810,16 @@ document.addEventListener('DOMContentLoaded', () => {
 
           let finalStoreImg = store.imageUrl || store.image_url || null;
           if (storeCatMapped === 'food') {
-            finalStoreImg = foodTruckImages[(store.id || 0) % foodTruckImages.length];
+            finalStoreImg = foodTruckImages[storeIndex % foodTruckImages.length];
           } else {
             // goods/collab fallback to prevent 404
-            finalStoreImg = goodsImgs[(store.id || 0) % goodsImgs.length];
+            const extendedGoodsStoreImgs = [
+              '/shop/img/stores/goods/gen_0.png', '/shop/img/stores/goods/gen_1.png', '/shop/img/stores/goods/gen_2.png',
+              '/shop/img/stores/goods/gen_3.png', '/shop/img/stores/goods/gen_4.png', '/shop/img/stores/goods/gen_5.png',
+              '/shop/img/stores/goods/gen_6.png', '/shop/img/stores/goods/gen_7.png', '/shop/img/stores/goods/gen_8.png',
+              '/shop/img/stores/goods/gen_9.png'
+            ];
+            finalStoreImg = extendedGoodsStoreImgs[storeIndex % extendedGoodsStoreImgs.length];
           }
 
           STORES.push({
@@ -817,7 +849,6 @@ document.addEventListener('DOMContentLoaded', () => {
                   let imgUrl = p.imageUrl || p.image_url || null;
                   if (imgUrl && (imgUrl.includes('/Festio/images/') || imgUrl.includes('goods_vinyl') || imgUrl.includes('/assets/img/products/'))) {
                     let strId = String(p.id || p.productName || p.name || '');
-                    let numId = hashCode(strId) || 1;
                     if (storeCatMapped === 'food' || strId.includes('버거') || strId.includes('감자') || strId.includes('치즈') || strId.includes('메뉴')) {
                       const foodImgs = [
                         'https://www.themealdb.com/images/media/meals/8rfd4q1764112993.jpg',
@@ -827,19 +858,57 @@ document.addEventListener('DOMContentLoaded', () => {
                         'https://www.themealdb.com/images/media/meals/44bzep1761848278.jpg',
                         'https://www.themealdb.com/images/media/meals/m0p0j81765568742.jpg',
                         'https://www.themealdb.com/images/media/meals/sytuqu1511553755.jpg',
-                        'https://www.themealdb.com/images/media/meals/wrssvt1511556563.jpg'
+                        'https://www.themealdb.com/images/media/meals/wrssvt1511556563.jpg',
+                        'https://www.themealdb.com/images/media/meals/pkopc31683207947.jpg',
+                        'https://www.themealdb.com/images/media/meals/z0ageb1583189517.jpg',
+                        'https://www.themealdb.com/images/media/meals/vtqxtu1511784197.jpg',
+                        'https://www.themealdb.com/images/media/meals/ursuup1487348423.jpg',
+                        'https://www.themealdb.com/images/media/meals/41cxjh1683207682.jpg',
+                        'https://www.themealdb.com/images/media/meals/uyqrrv1511553350.jpg',
+                        'https://www.themealdb.com/images/media/meals/dxpc7j1764370714.jpg',
+                        'https://www.themealdb.com/images/media/meals/1529444830.jpg',
+                        'https://www.themealdb.com/images/media/meals/t2b8bn1779737789.jpg',
+                        'https://www.themealdb.com/images/media/meals/1nalo51765188375.jpg',
+                        'https://www.themealdb.com/images/media/meals/cgl60b1683206581.jpg',
+                        'https://www.themealdb.com/images/media/meals/pbzcrx1763765096.jpg'
                       ];
-                      imgUrl = foodImgs[numId % foodImgs.length];
+                      imgUrl = foodImgs[i % foodImgs.length];
                     } else {
                       const fallbackGoods = [
                         'https://shopkpop.cafe24.com/web/upload/weskin14/kr/main/ATZ_14TH_PC.jpg',
                         'https://shopkpop.cafe24.com/web/upload/weskin14/kr/main/ADB_VC_PC.png',
                         'https://shopkpop.cafe24.com/web/upload/weskin14/kr/main/HTW_3RD_PC.png',
                         'https://shopkpop.cafe24.com/web/upload/weskin14/kr/main/QWER_PC_0527.png',
+                        'https://shopkpop.cafe24.com/web/upload/weskin14/kr/main/hzwav_pc.png',
+                        'https://shopkpop.cafe24.com/web/upload/weskin14/kr/main/evven_pc.png',
+                        'https://shopkpop.cafe24.com/web/upload/weskin14/kr/main/ald1ols_pc.png',
+                        'https://shopkpop.cafe24.com/web/upload/weskin14/kr/main/A2B_PC.png',
+                        'https://shopkpop.cafe24.com/web/upload/weskin14/kr/main/HTW_PC.png',
+                        'https://shopkpop.cafe24.com/web/upload/weskin14/kr/main/XIKERS_7TH_PC_F.png',
+                        'https://shopkpop.cafe24.com/web/upload/weskin14/kr/main/WOODZ_2ND_PC.jpg',
+                        'https://shopkpop.cafe24.com/web/upload/weskin14/kr/main/QWER_PC.jpg',
+                        'https://shopkpop.cafe24.com/web/upload/weskin14/kr/main/H2H_260317_PC.jpg',
+                        'https://shopkpop.cafe24.com/web/upload/weskin14/kr/main/LJS_NEW_PC.jpg',
+                        'https://shopkpop.cafe24.com/web/upload/weskin14/kr/main/MIYEON_LD4_PC.png',
                         'https://dokidokigoods.co.kr/web/product/medium/202606/bffa43558cb7e84a3361e4a75b786a3d.png',
-                        'https://dokidokigoods.co.kr/web/product/medium/202606/9bae5a6662d312f1af7df7dc1b87c811.png'
+                        'https://dokidokigoods.co.kr/web/product/medium/202606/9bae5a6662d312f1af7df7dc1b87c811.png',
+                        'https://dokidokigoods.co.kr/web/product/medium/202606/d8f3fe91bf40ca88c82735dfba2553eb.png',
+                        'https://dokidokigoods.co.kr/web/product/medium/202606/90962947887dcc67632c06a2e1c9bfc3.png',
+                        'https://dokidokigoods.co.kr/web/product/medium/202606/1de798c15be2ac32aaf84d8bba71294a.png',
+                        'https://dokidokigoods.co.kr/web/product/medium/202606/a677f69c9ac28fa7068e5894c3ef93d8.png',
+                        'https://dokidokigoods.co.kr/web/product/medium/202404/288d18d67410c1f248e0e2764a9297f1.jpg',
+                        'https://dokidokigoods.co.kr/web/product/big/202606/50bc807823ee1081cdfbeaff7abbd7f8.png',
+                        'https://dokidokigoods.co.kr/web/product/big/202606/d5fcbc07c5112d5bd2c1b911b684f3ae.png',
+                        'https://dokidokigoods.co.kr/web/product/big/202606/8554744a9f66f780be4fdb09a0cf2fd8.png',
+                        'https://dokidokigoods.co.kr/web/product/big/202606/ccbd726fa9fc5fbe93052125b7073244.png',
+                        'https://dokidokigoods.co.kr/web/product/big/202606/d9014728ae5cbd5cacb2ffa1a965819b.png',
+                        'https://dokidokigoods.co.kr/web/product/big/202606/ac6b65b316e5222683771ec6f8ac7c25.png',
+                        'https://dokidokigoods.co.kr/web/product/big/202606/061a8af2169e5203772d34b94729680f.png',
+                        'https://dokidokigoods.co.kr/web/product/big/202606/70bcd81b4414ffd901a5d844c6fb4e7c.png',
+                        'https://dokidokigoods.co.kr/web/product/big/202606/1e21d49da08367eb8396ec8f537dbefa.png',
+                        'https://dokidokigoods.co.kr/web/product/big/202606/89eda58119cfa62779fa639da8bbfe04.png'
                       ];
-                      imgUrl = fallbackGoods[numId % fallbackGoods.length];
+                      imgUrl = fallbackGoods[i % fallbackGoods.length];
                     }
                   }
 

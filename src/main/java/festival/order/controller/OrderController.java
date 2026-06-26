@@ -38,29 +38,31 @@ public class OrderController {
                 if (email != null) {
                     try {
                         userId = jdbcTemplate.queryForObject(
-                            "SELECT id FROM app_user WHERE email = ?", String.class, email);
-                    } catch (Exception ignored) {}
+                                "SELECT id FROM app_user WHERE email = ?", String.class, email);
+                    } catch (Exception ignored) {
+                    }
                 }
             }
 
-            String userEmail = (String) payload.getOrDefault("userEmail", "guest@festio.com");
             Integer totalPrice = payload.get("totalPrice") != null
-                ? ((Number) payload.get("totalPrice")).intValue() : 0;
+                    ? ((Number) payload.get("totalPrice")).intValue()
+                    : 0;
             String orderNumber = (String) payload.getOrDefault("orderNumber", "ORD-" + System.currentTimeMillis());
 
             // 2. orders 테이블에 주문 헤더 INSERT
-            String insertOrderSql = "INSERT INTO orders (user_id, total_price, payment_status, ticket_type, ticket_number, created_at) " +
-                                    "VALUES (?, ?, 'PAID', 'SHOP', ?, NOW())";
+            String insertOrderSql = "INSERT INTO orders (user_id, total_price, payment_status, ticket_type, ticket_number, created_at) "
+                    +
+                    "VALUES (?, ?, 'PAID', 'SHOP', ?, NOW())";
             jdbcTemplate.update(insertOrderSql, userId, totalPrice, orderNumber);
 
             // 3. 방금 삽입한 orders.id 조회
             Long orderId = jdbcTemplate.queryForObject(
-                "SELECT id FROM orders WHERE ticket_number = ? ORDER BY id DESC LIMIT 1",
-                Long.class, orderNumber);
+                    "SELECT id FROM orders WHERE ticket_number = ? ORDER BY id DESC LIMIT 1",
+                    Long.class, orderNumber);
 
             if (orderId == null) {
                 return org.springframework.http.ResponseEntity.status(500)
-                    .body(Map.of("success", false, "message", "주문 헤더 생성 실패"));
+                        .body(Map.of("success", false, "message", "주문 헤더 생성 실패"));
             }
 
             // 4. order_item 테이블에 주문 상세 INSERT
@@ -69,9 +71,11 @@ public class OrderController {
             if (items != null) {
                 for (Map<String, Object> item : items) {
                     Long productId = item.get("productId") != null
-                        ? ((Number) item.get("productId")).longValue() : null;
+                            ? ((Number) item.get("productId")).longValue()
+                            : null;
                     int quantity = item.get("quantity") != null
-                        ? ((Number) item.get("quantity")).intValue() : 1;
+                            ? ((Number) item.get("quantity")).intValue()
+                            : 1;
                     String selectedOptions = (String) item.get("selectedOptions");
                     String productType = "FOOD"; // 기본값
 
@@ -79,37 +83,40 @@ public class OrderController {
                     if (productId != null) {
                         try {
                             String pt = jdbcTemplate.queryForObject(
-                                "SELECT product_type FROM product WHERE id = ?", String.class, productId);
-                            if (pt != null) productType = pt;
-                        } catch (Exception ignored) {}
+                                    "SELECT product_type FROM product WHERE id = ?", String.class, productId);
+                            if (pt != null)
+                                productType = pt;
+                        } catch (Exception ignored) {
+                        }
                     }
 
-                    String insertItemSql = "INSERT INTO order_item (order_id, product_id, quantity, item_status, product_type, selected_options, updated_at) " +
-                                          "VALUES (?, ?, ?, 'ORDERED', ?, ?, NOW())";
+                    String insertItemSql = "INSERT INTO order_item (order_id, product_id, quantity, item_status, product_type, selected_options, updated_at) "
+                            +
+                            "VALUES (?, ?, ?, 'ORDERED', ?, ?, NOW())";
                     jdbcTemplate.update(insertItemSql, orderId, productId, quantity, productType, selectedOptions);
 
                     // 상품 재고 차감
                     if (productId != null) {
                         try {
                             jdbcTemplate.update(
-                                "UPDATE product SET reserved_stock = reserved_stock + ?, available_stock = available_stock - ? WHERE id = ? AND available_stock >= ?",
-                                quantity, quantity, productId, quantity);
-                        } catch (Exception ignored) {}
+                                    "UPDATE product SET reserved_stock = reserved_stock + ?, available_stock = available_stock - ? WHERE id = ? AND available_stock >= ?",
+                                    quantity, quantity, productId, quantity);
+                        } catch (Exception ignored) {
+                        }
                     }
                 }
             }
 
             return org.springframework.http.ResponseEntity.ok(Map.of(
-                "success", true,
-                "orderId", orderId,
-                "orderNumber", orderNumber,
-                "message", "주문이 업주 대시보드에 정상 전달되었습니다."
-            ));
+                    "success", true,
+                    "orderId", orderId,
+                    "orderNumber", orderNumber,
+                    "message", "주문이 업주 대시보드에 정상 전달되었습니다."));
 
         } catch (Exception e) {
             System.err.println("[shop-create] 주문 동기화 오류: " + e.getMessage());
             return org.springframework.http.ResponseEntity.status(500)
-                .body(Map.of("success", false, "message", e.getMessage()));
+                    .body(Map.of("success", false, "message", e.getMessage()));
         }
     }
 
@@ -119,20 +126,17 @@ public class OrderController {
         try {
             // 1. shop_orders 컬럼 정보
             List<Map<String, Object>> columns = jdbcTemplate.queryForList(
-                "SELECT column_name, data_type FROM information_schema.columns WHERE table_name = 'shop_orders'"
-            );
+                    "SELECT column_name, data_type FROM information_schema.columns WHERE table_name = 'shop_orders'");
             debugInfo.put("shop_orders_columns", columns);
 
             // 2. shop_orders 최근 5개 데이터
             List<Map<String, Object>> recentOrders = jdbcTemplate.queryForList(
-                "SELECT * FROM shop_orders ORDER BY created_at DESC LIMIT 5"
-            );
+                    "SELECT * FROM shop_orders ORDER BY created_at DESC LIMIT 5");
             debugInfo.put("shop_orders_recent", recentOrders);
 
             // 3. shop_order_items 최근 5개 데이터
             List<Map<String, Object>> recentItems = jdbcTemplate.queryForList(
-                "SELECT * FROM shop_order_items LIMIT 5"
-            );
+                    "SELECT * FROM shop_order_items LIMIT 5");
             debugInfo.put("shop_order_items_recent", recentItems);
 
         } catch (Exception e) {
@@ -216,7 +220,8 @@ public class OrderController {
     public String resetPassword() {
         org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder encoder = new org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder();
         String realHash = encoder.encode("festio1234!");
-        int rows = jdbcTemplate.update("UPDATE app_user SET password = ? WHERE email = 'gate_staff_8807@festio.com'", realHash);
+        int rows = jdbcTemplate.update("UPDATE app_user SET password = ? WHERE email = 'gate_staff_8807@festio.com'",
+                realHash);
         return "Password reset for " + rows + " users. New hash: " + realHash;
     }
 
@@ -555,7 +560,7 @@ public class OrderController {
             seat.put("isReserved", dbIsReserved || isReservedByOrder);
             seat.put("isEntered", isEnteredByOrder);
             allSeats.add(seat);
-            
+
             processedSeatIds.add(seatId);
             processedSeatIds.add(legacySeatId);
         }
