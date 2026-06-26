@@ -9,7 +9,7 @@ Set-Location festival
 # 3. Git 커밋 및 푸시 진행
 git add .
 git commit -m "Auto-deploy: $(Get-Date -Format 'yyyy-MM-dd HH:mm:ss')"
-git push origin master
+git push origin main
 
 
 
