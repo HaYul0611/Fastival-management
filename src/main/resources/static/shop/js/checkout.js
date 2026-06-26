@@ -311,19 +311,48 @@ document.addEventListener('DOMContentLoaded', () => {
       const rcvSelect = document.getElementById('rcvMethod');
       const deliveryType = (rcvSelect && rcvSelect.value === 'delivery') ? 'SHIPPING' : 'PICKUP';
 
-      const { data: orderData, error: orderErr } = await sb.from('shop_orders').insert({
-        order_number: orderNumber,
-        user_email: (u && u.email) || 'guest@festio.com',
-        user_name: name,
-        user_phone: phone,
-        total_price: originalTotal,
-        discount_amount: discountAmount,
-        final_price: finalTotal,
-        payment_method: payMethod,
-        delivery_type: deliveryType,
-        status: 'PAYMENT_COMPLETED',
-        secret_key: secret
-      }).select().single();
+      let orderData = null;
+      let orderErr = null;
+
+      // 1차 시도: delivery_type 컬럼을 포함하여 저장 시도
+      try {
+        const res = await sb.from('shop_orders').insert({
+          order_number: orderNumber,
+          user_email: (u && u.email) || 'guest@festio.com',
+          user_name: name,
+          user_phone: phone,
+          total_price: originalTotal,
+          discount_amount: discountAmount,
+          final_price: finalTotal,
+          payment_method: payMethod,
+          delivery_type: deliveryType,
+          status: 'PAYMENT_COMPLETED',
+          secret_key: secret
+        }).select().single();
+        orderData = res.data;
+        orderErr = res.error;
+      } catch (err) {
+        console.warn('1차 인서트 시도 중 예외 발생:', err);
+      }
+
+      // 2차 시도 (폴백): 만약 Supabase DB 스키마에 delivery_type 컬럼이 누락되어 에러가 났다면, 해당 컬럼을 제외하고 재시도
+      if (orderErr && (orderErr.message.includes('delivery_type') || orderErr.code === 'PGRST204' || (orderErr.message && orderErr.message.includes('column')))) {
+        console.warn('[Supabase 폴백] delivery_type 컬럼 누락 감지. 해당 필드를 제외하고 주문 저장을 재시도합니다.');
+        const resRetry = await sb.from('shop_orders').insert({
+          order_number: orderNumber,
+          user_email: (u && u.email) || 'guest@festio.com',
+          user_name: name,
+          user_phone: phone,
+          total_price: originalTotal,
+          discount_amount: discountAmount,
+          final_price: finalTotal,
+          payment_method: payMethod,
+          status: 'PAYMENT_COMPLETED',
+          secret_key: secret
+        }).select().single();
+        orderData = resRetry.data;
+        orderErr = resRetry.error;
+      }
 
       if (orderErr || !orderData) {
         throw new Error('주문 등록 실패: ' + (orderErr ? orderErr.message : ''));
