@@ -2435,6 +2435,19 @@ function initTabs() {
       document.querySelectorAll(`[data-tab="${tabId}"]`).forEach(t => t.classList.add('active'));
       const activePane = document.getElementById(tabId);
       if (activePane) activePane.classList.add('active');
+
+      // URL 해시 조용히 업데이트
+      history.replaceState(null, null, '#' + tabId);
+
+      // 하단 네비게이션 동기화
+      document.querySelectorAll('.bottom-nav-item').forEach(item => {
+        const label = item.getAttribute('aria-label');
+        if (label === '찜') {
+          tabId === 'tab-wishlist' ? item.classList.add('active') : item.classList.remove('active');
+        } else if (label === '마이페이지') {
+          tabId !== 'tab-wishlist' ? item.classList.add('active') : item.classList.remove('active');
+        }
+      });
     });
   });
 }
@@ -2509,17 +2522,32 @@ document.addEventListener('DOMContentLoaded', async () => {
   initFaceModal();
 
   // URL 해시(#tab-wishlist 등)로 특정 탭 자동 활성화
-  const hashTab = window.location.hash.replace('#', '');
-  if (hashTab) {
-    const targetTab = document.getElementById(hashTab);
-    if (targetTab) {
-      document.querySelectorAll('.mypage-sidenav-item, .mypage-tab').forEach(t => t.classList.remove('active'));
-      document.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active'));
-      document.querySelectorAll(`[data-tab="${hashTab}"]`).forEach(t => t.classList.add('active'));
-      targetTab.classList.add('active');
-      targetTab.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  function applyHashTab() {
+    const hashTab = window.location.hash.replace('#', '');
+    if (hashTab) {
+      const targetTab = document.getElementById(hashTab);
+      if (targetTab) {
+        document.querySelectorAll('.mypage-sidenav-item, .mypage-tab').forEach(t => t.classList.remove('active'));
+        document.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active'));
+        document.querySelectorAll(`[data-tab="${hashTab}"]`).forEach(t => t.classList.add('active'));
+        targetTab.classList.add('active');
+        targetTab.scrollIntoView({ behavior: 'smooth', block: 'start' });
+
+        // 하단 네비게이션 동기화
+        document.querySelectorAll('.bottom-nav-item').forEach(item => {
+          const label = item.getAttribute('aria-label');
+          if (label === '찜') {
+            hashTab === 'tab-wishlist' ? item.classList.add('active') : item.classList.remove('active');
+          } else if (label === '마이페이지') {
+            hashTab !== 'tab-wishlist' ? item.classList.add('active') : item.classList.remove('active');
+          }
+        });
+      }
     }
   }
+
+  applyHashTab();
+  window.addEventListener('hashchange', applyHashTab);
 
   initHeroQr();
   initQrModal();

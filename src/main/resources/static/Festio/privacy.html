@@ -29,10 +29,13 @@
   <!-- 모바일 검색 모달 -->
   <div class="modal-overlay modal-center" id="modal-mobile-search" role="dialog" aria-modal="true">
     <div class="modal-sheet">
-      <div class="modal-header search-modal-header" style="display:flex; justify-content:space-between; align-items:center;">
+      <div class="modal-header search-modal-header"
+        style="display:flex; justify-content:space-between; align-items:center;">
         <h3 style="font-size:18px; font-weight:bold; margin:0;">통합 검색</h3>
-        <button class="modal-close-btn" data-close-modal="modal-mobile-search" aria-label="닫기" style="width:32px; height:32px; background:rgba(255,255,255,0.1); border-radius:50%; display:flex; align-items:center; justify-content:center;">
-          <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:18px; height:18px;">
+        <button class="modal-close-btn" data-close-modal="modal-mobile-search" aria-label="닫기"
+          style="width:32px; height:32px; background:rgba(255,255,255,0.1); border-radius:50%; display:flex; align-items:center; justify-content:center;">
+          <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+            stroke-linecap="round" stroke-linejoin="round" style="width:18px; height:18px;">
             <line x1="18" y1="6" x2="6" y2="18" />
             <line x1="6" y1="6" x2="18" y2="18" />
           </svg>
@@ -46,7 +49,8 @@
               <line x1="21" y1="21" x2="16.65" y2="16.65" />
             </svg>
             <input type="search" class="filter-range-input mobile-search-input" id="mobileSearchInput"
-              placeholder="행사명, 아티스트 검색" autocomplete="off">
+              placeholder="행사명, 아티스트 검색" autocomplete="new-password" readonly
+              onfocus="this.removeAttribute('readonly');">
           </div>
           <button class="btn btn-pastel-blue" id="btn-mobile-search-execute">검색</button>
         </div>
@@ -1227,4 +1231,3 @@
 </body>
 
 </html>
-

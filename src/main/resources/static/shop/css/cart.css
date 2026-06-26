@@ -202,4 +202,9 @@
     justify-content: space-between;
     align-items: center
   }
+
+  .ci-img {
+    width: 60px;
+    height: 60px;
+  }
 }

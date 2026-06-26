@@ -94,10 +94,27 @@ function renderRelatedProducts(storeId, currentProductId) {
       <article class="pcard${sold ? ' sold' : ''}" data-id="${rp.id}" tabindex="0" onclick="location.href='shop-detail.html?id=${rp.id}'" style="cursor:pointer">
         <div class="pcard-img-area">
           ${badges.length ? `<div class="pcard-badges">${badges.join('')}</div>` : ''}
-          ${rp.imageUrl
-        ? `<img src="${rp.imageUrl}" class="pcard-img" alt="${rp.name}" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
-               <div class="pcard-placeholder" style="display:none; align-items:center; justify-content:center; width:100%; height:100%;">${smallPlaceholder(rp.cat)}</div>`
-        : `<div class="pcard-placeholder" style="display:flex; align-items:center; justify-content:center; width:100%; height:100%;">${smallPlaceholder(rp.cat)}</div>`}
+          ${(function () {
+        let mockImg = '';
+        if (rp.cat === 'food') {
+          const foodImgs = [
+            'https://www.themealdb.com/images/media/meals/8rfd4q1764112993.jpg', 'https://www.themealdb.com/images/media/meals/13fg4j1764441982.jpg',
+            'https://www.themealdb.com/images/media/meals/jgl9qq1764437635.jpg', 'https://www.themealdb.com/images/media/meals/kgfh3q1763075438.jpg'
+          ];
+          mockImg = foodImgs[rp.id % foodImgs.length];
+        } else {
+          const goodsImgs = [
+            'https://shopkpop.cafe24.com/web/upload/weskin14/kr/main/ATZ_14TH_PC.jpg', 'https://shopkpop.cafe24.com/web/upload/weskin14/kr/main/ADB_VC_PC.png',
+            'https://shopkpop.cafe24.com/web/upload/weskin14/kr/main/HTW_3RD_PC.png', 'https://shopkpop.cafe24.com/web/upload/weskin14/kr/main/QWER_PC_0527.png'
+          ];
+          mockImg = goodsImgs[rp.id % goodsImgs.length];
+        }
+        return rp.imageUrl
+          ? `<img src="${rp.imageUrl}" class="pcard-img" alt="${rp.name}" onerror="if(this.src !== '${mockImg}') { this.src='${mockImg}'; } else { this.style.display='none'; this.nextElementSibling.style.display='flex'; }">
+                 <div class="pcard-placeholder" style="display:none; align-items:center; justify-content:center; width:100%; height:100%;">${smallPlaceholder(rp.cat)}</div>`
+          : `<img src="${mockImg}" class="pcard-img" alt="${rp.name}" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                 <div class="pcard-placeholder" style="display:none; align-items:center; justify-content:center; width:100%; height:100%;">${smallPlaceholder(rp.cat)}</div>`;
+      })()}
           ${sold ? `<div class="sold-cover"><span class="sold-label">SOLD OUT</span></div>` : ''}
         </div>
         <div class="pcard-body">
@@ -135,10 +152,27 @@ function renderDetail(p) {
   main.className = `gal-main gal-main-cat-${p.cat}`;
 
   // 메인 이미지 렌더링
-  if (p.imageUrl) {
+  let mockMainImg = '';
+  if (p.cat === 'food') {
+    const foodImgs = [
+      'https://www.themealdb.com/images/media/meals/8rfd4q1764112993.jpg', 'https://www.themealdb.com/images/media/meals/13fg4j1764441982.jpg',
+      'https://www.themealdb.com/images/media/meals/jgl9qq1764437635.jpg', 'https://www.themealdb.com/images/media/meals/kgfh3q1763075438.jpg'
+    ];
+    mockMainImg = foodImgs[p.id % foodImgs.length];
+  } else {
+    const goodsImgs = [
+      'https://shopkpop.cafe24.com/web/upload/weskin14/kr/main/ATZ_14TH_PC.jpg', 'https://shopkpop.cafe24.com/web/upload/weskin14/kr/main/ADB_VC_PC.png',
+      'https://shopkpop.cafe24.com/web/upload/weskin14/kr/main/HTW_3RD_PC.png', 'https://shopkpop.cafe24.com/web/upload/weskin14/kr/main/QWER_PC_0527.png'
+    ];
+    mockMainImg = goodsImgs[p.id % goodsImgs.length];
+  }
+
+  const renderImgSrc = p.imageUrl || mockMainImg;
+
+  if (renderImgSrc) {
     document.getElementById('galPlaceholder').style.display = 'none';
     const mainImg = document.createElement('img');
-    mainImg.src = p.imageUrl;
+    mainImg.src = renderImgSrc;
     mainImg.className = 'gal-main-img';
     mainImg.style.width = '100%';
     mainImg.style.height = '100%';
@@ -148,10 +182,14 @@ function renderDetail(p) {
 
     // 에러 발생 시 플레이스홀더 렌더링
     mainImg.onerror = function () {
-      this.style.display = 'none';
-      const ph = document.getElementById('galPlaceholder');
-      ph.style.display = 'flex';
-      ph.innerHTML = bigPlaceholder(p.cat);
+      if (this.src !== mockMainImg) {
+        this.src = mockMainImg;
+      } else {
+        this.style.display = 'none';
+        const ph = document.getElementById('galPlaceholder');
+        ph.style.display = 'flex';
+        ph.innerHTML = bigPlaceholder(p.cat);
+      }
     };
 
     main.appendChild(mainImg);
@@ -163,8 +201,8 @@ function renderDetail(p) {
   const thumbs = document.getElementById('galThumbs');
   thumbs.innerHTML = Array.from({ length: 4 }, (_, i) => {
     let thumbContent = `<div style="display:flex; width:100%; height:100%; align-items:center; justify-content:center;">${smallPlaceholder(p.cat)}</div>`;
-    if (i === 0 && p.imageUrl) {
-      thumbContent = `<img src="${p.imageUrl}" style="width:100%; height:100%; object-fit:contain; border-radius:4px; background-color:var(--white);" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+    if (i === 0 && renderImgSrc) {
+      thumbContent = `<img src="${renderImgSrc}" style="width:100%; height:100%; object-fit:contain; border-radius:4px; background-color:var(--white);" onerror="if(this.src !== '${mockMainImg}') { this.src='${mockMainImg}'; } else { this.style.display='none'; this.nextElementSibling.style.display='flex'; }">
       <div style="display:none; width:100%; height:100%; align-items:center; justify-content:center;">${smallPlaceholder(p.cat)}</div>`;
     }
     return `
@@ -314,7 +352,7 @@ function tabContent(k) {
           </div>
           <div style="display:flex; gap:8px; margin-bottom:12px;">
             <div style="width:80px; height:80px; border-radius:8px; background:var(--g100); overflow:hidden;">
-              <img src="img/sample_qr.png" style="width:100%; height:100%; object-fit:cover; opacity: 0.3;">
+              <img src="https://placehold.co/80x80/eee/ccc?text=QR" style="width:100%; height:100%; object-fit:cover; opacity: 0.3;">
             </div>
           </div>
           <p style="font-size:14px; line-height:1.6; color:var(--g800); margin-bottom:16px;">

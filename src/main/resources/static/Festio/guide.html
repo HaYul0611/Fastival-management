@@ -45,7 +45,8 @@
               <line x1="21" y1="21" x2="16.65" y2="16.65" />
             </svg>
             <input type="search" class="filter-range-input mobile-search-input" id="mobileSearchInput"
-              placeholder="행사명, 아티스트 검색" autocomplete="off">
+              placeholder="행사명, 아티스트 검색" autocomplete="new-password" readonly
+              onfocus="this.removeAttribute('readonly');">
           </div>
           <button class="btn btn-pastel-blue" id="btn-mobile-search-execute">검색</button>
         </div>
@@ -682,7 +683,7 @@
           </div>
           <div class="faq-per-page">
             <div class="faq-search-toggle-wrap">
-              <input type="text" class="faq-search-toggle-input" placeholder="검색어를 입력하세요">
+              <input type="text" class="faq-search-toggle-input" placeholder="검색어를 입력하세요" autocomplete="off">
               <button type="button" class="faq-search-toggle-btn">
                 <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"
                   stroke-linecap="round" stroke-linejoin="round">

@@ -31,10 +31,10 @@
       <button class="bottom-nav-item mobile-search-btn" aria-label="검색">
         ${searchSvg}<span>검색</span>
       </button>
-      <button class="bottom-nav-item" aria-label="찜">
+      <a href="mypage.html#tab-wishlist" class="bottom-nav-item ${window.location.hash === '#tab-wishlist' ? 'active' : ''}" aria-label="찜">
         ${wishSvg}<span>찜</span>
-      </button>
-      <a href="mypage.html" class="bottom-nav-item ${isMypage ? 'active' : ''}" aria-label="마이페이지">
+      </a>
+      <a href="mypage.html" class="bottom-nav-item ${isMypage && window.location.hash !== '#tab-wishlist' ? 'active' : ''}" aria-label="마이페이지">
         ${mypageSvg}<span>마이</span>
       </a>
     </nav>

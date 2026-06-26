@@ -247,7 +247,7 @@ function cardHTML(p) {
       const fallbackHtml = `<div class="pcard-placeholder" style="display:none; width:100%; height:100%; align-items:center; justify-content:center; background:#f8f9fa;">${phSvg}</div>`;
 
       return p.imageUrl
-        ? `<img src="${p.imageUrl}" alt="${p.name}" class="pcard-img" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">${fallbackHtml}`
+        ? `<img src="${p.imageUrl}" alt="${p.name}" class="pcard-img" onerror="if(this.src !== '${mockImg}') { this.src='${mockImg}'; } else { this.style.display='none'; this.nextElementSibling.style.display='flex'; }">${fallbackHtml}`
         : `<img src="${mockImg}" alt="${p.name}" class="pcard-img" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">${fallbackHtml}`;
     })()}
 
@@ -485,6 +485,49 @@ document.addEventListener('DOMContentLoaded', () => {
   window.FS.renderHeader();
   window.FS.startMockAlerts();
 
+  /* ====================
+     이벤트 바인딩 (캐시 return 전 등록)
+     ==================== */
+  /* 카테고리 탭 (cat-strip) */
+  document.querySelectorAll('.cat-btn').forEach(b => {
+    b.addEventListener('click', () => {
+      document.querySelectorAll('.cat-btn').forEach(x => x.classList.remove('on'));
+      b.classList.add('on');
+      S.cat = b.dataset.cat;
+      S.selectedStoreId = null; // 카테고리 탭을 누르면 상점 목록으로 이동
+      S.currentPage = 1;
+      /* 필터 태그도 동기화 */
+      document.querySelectorAll('.ftag').forEach(x => {
+        x.classList.toggle('on', x.dataset.cat === S.cat);
+      });
+      render();
+    });
+  });
+
+  /* 필터 태그 */
+  document.querySelectorAll('.ftag').forEach(b => {
+    b.addEventListener('click', () => {
+      document.querySelectorAll('.ftag').forEach(x => x.classList.remove('on'));
+      b.classList.add('on');
+      S.cat = b.dataset.cat;
+      S.selectedStoreId = null; // 필터 탭을 누르면 상점 목록으로 이동
+      S.currentPage = 1;
+      document.querySelectorAll('.cat-btn').forEach(x => {
+        x.classList.toggle('on', x.dataset.cat === S.cat);
+      });
+      render();
+    });
+  });
+
+  /* 정렬 */
+  const sortSel = document.getElementById('sortSel');
+  if (sortSel) sortSel.addEventListener('change', e => { S.sort = e.target.value; render() });
+
+  /* 검색 */
+  document.addEventListener('shop:search', e => { S.q = e.detail.q; render() });
+
+  if (window.FS_convertSelectToCustom) window.FS_convertSelectToCustom();
+
   /* URL 파라미터로 카테고리 초기화 */
   const params = new URLSearchParams(window.location.search);
   const catParam = params.get('category');
@@ -517,6 +560,29 @@ document.addEventListener('DOMContentLoaded', () => {
   const grid = document.getElementById('prodGrid');
   if (grid) {
     grid.innerHTML = '<div style="grid-column: 1/-1; text-align: center; color: var(--g500); padding: 60px 0; font-size: 15px; font-weight: 600;">입점 상점 및 상품 목록을 불러오는 중...</div>';
+  }
+
+  // 캐싱된 데이터 확인 (shop-detail 등 진입 시 속도 개선)
+  const cachedProducts = sessionStorage.getItem('fs_cached_products_v3');
+  const cachedStores = sessionStorage.getItem('fs_cached_stores_v3');
+  if (cachedProducts && cachedStores && sessionStorage.getItem('fs_cached_fid_v3') === String(festivalId)) {
+    try {
+      ALL_PRODUCTS = JSON.parse(cachedProducts);
+      STORES = JSON.parse(cachedStores);
+      window.FS_PRODUCTS = ALL_PRODUCTS;
+
+      const statStore = document.getElementById('stat-store-cnt');
+      const statProduct = document.getElementById('stat-product-cnt');
+      const statFood = document.getElementById('stat-food-cnt');
+      if (statStore) statStore.textContent = STORES.length;
+      if (statProduct) statProduct.textContent = ALL_PRODUCTS.length;
+      if (statFood) statFood.textContent = STORES.filter(s => s.cat === 'food').length;
+
+      render();
+      return;
+    } catch (e) {
+      console.error('Cache parsing error:', e);
+    }
   }
 
   // 1. Fetch Supabase products
@@ -569,23 +635,49 @@ document.addEventListener('DOMContentLoaded', () => {
 
       if (supaProducts && supaProducts.length > 0) {
         supaProducts.forEach(p => {
-          const storeName = p.store_name || (p.type === 'FOOD' ? '푸드트럭' : 'FESTIO MD');
+          let catMapped = p.type === 'FOOD' ? 'food' : 'goods';
+          if (p.name && (p.name.includes('버거') || p.name.includes('감자') || p.name.includes('치즈') || p.name.includes('메뉴'))) {
+            catMapped = 'food';
+          }
+          const storeName = p.store_name || (catMapped === 'food' ? '푸드트럭' : 'FESTIO MD');
           if (!storeMap.has(storeName)) {
-            storeMap.set(storeName, { id: p.id, name: storeName, type: p.type });
+            storeMap.set(storeName, { id: p.id, name: storeName, type: p.type, catMapped: catMapped });
           }
         });
 
-        let s_foodIdx = 0;
-        let s_goodsIdx = 0;
         storeMap.forEach((storeObj, storeName) => {
-          const catMapped = storeObj.type === 'FOOD' ? 'food' : 'goods';
+          const catMapped = storeObj.catMapped;
           let finalImg = '';
           if (catMapped === 'food') {
-            finalImg = foodTruckImages[s_foodIdx % foodTruckImages.length];
-            s_foodIdx++;
+            // 키워드 기반 스마트 이미지 매칭
+            if (storeName.includes('반려견') || storeName.includes('개') || storeName.includes('아미오')) {
+              finalImg = '/assets/img/stores/반려견 푸드.jpg';
+            } else if (storeName.includes('버거')) {
+              finalImg = '/assets/img/stores/햄버거 차.jpg';
+            } else if (storeName.includes('치킨') || storeName.includes('닭')) {
+              finalImg = '/assets/img/stores/치킨트럭.jpeg';
+            } else if (storeName.includes('떡볶이') || storeName.includes('분식')) {
+              finalImg = '/assets/img/stores/떡볶이.jpg';
+            } else if (storeName.includes('커피') || storeName.includes('카페') || storeName.includes('음료') || storeName.includes('에이드') || storeName.includes('칵테일')) {
+              finalImg = '/assets/img/stores/커피차.jpg';
+            } else if (storeName.includes('꼬치')) {
+              finalImg = '/assets/img/stores/꼬치트럭.jpg';
+            } else if (storeName.includes('핫도그')) {
+              finalImg = '/assets/img/stores/핫도그차.jpg';
+            } else if (storeName.includes('타코야끼')) {
+              finalImg = '/assets/img/stores/타코야끼.jpg';
+            } else if (storeName.includes('빙수')) {
+              finalImg = '/assets/img/stores/빙수차.png';
+            } else {
+              // 안전한 기본 푸드트럭 이미지들 (반려견 제외)
+              const safeFoodImgs = [
+                '/assets/img/stores/간식차.jpg', '/assets/img/stores/부스1.jpg', '/assets/img/stores/식음료차.jpg',
+                '/assets/img/stores/원할머니.jpg', '/assets/img/stores/잇츠 월드.png', '/assets/img/stores/한국의 집.jpg'
+              ];
+              finalImg = safeFoodImgs[hashCode(storeName) % safeFoodImgs.length];
+            }
           } else {
-            finalImg = goodsImgs[s_goodsIdx % goodsImgs.length];
-            s_goodsIdx++;
+            finalImg = goodsImgs[hashCode(storeName) % goodsImgs.length];
           }
 
           let waitTime = null;
@@ -614,8 +706,12 @@ document.addEventListener('DOMContentLoaded', () => {
         });
 
         const supabaseAllProducts = supaProducts.map(p => {
-          const catMapped = p.type === 'FOOD' ? 'food' : 'goods';
-          const parentStore = storeMap.get(p.store_name || (catMapped === 'food' ? '푸드트럭' : 'FESTIO MD'));
+          let catMapped = p.type === 'FOOD' ? 'food' : 'goods';
+          if (p.name && (p.name.includes('버거') || p.name.includes('감자') || p.name.includes('치즈') || p.name.includes('메뉴'))) {
+            catMapped = 'food';
+          }
+          const storeName = p.store_name || (catMapped === 'food' ? '푸드트럭' : 'FESTIO MD');
+          const parentStore = storeMap.get(storeName);
           let waitTime = null;
           if (catMapped === 'food') {
             const setting = storeSettingsMap.get(parentStore ? parentStore.name : p.store_name);
@@ -623,6 +719,34 @@ document.addEventListener('DOMContentLoaded', () => {
               waitTime = setting.manual_wait_time; // B안 (수동)
             } else {
               waitTime = 5 + (hashCode(parentStore ? parentStore.id.toString() : p.id.toString()) % 6) * 5; // A안 (자동 임시)
+            }
+          }
+
+          let imgUrl = p.image_url || null;
+          if (imgUrl && (imgUrl.includes('/Festio/images/') || imgUrl.includes('goods_vinyl') || imgUrl.includes('/assets/img/products/'))) {
+            const numId = hashCode(p.id.toString());
+            if (catMapped === 'food') {
+              const foodImgs = [
+                'https://www.themealdb.com/images/media/meals/8rfd4q1764112993.jpg',
+                'https://www.themealdb.com/images/media/meals/13fg4j1764441982.jpg',
+                'https://www.themealdb.com/images/media/meals/jgl9qq1764437635.jpg',
+                'https://www.themealdb.com/images/media/meals/kgfh3q1763075438.jpg',
+                'https://www.themealdb.com/images/media/meals/44bzep1761848278.jpg',
+                'https://www.themealdb.com/images/media/meals/m0p0j81765568742.jpg',
+                'https://www.themealdb.com/images/media/meals/sytuqu1511553755.jpg',
+                'https://www.themealdb.com/images/media/meals/wrssvt1511556563.jpg'
+              ];
+              imgUrl = foodImgs[numId % foodImgs.length];
+            } else {
+              const fallbackGoods = [
+                'https://shopkpop.cafe24.com/web/upload/weskin14/kr/main/ATZ_14TH_PC.jpg',
+                'https://shopkpop.cafe24.com/web/upload/weskin14/kr/main/ADB_VC_PC.png',
+                'https://shopkpop.cafe24.com/web/upload/weskin14/kr/main/HTW_3RD_PC.png',
+                'https://shopkpop.cafe24.com/web/upload/weskin14/kr/main/QWER_PC_0527.png',
+                'https://dokidokigoods.co.kr/web/product/medium/202606/bffa43558cb7e84a3361e4a75b786a3d.png',
+                'https://dokidokigoods.co.kr/web/product/medium/202606/9bae5a6662d312f1af7df7dc1b87c811.png'
+              ];
+              imgUrl = fallbackGoods[numId % fallbackGoods.length];
             }
           }
 
@@ -636,7 +760,7 @@ document.addEventListener('DOMContentLoaded', () => {
             stock: p.stock_quantity !== undefined ? p.stock_quantity : 999,
             wait: waitTime,
             opts: [],
-            imageUrl: p.image_url || null
+            imageUrl: imgUrl
           };
         });
         ALL_PRODUCTS = ALL_PRODUCTS.concat(supabaseAllProducts);
@@ -689,6 +813,36 @@ document.addEventListener('DOMContentLoaded', () => {
                   if (p.optionGroupsJson) {
                     try { opts = JSON.parse(p.optionGroupsJson); } catch (e) { opts = []; }
                   }
+
+                  let imgUrl = p.imageUrl || p.image_url || null;
+                  if (imgUrl && (imgUrl.includes('/Festio/images/') || imgUrl.includes('goods_vinyl') || imgUrl.includes('/assets/img/products/'))) {
+                    let strId = String(p.id || p.productName || p.name || '');
+                    let numId = hashCode(strId) || 1;
+                    if (storeCatMapped === 'food' || strId.includes('버거') || strId.includes('감자') || strId.includes('치즈') || strId.includes('메뉴')) {
+                      const foodImgs = [
+                        'https://www.themealdb.com/images/media/meals/8rfd4q1764112993.jpg',
+                        'https://www.themealdb.com/images/media/meals/13fg4j1764441982.jpg',
+                        'https://www.themealdb.com/images/media/meals/jgl9qq1764437635.jpg',
+                        'https://www.themealdb.com/images/media/meals/kgfh3q1763075438.jpg',
+                        'https://www.themealdb.com/images/media/meals/44bzep1761848278.jpg',
+                        'https://www.themealdb.com/images/media/meals/m0p0j81765568742.jpg',
+                        'https://www.themealdb.com/images/media/meals/sytuqu1511553755.jpg',
+                        'https://www.themealdb.com/images/media/meals/wrssvt1511556563.jpg'
+                      ];
+                      imgUrl = foodImgs[numId % foodImgs.length];
+                    } else {
+                      const fallbackGoods = [
+                        'https://shopkpop.cafe24.com/web/upload/weskin14/kr/main/ATZ_14TH_PC.jpg',
+                        'https://shopkpop.cafe24.com/web/upload/weskin14/kr/main/ADB_VC_PC.png',
+                        'https://shopkpop.cafe24.com/web/upload/weskin14/kr/main/HTW_3RD_PC.png',
+                        'https://shopkpop.cafe24.com/web/upload/weskin14/kr/main/QWER_PC_0527.png',
+                        'https://dokidokigoods.co.kr/web/product/medium/202606/bffa43558cb7e84a3361e4a75b786a3d.png',
+                        'https://dokidokigoods.co.kr/web/product/medium/202606/9bae5a6662d312f1af7df7dc1b87c811.png'
+                      ];
+                      imgUrl = fallbackGoods[numId % fallbackGoods.length];
+                    }
+                  }
+
                   return {
                     id: p.id || `mock_${store.id}_${i}`,
                     storeId: store.id,
@@ -699,7 +853,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     stock: p.availableStock !== undefined ? p.availableStock : (p.currentStock || 0),
                     wait: wait,
                     opts: opts,
-                    imageUrl: p.imageUrl || p.image_url || null
+                    imageUrl: imgUrl
                   };
                 });
               }
@@ -713,6 +867,15 @@ document.addEventListener('DOMContentLoaded', () => {
       }
 
       window.FS_PRODUCTS = ALL_PRODUCTS;
+
+      try {
+        sessionStorage.setItem('fs_cached_products_v3', JSON.stringify(ALL_PRODUCTS));
+        sessionStorage.setItem('fs_cached_stores_v3', JSON.stringify(STORES));
+        sessionStorage.setItem('fs_cached_fid_v3', String(festivalId));
+      } catch (e) {
+        console.warn('Failed to cache products', e);
+      }
+
       console.log('[Shop] Combined products list (Supabase + API):', ALL_PRODUCTS);
 
       if (ALL_PRODUCTS.length === 0 && STORES.length === 0) {
@@ -733,46 +896,6 @@ document.addEventListener('DOMContentLoaded', () => {
       console.error('[Shop] Failed to fetch data from database or API:', err);
       if (grid) grid.innerHTML = `<div style="grid-column: 1/-1; text-align: center; color: #ff4d4f; padding: 40px; font-weight: 600;">데이터 로딩 실패: ${err.message}</div>`;
     });
-
-  /* 카테고리 탭 (cat-strip) */
-  document.querySelectorAll('.cat-btn').forEach(b => {
-    b.addEventListener('click', () => {
-      document.querySelectorAll('.cat-btn').forEach(x => x.classList.remove('on'));
-      b.classList.add('on');
-      S.cat = b.dataset.cat;
-      S.selectedStoreId = null; // 카테고리 탭을 누르면 상점 목록으로 이동
-      S.currentPage = 1;
-      /* 필터 태그도 동기화 */
-      document.querySelectorAll('.ftag').forEach(x => {
-        x.classList.toggle('on', x.dataset.cat === S.cat);
-      });
-      render();
-    });
-  });
-
-  /* 필터 태그 */
-  document.querySelectorAll('.ftag').forEach(b => {
-    b.addEventListener('click', () => {
-      document.querySelectorAll('.ftag').forEach(x => x.classList.remove('on'));
-      b.classList.add('on');
-      S.cat = b.dataset.cat;
-      S.selectedStoreId = null; // 필터 탭을 누르면 상점 목록으로 이동
-      S.currentPage = 1;
-      document.querySelectorAll('.cat-btn').forEach(x => {
-        x.classList.toggle('on', x.dataset.cat === S.cat);
-      });
-      render();
-    });
-  });
-
-  /* 정렬 */
-  const sortSel = document.getElementById('sortSel');
-  if (sortSel) sortSel.addEventListener('change', e => { S.sort = e.target.value; render() });
-
-  /* 검색 */
-  document.addEventListener('shop:search', e => { S.q = e.detail.q; render() });
-
-  if (window.FS_convertSelectToCustom) window.FS_convertSelectToCustom();
 });
 
 /* ================================================================

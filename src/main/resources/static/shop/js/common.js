@@ -49,7 +49,7 @@ function renderHeader() {
           <path d="M11 11l3.5 3.5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
         </svg>
       </span>
-      <input type="search" id="festioGlobalSearch" name="festio_q" placeholder="굿즈, 푸드트럭, 브랜드 검색…" autocomplete="new-password" aria-label="상품 검색"/>
+      <input type="search" id="festioGlobalSearch" name="festio_q" placeholder="굿즈, 푸드트럭, 브랜드 검색…" autocomplete="off" aria-label="상품 검색"/>
     </div>
 
     <div class="hdr-actions">

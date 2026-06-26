@@ -14,6 +14,11 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('sumGoods').textContent = t.toLocaleString() + '원';
     document.getElementById('sumTotal').textContent = t.toLocaleString() + '원';
     document.getElementById('cartCount').textContent = `${items.length}개 상품`;
+
+    const chkAll = document.getElementById('chkAll');
+    if (chkAll) {
+      chkAll.checked = items.length > 0 && items.every(i => i.checked !== false);
+    }
   }
 
   function render() {

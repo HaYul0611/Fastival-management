@@ -502,6 +502,9 @@ function continueVenueMapLegend(zones) {
 }
 
 function selectZone(zoneNo, zone, svgEl) {
+  if (!zone && typeof _eventDetail !== 'undefined' && _eventDetail?.zones) {
+    zone = _eventDetail.zones.find(z => Number(z.zoneNo) === Number(zoneNo));
+  }
   _selectedZoneNo = zoneNo;
   _selectedZone = zone;
 
