@@ -86,6 +86,12 @@ document.addEventListener("DOMContentLoaded", function () {
         },
         {
             type: "item",
+            text: "판매 기록 및 환불 관리",
+            icon: "bx bx-history",
+            url: "/features/payment/staff/refund.html"
+        },
+        {
+            type: "item",
             text: "실시간 매출 대시보드",
             icon: "bx bx-line-chart",
             url: "/features/payment/staff/sales-dashboard.html"
@@ -118,6 +124,12 @@ document.addEventListener("DOMContentLoaded", function () {
             text: "O2O 실시간 주문 수락",
             icon: "bx bx-receipt",
             url: "/features/payment/staff/o2o-orders.html"
+        },
+        {
+            type: "item",
+            text: "판매 기록 및 환불 관리",
+            icon: "bx bx-history",
+            url: "/features/payment/staff/refund.html"
         },
         {
             type: "item",

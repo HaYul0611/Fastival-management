@@ -1,42 +1,234 @@
-﻿<!DOCTYPE html>
-<html lang="ko">
+<!doctype html>
+<html lang="ko" class="layout-menu-fixed layout-compact" data-assets-path="/assets/" data-template="vertical-menu-template-free">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0" />
+    <title>점포 판매 기록 및 환불 관리 | FESTIO STAFF</title>
 
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>스태프 통합 관제 시스템 | FESTIO</title>
-  <link rel="stylesheet" href="/assets/css/custom.css">
-  <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
-  <script type="module">
-    import { injectLayout } from '/assets/js/layout.js';
-    injectLayout();
-  </script>
-</head>
+    <link rel="icon" type="image/x-icon" href="/assets/img/favicon/favicon.ico" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="/assets/vendor/fonts/iconify-icons.css" />
+    <link rel="stylesheet" href="/assets/vendor/css/core.css" />
+    <link rel="stylesheet" href="/assets/css/demo.css" />
+    <link rel="stylesheet" href="/assets/vendor/libs/perfect-scrollbar/perfect-scrollbar.css" />
+    <script src="/assets/vendor/js/helpers.js"></script>
+    <script src="/assets/js/config.js"></script>
+    <style>
+      .table-responsive {
+        min-height: 400px;
+      }
+      .badge-state {
+        font-weight: 700;
+        font-size: 0.85rem;
+      }
+    </style>
+  </head>
 
-<body>
+  <body>
+    <div class="layout-wrapper layout-content-navbar">
+      <div class="layout-container">
+        
+        <!-- Sidebar Menu -->
+        <aside id="layout-menu" class="layout-menu menu-vertical menu bg-menu-theme">
+          <!-- sidebar.js 가 런타임에 동적으로 삽입 -->
+        </aside>
 
-  <div id="app-shell">
+        <div class="layout-page">
+          <!-- Navbar -->
+          <nav class="layout-navbar container-xxl navbar navbar-expand-xl navbar-detached align-items-center bg-navbar-theme" id="layout-navbar">
+            <div class="layout-menu-toggle navbar-nav align-items-xl-center me-4 me-xl-0 d-xl-none">
+              <a class="nav-item nav-link px-0 me-xl-6" href="javascript:void(0)">
+                <i class="bx bx-menu bx-sm"></i>
+              </a>
+            </div>
+            <div class="navbar-nav-right d-flex align-items-center" id="navbar-collapse">
+              <h5 class="mb-0 fw-bold"><i class="bx bx-history me-2 text-primary"></i>판매 기록 및 환불 관리</h5>
+              <ul class="navbar-nav flex-row align-items-center ms-auto">
+                <li class="nav-item dropdown-user dropdown">
+                  <a class="nav-link dropdown-toggle hide-arrow" href="javascript:void(0);" data-bs-toggle="dropdown">
+                    <div class="avatar avatar-online">
+                      <img src="/assets/img/avatars/chibi_admin.png" class="w-px-40 h-auto rounded-circle" />
+                    </div>
+                  </a>
+                  <ul class="dropdown-menu dropdown-menu-end">
+                    <li>
+                      <a class="dropdown-item" href="#">
+                        <div class="d-flex">
+                          <div class="flex-shrink-0 me-3">
+                            <div class="avatar avatar-online">
+                              <img src="/assets/img/avatars/chibi_admin.png" class="w-px-40 h-auto rounded-circle" />
+                            </div>
+                          </div>
+                          <div class="flex-grow-1">
+                            <span class="fw-medium d-block" id="navUserName">점주</span>
+                            <small class="text-muted" id="navUserRole">가맹점주 (STAFF)</small>
+                          </div>
+                        </div>
+                      </a>
+                    </li>
+                  </ul>
+                </li>
+              </ul>
+            </div>
+          </nav>
 
-    <!-- Sidebar -->
-    
+          <!-- Content wrapper -->
+          <div class="content-wrapper">
+            <div class="container-xxl flex-grow-1 container-p-y">
+              
+              <div class="row">
+                <div class="col-12 mb-6">
+                  <div class="card bg-label-info border-0 mb-6 shadow-sm">
+                    <div class="card-body d-flex justify-content-between align-items-center py-4 flex-wrap gap-3">
+                      <div>
+                        <h4 class="fw-bold text-info mb-1"><i class="bx bx-receipt me-2"></i>점포 실시간 판매 기록 & 환불</h4>
+                        <p class="mb-0 text-muted">오늘 점포에서 발생한 모든 주문 내역을 실시간으로 확인하고, 요청 시 환불 및 주문 취소 처리를 일괄 제어할 수 있습니다.</p>
+                      </div>
+                      <div>
+                        <span class="badge bg-info fs-6 py-2 px-3 shadow-sm" id="storeNameBadge">로딩 중...</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
 
-    <!-- Main Workspace -->
-    <main id="main-container">
-      
+                <!-- Sales Log and Actions Table Card -->
+                <div class="col-12">
+                  <div class="card shadow-sm border-0">
+                    <div class="card-header pb-3 bg-white border-bottom d-flex justify-content-between align-items-center flex-wrap gap-3">
+                      <div class="d-flex align-items-center gap-2">
+                        <h5 class="m-0 fw-bold text-dark"><i class="bx bx-list-ol me-2 text-info fs-4"></i>전체 판매 내역</h5>
+                      </div>
+                      
+                      <!-- Filter controls -->
+                      <div class="d-flex align-items-center gap-2 flex-wrap">
+                        <select class="form-select border-info" id="statusFilter" style="width: 150px;">
+                          <option value="ALL">전체 상태</option>
+                          <option value="ORDERED">접수대기 (신규)</option>
+                          <option value="COOKING">조리/준비 중</option>
+                          <option value="READY">수령대기</option>
+                          <option value="SERVED">수령/인도완료</option>
+                          <option value="CANCELLED">취소/환불됨</option>
+                        </select>
+                        <input type="text" id="orderSearchInput" class="form-control border-info" placeholder="주문 번호 검색..." style="width: 200px;" />
+                        <button class="btn btn-info fw-bold" id="refreshBtn"><i class="bx bx-refresh me-1"></i>새로고침</button>
+                      </div>
+                    </div>
+                    
+                    <div class="table-responsive">
+                      <table class="table table-hover align-middle mb-0">
+                        <thead class="table-light">
+                          <tr>
+                            <th class="fw-bold text-dark" style="width: 80px;">주문 ID</th>
+                            <th class="fw-bold text-dark" style="width: 160px;">주문 일시</th>
+                            <th class="fw-bold text-dark">주문 상품 정보</th>
+                            <th class="fw-bold text-dark" style="width: 120px;">총 금액</th>
+                            <th class="fw-bold text-dark" style="width: 130px;">주문 상태</th>
+                            <th class="fw-bold text-dark text-center" style="width: 140px;">액션 (취소/환불)</th>
+                          </tr>
+                        </thead>
+                        <tbody id="salesLogBody">
+                          <tr>
+                            <td colspan="6" class="text-center py-5 text-muted">
+                              <div class="spinner-border text-info mb-3" role="status"></div>
+                              <h6 class="fw-bold">실시간 판매 기록을 로드하는 중입니다...</h6>
+                            </td>
+                          </tr>
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                </div>
+              </div>
 
-      <div id="main-content">
-        <section id="view-refund" class="content-view active">
-          <!-- Rendered by js/ui.js -->
-        </section>
+            </div>
+
+            <!-- Footer -->
+            <footer class="content-footer footer bg-footer-theme">
+              <div class="container-xxl d-flex flex-wrap justify-content-between py-2 flex-md-row flex-column">
+                <div class="mb-2 mb-md-0">
+                  © <script>document.write(new Date().getFullYear());</script> FESTIO
+                </div>
+              </div>
+            </footer>
+
+            <div class="content-backdrop fade"></div>
+          </div>
+        </div>
       </div>
-    </main>
+      <div class="layout-overlay layout-menu-toggle"></div>
+    </div>
 
-  </div>
+    <!-- 결제 상세 정보 모달 -->
+    <div class="modal fade" id="paymentDetailModal" tabindex="-1" aria-hidden="true">
+      <div class="modal-dialog modal-dialog-centered" role="document">
+        <div class="modal-content border-0 shadow-lg">
+          <div class="modal-header bg-info text-white">
+            <h5 class="modal-title fw-bold text-white" id="paymentDetailTitle"><i class="bx bx-receipt me-2"></i>결제 상세 정보</h5>
+            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body">
+            <div class="table-responsive" style="min-height: auto;">
+              <table class="table table-borderless align-middle mb-0">
+                <tbody>
+                  <tr>
+                    <td class="fw-bold text-dark" style="width: 120px;">주문 ID</td>
+                    <td id="modalOrderId" class="text-muted font-monospace">-</td>
+                  </tr>
+                  <tr>
+                    <td class="fw-bold text-dark">주문 번호</td>
+                    <td id="modalOrderCode" class="text-muted font-monospace">-</td>
+                  </tr>
+                  <tr>
+                    <td class="fw-bold text-dark">주문 일시</td>
+                    <td id="modalOrderDate" class="text-muted">-</td>
+                  </tr>
+                  <tr>
+                    <td class="fw-bold text-dark">고객 정보</td>
+                    <td id="modalCustomer" class="text-muted">-</td>
+                  </tr>
+                  <tr>
+                    <td class="fw-bold text-dark">주문 상품</td>
+                    <td id="modalProductInfo" class="fw-bold text-dark">-</td>
+                  </tr>
+                  <tr>
+                    <td class="fw-bold text-dark">결제 수단</td>
+                    <td id="modalPayMethod" class="text-muted">-</td>
+                  </tr>
+                  <tr>
+                    <td class="fw-bold text-dark">수령 방식</td>
+                    <td id="modalDeliveryType" class="text-muted">-</td>
+                  </tr>
+                  <tr class="border-top">
+                    <td class="fw-bold text-dark fs-5">총 결제 금액</td>
+                    <td><strong class="text-info fs-5" id="modalTotalPrice">₩ 0</strong></td>
+                  </tr>
+                  <tr>
+                    <td class="fw-bold text-dark">주문 상태</td>
+                    <td><span class="badge bg-label-info" id="modalStatus">-</span></td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+          <div class="modal-footer bg-light">
+            <button type="button" class="btn btn-outline-secondary fw-bold" data-bs-dismiss="modal">닫기</button>
+            <button type="button" class="btn btn-danger fw-bold" id="modalRefundBtn"><i class="bx bx-undo me-1"></i>이 주문 취소/환불</button>
+          </div>
+        </div>
+      </div>
+    </div>
 
-  <script type="module" src="js/refund.js"></script>
-
-</body>
-
+    <!-- Scripts -->
+    <script src="/assets/vendor/libs/jquery/jquery.js"></script>
+    <script src="/assets/vendor/libs/popper/popper.js"></script>
+    <script src="/assets/vendor/js/bootstrap.js"></script>
+    <script src="/assets/vendor/libs/perfect-scrollbar/perfect-scrollbar.js"></script>
+    <script src="/assets/vendor/js/menu.js"></script>
+    <script src="/assets/js/main.js"></script>
+    <script src="/assets/js/staff-sidebar.js"></script>
+    
+    <script src="./js/refund.js"></script>
+  </body>
 </html>
-
-

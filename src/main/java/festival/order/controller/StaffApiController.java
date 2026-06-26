@@ -590,6 +590,59 @@ public class StaffApiController {
     }
 
     // ==========================================
+    // 8.5. [주문 취소/환불] 주문 취소 처리 및 Supabase 연동
+    // ==========================================
+    @PutMapping("/orders/{orderId}/cancel")
+    public ResponseEntity<?> cancelOrder(
+            @RequestHeader(value = "Authorization", required = false) String token,
+            @PathVariable("orderId") Long orderId) {
+        
+        Long storeId = getLoggedInStoreId(token);
+
+        // [보안 검증] 해당 주문이 본인 상점에 속한 것인지 안전 검사
+        String verifySql = "SELECT p.store_id FROM order_item oi JOIN product p ON oi.product_id = p.id WHERE oi.id = ?";
+        List<Long> ownerStoreIds = jdbcTemplate.query(verifySql, (rs, rowNum) -> rs.getLong("store_id"), orderId);
+
+        if (ownerStoreIds.isEmpty() || !ownerStoreIds.get(0).equals(storeId)) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(Map.of("message", "해당 주문을 제어할 권한이 없습니다."));
+        }
+
+        // 1. 로컬 DB 상태를 'CANCELLED'로 업데이트
+        String updateSql = "UPDATE order_item SET item_status = 'CANCELLED', updated_at = NOW() WHERE id = ?";
+        jdbcTemplate.update(updateSql, orderId);
+
+        // 2. 가용 재고 복구 (주문 취소 시 재고 반환)
+        try {
+            String stockSql = "SELECT product_id, quantity FROM order_item WHERE id = ?";
+            Map<String, Object> itemData = jdbcTemplate.queryForMap(stockSql, orderId);
+            Long productId = ((Number) itemData.get("product_id")).longValue();
+            int quantity = ((Number) itemData.get("quantity")).intValue();
+
+            jdbcTemplate.update(
+                "UPDATE product SET reserved_stock = GREATEST(0, reserved_stock - ?), available_stock = available_stock + ? WHERE id = ?",
+                quantity, quantity, productId);
+        } catch (Exception e) {
+            System.err.println("[재고 복구 실패] " + e.getMessage());
+        }
+
+        // 3. [Supabase 동기화] Supabase shop_orders 상태를 'CANCELLED'로 업데이트
+        try {
+            String ticketNumber = jdbcTemplate.queryForObject(
+                "SELECT o.ticket_number FROM order_item oi JOIN orders o ON oi.order_id = o.id WHERE oi.id = ?",
+                String.class, orderId);
+            
+            if (ticketNumber != null) {
+                jdbcTemplate.update("UPDATE shop_orders SET status = 'CANCELLED' WHERE order_number = ?", ticketNumber);
+                System.out.println("[Supabase 동기화] shop_orders 상태 취소 업데이트 성공: " + ticketNumber);
+            }
+        } catch (Exception e) {
+            System.err.println("[Supabase 동기화] shop_orders 취소 실패: " + e.getMessage());
+        }
+
+        return ResponseEntity.ok(Map.of("status", "success", "orderId", orderId, "message", "주문이 성공적으로 취소 및 환불 처리되었습니다."));
+    }
+
+    // ==========================================
     // 9. [매출 통계] 실시간 매출 및 판매 분석 통계 조회
     // ==========================================
     @GetMapping("/sales/stats")

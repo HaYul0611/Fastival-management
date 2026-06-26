@@ -546,13 +546,14 @@ function renderOrderCard(order) {
     else if (isDone1) { movingEmoji = isFood ? '🍳' : '🎁'; }
 
     const prepLabel = isFood ? '조리 준비' : '상품 준비';
+    const waitingLabel = isFood ? '조리중' : '수령전';
 
     steps = `
       <div class="st-line-bg"></div>
       <div class="st-progress-bar"><div class="st-progress" style="width:${isDone3 ? 100 : (isDone2 ? 66.666 : 33.333)}%;"><span class="st-truck ${flipClass}">${movingEmoji}</span></div></div>
       <div class="st-step done"><div class="st-dot"></div><div class="st-label">결제완료</div></div>
       <div class="st-step ${isDone2 ? 'done' : 'active'}"><div class="st-dot"></div><div class="st-label">${prepLabel}</div></div>
-      <div class="st-step ${isDone3 ? 'done' : (isDone2 ? 'active' : '')}"><div class="st-dot"></div><div class="st-label">수령전</div></div>
+      <div class="st-step ${isDone3 ? 'done' : (isDone2 ? 'active' : '')}"><div class="st-dot"></div><div class="st-label">${waitingLabel}</div></div>
       <div class="st-step ${isDone3 ? 'active' : ''}"><div class="st-dot"></div><div class="st-label">수령완료</div></div>
     `;
   } else {
