@@ -14,8 +14,7 @@ document.addEventListener('DOMContentLoaded', () => {
   if (listEl) {
     listEl.innerHTML = order.map(i => `
       <div class="co-item">
-        <span class="co-item-name">${i.name}</span>
-        <span class="co-item-qty">×${i.qty}</span>
+        <span class="co-item-name">${i.name} <span class="co-item-qty" style="margin-left:6px; font-size:12px; font-weight:400;">×${i.qty}</span></span>
         <span class="co-item-price">${(i.price * i.qty).toLocaleString()}원</span>
       </div>`).join('');
   }
@@ -438,7 +437,7 @@ document.addEventListener('DOMContentLoaded', () => {
           const rechargeAmount = Math.ceil(diff / 10000) * 10000; // 1만원 단위 자동 충전
 
           if (confirm(`잔액이 부족합니다. (현재 ${currentBalance.toLocaleString()}원)\nFESTIO Pay ${rechargeAmount.toLocaleString()}원을 자동 충전하시겠습니까?`)) {
-            
+
             // Java 백엔드 자동 충전 API 호출
             const chargeRes = await fetch('/api/wallet/charge', {
               method: 'POST',
@@ -473,7 +472,7 @@ document.addEventListener('DOMContentLoaded', () => {
             }
 
             Toast.show({ title: '충전 완료', msg: `${rechargeAmount.toLocaleString()}원이 충전되었습니다. 결제를 다시 시도합니다.`, type: 'success' });
-            
+
             // 즉시 재시도할 수 있도록 isPaying 해제 후 결제 버튼 자동 트리거
             isPaying = false;
             document.getElementById('btnPay').click();
@@ -556,35 +555,52 @@ document.addEventListener('DOMContentLoaded', () => {
       return;
     }
 
-    if (method === 'toss' || method === 'card') {
-      try {
-        if (typeof TossPayments !== 'undefined') {
-          const tossPayments = TossPayments('test_ck_OEP59LybZ8Bdv6A1JxK366GYo7pR');
-          const methodMap = { card: '카드', toss: '토스결제' };
-
-          await tossPayments.requestPayment(methodMap[method] || '카드', {
-            amount: finalTotal,
-            orderId: 'SHOP_CART_' + Date.now(),
-            orderName: order.length > 1 ? `${order[0].name} 외 ${order.length - 1}건` : order[0].name,
-            customerName: name,
-            successUrl: `${window.location.origin}/Festio/payment-success.html`,
-            failUrl: `${window.location.origin}/Festio/payment-fail.html`,
-          });
-        } else {
-          throw new Error('Toss API not loaded');
-        }
-      } catch (err) {
-        if (err.code !== 'USER_CANCEL') {
-          await saveOrderToDB(method); // 모의 성공 시 DB에 저장
-          Toast.show({ title: '결제 성공 (Mock)', msg: 'PG 연동 오류로 모의 결제 성공 처리됩니다.', type: 'success' });
-          localStorage.removeItem('fs_cart');
-          sessionStorage.removeItem('fs_buynow');
-          sessionStorage.removeItem('fs_order');
-          setTimeout(() => { location.href = 'orders.html'; }, 1500);
-        }
+    if (method === 'toss' || method === 'card' || method === 'kakao') {
+      if (!window.IMP) {
+        Toast.show({ title: '오류', msg: '결제 모듈을 불러올 수 없습니다.', type: 'error' });
+        isPaying = false;
+        return;
       }
+
+      const IMP = window.IMP;
+      IMP.init('imp81384776'); // FESTIO 식별코드
+
+      let pgProvider = 'html5_inicis'; // 기본 신용카드 (KG이니시스)
+      if (method === 'toss') pgProvider = 'tosspay';
+      if (method === 'kakao') pgProvider = 'kakaopay';
+
+      IMP.request_pay({
+        pg: pgProvider,
+        pay_method: 'card',
+        merchant_uid: 'SHOP_CART_' + Date.now(),
+        name: order.length > 1 ? `${order[0].name} 외 ${order.length - 1}건` : order[0].name,
+        amount: finalTotal,
+        buyer_name: name,
+        buyer_tel: phone,
+      }, async function (rsp) {
+        if (rsp.success) {
+          try {
+            await saveOrderToDB(method);
+            Toast.show({ title: '결제 성공', msg: '정상적으로 결제되었습니다.', type: 'success' });
+            localStorage.removeItem('fs_cart');
+            sessionStorage.removeItem('fs_buynow');
+            sessionStorage.removeItem('fs_order');
+
+            // 결제 완료 팝업 (FESTIO Pay 결제 성공시 띄우던 모달 재활용 또는 그냥 이동)
+            setTimeout(() => { location.href = 'orders.html'; }, 1500);
+          } catch (err) {
+            console.error('Order save error:', err);
+            Toast.show({ title: '오류', msg: err.message || '주문 데이터 저장 중 문제가 발생했습니다.', type: 'error' });
+          }
+        } else {
+          // 사용자가 결제를 취소하거나 실패한 경우
+          Toast.show({ title: '결제 실패', msg: rsp.error_msg, type: 'error' });
+        }
+        isPaying = false;
+      });
     } else {
-      Toast.show({ title: '카카오페이 연동 예정', msg: '준비 중입니다.', type: 'info' });
+      Toast.show({ title: '알 수 없는 결제수단', type: 'error' });
+      isPaying = false;
     }
   });
 });

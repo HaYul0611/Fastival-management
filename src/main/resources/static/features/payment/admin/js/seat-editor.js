@@ -2227,6 +2227,7 @@ document.addEventListener('DOMContentLoaded', () => {
   function clearGrid() {
     seatsData = [];
     originalSeatsState = [];
+    const btnDeleteZone = document.getElementById('btnDeleteZone');
     if (btnDeleteZone) {
       btnDeleteZone.disabled = true;
     }

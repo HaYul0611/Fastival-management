@@ -1,34 +1,134 @@
 /* ================================================================
    FESTIO SHOP — checkout.css
    ================================================================ */
-.co-pg{background:var(--white);padding:32px 0 80px}
-.co-layout{display:grid;grid-template-columns:1fr 340px;gap:28px;align-items:start}
-
-.co-sec{background:var(--white);border:1.5px solid var(--g200);border-radius:var(--r20);padding:24px;margin-bottom:16px}
-.co-sec-title{font-size:16px;font-weight:800;color:var(--black);margin-bottom:18px;letter-spacing:-.3px}
-.co-notice{display:flex;align-items:center;gap:8px;padding:10px 14px;
-  background:#EFF6FF;border:1px solid #BFDBFE;border-radius:var(--r12);
-  font-size:13px;color:#1D4ED8;font-weight:600;margin-bottom:16px}
-
-.pay-opts{display:flex;flex-direction:column;gap:8px}
-.pay-opt{cursor:pointer;display:block}
-.pay-opt input{position:absolute;opacity:0;width:0;height:0}
-.pay-opt-lbl{
-  display:flex;align-items:center;gap:10px;padding:13px 16px;
-  border:1.5px solid var(--g200);border-radius:var(--r12);
-  font-size:14px;font-weight:600;color:var(--g700);
-  cursor:pointer;transition:all var(--trans);
+.co-pg {
+  background: var(--white);
 }
-.pay-opt input:checked+.pay-opt-lbl{border-color:var(--black);color:var(--black);background:var(--g50)}
-.pay-opt-lbl:hover{border-color:var(--g400)}
 
-.co-memo{height:auto;resize:vertical;padding:12px 14px;line-height:1.6}
+.co-pg main {
+  padding: 32px 0 80px;
+}
 
-.co-item{display:flex;justify-content:space-between;align-items:flex-start;gap:8px;
-  padding:10px 0;border-bottom:1px solid var(--g100);font-size:13px}
-.co-item:last-child{border-bottom:none}
-.co-item-name{color:var(--g700);font-weight:500;flex:1;line-height:1.4}
-.co-item-qty{color:var(--g400);white-space:nowrap}
-.co-item-price{font-weight:800;color:var(--black);white-space:nowrap}
+.co-layout {
+  display: grid;
+  grid-template-columns: 1fr 340px;
+  gap: 28px;
+  align-items: start
+}
 
-@media(max-width:900px){.co-layout{grid-template-columns:1fr}}
+.co-sec {
+  background: var(--white);
+  border: 1.5px solid var(--g200);
+  border-radius: var(--r20);
+  padding: 24px;
+  margin-bottom: 16px
+}
+
+.co-sec-title {
+  font-size: 16px;
+  font-weight: 800;
+  color: var(--black);
+  margin-bottom: 18px;
+  letter-spacing: -.3px
+}
+
+.co-notice {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 14px;
+  background: #EFF6FF;
+  border: 1px solid #BFDBFE;
+  border-radius: var(--r12);
+  font-size: 13px;
+  color: #1D4ED8;
+  font-weight: 600;
+  margin-bottom: 16px
+}
+
+.pay-opts {
+  display: flex;
+  flex-direction: column;
+  gap: 8px
+}
+
+.pay-opt {
+  cursor: pointer;
+  display: block
+}
+
+.pay-opt input {
+  position: absolute;
+  opacity: 0;
+  width: 0;
+  height: 0
+}
+
+.pay-opt-lbl {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 13px 16px;
+  border: 1.5px solid var(--g200);
+  border-radius: var(--r12);
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--g700);
+  cursor: pointer;
+  transition: all var(--trans);
+}
+
+.pay-opt input:checked+.pay-opt-lbl {
+  border-color: var(--black);
+  color: var(--black);
+  background: var(--g50)
+}
+
+.pay-opt-lbl:hover {
+  border-color: var(--g400)
+}
+
+.co-memo {
+  height: auto;
+  resize: vertical;
+  padding: 12px 14px;
+  line-height: 1.6
+}
+
+.co-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--g100);
+  font-size: 13px
+}
+
+.co-item:last-child {
+  border-bottom: none
+}
+
+.co-item-name {
+  color: var(--g700);
+  font-weight: 500;
+  flex: 1;
+  line-height: 1.4
+}
+
+.co-item-qty {
+  color: var(--g400);
+  white-space: nowrap
+}
+
+.co-item-price {
+  font-weight: 800;
+  color: var(--black);
+  white-space: nowrap
+}
+
+@media(max-width:900px) {
+  .co-layout {
+    grid-template-columns: 1fr
+  }
+}

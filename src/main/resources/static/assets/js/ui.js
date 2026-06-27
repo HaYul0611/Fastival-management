@@ -1706,10 +1706,12 @@ async function renderTicketingScreen() {
         <div class="panel-body-rigid" style="flex: 1; overflow-y: auto; display: flex; flex-direction: column;">
           <form id="ticketing-form" style="display: flex; flex-direction: column; height: 100%;">
             <div class="form-group-rigid" style="margin-bottom: 20px; flex-shrink: 0;">
-              <label style="font-size: 14px; font-weight: bold; color: var(--text-muted); margin-bottom: 8px; display: block;">진행 행사 (Festival) 선택</label>
-              <select id="ticketing-festival-select" class="input-rigid">
-                ${festivals.map(f => `<option value="${f.id}" ${f.id === activeFestivalId ? 'selected' : ''}>${f.name} (${f.startDate} ~ ${f.endDate})</option>`).join('')}
-              </select>
+              <label style="font-size: 15px; font-weight: 700; color: #374151; margin-bottom: 10px; display: block; letter-spacing: -0.3px;">진행 행사 (Festival) 선택</label>
+              <div style="position: relative;">
+                <select id="ticketing-festival-select" style="appearance: none; width: 100%; padding: 16px 20px; border: 1.5px solid #d1d5db; border-radius: 10px; font-size: 15px; font-weight: 600; color: #111827; background: #fff url('data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%2216%22 height=%2216%22 viewBox=%220 0 24 24%22 fill=%22none%22 stroke=%22%236b7280%22 stroke-width=%222.5%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22%3E%3Cpolyline points=%226 9 12 15 18 9%22%3E%3C/polyline%3E%3C/svg%3E') no-repeat right 16px center; background-size: 16px; cursor: pointer; outline: none; transition: all 0.2s ease;">
+                  ${festivals.map(f => `<option value="${f.id}" ${f.id === activeFestivalId ? 'selected' : ''}>${f.name} (${f.startDate} ~ ${f.endDate})</option>`).join('')}
+                </select>
+              </div>
             </div>
             
             <div class="form-group-rigid" style="display: flex; flex-direction: column; flex: 1; min-height: 250px; margin-bottom: 15px;">
@@ -1736,13 +1738,13 @@ async function renderTicketingScreen() {
             </div>
 
             <div style="flex-shrink: 0;">
-              <div class="price-display-box-rigid" style="margin-top: 20px; background: rgba(16, 185, 129, 0.1); border: 2px solid var(--color-green); padding: 20px 25px; display: flex; justify-content: space-between; align-items: center; border-radius: 6px;">
-                <span style="color: #fff; font-weight: 800; font-size: 18px;">최종 합산 결제 금액</span>
-                <strong id="ticket-final-price-lbl" style="color: var(--color-green); font-size: 32px; font-family: var(--font-mono);">0원</strong>
+              <div class="price-display-box-rigid" style="margin-top: 10px; background: #1f2937; padding: 24px 30px; display: flex; justify-content: space-between; align-items: center; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.1);">
+                <span style="color: #9ca3af; font-weight: 600; font-size: 16px; letter-spacing: -0.5px;">최종 합산 결제 금액</span>
+                <strong id="ticket-final-price-lbl" style="color: #10b981; font-size: 34px; font-weight: 800; font-family: var(--font-mono, monospace); letter-spacing: -1px;">0원</strong>
               </div>
 
-              <button type="button" id="btn-request-ticket-pay" class="btn btn-rigid btn-green" style="width: 100%; font-weight:bold; margin-top:25px; padding: 20px; font-size: 20px;">
-                [결제요청] Toss 일괄 결제창 호출
+              <button type="button" id="btn-request-ticket-pay" style="width: 100%; background: #10b981; color: #ffffff; border: none; font-weight:800; margin-top:16px; padding: 20px; font-size: 18px; border-radius: 12px; cursor: pointer; transition: background 0.2s ease, transform 0.1s ease; box-shadow: 0 4px 12px rgba(16,185,129,0.25); letter-spacing: -0.5px;">
+                [결제요청] TOSS 일괄 결제창 호출
               </button>
             </div>
           </form>

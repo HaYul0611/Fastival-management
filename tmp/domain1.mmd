@@ -1,0 +1,79 @@
+erDiagram
+    app_user {
+        string id PK "회원 식별 ID (UUID)"
+        string email UK "고유 이메일"
+        string password "BCrypt 해시"
+        string name "사용자 이름"
+        string phone "연락처"
+        string role "ROLE_USER, ROLE_STAFF, ROLE_ADMIN"
+        string membership_grade "BRONZE, SILVER, GOLD, VIP"
+        int balance "FESTIO Pay 잔액"
+        string status "ACTIVE, BANNED"
+        bigint store_id "입점 가맹점 ID (선택)"
+        timestamp created_at "가입일"
+    }
+
+    wallet_history {
+        bigint id PK "이력 번호"
+        bigint user_id FK "app_user.id 참조"
+        string transaction_type "CHARGED, USED, REFUNDED"
+        integer amount "트랜잭션 금액"
+        string description "결제/충전 사유"
+        timestamp created_at "발생 일시"
+    }
+
+    user_notifications {
+        uuid id PK
+        uuid user_id FK "app_user.id 논리 참조"
+        uuid sender_id "발송자 식별자"
+        string type "INFO, WARN, TICKET"
+        uuid target_id "연관 타겟 ID"
+        boolean is_read "읽음 여부"
+        timestamp created_at
+    }
+
+    coupon {
+        bigint id PK "쿠폰 고유 키"
+        string code UK "쿠폰 고유 발급 코드"
+        string name "쿠폰명"
+        integer discount_value "할인 값 (금액 혹은 %)"
+        string discount_type "FIXED, PERCENT"
+        integer min_order_amount "최소 주문 금액 조건"
+        integer max_discount_amount "최대 할인 한도"
+        timestamp valid_from "유효 시작일"
+        timestamp valid_to "유효 만료일"
+        timestamp created_at
+    }
+
+    user_coupon {
+        bigint id PK
+        bigint user_id FK "app_user.id 참조"
+        bigint coupon_id FK "coupon.id 참조"
+        boolean is_used "사용 완료 여부"
+        timestamp used_at "사용 일시"
+        timestamp created_at "발급 일시"
+    }
+
+    inquiry {
+        bigint id PK "문의 번호"
+        string user_id "문의 회원 ID"
+        string category "TICKET, PAY, ERROR, ETC"
+        string title "문의 제목"
+        text content "문의 본문"
+        string status "PENDING, ANSWERED"
+        text answer_content "답변 본문"
+        timestamp replied_at "답변 일시"
+        timestamp created_at "등록 일시"
+    }
+
+    wishlists {
+        bigint id PK
+        string event_id "관심 축제 ID"
+        string user_id "회원 ID"
+        timestamp created_at
+    }
+
+    app_user ||--o{ wallet_history : "페이 잔액 변동 기록"
+    app_user ||--o{ user_notifications : "알림 수신"
+    app_user ||--o{ user_coupon : "보유 쿠폰"
+    coupon ||--o{ user_coupon : "쿠폰 마스터"
