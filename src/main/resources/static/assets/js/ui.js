@@ -1763,7 +1763,7 @@ async function renderTicketingScreen() {
     let totalPrice = 0;
 
     if (selectedSeats.length === 0) {
-      tbody.innerHTML = `<tr><td colspan="5" class="text-center" style="color:#a0aec0; padding: 50px 0; font-size: 16px;">선택된 좌석이 없습니다.<br>좌석 현황 탭에서 좌석을 선택하세요.</td></tr>`;
+      tbody.innerHTML = `<tr><td colspan="5" style="color:#a0aec0; padding: 50px 20px; font-size: 16px; text-align: center;">선택된 좌석이 없습니다.<br>좌석 현황 탭에서 좌석을 선택하세요.</td></tr>`;
       document.getElementById("ticket-final-price-lbl").innerText = "0원";
       document.getElementById("selected-seats-count-lbl").innerText = "0개 선택됨";
 
@@ -3055,7 +3055,7 @@ function renderManualEntryScreen() {
           QR 코드 스캔이 불가능한 고객(스마트폰 방전 등)의 티켓 번호나 주문 번호를 검색하여 수동으로 입장 처리합니다.
         </p>
         <div style="display: flex; gap: 10px; margin-bottom: 20px;">
-          <input type="text" id="manual-search-input" class="input-rigid" style="flex: 1;" placeholder="주문번호 (예: ORD-123) 또는 티켓번호 (숫자) 입력">
+          <input type="text" id="manual-search-input" autocomplete="new-password" class="input-rigid" style="flex: 1;" placeholder="주문번호 (예: ORD-123) 또는 티켓번호 (숫자) 입력">
           <button id="btn-manual-search" class="btn btn-rigid btn-blue">검색</button>
         </div>
         <div id="manual-search-result" style="margin-top: 20px;">
