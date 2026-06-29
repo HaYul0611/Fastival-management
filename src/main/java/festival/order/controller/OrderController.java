@@ -645,11 +645,8 @@ public class OrderController {
                 ((hash[offset + 2] & 0xff) << 8) |
                 (hash[offset + 3] & 0xff);
 
-        long otp = binary % 2176782336L;
-        String code = Long.toString(otp, 36).toUpperCase();
-        while (code.length() < 6) {
-            code = "0" + code;
-        }
+        long otp = binary % 1000000L;
+        String code = String.format("%06d", otp);
         return code;
     }
 
