@@ -3686,7 +3686,7 @@ function makeVenueEditor(tab, sidebarContainer) {
       <div style="margin-bottom: 1.5rem;">
         <label style="display:block; font-weight: 700; margin-bottom: 0.5rem; color:var(--text-main);">기본 오시는 길 (검색)</label>
         <div style="display:flex; gap: 0.5rem; flex-direction:row; align-items:center; margin-bottom: 0.5rem;">
-          <input type="text" id="venueEditAddress" class="form-control" style="flex:1; border-radius:8px; padding: 12px 16px; background: #f9fafb; cursor: not-allowed;" placeholder="주소 검색 버튼을 이용해주세요" value="${baseAddress}" readonly>
+          <input type="text" id="venueEditAddress" class="form-control" style="flex:1; border-radius:8px; padding: 12px 16px; background: #f9fafb; cursor: not-allowed;" placeholder="주소 검색 버튼을 이용해주세요" autocomplete="new-password" value="${baseAddress}" readonly>
           <button type="button" class="btn btn-outline" id="btnSearchAddressApi" style="border-radius:8px; white-space:nowrap; padding: 12px 16px;">주소 검색</button>
         </div>
         <label style="display:block; font-weight: 700; margin-bottom: 0.5rem; color:var(--text-main);">상세 주소 (직접 입력)</label>

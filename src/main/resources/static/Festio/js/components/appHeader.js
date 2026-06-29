@@ -236,7 +236,7 @@
         ${modeSwitchBtnHtml}
         ${detailExtraActions}
         <a href="mypage.html" class="header-text-btn ${detailHideClass}" aria-label="MY티켓">${ticketSvg}MY티켓</a>
-        <div class="header-search-bar ${detailHideClass}" role="search">${searchSvg}<input type="search" class="header-search-input" id="headerSearch" placeholder="행사명, 아티스트 검색" autocomplete="off" aria-label="검색"></div>
+        <div class="header-search-bar ${detailHideClass}" role="search">${searchSvg}<input type="search" class="header-search-input" id="headerSearch" placeholder="행사명, 아티스트 검색" autocomplete="new-password" aria-label="검색"></div>
         <div class="hdr-noti-menu" style="position:relative; display:inline-block;">
           <button class="header-icon-btn ${detailHideClass}" id="btnHeaderNotification" aria-label="알림" style="position:relative;">
             ${alarmSvg}
@@ -285,7 +285,7 @@
               <circle cx="11" cy="11" r="8" />
               <line x1="21" y1="21" x2="16.65" y2="16.65" />
             </svg>
-            <input type="search" class="mobile-search-input" placeholder="행사명, 아티스트명 검색" autocomplete="off" style="width: 100%; border: none; background: transparent; outline: none; padding: 12px 8px; font-size: 15px; color: #000;">
+            <input type="search" class="mobile-search-input" placeholder="행사명, 아티스트명 검색" autocomplete="new-password" style="width: 100%; border: none; background: transparent; outline: none; padding: 12px 8px; font-size: 15px; color: #000;">
           </div>
           <button class="btn btn-primary" style="padding: 10px 16px; border-radius: 8px; font-size: 14px; white-space: nowrap;">검색</button>
         </div>

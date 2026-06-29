@@ -1,0 +1,102 @@
+erDiagram
+    festival {
+        bigint id PK "축제 식별 키"
+        string name "축제 행사명"
+        date start_date "축제 시작일"
+        date end_date "축제 종료일"
+        string start_time "시작 시각"
+        string end_time "종료 시각"
+        string venue "공연 장소"
+        string category "행사 카테고리"
+        string operational_status "UPCOMING, ONGOING, COMPLETED"
+        text description_html "상세 HTML 소개"
+        string ticket_mode "FREE, SEAT"
+        bigint view_count "조회수"
+        jsonb content_json "메타 정보"
+        timestamp created_at
+    }
+
+    festival_history {
+        bigint id PK
+        bigint festival_id FK "festival.id 참조"
+        text old_description_html "이전 버전 소개글"
+        timestamp updated_at "수정 일시"
+    }
+
+    festival_zone {
+        bigint id PK "구역 키"
+        bigint festival_id FK "festival.id 참조"
+        string zone_name "구역명 (예: VIP석)"
+        string svg_points "SVG 좌표선 정보"
+        integer safety_limit "수용 안전 인원"
+        integer current_crowd_count "현재 실시간 인원"
+        string density_level "SAFE, WARNING, DANGER"
+        string status "ACTIVE, BLOCKED"
+        string map_bg_url "배경 지도 경로"
+        timestamp created_at
+    }
+
+    seat_map {
+        bigint id PK "좌석 식별 키"
+        bigint zone_id FK "festival_zone.id 참조"
+        string seat_row "열 정보 (예: A열)"
+        integer seat_number "좌석 번호"
+        integer price "좌석 등급 가격"
+        string status "AVAILABLE, HELD, RESERVED"
+        boolean is_reserved "예약 확정 여부"
+        bigint version "낙관적 락 버전"
+        timestamp hold_expires_at "임시 홀딩 만료 시간"
+        string locked_by_user "락 선점 회원"
+    }
+
+    orders {
+        bigint id PK "예매 번호"
+        string user_id "예매 회원 ID"
+        bigint festival_id FK "festival.id 참조"
+        integer total_price "총 예매 결제액"
+        integer discount_amount "쿠폰/등급 할인액"
+        string payment_status "PAID, CANCELLED"
+        string seat_ids "선택 좌석 CSV (예: 101,102)"
+        string qr_code "입장/인증 토큰"
+        boolean is_entered "행사장 입장 완료 여부"
+        string ticket_type "ONLINE, ONSITE"
+        string ticket_number "티켓 바코드 번호"
+        timestamp created_at "예매 일시"
+    }
+
+    order_item {
+        bigint id PK "상세 품목 키"
+        bigint order_id FK "orders.id 참조"
+        bigint product_id "상품 식별자 (F&B/굿즈용)"
+        bigint seat_id FK "seat_map.id 참조 (좌석예매용)"
+        integer quantity "수량"
+        string item_status "ORDERED, COOKING, READY, SERVED, CANCELLED"
+        string product_type "TICKET, FOOD, GOODS"
+        string selected_options "옵션 문자열"
+        string qr_code_uuid "개별 픽업/검증 UUID"
+        timestamp qr_expired_at "QR 만료 시각"
+        boolean is_gifted "선물 여부"
+        string transfer_token "양도 토큰"
+        timestamp updated_at
+    }
+
+    partner_inquiry {
+        bigint id PK
+        bigint festival_id FK "festival.id 참조"
+        string company_name "기업 제안 처"
+        string manager_name "담당자명"
+        string email "이메일"
+        string phone "연락처"
+        string inquiry_type "SPONSOR, BOOTH, ETC"
+        text content "제안 본문"
+        string status "PENDING, ACCEPTED, REJECTED"
+        timestamp created_at
+    }
+
+    festival ||--o{ festival_history : "소개 변경 내역"
+    festival ||--o{ festival_zone : "구역 구성 정보"
+    festival_zone ||--o{ seat_map : "구역별 좌석 맵"
+    festival ||--o{ orders : "소속 예매 내역"
+    orders ||--|{ order_item : "주문 상세 품목들"
+    seat_map ||--o{ order_item : "예약 좌석 매핑"
+    festival ||--o{ partner_inquiry : "비즈니스 제휴 문의"
