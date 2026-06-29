@@ -85,8 +85,8 @@
                       <h5 class="card-title mb-0 fw-semibold">FESTIO Pay 총 발행액</h5>
                       <i class="bx bx-wallet text-primary fs-3"></i>
                     </div>
-                    <h3 class="fw-bold text-primary mb-2">₩ 1,245,000,000</h3>
-                    <p class="mb-0 text-muted fs-7">이벤트 활성 충전 총액 (15,200회)</p>
+                    <h3 class="fw-bold text-primary mb-2" id="totalIssued">₩ 0</h3>
+                    <p class="mb-0 text-muted fs-7" id="totalIssuedCount">이벤트 활성 충전 총액 (0회)</p>
                   </div>
                 </div>
               </div>
@@ -98,8 +98,8 @@
                       <h5 class="card-title mb-0 fw-semibold">사용된 페이 결제액</h5>
                       <i class="bx bx-cart text-success fs-3"></i>
                     </div>
-                    <h3 class="fw-bold text-success mb-2">₩ 912,450,000</h3>
-                    <p class="mb-0 text-muted fs-7">가맹 점포 내 누적 FESTIO Pay 결제 합계</p>
+                    <h3 class="fw-bold text-success mb-2" id="totalUsed">₩ 0</h3>
+                    <p class="mb-0 text-muted fs-7" id="totalUsedDesc">가맹 점포 내 누적 FESTIO Pay 결제 합계</p>
                   </div>
                 </div>
               </div>
@@ -111,8 +111,8 @@
                       <h5 class="card-title mb-0 fw-semibold">미사용 환불 대기 금액</h5>
                       <i class="bx bx-refresh text-warning fs-3"></i>
                     </div>
-                    <h3 class="fw-bold text-warning mb-2">₩ 332,550,000</h3>
-                    <p class="mb-0 text-muted fs-7">폐막 시 자동 환불 예약 완료 목록 포함</p>
+                    <h3 class="fw-bold text-warning mb-2" id="totalPending">₩ 0</h3>
+                    <p class="mb-0 text-muted fs-7" id="totalPendingDesc">폐막 시 자동 환불 예약 완료 목록 포함</p>
                   </div>
                 </div>
               </div>
@@ -136,33 +136,9 @@
                           <th>상태</th>
                         </tr>
                       </thead>
-                      <tbody>
+                      <tbody id="transactionTableBody">
                         <tr>
-                          <td>TX-99824</td>
-                          <td>김하율</td>
-                          <td><span class="badge bg-label-success">페이 결제 (O2O)</span></td>
-                          <td>- ₩ 13,500</td>
-                          <td>B-3 홍길동 떡볶이</td>
-                          <td>16:35:10</td>
-                          <td><span class="badge bg-success">승인 완료</span></td>
-                        </tr>
-                        <tr>
-                          <td>TX-99823</td>
-                          <td>박지윤</td>
-                          <td><span class="badge bg-label-primary">간편 충전</span></td>
-                          <td>+ ₩ 50,000</td>
-                          <td>계좌 연동 (국민은행)</td>
-                          <td>16:34:00</td>
-                          <td><span class="badge bg-success">충전 성공</span></td>
-                        </tr>
-                        <tr class="table-danger">
-                          <td>TX-99822</td>
-                          <td>이철수</td>
-                          <td><span class="badge bg-label-danger">페이 결제 (현장)</span></td>
-                          <td>- ₩ 45,000</td>
-                          <td>C-1 공식 MD샵</td>
-                          <td>16:32:15</td>
-                          <td><span class="badge bg-danger">잔액 부족 실패</span></td>
+                          <td colspan="7" class="text-center py-4 text-muted">거래 내역을 불러오는 중입니다...</td>
                         </tr>
                       </tbody>
                     </table>
@@ -199,7 +175,7 @@
   <script src="/assets/vendor/libs/apex-charts/apexcharts.js"></script>
   <script src="/assets/js/main.js"></script>
   <script src="/assets/js/sidebar.js"></script>
-
+  <script src="./js/pay-ledger.js"></script>
 </body>
 
 </html>

@@ -1,5 +1,7 @@
 package festival.payment.controller;
 
+import festival.payment.domain.WalletHistoryVo;
+import festival.payment.repository.WalletHistoryRepository;
 import festival.user.domain.UserVo;
 import festival.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
@@ -9,8 +11,11 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.http.*;
 
+import java.time.format.DateTimeFormatter;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 /**
  * FESTIO Pay 지갑 충전 API
@@ -22,6 +27,7 @@ import java.util.Map;
 public class WalletController {
 
     private final UserRepository userRepository;
+    private final WalletHistoryRepository walletHistoryRepository;
     private final RestTemplate restTemplate;
 
     /** 포트원 V1 아이디 (실제 계정 식별코드) */
@@ -135,6 +141,15 @@ public class WalletController {
         user.setBalance(newBalance);
         userRepository.save(user);
 
+        // 충전 내역 기록
+        WalletHistoryVo history = WalletHistoryVo.builder()
+                .user(user)
+                .transactionType("CHARGE")
+                .amount(amount)
+                .description("간편 충전 (국민은행 연동)")
+                .build();
+        walletHistoryRepository.save(history);
+
         Map<String, Object> result = new HashMap<>();
         result.put("success", true);
         result.put("newBalance", newBalance);
@@ -183,7 +198,7 @@ public class WalletController {
     /**
      * FESTIO Pay 결제 차감 (SHOP 연동용)
      * POST /api/wallet/pay
-     * Body: { "amount": 15000 }
+     * Body: { "amount": 15000, "description": "가맹점 이름" }
      */
     @PostMapping("/pay")
     @Transactional
@@ -194,7 +209,7 @@ public class WalletController {
         if (token.startsWith("Bearer ")) {
             token = token.substring(7);
         }
-        
+
         Integer amount = (Integer) body.get("amount");
         if (amount == null || amount <= 0) {
             return ResponseEntity.badRequest().body("유효하지 않은 결제 금액입니다.");
@@ -228,10 +243,75 @@ public class WalletController {
         user.setBalance(currentBalance - amount);
         userRepository.save(user);
 
+        // 결제 설명 세팅
+        String description = (String) body.get("description");
+        if (description == null || description.trim().isEmpty()) {
+            description = "가맹 점포 결제";
+        }
+
+        // 결제 내역 기록
+        WalletHistoryVo history = WalletHistoryVo.builder()
+                .user(user)
+                .transactionType("PAY")
+                .amount(-amount)
+                .description(description)
+                .build();
+        walletHistoryRepository.save(history);
+
         Map<String, Object> result = new HashMap<>();
         result.put("success", true);
         result.put("deductedAmount", amount);
         result.put("newBalance", user.getBalance());
         return ResponseEntity.ok(result);
     }
+
+    /**
+     * FESTIO Pay 전체 거래 내역 및 통계 조회 (관리자용)
+     * GET /api/wallet/ledger
+     */
+    @GetMapping("/ledger")
+    @Transactional(readOnly = true)
+    public ResponseEntity<?> getLedger() {
+        // 1. 통계 데이터 조회
+        Long totalIssuedRaw = walletHistoryRepository.sumAmountByTransactionType("CHARGE");
+        Long totalIssued = totalIssuedRaw != null ? totalIssuedRaw : 0L;
+        Long totalUsedRaw = walletHistoryRepository.sumAmountByTransactionType("PAY");
+        Long totalUsed = totalUsedRaw != null ? Math.abs(totalUsedRaw) : 0L;
+        Long totalPendingRaw = userRepository.sumAllActiveUserBalances();
+        Long totalPending = totalPendingRaw != null ? totalPendingRaw : 0L;
+        long totalChargeCount = walletHistoryRepository.count();
+
+        // 2. 전체 트랜잭션 목록 조회
+        List<WalletHistoryVo> histories = walletHistoryRepository.findAllByOrderByCreatedAtDesc();
+
+        DateTimeFormatter timeFormatter = DateTimeFormatter.ofPattern("HH:mm:ss");
+        DateTimeFormatter dateSuffixFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+
+        List<Map<String, Object>> transactionList = histories.stream().map(h -> {
+            Map<String, Object> map = new HashMap<>();
+            map.put("txId", "TX-" + String.format("%05d", h.getId()));
+            map.put("userName", h.getUser() != null ? h.getUser().getName() : "탈퇴 회원");
+            map.put("type", h.getTransactionType());
+            map.put("amount", h.getAmount());
+            map.put("description", h.getDescription() != null ? h.getDescription() : "");
+            if (h.getCreatedAt() != null) {
+                map.put("time", h.getCreatedAt().format(timeFormatter));
+                map.put("dateTime", h.getCreatedAt().format(dateSuffixFormatter));
+            } else {
+                map.put("time", "");
+                map.put("dateTime", "");
+            }
+            return map;
+        }).collect(Collectors.toList());
+
+        Map<String, Object> response = new HashMap<>();
+        response.put("totalIssued", totalIssued != null ? totalIssued : 0L);
+        response.put("totalUsed", totalUsed);
+        response.put("totalPending", totalPending != null ? totalPending : 0L);
+        response.put("totalChargeCount", totalChargeCount);
+        response.put("transactions", transactionList);
+
+        return ResponseEntity.ok(response);
+    }
 }
+

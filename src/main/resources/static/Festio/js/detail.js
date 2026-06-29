@@ -505,6 +505,15 @@ function selectZone(zoneNo, zone, svgEl) {
   if (!zone && typeof _eventDetail !== 'undefined' && _eventDetail?.zones) {
     zone = _eventDetail.zones.find(z => Number(z.zoneNo) === Number(zoneNo));
   }
+
+  if (!zone) {
+    console.warn(`[selectZone] 구역 정보를 찾을 수 없습니다. zoneNo: ${zoneNo}`);
+    if (window.Toast) {
+      Toast.warning('구역 정보를 불러올 수 없습니다. 일치하는 데이터가 있는지 확인해 주세요.');
+    }
+    return;
+  }
+
   _selectedZoneNo = zoneNo;
   _selectedZone = zone;
 
@@ -840,6 +849,10 @@ function openFreeTicketModal(zoneNo, selectedZone) {
    사용자 좌석 선택 모달 및 인터랙션 제어
    ═══════════════════════════════════════════════════════════ */
 function openSeatSelectionModal(zoneNo, zone) {
+  if (!zone) {
+    console.error('[openSeatSelectionModal] Zone 객체가 유효하지 않습니다.');
+    return;
+  }
   const modalTitle = document.getElementById('seat-modal-title');
   if (modalTitle) modalTitle.textContent = `${zone.zoneName} 좌석 선택`;
 
@@ -1780,19 +1793,78 @@ function initPaymentMethodSelect() {
     if (festioArea) {
       if (_selectedPayMethod === 'festiopay') {
         festioArea.classList.remove('hidden');
-        // 임시 잔액 표시
+        // 실시간 지갑 잔액 조회 및 반영
         const balEl = $('#festiopay-balance');
-        if (balEl) balEl.textContent = formatKRW(50000); // 5만 원 임시 설정
+        if (balEl) {
+          const token = localStorage.getItem('userToken');
+          if (token) {
+            fetch('/api/wallet/balance', { headers: { 'Authorization': token } })
+              .then(res => {
+                if (!res.ok) throw new Error('잔액 조회 실패');
+                return res.json();
+              })
+              .then(data => {
+                // html에 " 원"이 이미 명시되어 있으므로 localestring 숫자로 바인딩
+                balEl.textContent = (data.balance || 0).toLocaleString();
+              })
+              .catch(err => {
+                console.error('FESTIO Pay 잔액 조회 실패', err);
+                balEl.textContent = '0';
+              });
+          } else {
+            balEl.textContent = '0';
+          }
+        }
       } else {
         festioArea.classList.add('hidden');
       }
     }
   });
 
-  on($('#btn-charge-festiopay'), 'click', () => {
-    Toast.success('50,000 포인트가 충전되었습니다.');
-    const balEl = $('#festiopay-balance');
-    if (balEl) balEl.textContent = formatKRW(100000); // 잔액 증가 시뮬레이션
+  on($('#btn-charge-festiopay'), 'click', async () => {
+    const amountStr = prompt('충전할 금액을 입력하세요 (최소 1,000원):', '50000');
+    if (amountStr === null) return;
+    const amount = parseInt(amountStr.replace(/[^0-9]/g, '') || 0);
+
+    if (!amount || amount < 1000) {
+      Toast.warn('최소 1,000원 이상 입력해주세요.');
+      return;
+    }
+
+    const token = localStorage.getItem('userToken');
+    if (!token) {
+      Toast.warn('로그인이 필요합니다.');
+      return;
+    }
+
+    try {
+      const res = await fetch('/api/wallet/charge', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          impUid: 'imp_mock_' + Date.now(),
+          amount: amount,
+          userToken: token
+        })
+      });
+
+      if (res.ok) {
+        const data = await res.json();
+        if (data.success) {
+          Toast.success(`✅ ${amount.toLocaleString()}원 충전 완료!\n현재 잔액: ${data.newBalance.toLocaleString()}원`);
+          const balEl = $('#festiopay-balance');
+          if (balEl) balEl.textContent = data.newBalance.toLocaleString();
+        } else {
+          Toast.error('충전 실패: ' + (data.message || '알 수 없는 오류'));
+        }
+      } else {
+        const txt = await res.text();
+        Toast.error('충전 오류: ' + txt);
+      }
+    } catch (err) {
+      console.error(err);
+      Toast.error('충전 통신 실패');
+    }
   });
 }
 

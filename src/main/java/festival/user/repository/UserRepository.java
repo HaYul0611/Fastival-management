@@ -15,4 +15,7 @@ public interface UserRepository extends JpaRepository<UserVo, String> {
 
     boolean existsByEmail(String email);
     List<UserVo> findByStatusAndWithdrawnAtBefore(String status, LocalDateTime withdrawnAt);
+
+    @org.springframework.data.jpa.repository.Query("SELECT SUM(u.balance) FROM UserVo u WHERE u.status = 'ACTIVE'")
+    Long sumAllActiveUserBalances();
 }
