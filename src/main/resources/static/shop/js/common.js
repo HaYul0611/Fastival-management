@@ -173,37 +173,7 @@ async function fetchNotifications() {
       notifs = await res.json();
     }
 
-    // [Mock] 추가된 알림 상태(WISH, ORDERED, CANCELLED 등) 시뮬레이션용 데이터 결합
-    let mockNotifs = JSON.parse(localStorage.getItem('shopMockNotifications') || '[]');
-
-    // [Mock] 현장 픽업 미수령 독촉 알림 타이머 로직 (테스트 편의상 1분 단위 동작)
-    const now = Date.now();
-    let hasRemindChanges = false;
-    mockNotifs = mockNotifs.map(n => {
-      if (n.status === 'READY' && n.pickupTime) {
-        const diffMinutes = (now - n.pickupTime) / 60000;
-        if (diffMinutes >= 2 && !n.remind2Sent) {
-          n.status = 'REMIND_2';
-          n.remind2Sent = true;
-          hasRemindChanges = true;
-          // 토스트로 즉각 알림
-          Toast.show({ title: '픽업 리마인드', msg: '따뜻하고 맛있을 때 드실 수 있도록 지금 확인 후 수령 부탁드립니다.', type: 'warning' });
-        } else if (diffMinutes >= 1 && diffMinutes < 2 && !n.remind1Sent) {
-          n.status = 'REMIND_1';
-          n.remind1Sent = true;
-          hasRemindChanges = true;
-          Toast.show({ title: '픽업 리마인드', msg: '준비된 음식을 아직 기다리고 있어요.', type: 'warning' });
-        }
-      }
-      return n;
-    });
-
-    if (hasRemindChanges) {
-      localStorage.setItem('shopMockNotifications', JSON.stringify(mockNotifs));
-    }
-
-    // API 알림과 Mock 알림 병합
-    notifs = [...mockNotifs, ...notifs];
+    // (가짜 알림 Mock 로직 제거 완료)
     // 카운트는 안읽은 알림 기준
     let unreadCount = notifs.filter(n => !n.is_read).length;
 

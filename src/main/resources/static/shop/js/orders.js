@@ -156,34 +156,15 @@ document.addEventListener('DOMContentLoaded', async () => {
       const orders = await response.json();
 
       if (!orders || orders.length === 0) {
-        console.log('[orders.js] 주문 내역이 비어 있어 더미 데이터 표시');
-        // 미리보기용 더미 데이터
-        const dummyOrder = {
-          order_number: 'F1X9K2M4P5T8',
-          created_at: new Date().toISOString(),
-          delivery_type: 'PICKUP',
-          status: 'READY_FOR_PICKUP',
-          payment_method: 'FESTIO_PAY',
-          total_amount: 12500,
-          totp_secret: 'dummysecret12345',
-          shop_order_items: [
-            { product_name: '스모크 바베큐 버거 + 콜라 세트', quantity: 1, price_at_purchase: 12500, shop_products: { type: 'FOOD' } }
-          ]
-        };
-        const dummyGoods = {
-          order_number: 'G9X8K7M6P5T4',
-          created_at: new Date().toISOString(),
-          delivery_type: 'PICKUP',
-          status: 'READY_FOR_PICKUP',
-          payment_method: 'FESTIO_PAY',
-          total_amount: 35000,
-          totp_secret: 'dummysecret99999',
-          shop_order_items: [
-            { product_name: '페스티벌 공식 티셔츠', quantity: 1, price_at_purchase: 35000, shop_products: { type: 'GOODS' } }
-          ]
-        };
-        window.currentOrders = [dummyOrder, dummyGoods];
-        listEl.innerHTML = renderOrderCard(dummyOrder) + renderOrderCard(dummyGoods);
+        listEl.innerHTML = `
+          <div style="text-align:center; padding: 40px 20px; color: var(--g500);">
+            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" style="margin-bottom: 12px; color: var(--g300);">
+              <path d="M12 22C17.5228 22 22 17.5228 22 12C22 6.47715 17.5228 2 12 2C6.47715 2 2 6.47715 2 12C2 17.5228 6.47715 22 12 22Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+              <path d="M8 12H16" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+            <p>진행 중인 주문 내역이 없습니다.</p>
+          </div>
+        `;
         return;
       }
 
@@ -208,7 +189,7 @@ document.addEventListener('DOMContentLoaded', async () => {
    * @returns {Promise<string>} 생성된 6자리 TOTP 코드
    */
   async function generateTotpCode(hexSecret, timeOffset = 0) {
-    if (!hexSecret) hexSecret = 'dummysecret12345';
+    if (!hexSecret) throw new Error("TOTP Secret is missing.");
     let keyBytes;
     try {
       keyBytes = new Uint8Array(hexSecret.match(/.{1,2}/g).map(byte => parseInt(byte, 16)));
@@ -244,7 +225,11 @@ document.addEventListener('DOMContentLoaded', async () => {
    */
   window.openQrModal = function (orderNo) {
     const order = window.currentOrders.find(o => o.order_number === orderNo);
-    let secret = order?.totp_secret || 'dummysecret12345';
+    let secret = order?.totp_secret;
+    if (!secret) {
+      alert("주문 정보에 보안 키(Secret)가 없습니다. 관리자에게 문의하세요.");
+      return;
+    }
 
     let _qrEpochOffset = 0;
     let _qrStartTime = 0;
