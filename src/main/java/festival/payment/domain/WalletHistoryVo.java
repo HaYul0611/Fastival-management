@@ -1,8 +1,10 @@
 package festival.payment.domain;
 
 import festival.user.domain.UserVo;
-import jakarta.persistence.*;
 import lombok.*;
+import org.hibernate.annotations.CreationTimestamp;
+
+import jakarta.persistence.*;
 import java.time.LocalDateTime;
 
 @Entity
@@ -19,26 +21,22 @@ public class WalletHistoryVo {
     private Long id;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "user_id", nullable = false)
+    @JoinColumn(name = "user_email", referencedColumnName = "email")
     private UserVo user;
 
-    @Column(name = "transaction_type", nullable = false, length = 20)
-    private String transactionType; // "CHARGE", "PAY", "REFUND"
+    @Column(name = "transaction_type", nullable = false)
+    private String transactionType; // CHARGE, PAY, REFUND
 
-    @Column(nullable = false)
+    @Column(name = "amount", nullable = false)
     private Integer amount;
 
-    @Column(length = 255)
+    @Column(name = "current_balance", nullable = false)
+    private Integer currentBalance;
+
+    @Column(name = "description")
     private String description;
 
-    @Column(name = "created_at", nullable = false, updatable = false)
-    @Builder.Default
-    private LocalDateTime createdAt = LocalDateTime.now();
-
-    @PrePersist
-    protected void onCreate() {
-        if (this.createdAt == null) {
-            this.createdAt = LocalDateTime.now();
-        }
-    }
+    @CreationTimestamp
+    @Column(name = "created_at", updatable = false)
+    private LocalDateTime createdAt;
 }

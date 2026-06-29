@@ -217,7 +217,7 @@ async function startCamera() {
 // TOTP 생성 로직 (검증용)
 // ──────────────────────────────────────
 async function generateTotpCode(hexSecret, epochOffset = 0) {
-    if (!hexSecret) hexSecret = 'dummysecret12345';
+    if (!hexSecret) throw new Error("TOTP Secret is missing.");
     let keyBytes;
     try {
         keyBytes = new Uint8Array(hexSecret.match(/.{1,2}/g).map(byte => parseInt(byte, 16)));

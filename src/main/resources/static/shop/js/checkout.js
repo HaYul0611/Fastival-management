@@ -245,30 +245,24 @@ document.addEventListener('DOMContentLoaded', () => {
 
     Toast.show({ title: '충전 중...', msg: 'FESTIO Pay 충전 진행 중...', type: 'info', dur: 1000 });
 
-    // 빠른 모의 충전 처리 (INICIS 팝업 생략)
+    // 서버 통신 충전 처리
     setTimeout(async () => {
       try {
         const token = localStorage.getItem('userToken');
         const res = await fetch('/api/wallet/charge', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ impUid: 'mock_uid_' + Date.now(), amount: chargeAmount, userToken: token })
+          body: JSON.stringify({ impUid: 'charge_' + Date.now(), amount: chargeAmount, userToken: token })
         });
         const data = await res.json();
         if (res.ok && data.success) {
           Toast.show({ title: '충전 완료', msg: `${chargeAmount.toLocaleString()}원이 충전되었습니다.`, type: 'success' });
           await fetchFestioBalance();
         } else {
-          // 백엔드 오류 시에도 프론트에서 모의 충전 처리
-          throw new Error('Fallback to local mock');
+          Toast.show({ title: '충전 실패', msg: data.message || '충전 중 오류가 발생했습니다.', type: 'error' });
         }
       } catch (err) {
-        let profile = await window.ShopDB.getProfile(u.email);
-        if (profile) {
-          await window.ShopDB.updateProfile(profile.id, { festio_pay_points: (profile.festio_pay_points || 0) + chargeAmount });
-          await fetchFestioBalance();
-        }
-        Toast.show({ title: '충전 완료', msg: `${chargeAmount.toLocaleString()}원이 충전되었습니다.`, type: 'success' });
+        Toast.show({ title: '충전 실패', msg: '통신 오류가 발생했습니다.', type: 'error' });
       }
     }, 600);
   });

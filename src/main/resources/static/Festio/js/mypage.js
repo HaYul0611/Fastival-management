@@ -104,20 +104,7 @@ async function fetchFoodOrders() {
       });
       console.log('실제 Supabase DB 푸드트럭 주문 조회 완료:', MOCK_FOOD_ORDERS);
     } else {
-      // DB에 내역이 없을 경우, Shop UI와 동일하게 기본 예시 데이터 출력 처리
-      MOCK_FOOD_ORDERS = [{
-        orderItemId: 'F1X9K2M4P5T8',
-        storeName: 'FESTIO F&B',
-        productName: '스모크 바베큐 버거 + 콜라 세트',
-        quantity: 1,
-        selectedOptions: '기본 옵션',
-        pickupTimeSlot: new Date().toLocaleString(),
-        totalPrice: 12500,
-        itemStatus: 'READY_FOR_PICKUP',
-        statusText: '조리 완료 (픽업 대기)',
-        qrToken: 'F1X9K2M4P5T8',
-        totpSecret: 'dummysecret12345'
-      }];
+      MOCK_FOOD_ORDERS = [];
     }
   } catch (error) {
     console.error('Supabase DB 푸드트럭 주문 로드 실패:', error);
@@ -174,20 +161,7 @@ async function fetchGoodsOrders() {
       });
       console.log('실제 Supabase DB 굿즈 주문 조회 완료:', MOCK_GOODS_ORDERS);
     } else {
-      MOCK_GOODS_ORDERS = [{
-        orderItemId: 'G9X8K7M6P5T4',
-        storeName: 'FESTIO MD',
-        productName: '페스티벌 공식 티셔츠',
-        quantity: 1,
-        selectedOptions: 'L 사이즈',
-        pickupTimeSlot: new Date().toLocaleString(),
-        totalPrice: 35000,
-        itemStatus: 'READY_FOR_PICKUP',
-        statusText: '수령 대기',
-        qrToken: 'G9X8K7M6P5T4',
-        deliveryType: '현장수령',
-        totpSecret: 'dummysecret99999'
-      }];
+      MOCK_GOODS_ORDERS = [];
     }
   } catch (error) {
     console.error('Supabase DB 굿즈 주문 로드 실패:', error);
