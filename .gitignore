@@ -42,3 +42,6 @@ node_modules
 
 # 배포 임시 폴더 제외
 festival/
+
+scratch_db/
+scratch/
